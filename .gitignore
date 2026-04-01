@@ -1,0 +1,24 @@
+# Environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+
+# Claude
+.mcp.json
+settings.local.json
+private/*
