@@ -2,9 +2,9 @@
 # Read first 2 lines of each FRAME.yml
 FRAMES=""
 # for frame in "$CLAUDE_PROJECT_DIR"/.frames/*/FRAME.yml; do
-for frame in /Users/matt/Documents/GitHub/click-farm/.frames/*/FRAME.md; do
+for frame in /Users/matt/Documents/GitHub/click-farm/.frames/*/FRAME.yml; do
 if [ -f "$frame" ]; then
-    FRAMES="$FRAMES\n$(sed -n '2,3p' "$frame")"
+    FRAMES="$FRAMES\n$(head -n 2 "$frame")"
 fi
 done
 
