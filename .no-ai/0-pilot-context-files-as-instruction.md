@@ -112,3 +112,7 @@ claude summary:
 Claude tells me it has an internal directive that incidentally can supress instructions placed in nested context files. This is more like a hook, and i got it working with `install-frames.sh` and `settings.json`. This has been extremely reliable so far. I've updated BOOTSTRAP-v2.md and CLAUDE-v2.md.
 
 Now, at this point, the FRAMES system is "installed", we can finally start testing the damn thing.
+
+- Contrastive framing (do THIS now, do THAT later) encodes behavioral boundaries better than clean section organization
+- Locality matters — things that contrast need to be near each other
+- Redundancy in agent instructions isn't redundancy — it's the instruction carrying its own context

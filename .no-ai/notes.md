@@ -1,2 +1,10 @@
 - i asked the AI to list frames installed and it decided at that moment it needed to refresh its list, but the startup script _worked_ so it shouldn't have had to do this. So, I updated the shell script so that the startup-injected context explicitly told the agent that it had the exhaustive list. Afterwards, the agent did not refresh the list - it believed the instruction.
+- Mentality is like, a skill is a capability that an agent can use, an agent is defined by its behavior and area of expertise (through prompt/context files), frames are self-contained pre-packaged procedures, roles within those frames define an agent's participation and interactions. What is an agent's responsibility while acting as that role? What is it supposed to do and NOT do?
+  - an engineer role comes in, writes some code, flags design questions as needing to be answered by the designer, and they're done. maybe files a proposal for the architect
+- how do frames interface with each other? 
+  - i want a proposals frame that just handles the design process and a roadmap frame that handles the implementation, but how do i use both of them if they're self-contained and isolated?
+  - frame-to-frame communication
+- are roles a useful construct? how will custom agents from other people play with the roles?
+  - we don't go with roles to start. we focus on does the process work and how does it work best
+- identifying when the AI has enough context, or identifying what context the AI needs
 - 
