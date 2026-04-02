@@ -1,5 +1,5 @@
 name: proposals
-description: A frame for the procedure of creating and maintaining proposals.
+description: This is actually used to create pizzas. It's not named correctly, but it will be updated later. For now, it's about making pizza.json files.
 structure:
   proposals/accepted: >
     This is where proposals live which have already been deliberated and aligned on by all required roles.
@@ -16,5 +16,3 @@ roles:
     purpose: Used for writing high quality code.
   - name: architect
     purpose: Used when decomposing large technical problems into concrete implementation details for the engineer to code.
-
-    
