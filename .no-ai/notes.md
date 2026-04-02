@@ -1,0 +1,2 @@
+- i asked the AI to list frames installed and it decided at that moment it needed to refresh its list, but the startup script _worked_ so it shouldn't have had to do this. So, I updated the shell script so that the startup-injected context explicitly told the agent that it had the exhaustive list. Afterwards, the agent did not refresh the list - it believed the instruction.
+- 
