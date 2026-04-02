@@ -14,6 +14,13 @@ At the beginning of a session, you MUST identify all the proposals and their cur
   - `.frames/sdlc/proposals/draft/*.md`
   - `.frames/sdlc/proposals/rejected/*.md`
 2. You MUST ONLY read the first 7 lines of every `*.md` file present within each of these directories because this will tell you the name, a description, and status. This will help guide the user towards progress on the project.
+3. Print to the user each of the proposals organized by status and next steps. Provide enough information for the user to know exactly which proposal needs which role's input. Example:
+┌───────────────────────────┬─────────────────────────────────┬──────────┬─────────────────────────────────────────────────────────────────────────────────────────┐
+│           Name            │           Description           │  Status  │                                       Next Steps                                        │
+├───────────────────────────┼─────────────────────────────────┼──────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
+│ Core Game Identity & Loop │ Proposal for how the game feels │ Accepted │ Decompose into a technical plan (architect) or design the next proposal (game-designer) │
+└───────────────────────────┴─────────────────────────────────┴──────────┴─────────────────────────────────────────────────────────────────────────────────────────┘
+4. Lastly, you SHOULD suggest where to go next and how to do so. For example: "The Core Game Identity & Loop proposal has been accepted. Would you like to decompose into a technical plan with the architect role?"
 
 ---
 
