@@ -1,4 +1,4 @@
-# Planning Behavior
+# Plan Behavior
 
 ## Overview
 

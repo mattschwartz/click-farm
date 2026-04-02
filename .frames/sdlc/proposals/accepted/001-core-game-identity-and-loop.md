@@ -2,8 +2,8 @@
 name: Core Game Identity & Loop
 description: Proposal for how the game feels.
 author: game-designer
-status: draft
-reviewers: [architect, ux-designer]
+status: accepted
+reviewers: []
 ---
 
 ## Target Feeling
@@ -64,9 +64,10 @@ No dark patterns. The game is fun because it's fun, not because it's manipulativ
 - **What's the right state model for an idle clicker that needs to calculate offline progress on return?** Architect answer: snapshot-based model — save full game state with a timestamp, calculate offline earnings analytically on return (generators × rates × elapsed time × multipliers). For a linear generator model this is O(1) regardless of time away. No tick-by-tick simulation needed. Exact state shape and offline calculation contract will be defined in the architecture spec.
 - **Frontend framework choice matters more than usual here — juice/animation quality is the #1 differentiator. The game designer's position is: optimize for animation capability over architectural purity.** Architect answer: constraint accepted. Framework selection will prioritize fine-grained rendering control and frequent DOM update performance (ticking counters, particles, screen shake). Recommendation will be delivered in the architecture spec.
 
-## Open Questions for Game Designer (from Architect Review)
+## Open Questions for Game Designer (from Architect Review) — Resolved
 
-- **Prestige generator model:** Does prestige reset the player to rebuy the *same* generator tier list (with a permanent multiplier applied), or does it unlock a *new set* of generators per prestige layer? A fixed list with a multiplier is a simpler state model; a growing catalog per layer adds significant data model complexity. Need this answered before the architecture spec.
+- **Prestige generator model:** Same generator list with a permanent multiplier. The player rebuys the same generators each prestige, but everything scales faster due to the multiplier. No new generator catalogs per layer. The fun is in the scale, not new systems to learn.
+- **Upgrade stacking model:** Both per-generator and global upgrades exist. Per-generator upgrades let the player invest within a tier; global upgrades create "everything just got better" moments. All upgrades stack multiplicatively — this is what drives the exponential number growth the game wants.
 
 ## Decision Requested
 
@@ -95,3 +96,45 @@ The core loop, depth constraint, and engagement line are all architecturally sou
 **For game-designer:**
 - Answer the prestige generator model question — same list with multiplier, or new catalog per layer?
 - Define upgrade stacking model (per-generator vs. global, multiplicative vs. additive) before or during architecture phase
+
+### architect — 2026-04-02 (follow-up)
+
+**Assessment:** approve
+
+Both blocking and non-blocking questions are now resolved:
+
+- **Prestige model:** Same generator list + permanent multiplier. This gives a flat state model — one generator catalog, one scalar prestige multiplier. Clean to spec and implement.
+- **Upgrade stacking:** Per-generator and global, multiplicative stacking. This means the damage formula is: `base_rate × generator_count × product(per_gen_upgrades) × product(global_upgrades) × prestige_multiplier`. Straightforward to calculate analytically for offline progress.
+
+No remaining architectural concerns. This proposal is ready to accept. Once accepted, I will produce:
+1. An architecture spec covering state model, offline calculation contract, and frontend data requirements
+2. Engineer tasks with explicit done-whens
+
+### game-designer — 2026-04-02
+
+**Assessment:** approve
+
+The proposal accurately captures the game's identity and core loop. Target feeling is precisely named, MDA trace is correct (Sensation + Submission), and every mechanic traces back to those aesthetics. The resolved design decisions — same generators with scalar prestige multiplier, multiplicative upgrade stacking — are the right calls for the stated depth.
+
+**Non-blocking observations:**
+
+- The "no wrong choices" principle is load-bearing for the chill factor. Worth remembering during implementation: the *illusion of choice* still matters. Pacing — making some generators feel like breakthroughs — does this work without adding real complexity.
+- The single-currency constraint is correct and should be defended. If pressure to add a second currency ever arises, it almost certainly means the first one has a faucet/drain imbalance. Fix the economy, don't add complexity.
+
+**For ux-designer:**
+- Juice is called out as the #1 priority. The game-designer position is that this game lives or dies on frontend feel — animation quality, number presentation, feedback on every action. The UX review should confirm whether the "escalating absurdity" narrative through generators creates enough visual/thematic variety to sustain interest across prestige cycles.
+
+### ux-designer — 2026-04-02
+
+**Assessment:** approve
+
+The core loop is tight and maps cleanly to a single primary screen with a shop/upgrade panel. Juice as the #1 priority is the correct call — this game's feel IS the product. The zero-tutorial test should pass naturally for a loop this simple. No structural UX concerns with the proposed identity.
+
+**Non-blocking observations:**
+
+- **Escalating absurdity across prestiges:** The generator list is the same each cycle, but the proposal promises the premise "gets more ridiculous each time." Bigger numbers alone won't land that comedy beat. The UX spec needs to define what changes visually to signal escalation when the content is structurally identical — options include visual theming per prestige tier, generator name/description variants, or environmental changes on the main screen. This is a presentation problem, not a design problem, and I'll solve it in the UX spec phase.
+- **Prestige as a screen moment:** This is simultaneously the biggest payoff and the most psychologically risky moment (loss aversion). The motion design must overwhelm the feeling of loss with spectacle — the player should feel triumph, not grief. This will be a first-class motion brief deliverable.
+- **Number presentation is a trust signal problem:** How numbers tick, how they format at scale transitions (999K → 1.0M), how milestones celebrate — these are UX decisions that directly affect whether the player trusts and engages with the core loop. I'll treat this as a first-class deliverable, not a formatting afterthought.
+
+**For architect:**
+- The UX spec will define animation and number presentation requirements that have frontend performance implications (ticking counters, particles, screen shake). Flagging early so the architecture spec accounts for rendering performance as a constraint.

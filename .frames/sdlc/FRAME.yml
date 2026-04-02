@@ -1,5 +1,9 @@
 name: sdlc
 description: A coordination protocol for taking ideas from design through implementation. Work moves through three phases — design, plan, build — carried by artifacts in known locations. Multiple roles participate across multiple sessions. No single role completes the lifecycle alone.
+absolute-rules:
+  - You MUST NOT enter more than one frame at a time. You MUST NEVER switch frames once a frame has been entered. 
+  - You MUST only operate one role at a time. You MUST NEVER switch roles once a role has been equipped.
+  - You MUST ONLY read the first 7 lines of every `*.md` file present within `proposals/draft/` because this will tell you whether they are relevant, what their status is, and which role you should recommend to the user that you equip it to continue with that proposal. You MUST ONLY read the full draft after assuming that role because you want to avoid unnecessary context bloat.
 states:
   - name: design
     description: Deliberate on a design question to reach alignment. The goal is a written decision, not a conversation — the output is a proposal document that other roles can act on.
@@ -19,9 +23,9 @@ states:
     output: A proposal document with feedback, open questions answered, and maybe more open questions asked
     allowed-roles: ["*"]
 
-  - name: planning
+  - name: plan
     description: Decompose an accepted design into concrete, assignable work items. The goal is a set of tasks with explicit done-whens that an engineer or other role can pick up and execute without guessing.
-    behavior: ./behaviors/planning.md
+    behavior: ./behaviors/plan.md
     enter: When a large or ambiguous task or design artifact needs to be broken down into bite-sized work items for other roles to take on.
     exit: When the task has been saved to disk and the user is happy with the output.
     input: A conversation with the user or a design document in `proposals/accepted`
@@ -36,6 +40,7 @@ states:
     input: A clearly-defined coding task.
     output: The implementation of the coding task.
     allowed-roles: [engineer]
+
 roles:
   - name: game-designer
     description: The game designer owns every decision about how the game works as a system and how it feels to play. Their authority is final on game mechanics, balancing, progression, economy, and player-facing feel. They MAY override any other role when player experience is at stake.
