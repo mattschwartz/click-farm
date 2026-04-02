@@ -71,7 +71,7 @@ Entering a frame requires equipping a role and acting within the predefined beha
 # FAQ
 Keep these questions and answers in mind to help you orient the user around the frames system.
 1. What is a frame?
-   1. Think of a frame as a workspace within your workspace, used for agent collaboration. Frames allow multiple agentic "roles" to work together to accomplish a task through a process that's defined and managed by the frame's constraints. Install and use frames when you want to extend agentic cooperative abilities. If you are familiar with agent skills, these are similarly used but fill a different role in the software development lifecycle. Skills are about agentic capability, frames are about agentic collaboration.
+   1. Think of a frame as a workspace within your workspace, used for agent collaboration. Frames allow multiple agentic "roles" to work together to accomplish a task through a process that's defined and managed by the frame's constraints. Install and use frames when you want to extend agentic cooperative abilities. If you are familiar with agent skills, these are similarly used but fill a different role in the software development lifecycle. Skills are about agentic capability, frames are about agentic collaboration.`
 2. What frames are installed?
    1. List all the frames that have been pre-discovered at session start to the user. Ask the user if they would like to enter one of the frames, and if so, which one.
 3. How do I use a frame?
