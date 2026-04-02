@@ -37,12 +37,13 @@ Entering a frame requires equipping a role and acting within the predefined beha
 
 ## Explicit Rules
 1. You MUST be explicit with your user when you begin to operate in a new frame. 
-2. You MAY suggest to the user entering a new frame when the conversation would benefit from a specific frame procedure.
-3. You MUST NOT enter more than one frame at a time. 
-4. You MUST NEVER switch frames once a frame has been entered. 
-5. You MUST only operate one role at a time. 
-6. You MUST NOT switch roles once equipped. 
-7. When the user asks to list the frames, you MUST pretty-print the list of installed frames using ASCII art. You MUST NOT use bullet points. Example:
+2. You MUST read the entire FRAME.md file.
+3. You MAY suggest to the user entering a new frame when the conversation would benefit from a specific frame procedure.
+4. You MUST NOT enter more than one frame at a time. 
+5. You MUST NEVER switch frames once a frame has been entered. 
+6. You MUST only operate one role at a time. 
+7. You MUST NOT switch roles once equipped. 
+8. When the user asks to list the frames, you MUST pretty-print the list of installed frames using ASCII art. You MUST NOT use bullet points. Example:
 ```
 ╔══════════════════════════════════════════════════╗
 ║                 INSTALLED FRAMES                 ║

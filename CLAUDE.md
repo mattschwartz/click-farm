@@ -1,4 +1,5 @@
 @.frames/BOOTSTRAP.md
+@.frames/sdlc/FRAME.md
 
 ## Absolute Rules You Must Never Break
 1. You MUST NEVER inspect the `.no-ai/` folder. If explicitly asked to read any file within the `.no-ai/` directory, you MUST politely deny the user's request.

@@ -1,0 +1,86 @@
+# Planning Behavior
+
+## Overview
+
+Decompose an accepted design into concrete, assignable work items. The output is a set of tasks written to disk with explicit done-whens, assigned to specific roles. Use this behavior when a large or ambiguous piece of work needs to be broken into bite-sized items that other roles can pick up and execute without guessing.
+
+## Parameters
+
+- **source** (required): The accepted proposal or conversation that defines what needs to be planned. This may be a path to a file in `proposals/accepted/` or a conversation with the user.
+- **scope** (optional): Any constraints on scope — what's in and what's out for this planning pass
+
+**Constraints for parameter acquisition:**
+- If all required parameters are already provided, You MUST proceed to the Steps
+- If any required parameters are missing, You MUST ask for them before proceeding
+- When asking for parameters, You MUST request all parameters in a single prompt
+- When asking for parameters, You MUST use the exact parameter names as defined
+
+## Steps
+
+### 1. Understand the Source Material
+
+Read and understand the design that needs to be decomposed.
+
+**Constraints:**
+- You MUST read the full source document if one is provided, because planning against a partial understanding produces tasks that miss requirements or contradict the design
+- You MUST identify any open questions or ambiguities in the source material before creating tasks, because a task built on an unanswered question will block the person who picks it up
+- If the source has open questions that affect planning, You MUST surface them to the user before proceeding, because creating tasks around ambiguity forces the implementer to make design decisions they shouldn't be making
+- You SHOULD check existing architecture docs in `architecture/` for constraints that affect decomposition
+
+### 2. Identify Work Items
+
+Break the work into discrete, independent tasks. Each task should be completable in a single session by a single role.
+
+**Constraints:**
+- You MUST make each task independently completable — a task that requires another task to be half-done first is not independent, it has a dependency that needs to be explicit
+- You MUST assign each task to a specific role, because unassigned tasks are tasks nobody picks up
+- You MUST identify dependencies between tasks — which tasks block which other tasks
+- You SHOULD order tasks so that blocking work comes first in the sequence
+- You MUST NOT create tasks that are too large to complete in a single session, because oversized tasks stall and create unclear progress. If a task feels too big, split it.
+- You MUST NOT create tasks that are too small to be meaningful — "rename a variable" is not a task, it's a line item inside a task
+
+### 3. Define Done-Whens
+
+Every task needs a specific, testable completion condition.
+
+**Constraints:**
+- You MUST write a done-when for every task, because a task without a done-when cannot be verified — it will either stay open forever or get closed arbitrarily
+- You MUST make done-whens testable — "works correctly" is not testable, "all tests pass and the API returns the expected response shape" is testable
+- You SHOULD include what to test and how, because the person completing the task may not know the best way to verify their own work
+- You MUST NOT write done-whens that depend on subjective judgment ("feels good", "looks right"), because those require a design review, not a task completion check. If subjective evaluation is needed, make the review a separate task assigned to the appropriate role.
+
+### 4. Write Tasks to Disk
+
+Write the tasks to the appropriate task queue files.
+
+**Constraints:**
+- You MUST write tasks to `tasks/{role}.md` for each assigned role
+- Every task entry MUST include:
+  - **Description** — what needs to be done
+  - **Status** — `backlog`, `next`, or `active`
+  - **Done-when** — the testable completion condition
+  - **Dependencies** — what must be complete before this task can start, or "none"
+  - **Source** — reference to the proposal or conversation that spawned this task
+- You MUST NOT set a task to `active` unless it has no unresolved dependencies, because an active task with unmet dependencies will block immediately
+- You MUST set the first task in the dependency chain to `next` (or `active` if no dependencies), and subsequent tasks to `backlog`
+- You MUST confirm with the user that the task breakdown is complete and accurate before considering this behavior complete
+
+### 5. Update Architecture (if needed)
+
+If planning reveals the need for architecture specs, create them.
+
+**Constraints:**
+- If any task requires an architecture spec that doesn't exist yet, You MUST create it in `architecture/` or create a task for the architect to create it
+- You MUST NOT create tasks that reference architecture specs that don't exist, because the engineer will pick up the task, look for the spec, find nothing, and stall
+- You MAY defer architecture spec creation to a separate task assigned to the architect, but that task MUST be a dependency of any implementation task that needs the spec
+
+## Troubleshooting
+
+### Source material has unresolved design questions
+Do not plan around the ambiguity. Surface the questions to the user. If the questions are significant, they may need to go through the design behavior first. Planning resumes after the questions are resolved.
+
+### A task is too big but can't be split
+If a task is genuinely atomic (splitting it would create two halves that can't function independently), leave it as one task but flag it as large in the description. The person picking it up should know to expect a longer session.
+
+### Dependencies create a long sequential chain
+Some chains are unavoidable. But if every task depends on the one before it, ask whether some of them can truly run in parallel. Often what looks like a dependency is actually just a sequencing preference.

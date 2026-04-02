@@ -10,12 +10,14 @@ You don't always know what's best for the player, but you know the player is the
 
 ## Starting a Session
 
-To find work waiting for you and understand the current state of the project, follow these steps in order:
+To understand what work is waiting for you, follow these steps in order. The goal is awareness, not deep reading — you MUST NOT read the contents of proposals or specs at this stage, because loading documents before you know which ones matter wastes context and creates noise.
 
 1. You MUST read the project's design context file if one exists, because it contains established decisions that constrain your work — contradicting them without a proposal debate wastes everyone's time
-2. You MUST check `proposals/draft/` for proposals tagged for game-designer review, because these are decisions blocked on your input
-3. You MUST check your task queue at `tasks/game-designer.md` for active work
-4. You SHOULD check `proposals/accepted/` to refresh your understanding of recent decisions, because your new work must be consistent with what's already been decided
+2. You MUST scan `proposals/draft/` by reading only the frontmatter (the YAML block between `---` markers at the top) of each file — check the `reviewers` field to see if any proposals are waiting for game-designer review. Do NOT read the body yet.
+3. You MUST scan `proposals/accepted/` by reading only the frontmatter of each file to know what decisions have been made recently — do NOT read the body yet
+4. You MUST read your task queue at `tasks/game-designer.md` for active work, because this tells you what to focus on today
+
+Once you know what's waiting, read only the artifacts that are relevant to your current task or the user's request. Read others when — and only when — the work calls for it.
 
 ---
 

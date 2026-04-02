@@ -1,9 +1,9 @@
-# Proposal: Core Game Identity & Loop
-
-**Status:** draft
-**Author:** game-designer
-**Review required:** architect
-
+---
+name: Core Game Identity & Loop
+description: Proposal for how the game feels.
+author: game-designer
+status: draft
+reviewers: [architect, ux-designer]
 ---
 
 ## Target Feeling
@@ -59,11 +59,39 @@ This design is clean on the three-question test:
 
 No dark patterns. The game is fun because it's fun, not because it's manipulative.
 
-## Open Questions for Architect
+## Open Questions for Architect (Resolved)
 
-- What's the right state model for an idle clicker that needs to calculate offline progress on return? This affects how generators and multipliers are stored.
-- Frontend framework choice matters more than usual here — juice/animation quality is the #1 differentiator. The game designer's position is: optimize for animation capability over architectural purity.
+- **What's the right state model for an idle clicker that needs to calculate offline progress on return?** Architect answer: snapshot-based model — save full game state with a timestamp, calculate offline earnings analytically on return (generators × rates × elapsed time × multipliers). For a linear generator model this is O(1) regardless of time away. No tick-by-tick simulation needed. Exact state shape and offline calculation contract will be defined in the architecture spec.
+- **Frontend framework choice matters more than usual here — juice/animation quality is the #1 differentiator. The game designer's position is: optimize for animation capability over architectural purity.** Architect answer: constraint accepted. Framework selection will prioritize fine-grained rendering control and frequent DOM update performance (ticking counters, particles, screen shake). Recommendation will be delivered in the architecture spec.
+
+## Open Questions for Game Designer (from Architect Review)
+
+- **Prestige generator model:** Does prestige reset the player to rebuy the *same* generator tier list (with a permanent multiplier applied), or does it unlock a *new set* of generators per prestige layer? A fixed list with a multiplier is a simpler state model; a growing catalog per layer adds significant data model complexity. Need this answered before the architecture spec.
 
 ## Decision Requested
 
 Align on this as the foundational identity for Click Farm. Every future proposal builds on top of these constraints. If anything here is wrong, now is the time to flag it.
+
+---
+
+## Review Log
+
+### architect — 2026-04-02
+
+**Assessment:** request-changes
+
+The core loop, depth constraint, and engagement line are all architecturally sound. The single-currency model with linear generators and analytical offline calculation is clean to spec and implement. No structural concerns with the proposed identity.
+
+**Blocking:**
+
+- The prestige generator model question (see "Open Questions for Game Designer") must be answered before I can approve. The data model diverges significantly between "same generator list + permanent multiplier" (flat state, scalar multiplier) and "new generator catalog per prestige layer" (layered state, growing entity catalog). I cannot produce an architecture spec that covers both without introducing unnecessary abstraction. Need a decision.
+
+**Non-blocking:**
+
+- The upgrade stacking model needs definition before architecture work begins. Are upgrades per-generator, global, or both? Do multiple upgrades stack multiplicatively or additively? This is a design question — flagging it now so it doesn't become a blocker later.
+- The "one currency" constraint is load-bearing. I will treat it as a hard architectural constraint. Introducing a second currency later would require structural changes to state, offline calculation, and prestige reset scope. The proposal's high bar is noted and respected.
+- Offline calculation approach (analytical, O(1)) is confirmed sound for the proposed linear generator model, as long as no time-dependent rate changes are introduced.
+
+**For game-designer:**
+- Answer the prestige generator model question — same list with multiplier, or new catalog per layer?
+- Define upgrade stacking model (per-generator vs. global, multiplicative vs. additive) before or during architecture phase
