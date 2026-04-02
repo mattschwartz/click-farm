@@ -12,7 +12,7 @@ if [ -n "$FRAMES" ]; then
 jq -n --arg frames "$FRAMES" '{
     "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": ("Installed frames:\n" + $frames + "\nDiscover these frames by reading their FRAME.yml when entering a frame.")
+    "additionalContext": ("The following frames have been installed in this workspace. Use the name and discription fields to identify when a procedure is relevant to the conversation and propose it to the user. This is an exhaustive list. Frames:\n" + $frames)
     }
 }'
 fi

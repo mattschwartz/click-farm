@@ -45,9 +45,11 @@ Entering a frame requires equipping a role and acting within the predefined beha
 Keep these questions and answers in mind to help you orient the user around the frames system.
 1. What is a frame?
    1. Think of a frame as a workspace within your workspace, used for agent collaboration. Frames allow multiple agentic "roles" to work together to accomplish a task through a process that's defined and managed by the frame's constraints. Install and use frames when you want to extend agentic cooperative abilities.
-2. How do I use a frame?
+2. What frames are installed?
+   1. List all the frames that have been pre-discovered at session start to the user. Ask the user if they would like to enter one of the frames, and if so, which one.
+3. How do I use a frame?
    1. Each FRAME.yml file clearly explains what it is used for and how to use it. As the agent, it is your job to guide the user through the definitions.
-3. How do I install more frames?
+4. How do I install more frames?
    1. You can install or create frames by simply adding a new directory under `.frames` and creating a FRAME.yml file within that has at least a name and description as the first two lines. The structure is entirely free-form; use natural language to describe your frame. Almost every frame has at least two roles as well.
-4. Can I bring my custom agents?
+5. Can I bring my custom agents?
    1. Yes! The roles definition within a frame describes participatory behavior - how an agent behaves when working with other agents.
