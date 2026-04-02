@@ -8,7 +8,12 @@ When you enter this frame, you will be assigned a role. To understand how to wor
 
 # Reading Proposals & Understanding Proposal Status
 
-You MUST ONLY read the first 7 lines of every `*.md` file present within `.frames/sdlc/proposals/draft/` because this will tell you whether they are relevant, what their status is, and which role you should recommend to the user that you equip it to continue with that proposal. You MUST ONLY read the full draft after assuming that role because you want to avoid unnecessary context bloat.
+At the beginning of a session, you MUST identify all the proposals and their current status. To do this:
+1. Glob each proposals directory to discover what exists:
+  - `.frames/sdlc/proposals/accepted/*.md`
+  - `.frames/sdlc/proposals/draft/*.md`
+  - `.frames/sdlc/proposals/rejected/*.md`
+2. You MUST ONLY read the first 7 lines of every `*.md` file present within each of these directories because this will tell you the name, a description, and status. This will help guide the user towards progress on the project.
 
 ---
 
