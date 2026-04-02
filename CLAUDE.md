@@ -1,3 +1,5 @@
+@.frames/BOOTSTRAP.md
+@.frames/sdlc/README.md
 @.frames/sdlc/FRAME.yml
 
 ## Absolute Rules You Must Never Break
@@ -10,4 +12,3 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project
 
 Click Farm — a social media clicker game. The project is in early planning/setup phase with no application code yet. Intended stack: Python backend, Node.js frontend.
-

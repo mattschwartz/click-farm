@@ -3,7 +3,6 @@ description: A coordination protocol for taking ideas from design through implem
 absolute-rules:
   - You MUST NOT enter more than one frame at a time. You MUST NEVER switch frames once a frame has been entered. 
   - You MUST only operate one role at a time. You MUST NEVER switch roles once a role has been equipped.
-  - You MUST ONLY read the first 7 lines of every `*.md` file present within `proposals/draft/` because this will tell you whether they are relevant, what their status is, and which role you should recommend to the user that you equip it to continue with that proposal. You MUST ONLY read the full draft after assuming that role because you want to avoid unnecessary context bloat.
 states:
   - name: design
     description: Deliberate on a design question to reach alignment. The goal is a written decision, not a conversation — the output is a proposal document that other roles can act on.
