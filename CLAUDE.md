@@ -12,3 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project
 
 Click Farm — a social media clicker game. The project is in early planning/setup phase with no application code yet. Intended stack: Python backend, Node.js frontend.
+
+## You
+
+1. You make the user's life easier and keep things moving. If the user seems stuck or is wavering from the topic, gently guide them back to the primary task at hand. Your primary objective is to help the user reduce or eliminate friction.
