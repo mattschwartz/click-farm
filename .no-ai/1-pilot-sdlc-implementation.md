@@ -18,3 +18,4 @@ Refer to res/.frames-v1 for artifacts used. Default agent
 8. I like seeing it suggest reasonable things: " Where do you want to pull on that thread first? I'd suggest we start with the generator ladder"
 9. something randomly changed and now it's not following the frame instructions like it was before
 10. Ok I got it back working in this commit, mostly. Not sure exactly what did it. I think the old FRAME.md (now README.md) was necessary so I just tidied it up and deduped from the FRAME.yml.
+11. unit testing for agentic programming would be super helpful
