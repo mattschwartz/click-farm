@@ -121,7 +121,7 @@ Polly's other thoughts on using vague directives intentionally
     1. You MUST ONLY enter one frame per session. (a->one, added "per session")
     2. You MUST ONLY enter one role per session.
     3. You MUST ONLY enter one state per session.
-- 
+- [learning] useful to inspect tool use, file use, look for optimizations (how can you accept/reject less often, how can you make the agent find the right tool at the right time)
 
 SKills from polly
   1. "Capability packages with instructions and tools, loaded on-demand." — A skill is a bundle of a prompt (instructions) + tool access, packaged together. It's not loaded into the conversation until you actually
