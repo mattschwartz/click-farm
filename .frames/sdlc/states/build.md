@@ -60,7 +60,16 @@ Write tests and verify the implementation.
 - If you encounter pre-existing test failures, You MUST fix them, because the codebase must be healthier when you leave than when you arrived
 - If a pre-existing failure is genuinely outside your ability to fix, You MUST surface it as a blocker with a clear description of what's wrong and what decision is needed
 
-### 5. Commit
+### 5. Validate
+
+Present validation steps to the user and wait for their confirmation before committing.
+
+**Constraints:**
+- You MUST provide a **Validation section** — specific, actionable steps the user can follow to verify the work is correct. Not descriptions of what you built. Actual things to do: run this command, open this URL, click this, observe that.
+- You MUST explicitly ask the user if they are ready to commit, because the user must confirm the work is correct before it is committed
+- You MUST NOT proceed to the Commit step until the user confirms they are ready, because a commit is harder to undo than a pause
+
+### 6. Commit
 
 Commit your changes before marking the task complete.
 
@@ -70,13 +79,12 @@ Commit your changes before marking the task complete.
 - You MUST write a commit message that includes the task ID and a short description of what was done (e.g. `task #12: implement generator tick loop`)
 - You MUST NOT commit if tests are failing, because a broken commit is worse than no commit
 
-### 6. Complete the Task
+### 7. Complete the Task
 
-Mark the task done and provide verification steps.
+Mark the task done.
 
 **Constraints:**
 - You MUST mark the task complete using `bash .frames/sdlc/tools/task.sh complete <id>`
-- You MUST close with a **Validation section** — specific, actionable steps the user can follow to verify the work is correct. Not descriptions of what you built. Actual things to do: run this command, open this URL, click this, observe that.
 - You MUST NOT consider the task complete until the done-when condition is satisfied and all tests pass
 - If completing this task unblocks other tasks (check their dependencies), You SHOULD note which tasks are now unblocked, because the next planning session needs to know what's ready
 
