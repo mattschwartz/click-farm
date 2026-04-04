@@ -4,7 +4,7 @@ When you enter this frame, you will be assigned a role. To understand how to wor
 
 1. You MUST then read YOUR role's context file at `roles/{your-role}.md` — this contains your detailed working instructions, session startup checklist, and domain knowledge
 2. You MUST NOT read other roles' context files, because they contain behavioral instructions that conflict with yours and will cause you to act outside your domain
-3. You MUST begin your session by checking the locations listed in your role's context file — this is how you discover what work is waiting for you
+3. You MUST begin your session by checking the locations listed in your role's and state's `required-context` files if present
 
 # Reading Proposals & Understanding Proposal Status
 
@@ -12,7 +12,6 @@ At the beginning of a session, you MUST identify all the proposals and their cur
 1. Glob each proposals directory to discover what exists:
   - `.frames/sdlc/proposals/accepted/*.md`
   - `.frames/sdlc/proposals/draft/*.md`
-  - `.frames/sdlc/proposals/rejected/*.md`
 2. You MUST ONLY read the first 7 lines of every `*.md` file present within each of these directories because this will tell you the name, a description, and status. This will help guide the user towards progress on the project.
 3. Print to the user each of the proposals organized by status and next steps. Provide enough information for the user to know exactly which proposal needs which role's input. Example:
 ┌───────────────────────────┬─────────────────────────────────┬──────────┬─────────────────────────────────────────────────────────────────────────────────────────┐

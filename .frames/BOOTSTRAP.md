@@ -25,6 +25,8 @@ states: An exhaustive list of states that the frame can be in at any given time.
 roles: An exhaustive list of roles that can be equipped to operate within a state in the frame. Each role has a behavior definition matching its name in the ./states folder that you MUST load when equipping a role.
 ```
 
+You MUST NOT re-read FRAME.yml. It is already loaded into your context.
+
 # Roles & Participation
 
 - Every one participates in a frame by assuming a role. Roles are defined in FRAME.yml under the `roles` header. Frames have more than one role. You MUST ask the user what your role is if it has not been already specified BEFORE reading any role files.
@@ -36,7 +38,7 @@ roles: An exhaustive list of roles that can be equipped to operate within a stat
 
 # Loading Behaviors
 
-Each state and role definition in FRAME.yml has a corresponding behavior file in `./states` which MUST ALWAYS be loaded every time you equip a role or enter or transition into a state.
+Each state and role definition in FRAME.yml has a corresponding behavior file in `./states` or `./roles` which MUST ALWAYS be loaded every time you equip a role or enter a state.
 
 Example: You are equipping the game-designer role and entering the design state.
 Action: You read the full contents of these files:
@@ -45,7 +47,7 @@ Action: You read the full contents of these files:
 
 # Loading Additional Context
 
-Each state and role definition in FRAME.yml MAY have a `required-context` field with a list of strings. When entering the state, you MUST read every file linked in `required-context` by searching for the file name under `.frames/sdlc/context/`.
+Each state and role definition in FRAME.yml MAY have a `required-context` field with a list of strings. When entering the state or role, you MUST read every file linked in `required-context` by searching for the file name under `.frames/sdlc/context/`.
 
 Example: You are entering the plan state which has a required-context field with the string `TASKS.md` and `PROPOSALS.md`.
 Action: You read the following files:
