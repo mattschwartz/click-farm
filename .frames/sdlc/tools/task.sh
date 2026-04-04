@@ -249,6 +249,72 @@ cmd_list() {
   fi
 }
 
+cmd_blocks() {
+  # Usage: task.sh blocks <blocker_id> <blocked_id> [<blocked_id>...]
+  # Reads as: "task <blocker_id> blocks these tasks"
+  # Adds <blocker_id> to the blocked_on array of each <blocked_id>.
+
+  if [[ $# -lt 2 ]]; then
+    echo "Usage: task.sh blocks <blocker_id> <blocked_id> [<blocked_id>...]" >&2
+    echo "  Marks <blocker_id> as a blocker on each of the listed tasks." >&2
+    exit 1
+  fi
+
+  local blocker="$1"
+  shift
+  local blocked=("$@")
+
+  # Numeric check
+  if ! [[ "$blocker" =~ ^[0-9]+$ ]]; then
+    echo "Error: blocker ID must be a number, got '$blocker'" >&2
+    exit 1
+  fi
+  for id in "${blocked[@]}"; do
+    if ! [[ "$id" =~ ^[0-9]+$ ]]; then
+      echo "Error: blocked ID must be a number, got '$id'" >&2
+      exit 1
+    fi
+    if [[ "$id" == "$blocker" ]]; then
+      echo "Error: a task cannot block itself (#$id)" >&2
+      exit 1
+    fi
+  done
+
+  # Build a JSON array of the blocked IDs for jq
+  local blocked_json
+  blocked_json="$(printf '%s\n' "${blocked[@]}" | jq -s 'map(tonumber)')"
+
+  # Verify blocker exists
+  local blocker_exists
+  blocker_exists="$(jq --argjson id "$blocker" '[.tasks[] | select(.id == $id)] | length' "$TASKS_FILE")"
+  if [[ "$blocker_exists" == "0" ]]; then
+    echo "Error: blocker task #$blocker not found" >&2
+    exit 1
+  fi
+
+  # Verify all blocked tasks exist
+  local missing
+  missing="$(jq -r --argjson ids "$blocked_json" '
+    ($ids - [.tasks[].id]) | .[]
+  ' "$TASKS_FILE")"
+  if [[ -n "$missing" ]]; then
+    echo "Error: task(s) not found: $missing" >&2
+    exit 1
+  fi
+
+  # Append blocker ID to blocked_on of each listed task (dedup with unique)
+  jq --argjson blocker "$blocker" --argjson ids "$blocked_json" '
+    .tasks |= [.[] | if (.id as $tid | $ids | index($tid)) != null
+                      then .blocked_on = ((.blocked_on // []) + [$blocker] | unique)
+                      else . end]
+  ' "$TASKS_FILE" > "${TASKS_FILE}.tmp" && mv "${TASKS_FILE}.tmp" "$TASKS_FILE"
+
+  # Human-readable confirmation
+  local blocked_list
+  blocked_list="$(printf '#%s, ' "${blocked[@]}" | sed 's/, $//')"
+  echo "Task #$blocker now blocks: $blocked_list"
+}
+
 cmd_plan() {
   # Read JSON array from stdin
   local input
@@ -397,6 +463,9 @@ case "$COMMAND" in
   plan)
     cmd_plan "$@"
     ;;
+  blocks)
+    cmd_blocks "$@"
+    ;;
   --help|-h)
     echo "Usage: task.sh <add|complete|get|list|plan> [options]"
     echo ""
@@ -406,6 +475,7 @@ case "$COMMAND" in
     echo "  get <id>                 Get a single task by ID"
     echo "  list [--role r] [--all]  List tasks (default: open only)"
     echo "  plan                     Batch create tasks from a plan (reads JSON array from stdin)"
+    echo "  blocks <id> <id>...      Mark first task as a blocker on all remaining tasks"
     ;;
   *)
     echo "Unknown command: $COMMAND" >&2

@@ -123,11 +123,13 @@ The client is the authority for all gameplay. This is a single-player game. Ther
 - Persists save state to local storage
 - Renders UI
 
-### Server (Python)
+### Server (deferred)
 
-**Responsibility:** Provides optional services that the client cannot handle alone — save backup, leaderboards, seed issuance (if social features are added later).
+**Status:** Deferred at launch. Not being built. This section documents the extension point for when social/multi-device features are committed to.
 
-The server is **not required for the game to function.** The game is fully playable offline and client-only. The server is a future-proofing boundary, not a launch dependency.
+**Responsibility (when built):** Provides optional services that the client cannot handle alone — save backup, leaderboards, seed issuance (if social features are added later).
+
+The server is **not required for the game to function.** The game is fully playable offline and client-only. The server is a future-proofing boundary, not a launch dependency. Revisit when one of these is committed: leaderboards, cross-device cloud saves, or shared/community algorithm seeds.
 
 If/when the server is introduced:
 - Receives save snapshots for cloud backup
@@ -369,9 +371,9 @@ This means every generator contributes to every unlocked platform proportionally
 
 ### Client Framework
 
-**Decision deferred.** The game loop is framework-agnostic by design. The UI framework choice (React, Svelte, Vue, vanilla) does not affect the architecture — the game loop exposes state and accepts actions. The engineer should choose based on what enables the fastest iteration for the UI work ahead.
+**Decision: Vite + React + TypeScript.** Chosen for solo-developer familiarity and ecosystem maturity on a long-lived project of modest complexity. The game loop remains framework-agnostic by design — React is the view-layer binding, nothing more.
 
-**Constraint:** Whatever framework is chosen, the game loop must not import from it. The dependency is one-way: UI → game loop, never reverse.
+**Constraint:** The game loop must not import from React. The dependency is one-way: UI → game loop, never reverse. The game loop is a pure `state → state` function consumed by React components via hooks/context.
 
 ---
 
@@ -381,7 +383,7 @@ This means every generator contributes to every unlocked platform proportionally
 
 2. **Level multiplier curve.** `level_multiplier(level)` in the engagement rate formula — is this linear, polynomial, exponential? Affects balance significantly. Architecture supports any curve; the specific function is a design decision. **Owner: DESIGN**
 
-3. **Server scope and timeline.** The server boundary is defined but the server is not required for launch. When (if ever) to build it depends on whether social features (leaderboards, shared seeds) are prioritized. **Owner: DESIGN/PRODUCT**
+3. ~~**Server scope and timeline.**~~ **Resolved 2026-04-04:** Deferred at launch. Not being built. Revisit when leaderboards, cross-device cloud saves, or shared algorithm seeds become committed features.
 
 ---
 
