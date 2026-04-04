@@ -23,9 +23,10 @@ const ALL_GENERATOR_IDS: GeneratorId[] = [
   'selfies',
   'memes',
   'hot_takes',
-  'reaction_posts',
-  'vlogs',
-  'collabs',
+  'tutorials',
+  'livestreams',
+  'podcasts',
+  'viral_stunts',
 ];
 
 const ALL_PLATFORM_IDS: PlatformId[] = ['chirper', 'instasham', 'grindset'];

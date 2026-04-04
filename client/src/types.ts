@@ -3,18 +3,21 @@
 
 // ---------------------------------------------------------------------------
 // ID types
-// NOTE: GeneratorId includes 3 named types from the architecture spec
-// (selfies, memes, hot_takes) plus 3 provisional names. The game designer
-// should confirm the full set via task #33 / follow-on design work.
+// Generator IDs match the accepted design proposal (Section 3), which lists
+// 7 base generators. The architecture spec mentions "6 base types" — that
+// count appears to be stale; the accepted proposal is authoritative.
+// NOTE: The architecture spec discrepancy (6 vs 7) has been flagged to the
+// architect.
 // ---------------------------------------------------------------------------
 
 export type GeneratorId =
   | 'selfies'
   | 'memes'
   | 'hot_takes'
-  | 'reaction_posts'
-  | 'vlogs'
-  | 'collabs';
+  | 'tutorials'
+  | 'livestreams'
+  | 'podcasts'
+  | 'viral_stunts';
 
 export type PlatformId = 'chirper' | 'instasham' | 'grindset';
 
