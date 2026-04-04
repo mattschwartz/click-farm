@@ -49,14 +49,56 @@ Every task needs a specific, testable completion condition.
 - You SHOULD include what to test and how, because the person completing the task may not know the best way to verify their own work
 - You MUST NOT write done-whens that depend on subjective judgment ("feels good", "looks right"), because those require a design review, not a task completion check. If subjective evaluation is needed, make the review a separate task assigned to the appropriate role.
 
-### 4. Write Tasks to Disk
+### 4. Write the Plan
 
-Write the tasks to the appropriate task queue files.
+Write your plan as a JSON array to a temp file, then submit it via the task tool.
 
 **Constraints:**
-- You MUST write tasks to `tasks/{role}.md` for each assigned role
-- You MUST set the first task in the dependency chain to `next` (or `active` if no dependencies), and subsequent tasks to `backlog`
-- You MUST confirm with the user that the task breakdown is complete and accurate before considering this behavior complete
+- You MUST write the plan to `/tmp/plan-{short-name}.json` first — do NOT pipe JSON inline with heredocs
+- You MUST submit the plan with: `bash tools/task.sh plan < /tmp/plan-{short-name}.json`
+- You MUST confirm with the user that the task breakdown is complete and accurate before submitting
+
+**Plan format:** A JSON array where each element is a task object:
+```json
+[
+  {
+    "alias": "A1",
+    "role": "architect",
+    "state": "design",
+    "title": "Short descriptive title",
+    "requester": "your-role",
+    "complexity": "haiku|sonnet|opus",
+    "overview": "What needs to be done and why.",
+    "related_items": [
+      {"ref": "path/to/file.md", "purpose": "why this is relevant"}
+    ],
+    "acceptance_criteria": [
+      "Testable condition that must be met"
+    ],
+    "open_questions": [],
+    "blocked_on": []
+  },
+  {
+    "alias": "E1",
+    "role": "engineer",
+    "state": "build",
+    "title": "Implement the thing",
+    "requester": "architect",
+    "complexity": "sonnet",
+    "overview": "Implement per the architecture spec.",
+    "acceptance_criteria": ["All tests passing"],
+    "blocked_on": ["A1"]
+  }
+]
+```
+
+**Key fields:**
+- `alias` — short identifier for this task within the plan (e.g. "A1", "E3"). Used only for `blocked_on` references within the same plan.
+- `role` — which role this task is assigned to
+- `state` — which state the assigned role should enter when working on this task
+- `blocked_on` — array of alias strings referencing other tasks in this plan that must complete first. The tool resolves these to integer IDs automatically.
+
+The tool validates that all aliases resolve, assigns real integer IDs, and writes all tasks atomically. If any alias in `blocked_on` doesn't match a task in the plan, the entire batch is rejected.
 
 ### 5. Update Architecture (if needed)
 

@@ -4,6 +4,7 @@
 #
 # Usage:
 #   task.sh add --role <role>        Create a task (reads JSON from stdin)
+#   task.sh plan                     Batch create from a plan (reads JSON array from stdin)
 #   task.sh complete <id>            Mark a task as complete
 #   task.sh get <id>                 Get a single task by ID
 #   task.sh list                     List all open tasks
@@ -60,22 +61,6 @@ validate_task_input() {
       missing+=("$field")
     fi
   done
-
-  # Validate complexity value
-  local complexity
-  complexity="$(echo "$input" | jq -r '.complexity // ""')"
-  if [[ -n "$complexity" && "$complexity" != "haiku" && "$complexity" != "sonnet" && "$complexity" != "opus" ]]; then
-    echo "Error: complexity must be one of: haiku, sonnet, opus (got: $complexity)" >&2
-    return 1
-  fi
-
-  # Validate state value
-  local state
-  state="$(echo "$input" | jq -r '.state // ""')"
-  if [[ -n "$state" && "$state" != "design" && "$state" != "review" && "$state" != "plan" && "$state" != "build" ]]; then
-    echo "Error: state must be one of: design, review, plan, build (got: $state)" >&2
-    return 1
-  fi
 
   if [[ ${#missing[@]} -gt 0 ]]; then
     echo "Error: missing required fields: ${missing[*]}" >&2
@@ -254,6 +239,128 @@ cmd_list() {
   fi
 }
 
+cmd_plan() {
+  # Read JSON array from stdin
+  local input
+  input="$(cat)"
+
+  if [[ -z "$input" ]]; then
+    echo "Error: expected JSON array on stdin" >&2
+    exit 1
+  fi
+
+  # Verify it's an array
+  local count
+  count="$(echo "$input" | jq 'length')" || {
+    echo "Error: invalid JSON" >&2
+    exit 1
+  }
+
+  if [[ "$(echo "$input" | jq 'type')" != '"array"' ]]; then
+    echo "Error: expected JSON array, got $(echo "$input" | jq 'type')" >&2
+    exit 1
+  fi
+
+  if [[ "$count" -eq 0 ]]; then
+    echo "Error: plan is empty" >&2
+    exit 1
+  fi
+
+  # --- pass 1: validate all tasks and check for duplicate aliases ---
+
+  local aliases=()
+  for i in $(seq 0 $((count - 1))); do
+    local task_input
+    task_input="$(echo "$input" | jq ".[$i]")"
+
+    # Check required fields (including role and alias for plan)
+    local missing=()
+    for field in alias role title requester complexity state overview acceptance_criteria; do
+      if ! echo "$task_input" | jq -e ".$field" > /dev/null 2>&1; then
+        missing+=("$field")
+      fi
+    done
+
+    if [[ ${#missing[@]} -gt 0 ]]; then
+      local alias_hint
+      alias_hint="$(echo "$task_input" | jq -r '.alias // "unknown"')"
+      echo "Error: task $alias_hint (index $i) missing required fields: ${missing[*]}" >&2
+      exit 1
+    fi
+
+    local alias
+    alias="$(echo "$task_input" | jq -r '.alias')"
+
+    # Check for duplicate aliases
+    for existing in "${aliases[@]+"${aliases[@]}"}"; do
+      if [[ "$existing" == "$alias" ]]; then
+        echo "Error: duplicate alias '$alias'" >&2
+        exit 1
+      fi
+    done
+    aliases+=("$alias")
+  done
+
+  # --- pass 1.5: build alias→ID map as JSON, assign IDs ---
+
+  local start_id
+  start_id="$(jq '.next_id' "$TASKS_FILE")"
+
+  # Build the map in one jq call: {"A1": 3, "A2": 4, "E1": 5, ...}
+  local alias_map
+  alias_map="$(echo "$input" | jq --argjson start "$start_id" '
+    [to_entries[] | {(.value.alias): ($start + .key)}] | add
+  ')"
+
+  # Validate all blocked_on references resolve
+  local bad_refs
+  bad_refs="$(echo "$input" | jq -r --argjson map "$alias_map" '
+    .[] | .alias as $src | (.blocked_on // [])[] |
+    select($map[.] == null) |
+    "\($src) -> \(.)"
+  ')"
+
+  if [[ -n "$bad_refs" ]]; then
+    echo "Error: unresolved blocked_on references:" >&2
+    echo "$bad_refs" >&2
+    exit 1
+  fi
+
+  # --- pass 2: create all tasks, resolving aliases to IDs (all in jq) ---
+
+  local date_assigned
+  date_assigned="$(date +%Y-%m-%d)"
+
+  local created_tasks
+  created_tasks="$(echo "$input" | jq --argjson map "$alias_map" --arg date "$date_assigned" '
+    [to_entries[] | .value as $t | {
+      id: $map[$t.alias],
+      alias: $t.alias,
+      role: $t.role,
+      state: $t.state,
+      status: "open",
+      date_assigned: $date,
+      title: $t.title,
+      requester: $t.requester,
+      complexity: $t.complexity,
+      overview: $t.overview,
+      related_items: ($t.related_items // []),
+      acceptance_criteria: $t.acceptance_criteria,
+      open_questions: ($t.open_questions // []),
+      blocked_on: [($t.blocked_on // [])[] | $map[.]]
+    }]
+  ')"
+
+  # Write all tasks to the file atomically
+  local new_next_id=$((start_id + count))
+  jq --argjson tasks "$created_tasks" --argjson next "$new_next_id" \
+    '.tasks += $tasks | .next_id = $next' \
+    "$TASKS_FILE" > "${TASKS_FILE}.tmp" && mv "${TASKS_FILE}.tmp" "$TASKS_FILE"
+
+  # Output all created tasks
+  echo "$created_tasks" | jq '.'
+}
+
 # --- dispatch ---
 
 if [[ $# -eq 0 ]]; then
@@ -277,14 +384,18 @@ case "$COMMAND" in
   list)
     cmd_list "$@"
     ;;
+  plan)
+    cmd_plan "$@"
+    ;;
   --help|-h)
-    echo "Usage: task.sh <add|complete|get|list> [options]"
+    echo "Usage: task.sh <add|complete|get|list|plan> [options]"
     echo ""
     echo "Commands:"
     echo "  add --role <role>        Create a task (reads JSON from stdin)"
     echo "  complete <id>            Mark a task as complete"
     echo "  get <id>                 Get a single task by ID"
     echo "  list [--role r] [--all]  List tasks (default: open only)"
+    echo "  plan                     Batch create tasks from a plan (reads JSON array from stdin)"
     ;;
   *)
     echo "Unknown command: $COMMAND" >&2
