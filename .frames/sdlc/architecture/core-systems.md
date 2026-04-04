@@ -2,7 +2,7 @@
 
 > **Scope:** Defines the data model, component boundaries, interface contracts, and technology decisions for Click Farm's core game systems — the Post → Engage → Grow loop, generators, the Algorithm, platforms, economy, offline calculation, and prestige.
 
-> **Not in scope:** Scandal/follower-loss event system (see `architecture/scandal-system.md` when available), visual/UX implementation details, specific tuning values.
+> **Not in scope:** Scandal/follower-loss event system (see `.frames/sdlc/architecture/scandal-system.md` when available), visual/UX implementation details, specific tuning values.
 
 ---
 

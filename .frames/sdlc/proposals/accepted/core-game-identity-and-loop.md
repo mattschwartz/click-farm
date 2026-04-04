@@ -146,7 +146,7 @@ The main alternative considered was playing the social media theme straight — 
 
 ## References
 
-1. `CLAUDE.md` — project description and intended stack (Python backend, Node.js frontend)
+1. `CLAUDE.md` — project description and intended stack (client: Vite + React + TypeScript; server deferred)
 2. MDA Framework (Hunicke, LeBlanc, Zubek, 2004) — aesthetic-first design methodology referenced in game-designer role
 3. Cookie Clicker (Orteil, 2013) — primary genre reference for escalating absurdity and idle-to-strategic arc
 4. Universal Paperclips (Lantz, 2017) — reference for narrative discovery through systems
@@ -167,12 +167,9 @@ The main alternative considered was playing the social media theme straight — 
 
 ---
 
-## Review Log
+# Review: architect
 
-### architect — 2026-04-04
-
-**Assessment:** approve
-
+**Decision**: Aligned
 **Three-currency economy.** The three currencies map cleanly to three distinct lifecycle speeds (fast/medium/slow), which avoids storage and update contention. The directional pipeline (Engagement → Followers → Clout) is sound. Two structural commitments worth flagging:
 - Per-platform follower counts make Platform a full sub-entity with its own state, not just a multiplier. This is the heaviest data model decision in the proposal.
 - Engagement-to-follower conversion is context-dependent (algorithm state, platform affinity, generator type) — this multi-input formula will need a clean contract.

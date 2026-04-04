@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Click Farm — a social media clicker game. The project is in early planning/setup phase with no application code yet. Stack: Vite + React + TypeScript client with localStorage persistence. Server boundary defined in `architecture/core-systems.md` but deferred until social/multi-device features are prioritized.
+Click Farm — a social media clicker game. The project is in early planning/setup phase with no application code yet. Stack: Vite + React + TypeScript client with localStorage persistence. Server boundary defined in `.frames/sdlc/architecture/core-systems.md` but deferred until social/multi-device features are prioritized.
 
 ## You
 

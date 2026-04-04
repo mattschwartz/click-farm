@@ -23,7 +23,7 @@ Each FRAME.yml file contains the following structure:
 name: The name of the frame
 description: The frame's purpose and how it is used
 states: An exhaustive list of states that the frame can be in at any given time. Each state has a behavior definition matching its name in the ./states folder that you MUST load when entering or transitioning into a state.
-roles: An exhaustive list of roles that can be equipped to operate within a state in the frame. Each role has a behavior definition matching its name in the ./states folder that you MUST load when equipping a role.
+roles: An exhaustive list of roles that can be equipped to operate within a state in the frame. Each role has a behavior definition matching its name in the ./roles folder that you MUST load when equipping a role.
 ```
 
 You MUST NOT re-read FRAME.yml. It is already loaded into your context.

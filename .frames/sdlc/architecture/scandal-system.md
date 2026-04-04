@@ -2,7 +2,7 @@
 
 > **Scope:** Defines the data model, pipeline, state machine, and contracts for the Scandal & Follower Loss event system — risk accumulators, scandal events, the PR Response modal, and session snapshots.
 
-> **Not in scope:** Core game loop, generator/platform/economy architecture (see `architecture/core-systems.md`), specific tuning values, visual/UX treatment.
+> **Not in scope:** Core game loop, generator/platform/economy architecture (see `.frames/sdlc/architecture/core-systems.md`), specific tuning values, visual/UX treatment.
 
 > **Dependency:** This system is additive. It bolts onto the core architecture without structural changes. The core game is fully playable without it.
 
@@ -243,7 +243,7 @@ Called when the PR Response window closes. Returns the follower changes to apply
 ```typescript
 interface ScandalStaticData {
   scandalTypes: Record<ScandalTypeId, ScandalTypeDef>;
-  empirScaleCurve: {
+  empireScaleCurve: {
     scaleConstant: number;           // denominator in empire_scale function
   };
   prResponse: {

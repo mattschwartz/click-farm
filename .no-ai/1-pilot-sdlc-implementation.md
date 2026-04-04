@@ -19,7 +19,7 @@ Refer to res/.frames-v1 for artifacts used. Default agent
 9. something randomly changed and now it's not following the frame instructions like it was before
 10. Ok I got it back working in this commit, mostly. Not sure exactly what did it. I think the old FRAME.md (now README.md) was necessary so I just tidied it up and deduped from the FRAME.yml.
 11. unit testing for agentic programming would be super helpful
-12. it can be iffy as to when it starts looking at proposals and things, but it seems overal eventually consistent
+12. it can be iffy as to when it starts looking at proposals and things, but it seems overall eventually consistent
 13. 
 
 ## Lovely example after 1 prompt

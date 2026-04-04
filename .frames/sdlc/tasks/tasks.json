@@ -70,11 +70,11 @@
       "overview": "Write the architecture spec for Click Farm's core game systems. This is the foundational technical document that all engineering tasks depend on. Must cover: data model for all entities (Player, Generator, Platform, Algorithm State, Engagement/Followers/Clout currencies), component boundaries between Python backend and Node.js frontend, interface contracts (API shape between client and server), state management approach, persistence strategy, technology decisions (seeded PRNG for algorithm shifts, calculate-on-open for offline gains). The two accepted proposals define what the game does — this spec defines how the systems that make it work are structured.",
       "related_items": [
         {
-          "ref": "proposals/accepted/core-game-identity-and-loop.md",
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
           "purpose": "The accepted design this architecture must support — covers core loop, generators, algorithm, platforms, economy, prestige, offline rules"
         },
         {
-          "ref": "proposals/accepted/scandals-and-follower-loss.md",
+          "ref": ".frames/sdlc/proposals/accepted/scandals-and-follower-loss.md",
           "purpose": "Stretch goal that bolts onto the core — the core data model should accommodate it without structural changes"
         }
       ],
