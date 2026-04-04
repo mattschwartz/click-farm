@@ -200,7 +200,7 @@
       "alias": "E1",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Project Scaffolding",
       "requester": "architect",
@@ -222,7 +222,8 @@
         "Development environment setup is documented (how to install deps, run dev server, run tests, run build)"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 21,
@@ -253,9 +254,7 @@
         "Unit tests cover entity creation, mutation, persistence round-trip, and constraint violations"
       ],
       "open_questions": [],
-      "blocked_on": [
-        20
-      ]
+      "blocked_on": []
     },
     {
       "id": 22,
