@@ -21,6 +21,10 @@ At the beginning of a session, you MUST identify all the proposals and their cur
 └───────────────────────────┴─────────────────────────────────┴──────────┴─────────────────────────────────────────────────────────────────────────────────────────┘
 4. Lastly, you SHOULD suggest where to go next and how to do so. For example: "The Core Game Identity & Loop proposal has been accepted. Would you like to decompose into a technical plan with the architect role?"
 
+# Reading Tasks & Understanding Board Status
+
+Each role has their own task file under `./tasks` (eg `./tasks/architect.md`). To quickly check if a role has work to do, get the file size of each task list. A nonzero file size means that role has at least one task and needs to be invoked. You SHOULD NOT read any tasks until you equip a role and only then should you only ever look at that role's task list.
+
 ---
 
 # Cooperation & Collaborative Behavior with Your Team

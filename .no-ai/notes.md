@@ -115,6 +115,7 @@ Polly's other thoughts on using vague directives intentionally
 - [principle] you need to spend the time really thinking through what context/directives need to be explicit, what needs to be suggested, what needs to be intentional left open/vague
 - [theory] minimal viable scaffolding to avoid the "checking boxes" behavior? -Polly 
   - scaffolding is definitely the right word - it's how much do you want the agent to have to hold onto vs how much do you want them to bring to the table to improvise on how to hold onto it. so it's about what you want. sometimes you _want_ box checking, but sometimes you want there to be "thought" behind the box, so you can instruct the agent more vaguely and tell it to use more judgment rather than holding onto facts (like a checkbox mentality would have you do)
+- [observation] game designer is doing pretty well going from conversation -> draft proposal -> and even creating tasks for the reviewers to check it out
 
 SKills from polly
   1. "Capability packages with instructions and tools, loaded on-demand." — A skill is a bundle of a prompt (instructions) + tool access, packaged together. It's not loaded into the conversation until you actually
