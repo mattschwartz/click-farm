@@ -167,7 +167,7 @@
       "alias": "U2",
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Scandal UX Spec",
       "requester": "architect",
@@ -194,7 +194,8 @@
       "open_questions": [],
       "blocked_on": [
         17
-      ]
+      ],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 20,
@@ -604,7 +605,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        19,
         30
       ]
     },
@@ -708,7 +708,7 @@
       "id": 35,
       "role": "architect",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Correct '6 base generator types' count in architecture spec",
       "requester": "engineer",
@@ -729,7 +729,8 @@
         "The generator ID examples in core-systems.md are updated to include the full list: selfies, memes, hot_takes, tutorials, livestreams, podcasts, viral_stunts"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     }
   ]
 }
