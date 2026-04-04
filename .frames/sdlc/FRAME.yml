@@ -52,6 +52,7 @@ roles:
 
   - name: architect
     description: The architect owns every decision about how systems connect, where boundaries are drawn, and what shape data takes as it moves between components.
+    required-context: [ARCHITECTURE.md]
     knowledge-domain:
       - How systems connect to each other
       - What shape data takes as it moves between components
@@ -81,6 +82,7 @@ roles:
   
   - name: engineer
     description: The engineer owns every decision about how code is written, how it behaves at runtime, and whether it satisfies the task's done-when.
+    required-context: [ARCHITECTURE.md]
     knowledge-domain:
       - Whether something is technically possible within the current codebase
       - How long an implementation will take or what effort it requires
