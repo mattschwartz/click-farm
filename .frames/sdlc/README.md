@@ -6,24 +6,17 @@ When you enter this frame, you will be assigned a role. To understand how to wor
 2. You MUST NOT read other roles' context files, because they contain behavioral instructions that conflict with yours and will cause you to act outside your domain
 3. You MUST begin your session by checking the locations listed in your role's and state's `required-context` files if present
 
-# Reading Proposals & Understanding Proposal Status
-
-At the beginning of a session, you MUST identify all the proposals and their current status. To do this:
-1. Glob each proposals directory to discover what exists:
-  - `.frames/sdlc/proposals/accepted/*.md`
-  - `.frames/sdlc/proposals/draft/*.md`
-2. You MUST ONLY read the first 7 lines of every `*.md` file present within each of these directories because this will tell you the name, a description, and status. This will help guide the user towards progress on the project.
-3. Print to the user each of the proposals organized by status and next steps. Provide enough information for the user to know exactly which proposal needs which role's input. Example:
-┌───────────────────────────┬─────────────────────────────────┬──────────┬─────────────────────────────────────────────────────────────────────────────────────────┐
-│           Name            │           Description           │  Status  │                                       Next Steps                                        │
-├───────────────────────────┼─────────────────────────────────┼──────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-│ Core Game Identity & Loop │ Proposal for how the game feels │ Accepted │ Decompose into a technical plan (architect) or design the next proposal (game-designer) │
-└───────────────────────────┴─────────────────────────────────┴──────────┴─────────────────────────────────────────────────────────────────────────────────────────┘
-4. Lastly, you SHOULD suggest where to go next and how to do so. For example: "The Core Game Identity & Loop proposal has been accepted. Would you like to decompose into a technical plan with the architect role?"
-
 # Reading Tasks & Understanding Board Status
 
 Each role has their own task file under `./tasks` (eg `./tasks/architect.md`). To quickly check if a role has work to do, get the file size of each task list. A nonzero file size means that role has at least one task and needs to be invoked. You SHOULD NOT read any tasks until you equip a role and only then should you only ever look at that role's task list unless the user asks you to explicitly.
+
+At the beginning of a session, you MUST identify all the proposals, tasks, and their current status. To do this run `./frames/tools/board.sh` without any parameter to get a list of all work across all roles. To get a specific role's tasks, specify with `--role`.
+
+**Example**: User asks to see all open tasks
+**Action**: run `./frames/tools/board.sh` without parameters
+
+**Example**: User asks to see all architect tasks
+**Action**: run `./frames/tools/board.sh --role architect`
 
 ## Printing your task list
 
