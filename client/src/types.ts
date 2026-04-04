@@ -155,8 +155,31 @@ export interface GeneratorDef {
   follower_conversion_rate: number;
   /** How much Algorithm state affects output. [0, 1]. */
   trend_sensitivity: number;
-  /** Total followers required to unlock. */
+  /** Total followers required to unlock (appear in the shop). */
   unlock_threshold: number;
+  /**
+   * Engagement cost to buy the first unit.
+   * Subsequent units cost more: base_buy_cost × buy_cost_multiplier^count_owned.
+   * TODO(game-designer): provisional values — tune during balance pass.
+   */
+  base_buy_cost: number;
+  /**
+   * Cost multiplier per additional unit already owned.
+   * Industry standard for clicker games: 1.15 gives a gentle but compounding curve.
+   * TODO(game-designer): provisional — tune during balance pass.
+   */
+  buy_cost_multiplier: number;
+  /**
+   * Engagement cost to upgrade from level 1 → 2.
+   * Each subsequent level costs 4× the previous: base_upgrade_cost × 4^(currentLevel - 1).
+   *
+   * Note: the design proposal mentions three upgrade tracks (quality, frequency,
+   * platform optimization). The architecture spec consolidated these into a single
+   * `level` field and `levelMultiplier`. If distinct tracks are reinstated, this
+   * field will need to be replaced with per-track cost arrays.
+   * TODO(game-designer): provisional — tune during balance pass.
+   */
+  base_upgrade_cost: number;
 }
 
 export interface PlatformDef {

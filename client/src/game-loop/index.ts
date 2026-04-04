@@ -28,6 +28,7 @@ import {
   checkPlatformUnlocks,
   computeFollowerDistribution,
 } from '../platform/index.ts';
+import { checkGeneratorUnlocks } from '../generator/index.ts';
 import { syncTotalFollowers } from '../model/index.ts';
 
 // ---------------------------------------------------------------------------
@@ -261,7 +262,14 @@ export function tick(
   // 7. Check platform unlocks using the freshly-synced total.
   platforms = checkPlatformUnlocks(platforms, player.total_followers, staticData);
 
-  // 8. Advance algorithm shifts up to `now`.
+  // 8. Check generator unlocks using the freshly-synced total.
+  const generators = checkGeneratorUnlocks(
+    state.generators,
+    player.total_followers,
+    staticData,
+  );
+
+  // 9. Advance algorithm shifts up to `now`.
   const algorithm = advanceAlgorithm(
     state.algorithm,
     player.algorithm_seed,
@@ -269,7 +277,7 @@ export function tick(
     staticData,
   );
 
-  return { player, generators: state.generators, platforms, algorithm };
+  return { player, generators, platforms, algorithm };
 }
 
 // ---------------------------------------------------------------------------

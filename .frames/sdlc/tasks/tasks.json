@@ -296,7 +296,7 @@
       "alias": "E4",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Generator System",
       "requester": "architect",
@@ -322,7 +322,8 @@
         "Tests cover: generator output calculation, upgrade effects, trend sensitivity modification, unlock thresholds"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 24,
@@ -422,9 +423,7 @@
         "Integration tests verify multi-system interactions with realistic play scenarios"
       ],
       "open_questions": [],
-      "blocked_on": [
-        23
-      ]
+      "blocked_on": []
     },
     {
       "id": 27,
@@ -513,6 +512,10 @@
         },
         {
           "ref": "proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Core loop, generator roster, algorithm visualization intent, going viral moment"
+        },
+        {
+          "ref": "ux/core-game-screen.md",
           "purpose": "Core loop, generator roster, algorithm visualization intent, going viral moment"
         }
       ],
