@@ -263,7 +263,7 @@ function calculateRebrand(state: GameState): RebrandResult;
 function applyRebrand(state: GameState, result: RebrandResult): GameState;
 ```
 
-`calculateRebrand` computes Clout earned from `lifetime_followers` (current run contribution). `applyRebrand` resets engagement, generators (to unowned), platforms (to locked, minus headstarts), follower counts to zero, increments `rebrand_count`, applies new seed, preserves `clout` and `clout_upgrades`.
+`calculateRebrand` computes Clout earned from `total_followers` (sum of current platform follower counts, resets on rebrand — not `lifetime_followers`, which compounds across runs). `applyRebrand` resets engagement, generators (to unowned), platforms (to locked, minus headstarts), follower counts to zero, increments `rebrand_count`, applies new seed, preserves `clout` and `clout_upgrades`.
 
 ### Client → Server (future)
 
@@ -379,9 +379,9 @@ This means every generator contributes to every unlocked platform proportionally
 
 ## Open Questions
 
-1. **Clout-to-follower scaling curve for rebrand.** The formula for how many Clout points a rebrand earns based on lifetime followers is a game design question — it determines the prestige pacing. The architecture supports any monotonically increasing function, but the specific curve needs to come from the game designer. **Owner: DESIGN**
+1. ~~**Clout-to-follower scaling curve for rebrand.**~~ **Resolved 2026-04-04:** `clout_awarded = floor(sqrt(total_followers) / 10)`. Uses `total_followers` (current run, resets on rebrand) — not `lifetime_followers`. Divisor `10` is the single tuning knob. First clean milestone: 10,000 followers → 10 Clout (assumes first-tier upgrade costs ~10 Clout). See `.frames/sdlc/proposals/draft/clout-to-follower-scaling-curve.md` for full rationale and value table. Note: `calculateRebrand` comment should be updated to clarify it uses `total_followers`.
 
-2. **Level multiplier curve.** `level_multiplier(level)` in the engagement rate formula — is this linear, polynomial, exponential? Affects balance significantly. Architecture supports any curve; the specific function is a design decision. **Owner: DESIGN**
+2. ~~**Level multiplier curve.**~~ **Resolved 2026-04-04:** Super-exponential curve — `level_multiplier(level) = 2^(level² / 5)`. Per-generator, independent. Typical run ceiling is level 7–8 (891×–7,225×); levels 9–10 are post-prestige territory (75k×–1M×). The denominator `5` is the single tuning knob. See `.frames/sdlc/proposals/draft/level-multiplier-curve.md` for full rationale and value table.
 
 3. ~~**Server scope and timeline.**~~ **Resolved 2026-04-04:** Deferred at launch. Not being built. Revisit when leaderboards, cross-device cloud saves, or shared algorithm seeds become committed features.
 

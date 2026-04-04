@@ -1,5 +1,5 @@
 {
-  "next_id": 34,
+  "next_id": 36,
   "tasks": [
     {
       "id": 1,
@@ -132,7 +132,7 @@
       "alias": "U1",
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Core Game Screen UX Spec",
       "requester": "architect",
@@ -159,14 +159,15 @@
         "Spec addresses mid-game density problem with clear hierarchy decisions"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 19,
       "alias": "U2",
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Scandal UX Spec",
       "requester": "architect",
@@ -193,42 +194,45 @@
       "open_questions": [],
       "blocked_on": [
         17
-      ]
+      ],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 20,
       "alias": "E1",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Project Scaffolding",
       "requester": "architect",
       "complexity": "sonnet",
-      "overview": "Set up the project structure for Click Farm per the core systems architecture spec. Python backend, Node.js frontend, build tooling, development environment, and project configuration. The architecture spec defines the component boundaries — this task creates the skeleton that all subsequent engineering tasks build on.",
+      "overview": "Set up the client project structure for Click Farm per the core systems architecture spec. Vite + React + TypeScript client under ./client, with module skeleton matching the spec's component boundaries (game-loop, save, static-data, offline, ui). localStorage-based persistence. No server — server boundary is deferred per spec (resolved 2026-04-04). This task creates the skeleton that all subsequent engineering tasks build on.",
       "related_items": [
         {
           "ref": "architecture/core-systems.md",
-          "purpose": "Defines component boundaries, technology decisions, and project structure requirements"
+          "purpose": "Defines component boundaries, technology decisions (Vite+React+TS, localStorage, no server at launch), and project structure requirements"
         }
       ],
       "acceptance_criteria": [
-        "Python backend project is initialized with dependency management and a runnable entry point",
-        "Node.js frontend project is initialized with build tooling and a runnable dev server",
-        "Backend and frontend can communicate per the interface contract in the architecture spec",
-        "Development environment setup is documented (how to install deps, run backend, run frontend)",
-        "Project structure matches the component boundaries defined in the architecture spec",
-        "A basic health-check or hello-world endpoint confirms the stack works end-to-end"
+        "Client project is initialized under ./client using Vite + React + TypeScript with strict mode enabled",
+        "Dev server runs via `npm run dev` and serves a minimal hello-world page that confirms the stack works end-to-end",
+        "Production build works via `npm run build`",
+        "Module skeleton directories exist under client/src matching the architecture spec's component boundaries: game-loop, save, static-data, offline, ui",
+        "A test runner (Vitest) is configured and `npm test` runs successfully with at least one passing smoke test",
+        "Linter (ESLint) is configured and `npm run lint` runs clean",
+        "Development environment setup is documented (how to install deps, run dev server, run tests, run build)"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 21,
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Core Data Model & State Management",
       "requester": "architect",
@@ -252,16 +256,15 @@
         "Unit tests cover entity creation, mutation, persistence round-trip, and constraint violations"
       ],
       "open_questions": [],
-      "blocked_on": [
-        20
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 22,
       "alias": "E3",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Game Loop: Post → Engage → Grow",
       "requester": "architect",
@@ -285,10 +288,8 @@
         "Tests verify the full Post → Engage → Grow pipeline with known inputs and expected outputs"
       ],
       "open_questions": [],
-      "blocked_on": [
-        21,
-        33
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 23,
@@ -321,17 +322,14 @@
         "Tests cover: generator output calculation, upgrade effects, trend sensitivity modification, unlock thresholds"
       ],
       "open_questions": [],
-      "blocked_on": [
-        21,
-        33
-      ]
+      "blocked_on": []
     },
     {
       "id": 24,
       "alias": "E5",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Algorithm System (Seeded PRNG)",
       "requester": "architect",
@@ -357,16 +355,15 @@
         "Tests cover: deterministic schedule generation, state transitions, modifier application, time-advancement"
       ],
       "open_questions": [],
-      "blocked_on": [
-        21
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 25,
       "alias": "E6",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Platform System",
       "requester": "architect",
@@ -392,9 +389,8 @@
         "Tests cover: platform unlocking, affinity modifiers, cross-posting output calculation, independent follower tracking"
       ],
       "open_questions": [],
-      "blocked_on": [
-        21
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 26,
@@ -427,11 +423,7 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        22,
-        23,
-        24,
-        25,
-        33
+        23
       ]
     },
     {
@@ -465,7 +457,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        24,
         26
       ]
     },
@@ -501,8 +492,7 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        26,
-        32
+        26
       ]
     },
     {
@@ -538,7 +528,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        18,
         26
       ]
     },
@@ -616,7 +605,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        19,
         30
       ]
     },
@@ -624,7 +612,7 @@
       "id": 32,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Define Clout-to-Follower Scaling Curve for Rebrand",
       "requester": "architect",
@@ -648,13 +636,14 @@
         "Blocks task 28 (Prestige: The Rebrand) — result must be available before that task is built"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 33,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Define Level Multiplier Curve for Engagement Rate Formula",
       "requester": "architect",
@@ -678,7 +667,70 @@
         "Blocks tasks 22, 23, 26 — result must be available before those tasks are built"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 34,
+      "role": "game-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-04",
+      "title": "Confirm the 6 base generator types",
+      "requester": "engineer",
+      "complexity": "haiku",
+      "overview": "The engineer implemented the data model (task #21) using 3 generator IDs named in the architecture spec (selfies, memes, hot_takes) plus 3 provisional names (reaction_posts, vlogs, collabs). The full set of 6 base content types needs to be confirmed or corrected by the game designer before the generator system (task #23) is built.",
+      "related_items": [
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "Defines the generator entity and notes '6 base types' with examples selfies, memes, hot_takes"
+        },
+        {
+          "ref": "proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Design context for what content types should feel like to the player"
+        }
+      ],
+      "acceptance_criteria": [
+        "All 6 generator IDs are named and confirmed (or the provisional names are explicitly approved)",
+        "A brief description of each generator's content type is provided so the game designer's intent is clear to the engineer",
+        "The confirmed list is written into a design note or accepted proposal so the engineer can update src/types.ts and src/static-data/index.ts"
+      ],
+      "open_questions": [
+        {
+          "question": "Are reaction_posts, vlogs, and collabs the right content types for the remaining 3 generators, or should they be replaced?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 35,
+      "role": "architect",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-04",
+      "title": "Correct '6 base generator types' count in architecture spec",
+      "requester": "engineer",
+      "complexity": "haiku",
+      "overview": "The architecture spec (core-systems.md) says '6 base types' for generators, but the accepted design proposal (Section 3) lists 7: selfies, memes, hot_takes, tutorials, livestreams, podcasts, viral_stunts. Task #23 also says 'All 7 base generators.' The engineer used the proposal as the authoritative source and has implemented 7 generators in types.ts and static-data. The architecture spec count should be corrected to avoid future confusion.",
+      "related_items": [
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "Line reading 'Generator: 6 base types' needs to be updated to 7"
+        },
+        {
+          "ref": "proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Section 3 — authoritative list of 7 generators"
+        }
+      ],
+      "acceptance_criteria": [
+        "The generator count in core-systems.md is corrected to 7",
+        "The generator ID examples in core-systems.md are updated to include the full list: selfies, memes, hot_takes, tutorials, livestreams, podcasts, viral_stunts"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     }
   ]
 }

@@ -117,6 +117,16 @@ reviewers: []
 ```
 File moved to `.frames/sdlc/proposals/accepted/`.
 
+## Commit
+
+After updating the frontmatter, commit the proposal file.
+
+**Constraints:**
+- You MUST stage only the proposal file — use its explicit path with `git add`, because other files in the repo are not part of this review
+- If the proposal was moved from `proposals/draft/` to `proposals/accepted/`, you MUST stage both the deletion and the new file (`git add` both paths)
+- You MUST verify with `git status` before committing
+- You MUST write a commit message following the project commit format (see `context/COMMITS.md`)
+
 ## Troubleshooting
 
 ### You disagree with another reviewer's assessment

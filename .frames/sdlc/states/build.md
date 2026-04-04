@@ -60,14 +60,34 @@ Write tests and verify the implementation.
 - If you encounter pre-existing test failures, You MUST fix them, because the codebase must be healthier when you leave than when you arrived
 - If a pre-existing failure is genuinely outside your ability to fix, You MUST surface it as a blocker with a clear description of what's wrong and what decision is needed
 
-### 5. Complete the Task
+### 5. Validate
 
-Mark the task done and provide verification steps.
+Present validation steps to the user and wait for their confirmation before committing.
 
 **Constraints:**
-- You MUST close with a **Validation section** — specific, actionable steps the user can follow to verify the work is correct. Not descriptions of what you built. Actual things to do: run this command, open this URL, click this, observe that.
+- You MUST provide a **Validation section** — specific, actionable steps the user can follow to verify the work is correct. Not descriptions of what you built. Actual things to do: run this command, open this URL, click this, observe that.
+- You MUST explicitly ask the user if they are ready to commit, because the user must confirm the work is correct before it is committed
+- You MUST NOT proceed to the Commit step until the user confirms they are ready, because a commit is harder to undo than a pause
+
+### 6. Complete the Task
+
+Mark the task done so that `tasks.json` reflects the completed state before it is committed.
+
+**Constraints:**
+- You MUST mark the task complete using `bash .frames/sdlc/tools/task.sh complete <id>`
 - You MUST NOT consider the task complete until the done-when condition is satisfied and all tests pass
 - If completing this task unblocks other tasks (check their dependencies), You SHOULD note which tasks are now unblocked, because the next planning session needs to know what's ready
+
+### 7. Commit
+
+Commit your changes, including the updated `tasks.json`.
+
+**Constraints:**
+- You MUST stage only the files you modified — use explicit file paths with `git add`, never `git add -A` or `git add .`, because blanket staging picks up unrelated changes and pollutes the commit
+- You MUST include `tasks/tasks.json` in the staged files, because the task completion is part of this commit
+- You MUST verify what you are about to commit with `git status` before committing, because a commit that contains unintended files is harder to undo than a commit that was checked first
+- You MUST write a commit message following the project commit format (see `context/COMMITS.md`)
+- You MUST NOT commit if tests are failing, because a broken commit is worse than no commit
 
 ## Troubleshooting
 

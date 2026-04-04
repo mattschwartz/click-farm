@@ -122,6 +122,28 @@ Polly's other thoughts on using vague directives intentionally
     2. You MUST ONLY enter one role per session.
     3. You MUST ONLY enter one state per session.
 - [learning] useful to inspect tool use, file use, look for optimizations (how can you accept/reject less often, how can you make the agent find the right tool at the right time)
+- [observation] i asked default agent to autonomously pick up the next task all on its own based on priority, which it did, but when it loaded the task it recognized and flagged a contradiction in its chain of thought; "⏺ Stop — the task contradicts the architecture spec, and I need to surface this before scaffolding." and "  The architecture spec was finalized today (2026-04-04), and the task was assigned today. The task overview appears to reflect an earlier draft before the server-deferred decision was locked in. The spec is
+  authoritative per engineer protocol; I MUST NOT route around it by silently building either option."
+- [observation] engineer/build flagging discrepencies (continuation so with context)
+  - ⏺ Wait — before starting task #24 I need to flag something I just spotted in the proposal.
+
+  The proposal (Section 3) lists 7 generators: Selfies, Memes, Hot Takes, Tutorials, Livestreams, Podcasts,
+   Viral Stunts. Task #23 also says "All 7 base generators." But the architecture spec says "6 base types"
+  and task #21 I just completed used provisional names based on that number.
+
+  The correct generator IDs are already defined in the accepted proposal. I need to fix types.ts and
+  static-data before implementing task #24, since algorithm state modifiers are keyed per generator. I'll
+  also close task #34 since the answer was in the proposal all along.
+
+  The architecture spec's "6 base types" appears to be a stale count — the accepted design is the authority
+   here. I'll note the discrepancy for the architect.
+- [observation] potentially related to Frank's introspective nature, he had this thought:
+  - Before I write, one thing to note: the architect's specs live at .frames/sdlc/architecture/*.md as
+  standalone docs. I'll mirror that convention and put the UX spec at .frames/sdlc/ux/core-game-screen.md.
+  That matches what the engineer will expect to find.
+- [observation] agent flagged an implicitly defined rule (but didn't prevent itself from doing it, so..): "Task is assigned to architect with state: build, but build is engineer-only. Per protocol I must stop and flag this."
+- [observation] unit tests help the agent orient when it breaks things that previously worked, which is why they're still useful even if they're the ones writing them
+- 
 
 SKills from polly
   1. "Capability packages with instructions and tools, loaded on-demand." — A skill is a bundle of a prompt (instructions) + tool access, packaged together. It's not loaded into the conversation until you actually
