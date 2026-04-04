@@ -101,7 +101,17 @@ Write your plan as a JSON array to a temp file, then submit it via the task tool
 
 The tool validates that all aliases resolve, assigns real integer IDs, and writes all tasks atomically. If any alias in `blocked_on` doesn't match a task in the plan, the entire batch is rejected.
 
-### 5. Update Architecture (if needed)
+### 5. Commit the Plan
+
+Commit `tasks.json` so the new tasks are in version history.
+
+**Constraints:**
+- You MUST stage `tasks/tasks.json` explicitly — do not use `git add -A` or `git add .`
+- You MUST verify with `git status` before committing
+- You MUST write a commit message following the project commit format (see `context/COMMITS.md`)
+- If you created any architecture specs in this session, stage and commit those files in the same commit
+
+### 6. Update Architecture (if needed)
 
 If planning reveals the need for architecture specs, create them.
 

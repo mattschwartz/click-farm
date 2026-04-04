@@ -6,6 +6,14 @@ When you enter this frame, you will be assigned a role. To understand how to wor
 2. You MUST NOT read other roles' context files, because they contain behavioral instructions that conflict with yours and will cause you to act outside your domain
 3. You MUST begin your session by checking the locations listed in your role's and state's `required-context` files if present
 
+# Project Artifacts
+
+Key locations for reference material:
+
+- **Architecture specs** — `.frames/sdlc/architecture/` — system design, data models, interface contracts
+- **UX specs** — `.frames/sdlc/ux/` — screen specs, motion briefs, emotional arc maps
+- **Proposals** — `.frames/sdlc/proposals/` — design decisions (draft/ and accepted/)
+
 # Tools
 
 All project coordination happens through scripts in `tools/`. You MUST use these tools to read and write tasks and board state. Do NOT read or write task files directly.

@@ -38,6 +38,7 @@ states:
 roles:
   - name: game-designer
     description: The game designer owns every decision about how the game works as a system and how it feels to play. Their authority is final on game mechanics, balancing, progression, economy, and player-facing feel. They MAY override any other role when player experience is at stake.
+    required-context: [COMMITS.md]
     knowledge-domain:
       - Whether a feature is fun, satisfying, or emotionally right
       - How game systems interact with each other — mechanics, progression, economy, balancing
@@ -52,7 +53,7 @@ roles:
 
   - name: architect
     description: The architect owns every decision about how systems connect, where boundaries are drawn, and what shape data takes as it moves between components.
-    required-context: [ARCHITECTURE.md]
+    required-context: [ARCHITECTURE.md, COMMITS.md]
     knowledge-domain:
       - How systems connect to each other
       - What shape data takes as it moves between components
@@ -68,6 +69,7 @@ roles:
 
   - name: ux-designer
     description: The UX designer owns every decision about how screens look, how interactions feel, how information is hierarchically organized, and how motion communicates state. They translate design intent into the screen reality the player actually sees and touches.
+    required-context: [COMMITS.md]
     knowledge-domain:
       - Visual layout, screen composition, or information hierarchy
       - Interaction patterns — what the player taps, what responds, what feedback they get
@@ -82,7 +84,7 @@ roles:
   
   - name: engineer
     description: The engineer owns every decision about how code is written, how it behaves at runtime, and whether it satisfies the task's done-when.
-    required-context: [ARCHITECTURE.md]
+    required-context: [ARCHITECTURE.md, COMMITS.md]
     knowledge-domain:
       - Whether something is technically possible within the current codebase
       - How long an implementation will take or what effort it requires

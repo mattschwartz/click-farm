@@ -302,6 +302,14 @@ This is iterative. Each refinement makes the environment slightly more precise, 
 
 **Why this matters:** An environment you never refine drifts. The agent adapts to your prompting style instead of the environment's structure, and you become a load-bearing part of the system. Continuous inspection keeps the environment honest and the agent's behavior rooted in structure, not habit.
 
+### Unit tests as orientation tools
+
+There's a common objection to agent-written tests: if the agent wrote the tests, won't it just write tests that pass its own assumptions? Yes — and that's not the point. The value of agent-written tests isn't catching the agent's blind spots. It's giving the agent a signal when it breaks something that previously worked.
+
+When an agent makes a change and the test suite lights up, it knows exactly where to look. Without tests, a regression is invisible until the behavior surfaces somewhere unexpected — often far from the cause. With tests, the failure is immediate, localized, and actionable.
+
+Agent-written tests are orientation tools, not correctness guarantees. They're still worth having.
+
 ### Exercise — Post-mortem
 Take a real agent failure. Walk through the debugging loop together. Identify the root cause. Write the fix. Verify it worked.
 
