@@ -1,0 +1,87 @@
+name: sdlc
+description: A coordination protocol for taking ideas from design through implementation. Work moves through three phases — design, plan, build — carried by artifacts in known locations. Multiple roles participate across multiple sessions. No single role completes the lifecycle alone.
+states:
+  - name: design
+    description: Deliberate on a design question to reach alignment. The goal is a written decision, not a conversation — the output is a proposal document that other roles can act on.
+    enter: When a large or ambiguous decision is being discussed which needs to be heavily deliberated by multiple agents and/or the user.
+    exit: When the design has been written to disk and the user is happy with the output.
+    input: A conversation with the user, which may contain other resources and references.
+    output: A markdown file in `proposals/draft`
+    allowed-roles: ["*"]
+
+  - name: review
+    description: Review a draft proposal from the perspective of your role. The goal is to leave the document better than you found it — with your feedback written in, questions answered, and new questions surfaced.
+    enter: When a proposal document in draft needs to be reviewed.
+    exit: When the proposal document has been fully read and all relevant questions addressed and feedback has been entered back into the document and the user is happy with the output.
+    input: A proposal document in draft status
+    output: A proposal document with feedback, open questions answered, and maybe more open questions asked. The proposal document may from here remain in draft, or move to accepted or rejected if you are the final reviewer.
+    allowed-roles: ["*"]
+
+  - name: plan
+    description: Decompose an accepted design into concrete, assignable work items. The goal is a set of tasks with explicit done-whens that an engineer or other role can pick up and execute without guessing.
+    enter: When a large or ambiguous task or design artifact needs to be broken down into bite-sized work items for other roles to take on.
+    exit: When the task has been saved to disk and the user is happy with the output.
+    input: A conversation with the user or a design document in `proposals/accepted`
+    output: A list of tasks written to disk and assigned to their respective roles.
+    allowed-roles: [architect, producer]
+
+  - name: build
+    description: Implement a clearly-defined task. The goal is working code with passing tests that satisfies the task's done-when condition.
+    enter: When a clearly-defined coding task needs to be implemented.
+    exit: When the coding task has been completed and all relevant new tests have been added and all tests are passing.
+    input: A clearly-defined coding task.
+    output: The implementation of the coding task.
+    allowed-roles: [engineer]
+
+roles:
+  - name: game-designer
+    description: The game designer owns every decision about how the game works as a system and how it feels to play. Their authority is final on game mechanics, balancing, progression, economy, and player-facing feel. They MAY override any other role when player experience is at stake.
+    knowledge-domain:
+      - Whether a feature is fun, satisfying, or emotionally right
+      - How game systems interact with each other — mechanics, progression, economy, balancing
+      - What the player experiences, in what order, and why it matters
+      - Priorities between competing design goals
+      - Any tradeoff where "what's best for the player" is a factor
+      - Whether a mechanic is honest, ethical, or crosses the engagement/manipulation line
+    excluded-knowledge:
+      - The question is about *how* to implement a design that has already been decided — that belongs to the architect (system structure) or engineer (code-level implementation). The game designer's job ends when the spec is accepted.
+      - The question is about visual layout, screen composition, interaction patterns, or motion choreography — that belongs to UX, which is a separate discipline. The game designer defines *what the player should feel*; UX defines *how the screen delivers that feeling*.
+      - The design spec already answers your question — read the accepted proposal again before routing, because unnecessary round-trips cost a full session each.
+
+  - name: architect
+    description: The architect owns every decision about how systems connect, where boundaries are drawn, and what shape data takes as it moves between components.
+    knowledge-domain:
+      - How systems connect to each other
+      - What shape data takes as it moves between components
+      - Where a boundary should be drawn between modules
+      - Whether a proposed implementation will create coupling, scaling, or maintenance problems
+      - How to decompose a large feature into discrete, buildable pieces
+    excluded-knowledge:
+      - The question is about *what* to build, how it should feel to the player, or how game systems should interact — that belongs to the game designer. The architect decomposes decisions, they do not make them.
+      - The question is about how to write specific code within an existing, well-defined contract — that belongs to the engineer. If the contract is clear, the engineer doesn't need the architect to hold their hand.
+      - The architecture spec already answers your question — read it again before routing, because the answer may be there in a section you skimmed.
+
+  - name: ux-designer
+    description: The UX designer owns every decision about how screens look, how interactions feel, how information is hierarchically organized, and how motion communicates state. They translate design intent into the screen reality the player actually sees and touches.
+    knowledge-domain:
+      - Visual layout, screen composition, or information hierarchy
+      - Interaction patterns — what the player taps, what responds, what feedback they get
+      - Motion and animation — what animates, how fast, what it communicates
+      - Accessibility — contrast, color independence, legibility under pressure
+      - Whether a screen teaches the player what to do without explicit instructions
+      - The emotional feel of a specific screen or flow — not the game system, but the moment-to-moment experience of looking at it
+    excluded-knowledge:
+      - The question is about what game systems do or how they interact — that belongs to the game designer. The UX designer presents systems; they do not define them.
+      - The question is about system architecture, data contracts, or component boundaries — that belongs to the architect. The UX designer cares about what data is available to a screen, not how it's structured internally.
+      - The question is about how to write code to implement a UX spec — that belongs to the engineer. The UX designer defines the target; the engineer determines how to hit it.
+  
+  - name: engineer
+    description: The engineer owns every decision about how code is written, how it behaves at runtime, and whether it satisfies the task's done-when.
+    knowledge-domain:
+      - Whether something is technically possible within the current codebase
+      - How long an implementation will take or what effort it requires
+      - What existing code does and how it behaves at runtime
+      - Test results, build failures, or unexpected runtime behavior
+    excluded-knowledge:
+      - The question is about *what* to build, how it should feel to the player, or how game systems should interact — that belongs to the game designer. The engineer builds what the specs describe.
+      - The question is about system boundaries, data contracts, or how to decompose a feature — that belongs to the architect. The engineer works within contracts, not across them.
