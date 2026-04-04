@@ -21,8 +21,8 @@ Each FRAME.yml file contains the following structure:
 ```yml
 name: The name of the frame
 description: The frame's purpose and how it is used
-states: An exhaustive list of states that the frame can be in at any given time. Each state has a behavior definition matching its name in the ./behaviors folder that you MUST load when entering or transitioning into a state.
-roles: An exhaustive list of roles that can be equipped to operate within a state in the frame. Each role has a behavior definition matching its name in the ./behaviors folder that you MUST load when equipping a role.
+states: An exhaustive list of states that the frame can be in at any given time. Each state has a behavior definition matching its name in the ./states folder that you MUST load when entering or transitioning into a state.
+roles: An exhaustive list of roles that can be equipped to operate within a state in the frame. Each role has a behavior definition matching its name in the ./states folder that you MUST load when equipping a role.
 ```
 
 # Roles & Participation
@@ -36,12 +36,12 @@ roles: An exhaustive list of roles that can be equipped to operate within a stat
 
 # Loading Behaviors
 
-Each state and role definition in FRAME.yml has a corresponding behavior file in `./behaviors` which MUST ALWAYS be loaded every time you equip a role or enter or transition into a state.
+Each state and role definition in FRAME.yml has a corresponding behavior file in `./states` which MUST ALWAYS be loaded every time you equip a role or enter or transition into a state.
 
 Example: You are equipping the game-designer role and entering the design state.
 Action: You read the full contents of these files:
 - ./roles/game-designer.md
-- ./behaviors/design.md
+- ./states/design.md
 
 # Loading Additional Context
 
