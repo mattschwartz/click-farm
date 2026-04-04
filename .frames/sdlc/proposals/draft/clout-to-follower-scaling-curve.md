@@ -3,7 +3,7 @@ name: Clout-to-Follower Scaling Curve
 description: Defines the formula mapping total_followers at rebrand → Clout awarded, determining prestige pacing.
 author: game-designer
 status: draft
-reviewers: [architect, engineer]
+reviewers: [engineer]
 ---
 
 # Proposal: Clout-to-Follower Scaling Curve
@@ -84,3 +84,17 @@ The formula above assumes first-tier Clout upgrades cost approximately 10 Clout,
 ## Open Questions
 
 1. **Clout upgrade costs.** The formula is calibrated against an assumed first-tier cost of ~10 Clout. If upgrade costs are defined at a significantly different scale, the divisor needs to adjust. **Owner: game-designer** (cost calibration is a balance decision, requires knowing the upgrade menu)
+
+---
+# Review: architect
+
+**Date**: 2026-04-04
+**Decision**: Aligned
+
+**Comments**
+
+Architecturally clean. `floor(sqrt(total_followers) / 10)` requires no new fields, no new entities, and no changes to data model shape. The single tuning knob (divisor `10`) is easy to adjust at balance time without structural surgery.
+
+The clarification on `total_followers` vs. `lifetime_followers` is correct and necessary. The `calculateRebrand` comment in `core-systems.md` was referencing `lifetime_followers` — I have updated that comment in the architecture spec to match this proposal. The corrected wording: "computes Clout earned from `total_followers` (sum of current platform follower counts, resets on rebrand — not `lifetime_followers`, which compounds across runs)."
+
+Open question on upgrade costs is a balance decision owned by game-designer. It does not affect the formula or architecture — the divisor is a single constant and can be adjusted when upgrade costs are defined. This does not block acceptance.

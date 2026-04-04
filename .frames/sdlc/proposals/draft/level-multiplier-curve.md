@@ -3,7 +3,7 @@ name: Level Multiplier Curve
 description: Defines the shape of level_multiplier(level) used in the generator engagement rate formula.
 author: game-designer
 status: draft
-reviewers: [architect, engineer]
+reviewers: [engineer]
 ---
 
 # Proposal: Level Multiplier Curve
@@ -81,3 +81,17 @@ Upgrade costs are not defined in this proposal, but they must match the curve's 
 ## Open Questions
 
 1. **Upgrade cost formula.** The level multiplier curve is defined, but the cost to upgrade from level `n` to `n+1` is not. Costs must scale to match the curve's inflection — otherwise early levels are trivially cheap and late levels are unreachable. **Owner: game-designer** (cost pacing is a balance decision)
+
+---
+# Review: architect
+
+**Date**: 2026-04-04
+**Decision**: Aligned
+
+**Comments**
+
+Architecturally sound. `2^(level² / 5)` is a pure formula — no data model changes, no new fields. The `level` field already exists on the Generator entity. The formula slots directly into the effective rate calculation already defined in the architecture spec.
+
+One non-blocking note for the engineer: this formula should be extracted as a named pure function (e.g. `levelMultiplier(level: number): number`) rather than inlined at the call site. The game loop tick and any offline balance tooling will both need it — a shared utility prevents drift between implementations.
+
+Open question on upgrade costs is balance work owned by game-designer. The formula itself is independent of upgrade costs and is fully specifiable now. Does not block acceptance.

@@ -263,7 +263,7 @@ function calculateRebrand(state: GameState): RebrandResult;
 function applyRebrand(state: GameState, result: RebrandResult): GameState;
 ```
 
-`calculateRebrand` computes Clout earned from `lifetime_followers` (current run contribution). `applyRebrand` resets engagement, generators (to unowned), platforms (to locked, minus headstarts), follower counts to zero, increments `rebrand_count`, applies new seed, preserves `clout` and `clout_upgrades`.
+`calculateRebrand` computes Clout earned from `total_followers` (sum of current platform follower counts, resets on rebrand — not `lifetime_followers`, which compounds across runs). `applyRebrand` resets engagement, generators (to unowned), platforms (to locked, minus headstarts), follower counts to zero, increments `rebrand_count`, applies new seed, preserves `clout` and `clout_upgrades`.
 
 ### Client → Server (future)
 
