@@ -122,6 +122,9 @@ Polly's other thoughts on using vague directives intentionally
     2. You MUST ONLY enter one role per session.
     3. You MUST ONLY enter one state per session.
 - [learning] useful to inspect tool use, file use, look for optimizations (how can you accept/reject less often, how can you make the agent find the right tool at the right time)
+- [observation] i asked default agent to autonomously pick up the next task all on its own based on priority, which it did, but when it loaded the task it recognized and flagged a contradiction in its chain of thought; "⏺ Stop — the task contradicts the architecture spec, and I need to surface this before scaffolding." and "  The architecture spec was finalized today (2026-04-04), and the task was assigned today. The task overview appears to reflect an earlier draft before the server-deferred decision was locked in. The spec is
+  authoritative per engineer protocol; I MUST NOT route around it by silently building either option."
+- 
 
 SKills from polly
   1. "Capability packages with instructions and tools, loaded on-demand." — A skill is a bundle of a prompt (instructions) + tool access, packaged together. It's not loaded into the conversation until you actually

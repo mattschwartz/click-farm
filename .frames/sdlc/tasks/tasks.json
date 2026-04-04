@@ -205,20 +205,21 @@
       "title": "Project Scaffolding",
       "requester": "architect",
       "complexity": "sonnet",
-      "overview": "Set up the project structure for Click Farm per the core systems architecture spec. Python backend, Node.js frontend, build tooling, development environment, and project configuration. The architecture spec defines the component boundaries — this task creates the skeleton that all subsequent engineering tasks build on.",
+      "overview": "Set up the client project structure for Click Farm per the core systems architecture spec. Vite + React + TypeScript client under ./client, with module skeleton matching the spec's component boundaries (game-loop, save, static-data, offline, ui). localStorage-based persistence. No server — server boundary is deferred per spec (resolved 2026-04-04). This task creates the skeleton that all subsequent engineering tasks build on.",
       "related_items": [
         {
           "ref": "architecture/core-systems.md",
-          "purpose": "Defines component boundaries, technology decisions, and project structure requirements"
+          "purpose": "Defines component boundaries, technology decisions (Vite+React+TS, localStorage, no server at launch), and project structure requirements"
         }
       ],
       "acceptance_criteria": [
-        "Python backend project is initialized with dependency management and a runnable entry point",
-        "Node.js frontend project is initialized with build tooling and a runnable dev server",
-        "Backend and frontend can communicate per the interface contract in the architecture spec",
-        "Development environment setup is documented (how to install deps, run backend, run frontend)",
-        "Project structure matches the component boundaries defined in the architecture spec",
-        "A basic health-check or hello-world endpoint confirms the stack works end-to-end"
+        "Client project is initialized under ./client using Vite + React + TypeScript with strict mode enabled",
+        "Dev server runs via `npm run dev` and serves a minimal hello-world page that confirms the stack works end-to-end",
+        "Production build works via `npm run build`",
+        "Module skeleton directories exist under client/src matching the architecture spec's component boundaries: game-loop, save, static-data, offline, ui",
+        "A test runner (Vitest) is configured and `npm test` runs successfully with at least one passing smoke test",
+        "Linter (ESLint) is configured and `npm run lint` runs clean",
+        "Development environment setup is documented (how to install deps, run dev server, run tests, run build)"
       ],
       "open_questions": [],
       "blocked_on": []
