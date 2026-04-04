@@ -1,0 +1,438 @@
+{
+  "next_id": 16,
+  "tasks": [
+    {
+      "id": 1,
+      "role": "game-designer",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Define \"Session\" for Scandal Magnitude Floor",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "The Scandals & Follower Loss proposal (Section 3, Magnitude) states: \"No scandal should ever remove more than the player earned in their current session.\" The term \"session\" is undefined, and the architect cannot spec the magnitude calculation without a clear definition. This is a small but load-bearing design decision — the meaning of \"session\" determines what data the magnitude formula reads and how the floor is computed.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "the proposal containing the magnitude floor rule; load Section 3 (Magnitude) to see the rule in context"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "the accepted core design; load if needed to verify consistency with idle/offline behavior"
+        }
+      ],
+      "acceptance_criteria": [
+        "Define what \"session\" means in the context of the magnitude floor rule — provide a clear, unambiguous definition (e.g., \"time since the app was opened,\" \"time since the last prestige,\" or another boundary)",
+        "Update Open Question #4 in the scandals proposal with the answer as a sub-bullet"
+      ],
+      "open_questions": [],
+      "state": "design",
+      "blocked_on": []
+    },
+    {
+      "id": 2,
+      "role": "architect",
+      "status": "complete",
+      "date_assigned": "2026-04-04",
+      "title": "Decompose Accepted Proposals into Technical Plan",
+      "requester": "user",
+      "complexity": "opus",
+      "overview": "Both accepted proposals (Core Game Identity & Loop, Scandals & Follower Loss) need to be decomposed into concrete, assignable engineering tasks with explicit done-whens.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "accepted proposal to decompose"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "accepted proposal to decompose"
+        }
+      ],
+      "acceptance_criteria": [
+        "Decompose both accepted proposals into discrete engineering tasks",
+        "Each task has explicit acceptance criteria an engineer can pick up and execute"
+      ],
+      "open_questions": [],
+      "state": "plan",
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 3,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Core Game State & Data Model Architecture",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Define the complete data model for Click Farm: every entity (generators, platforms, currencies, algorithm state), field types, constraints, ownership, mutation rules, and persistence strategy. This is the skeleton that all implementation hangs off. Per the accepted Core Game Identity & Loop proposal, the key structural commitments are: per-platform follower counts (Platform is a full sub-entity), three currencies at three lifecycle speeds, and a multi-input engagement-to-follower conversion formula.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "source design — defines all entities, currencies, generators, platforms, algorithm"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "stretch goal — data model should accommodate scandal accumulators without requiring them at launch"
+        }
+      ],
+      "acceptance_criteria": [
+        "Architecture doc in architecture/ defining every game entity with fields, types, and constraints",
+        "Persistence strategy defined — what format, where it lives, how it's loaded/saved",
+        "Mutation rules for each entity — who can change what and through which interface",
+        "Data model accommodates scandal accumulators as an additive extension (not required at launch but must not be blocked by core model)"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 4,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Game Loop & Systems Architecture",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Define the game loop execution model, component boundaries, and interface contracts for all core systems: tick/update cycle, engagement-to-follower conversion contract (multi-input formula depending on algorithm state, platform affinity, generator type), algorithm shift system (seeded PRNG per architect review), idle/offline calculation (calculate-on-open), and the state machine for the game loop (normal play, and later scandal_active state). Define what each system exposes to other systems and where the boundaries are.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "source design — core loop, algorithm, idle rules"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "stretch goal — PR Response introduces a modal game state; architecture should accommodate this"
+        }
+      ],
+      "acceptance_criteria": [
+        "Architecture doc in architecture/ defining the game loop execution model (tick/update cycle)",
+        "Interface contract for engagement-to-follower conversion formula with all inputs named",
+        "Algorithm shift system spec: seeded PRNG, shift schedule, fuzzy window, how state is exposed",
+        "Idle/offline calculation spec: calculate-on-open formula, what state is snapshotted on close",
+        "Component boundary diagram or list — one sentence per component responsibility",
+        "Coupling analysis: named dependencies between systems, what breaks if a dependency changes"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 5,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Implement Core Data Model & Game State",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the core data model as defined in the architecture spec. This includes all game entities (GameState, Generator, Platform, Currency balances, AlgorithmState), their types, initialization, serialization/deserialization, and persistence. This is the foundation every other system builds on.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "design source — entity definitions, currency model, generator roster"
+        }
+      ],
+      "acceptance_criteria": [
+        "All core game entities implemented with fields matching the architecture spec",
+        "Game state can be created (new game), serialized, and deserialized without data loss",
+        "Unit tests verify initialization defaults and round-trip serialization",
+        "Persistence layer can save and load game state"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        3
+      ]
+    },
+    {
+      "id": 6,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Implement Click-to-Post & Engagement Pipeline",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Implement the basic click-to-post mechanic: player clicks, a post is created, engagement is generated based on base rates. This is the simplest slice of the core loop — one generator (Selfies), one platform, no algorithm modifiers yet. The goal is a working Post → Engage pipeline that later systems plug into.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "core loop definition — Section 2"
+        }
+      ],
+      "acceptance_criteria": [
+        "Player can click to create a post that generates engagement",
+        "Engagement is calculated using the generator's base rate",
+        "Engagement accumulates correctly in game state",
+        "Unit tests verify click → engagement pipeline with expected values"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        5
+      ]
+    },
+    {
+      "id": 7,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Implement Generator System",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the full generator system: all 7 base content types (Selfies through Viral Stunts) with base engagement rates, follower conversion rates, upgrade tracks (quality, frequency, platform optimization), and trend sensitivity values. Generators auto-produce engagement when purchased. Unlock thresholds gate which generators are available based on progression.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "generator roster and properties — Section 3"
+        }
+      ],
+      "acceptance_criteria": [
+        "All 7 base generators implemented with base rates, conversion rates, and trend sensitivity",
+        "Generators auto-produce engagement per tick when owned",
+        "Upgrade tracks modify generator output correctly",
+        "Generator unlock thresholds gate availability based on follower count",
+        "Unit tests verify generator output calculations and upgrade effects"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        5
+      ]
+    },
+    {
+      "id": 8,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Implement Algorithm System",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the Algorithm system: a seeded PRNG that determines a deterministic schedule of algorithm states. Each state has a name, favored/penalized content types, and a fuzzy shift window (base interval ± seeded random offset). The algorithm state modifies generator output via trend sensitivity. Expose current state and a coarse instability indicator for UX. Algorithm state advances offline deterministically via the seed.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "algorithm design — Section 4, architect Q2 answer"
+        }
+      ],
+      "acceptance_criteria": [
+        "Algorithm states defined with content type modifiers (boost/penalize)",
+        "Seeded PRNG produces a deterministic shift schedule",
+        "Fuzzy shift window prevents clock-watching",
+        "Generator output is modified by current algorithm state via trend sensitivity",
+        "Algorithm state can be advanced for any elapsed time (supports offline calculation)",
+        "Unit tests verify deterministic schedule from seed and correct generator modifiers"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        5,
+        4
+      ]
+    },
+    {
+      "id": 9,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Implement Platform System & Cross-Posting",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the platform system: 3 platforms at launch, each with independent follower counts, content affinity (which generators perform best), and unlock thresholds based on total followers. Cross-posting across platforms with the right content mix creates multiplicative returns. Platform affinity interacts with algorithm state to determine effective generator output per platform.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "platform design — Section 5, architect Q3 answer (3 platforms at launch)"
+        }
+      ],
+      "acceptance_criteria": [
+        "3 platforms implemented with independent follower counts",
+        "Each platform has content affinity modifiers for each generator type",
+        "Platform unlock thresholds gate availability based on total followers",
+        "Cross-posting calculates output using generator base rate × platform affinity × algorithm modifier",
+        "Unit tests verify platform affinity calculations and unlock progression"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        7,
+        8
+      ]
+    },
+    {
+      "id": 10,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Implement Engagement-to-Follower Conversion",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the engagement-to-follower conversion pipeline. This is the multi-input formula that converts accumulated engagement into followers on each platform. Inputs: engagement amount, generator type, platform affinity, algorithm state modifier, generator's follower conversion rate. Followers accumulate per-platform. This is the Engage → Grow beat of the core loop.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "economy design — Section 6, conversion pipeline"
+        }
+      ],
+      "acceptance_criteria": [
+        "Engagement converts to followers per-platform based on the multi-input formula",
+        "Conversion respects generator conversion rates, platform affinity, and algorithm state",
+        "Follower counts update correctly across all active platforms",
+        "The full Post → Engage → Grow loop works end-to-end",
+        "Unit tests verify conversion formula with known inputs and expected outputs"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "id": 11,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Implement Idle/Offline Calculation",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Implement the calculate-on-open idle gains system. When the player opens the game, compute elapsed time since last save, advance the algorithm state deterministically via seed, and calculate pure positive accumulation (engagement and follower gains) for the elapsed period. Per the accepted design: no negative events fire while offline. Snapshot relevant state on close/background.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "idle rules — Section 8, architect Q4 answer (calculate-on-open)"
+        }
+      ],
+      "acceptance_criteria": [
+        "On game open, elapsed time since last save is computed",
+        "Algorithm state is advanced deterministically for elapsed time",
+        "Engagement and follower gains are calculated for the idle period (positive only)",
+        "Game state is snapshotted on close/background for accurate idle calculation",
+        "Unit tests verify idle calculation produces correct gains for known elapsed time and state"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        10,
+        4
+      ]
+    },
+    {
+      "id": 12,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Implement Prestige System (Rebrand + Clout)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the prestige mechanic: Rebranding. Player can rebrand to reset followers and engagement to zero, earning Clout based on total followers at time of rebrand. Clout buys permanent meta-upgrades: faster engagement rates, new generator types (prestige-only), algorithm insight, platform head-starts. The prestige tension is: rebrand now for small Clout or push further for more with diminishing returns.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "prestige design — Section 7, Clout currency in Section 6"
+        }
+      ],
+      "acceptance_criteria": [
+        "Player can trigger a rebrand that resets followers and engagement to zero",
+        "Clout earned scales with total followers at rebrand time",
+        "Clout persists across rebrands",
+        "At least 4 meta-upgrade types implemented (faster rates, new generators, algorithm insight, platform head-starts)",
+        "Meta-upgrades correctly modify gameplay in subsequent runs",
+        "Unit tests verify Clout calculation, reset behavior, and upgrade effects"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        10
+      ]
+    },
+    {
+      "id": 13,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Implement Scandal Risk Accumulator System",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the scandal risk accumulator system as defined in the Scandals & Follower Loss proposal. Each scandal type has an accumulator per relevant scope (generator, platform, or global). Accumulators are event-driven (update on relevant actions), freeze offline, and fire when value exceeds effective threshold + fuzz. Empire scaling decreases thresholds as total followers increase. Expose coarse risk_level (none|building|high) for UX signaling. This is a stretch goal — the core loop must work without it.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "full scandal system spec — Sections 2-3, architect review for accumulator contract"
+        }
+      ],
+      "acceptance_criteria": [
+        "6 scandal types implemented with per-scope accumulators (generator, platform, or global)",
+        "Accumulators update on relevant player actions (event-driven, not tick-driven)",
+        "Empire scaling reduces effective thresholds as total followers increase",
+        "Accumulators freeze when offline and resume from frozen state on return",
+        "Fuzz uses seeded PRNG consistent with algorithm system",
+        "risk_level enum (none|building|high) exposed per accumulator for UX",
+        "Unit tests verify accumulator progression, empire scaling, freeze/resume, and fire threshold"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        10
+      ]
+    },
+    {
+      "id": 14,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Implement Scandal Trigger, Magnitude & Floor",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement scandal firing and magnitude calculation. When an accumulator fires: determine magnitude (5-15% of affected platform's followers), apply the session floor (no scandal pushes a platform below its snapshot value from when the app was foregrounded), enforce the ceiling (max 15%), and suppress stacking (only the most severe fires when multiple trigger simultaneously). Deduct followers from the affected platform.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "magnitude rules — Section 3, session definition in OQ #4 answer"
+        }
+      ],
+      "acceptance_criteria": [
+        "Scandal fires when accumulator crosses threshold, removing 5-15% of affected platform followers",
+        "Session floor enforced: follower snapshot taken on app foreground, no scandal pushes below it",
+        "Ceiling enforced: no single scandal removes more than 15% from one platform",
+        "Stacking suppressed: only the most severe scandal fires when multiple trigger simultaneously",
+        "Small cross-platform ripple (1-3%) applied for severe scandals",
+        "Unit tests verify magnitude calculation, floor, ceiling, and stacking suppression"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        13
+      ]
+    },
+    {
+      "id": 15,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Implement PR Response Mechanic",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the PR Response counterplay window. When a scandal fires, the game enters a scandal_active state with a 10-15 second response window. The player can spend Engagement to mitigate damage (more Engagement = fewer followers lost, max mitigation reduces loss to 30-40% of original). The window opens only when the player is present (not during idle). After the timer expires or player confirms, the final magnitude is applied and the game returns to normal state.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "PR Response spec — Section 4, UX review for interaction pattern"
+        }
+      ],
+      "acceptance_criteria": [
+        "Game transitions to scandal_active state when a scandal fires",
+        "10-15 second response window with timer",
+        "Player can spend Engagement to reduce follower loss (slider or equivalent input)",
+        "Maximum mitigation caps at 30-40% of original magnitude (cannot fully negate)",
+        "Spending nothing results in full magnitude hit",
+        "Game returns to normal state after timer expires or player confirms",
+        "Unit tests verify mitigation scaling, timer behavior, and state transitions"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        14
+      ]
+    }
+  ]
+}
