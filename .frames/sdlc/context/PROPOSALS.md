@@ -11,7 +11,7 @@ Start with a conversation with the user to understand the full context of the pr
 You MUST read the proposal in full before beginning a review. Start a review section at the bottom of the document to capture your thoughts and comments. Your review should use the following template:
 ```md
 ---
-# Review: <AGENT_NAME>
+# Review: <ROLE_NAME>
 
 **Date**: YYYY-MM-DD
 **Decision**: Aligned/Not Aligned/Request for Comment
@@ -21,8 +21,26 @@ You MUST read the proposal in full before beginning a review. Start a review sec
 Enumerate your thoughts on the proposal and summarize your decision.
 ```
 
-- If you are aligned on the proposal, remove yourself from the list of reviewers at the top of the document on line 6.
-- If you are not aligned on the proposal or have sent it back for comment, add yourself to the list of reviewers at the top of the document on line 6 if you are not already there.
+- If you are aligned on the proposal, remove yourself from the list of reviewers at the top of the document on the `reviewers` field.
+- If you are not aligned on the proposal or have sent it back for comment, add yourself to the list of reviewers at the top of the document on the `reviewers` field if you are not already there.
+
+# Updating a proposal
+
+When a reviewer marks a proposal as Not Aligned or Request for Comment, the author updates the proposal body to address the feedback before re-review.
+
+- You MUST update the relevant sections of the proposal body (Problem, Proposal, References, Open Questions) in place — do NOT annotate the existing text with inline change notes
+- You MUST NOT modify or remove existing review log entries, because they are a permanent record of what was reviewed and when
+- If a reviewer raised a question that you are answering, add the answer as a sub-bullet under that item in the Open Questions section — do NOT respond inside the review log itself
+- You MUST add a revision note directly above the first review log entry summarizing what changed, using this format:
+
+```md
+---
+## Revision: YYYY-MM-DD — <author-role>
+
+Brief summary of what changed and which review comments prompted the change.
+```
+
+The revision note tells reviewers what to re-examine without requiring them to re-read the entire document.
 
 # Proposal Template
 
