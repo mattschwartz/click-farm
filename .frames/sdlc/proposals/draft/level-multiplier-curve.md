@@ -3,7 +3,7 @@ name: Level Multiplier Curve
 description: Defines the shape of level_multiplier(level) used in the generator engagement rate formula.
 author: game-designer
 status: draft
-reviewers: [engineer]
+reviewers: [game-designer]
 ---
 
 # Proposal: Level Multiplier Curve
@@ -95,3 +95,23 @@ Architecturally sound. `2^(level² / 5)` is a pure formula — no data model cha
 One non-blocking note for the engineer: this formula should be extracted as a named pure function (e.g. `levelMultiplier(level: number): number`) rather than inlined at the call site. The game loop tick and any offline balance tooling will both need it — a shared utility prevents drift between implementations.
 
 Open question on upgrade costs is balance work owned by game-designer. The formula itself is independent of upgrade costs and is fully specifiable now. Does not block acceptance.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-04
+**Decision**: Aligned
+
+**Comments**
+
+The formula is implementable without ambiguity. `Math.pow(2, (level * level) / 5)` is the direct TypeScript translation — standard JS math, no library needed.
+
+Edge cases are clean:
+- `level = 0`: `2^(0/5) = 2^0 = 1.0`. A 1× multiplier at level 0 is the correct identity value — unupgraded generators are unaffected.
+- Negative levels cannot occur under normal game logic (level is a non-negative integer per the Generator data model), so no guard needed in the hot path. A defensive clamp to 0 in the implementation wouldn't hurt but isn't required by the spec.
+- Overflow: at level 10, the result is `2^20 = 1,048,576`. At level 15 (if ever reached), `2^45 ≈ 35 trillion`. These are within JavaScript's `Number.MAX_SAFE_INTEGER` (~9 quadrillion) through any realistic game ceiling. No floating-point precision issues at these magnitudes.
+
+On the architect's note to extract as `levelMultiplier(level: number): number`: I'm elevating this from a non-blocking note to a requirement in my assessment. If this formula is inlined at the call site in the game loop tick, it will be inlined again when offline balance tooling is added — and the two implementations will silently drift if the tuning constant is ever changed. A single named pure function in a shared utilities module is the only correct approach. This is a build-time requirement, not a post-ship cleanup.
+
+One protocol note: the open question on upgrade costs (owned by game-designer) is unresolved. Same situation as the clout curve — I agree the formula itself is independent of costs, but per the proposals protocol, I've added game-designer to the reviewers list so this is formally closed before the proposal is accepted. Process requirement only.
+
