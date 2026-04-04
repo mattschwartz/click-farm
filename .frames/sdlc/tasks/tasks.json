@@ -1,5 +1,5 @@
 {
-  "next_id": 36,
+  "next_id": 40,
   "tasks": [
     {
       "id": 1,
@@ -734,6 +734,127 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-04"
+    },
+    {
+      "id": 36,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Upgrade Curve Drawer Spec",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "The generator row upgrade interaction (§6.3 of core-game-screen.md) gestures at a drawer that slides out from the right of a row, showing the next 3 upgrade levels, cost, and effect delta. This spec was flagged as needing its own pass alongside the balance curves. Define the full layout, interaction, and motion for the upgrade drawer.",
+      "related_items": [
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "§6.3 defines the upgrade interaction trigger and confirm behavior — this task specifies the drawer content and design in full"
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "Data contracts — what upgrade/cost/delta data is available to render"
+        }
+      ],
+      "acceptance_criteria": [
+        "Drawer layout fully specified: content zones, upgrade path display (next 3 levels), cost, effect delta",
+        "Interaction states defined: open, confirm, insufficient funds, max level",
+        "Motion brief written: open/close animation, confirm pulse, error state",
+        "Spec is self-contained enough for engineer to implement without follow-up questions"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 37,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Prestige / Rebrand Screen Spec",
+      "requester": "ux-designer",
+      "complexity": "opus",
+      "overview": "The Prestige/Rebrand screen is where the player spends Clout to reset their run and carry bonuses forward. It is the only surface on which Clout is displayed (per core-game-screen.md §5.3). It needs a full UX spec covering layout, information hierarchy, the rebrand confirmation flow, Clout display, and the emotional arc of the prestige moment.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Defines the prestige/rebrand mechanic — Clout currency, what resets, what carries forward"
+        },
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "§5.3 establishes that Clout is not shown on the main screen — prestige screen is its home. Also defines the rebrand button affordance and Clout preview tooltip."
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "Data contracts for Clout, run state, and what persists across resets"
+        }
+      ],
+      "acceptance_criteria": [
+        "Full screen layout specified with zone map",
+        "Clout display and earned-this-run breakdown specified",
+        "Rebrand confirmation flow defined: affordance, confirmation step, irreversibility communication",
+        "Emotional arc of the prestige moment addressed — this is a milestone beat, not a utility screen",
+        "Transition in/out of prestige screen specified (how does the player get here, how do they return post-rebrand)",
+        "Motion brief written for the rebrand moment",
+        "Accessibility requirements met per role standards"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 38,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Mobile Layout Pass",
+      "requester": "ux-designer",
+      "complexity": "opus",
+      "overview": "The core game screen spec is desktop-first (1280×800). §14 sketches a mobile layout but explicitly defers it. This task produces the full mobile UX spec: thumb-reach-optimized post zone at bottom, vertical scroll generators, horizontal platform strip, algorithm mood in background. Must also resolve the open question of whether the algorithm state name + mood can be combined into a single top-strip element on mobile.",
+      "related_items": [
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "§14 contains the rough sketch this task must formalize into a full spec. All sections of the desktop spec have mobile equivalents to specify or explicitly defer."
+        }
+      ],
+      "acceptance_criteria": [
+        "Full mobile zone map defined (reference canvas size specified)",
+        "Post zone placement and size resolved for thumb reach",
+        "Generator list scroll behavior specified",
+        "Platform display resolved — horizontal strip layout or alternative",
+        "Algorithm state name + mood combination question resolved (OQ from §14)",
+        "All motion and interaction patterns from desktop spec assessed for mobile — carried, adapted, or deferred with rationale",
+        "Viral event design confirmed or adapted for mobile",
+        "Accessibility requirements met on mobile (hit areas, contrast, motion)"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 39,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Settings Screen Spec",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "The core game screen spec references a Settings screen for Reduce Motion, audio toggles, and save management but explicitly defers it. This task produces that spec. It is a utility screen — the emotional bar is low, but the Reduce Motion toggle has accessibility implications that must be fully specified.",
+      "related_items": [
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "§12 defines what Reduce Motion must affect: disables particle bursts, replaces background drift with static gradients, replaces viral zoom pulse with static glow. Tick-rate drama is preserved."
+        }
+      ],
+      "acceptance_criteria": [
+        "Layout specified for settings screen",
+        "Reduce Motion toggle specified — exactly what it disables and what it preserves (per §12 of core-game-screen.md)",
+        "Audio toggle specified",
+        "Save management options specified (export, reset, any cloud sync if applicable)",
+        "Access point from main screen defined (where does the player find settings?)",
+        "Accessibility requirements met"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }
