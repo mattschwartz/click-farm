@@ -2,11 +2,11 @@
 
 ## Overview
 
-Implement a clearly-defined coding task. The output is working code with passing tests that satisfies the task's done-when condition. Use this behavior when a task in `tasks/engineer.md` is ready to be picked up and built.
+Implement a clearly-defined coding or infrastructure task. The output is working code with passing tests that satisfies the task's done-when condition.
 
 ## Parameters
 
-- **task** (required): The task to implement. This may be a specific task entry in `tasks/engineer.md` or a description provided by the user.
+- **task** (required): The task to implement.
 - **spec** (optional): Path to the architecture spec or design doc that this task implements against
 
 **Constraints for parameter acquisition:**
@@ -65,7 +65,6 @@ Write tests and verify the implementation.
 Mark the task done and provide verification steps.
 
 **Constraints:**
-- You MUST update the task entry in `tasks/engineer.md` to mark it complete, because the task file is the coordination state — if it doesn't reflect reality, the next role will make wrong decisions about what work remains
 - You MUST close with a **Validation section** — specific, actionable steps the user can follow to verify the work is correct. Not descriptions of what you built. Actual things to do: run this command, open this URL, click this, observe that.
 - You MUST NOT consider the task complete until the done-when condition is satisfied and all tests pass
 - If completing this task unblocks other tasks (check their dependencies), You SHOULD note which tasks are now unblocked, because the next planning session needs to know what's ready

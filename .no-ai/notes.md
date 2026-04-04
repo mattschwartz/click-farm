@@ -16,6 +16,7 @@
 - sometimes, you want the AI to do what it thinks you mean rather than what you mean explicitly. sometimes, you want the AI to fill in gaps, so you say things like
   - "that seems worth remembering" instead of "write down X in your memory files"
   - hypothesis: the AI assigns meaning to words, doesn't necessarily see synonyms the same. there's significance, i think, that's why it tends to reuse the same phrases and words a lot. they're significant to the AI. So, if you want it to remember something and it knows what remembering means - the way it knows it is probably innate to its way of thinking and if you accidentally gave it something conflicting, it could get confused.
+- []
 
 
 
@@ -108,12 +109,24 @@ Polly's other thoughts on using vague directives intentionally
 - [confirmed from claude api docs] As token count grows, accuracy and recall degrade, a phenomenon known as context rot. This makes curating what's in context just as important as how much space is available. https://platform.claude.com/docs/en/build-with-claude/context-windows#:~:text=As%20token%20count%20grows%2C%20accuracy%20and%20recall%20degrade%2C%20a%20phenomenon%20known%20as%20context%20rot.%20This%20makes%20curating%20what%27s%20in%20context%20just%20as%20important%20as%20how%20much%20space%20is%20available.
 - [theory] narrowing and widening the context window to craft your results
 - [theory] context window = narrowing the probability space. the more context, the wider the probability space
-- 
+- [observation] hallucinating a file path when one is not explicitly provided, but a directive says to "look for X", the agent hallucinates and guesses where X might be located, which may differ session to session
+- [theory] context engineering: think about what you want the agent to definitively do and what you want to leave open. Where you want the agent's "creativity" to fill the gaps. (like enforcing structure in a template but leaving parts open-ended for the agent to make judgment calls on how to fill it)
+- [theory] the quality of the artifacts produced will influence the success or failure of this implementation. issues with the fundamentals will compound over time and be difficult to catch when they start because they will be imperceptible at first
+- [principle] you need to spend the time really thinking through what context/directives need to be explicit, what needs to be suggested, what needs to be intentional left open/vague
+- [theory] minimal viable scaffolding to avoid the "checking boxes" behavior? -Polly 
+  - scaffolding is definitely the right word - it's how much do you want the agent to have to hold onto vs how much do you want them to bring to the table to improvise on how to hold onto it. so it's about what you want. sometimes you _want_ box checking, but sometimes you want there to be "thought" behind the box, so you can instruct the agent more vaguely and tell it to use more judgment rather than holding onto facts (like a checkbox mentality would have you do)
+- [observation] game designer is doing pretty well going from conversation -> draft proposal -> and even creating tasks for the reviewers to check it out
+- [note] going to need to add a work planner that organizes the tasks based on their assignee and blocked_on
+- [learning/debugging] i FINALLY found the bug: "Per the frame rules, I can only enter each state once. So if I exit review, I can't re-enter it in this session." - so it's thinking that when i say you can only enter it "once" that it means "each state once" not "once per session"...updated:
+    1. You MUST ONLY enter one frame per session. (a->one, added "per session")
+    2. You MUST ONLY enter one role per session.
+    3. You MUST ONLY enter one state per session.
+- [learning] useful to inspect tool use, file use, look for optimizations (how can you accept/reject less often, how can you make the agent find the right tool at the right time)
 
 SKills from polly
   1. "Capability packages with instructions and tools, loaded on-demand." — A skill is a bundle of a prompt (instructions) + tool access, packaged together. It's not loaded into the conversation until you actually
   invoke it (e.g., /commit).
-  2. "Progressive disclosure without busting the prompt cache." — This is the key part:
+  1. "Progressive disclosure without busting the prompt cache." — This is the key part:
     - Progressive disclosure means information is only shown when needed, rather than dumping everything upfront. Skills stay hidden until invoked, keeping the base system prompt lean.
     - Without busting the prompt cache — Anthropic's API caches the system prompt prefix. If you stuffed every skill's instructions into the system prompt from the start, the prompt would be huge. Worse, if
   different skills were loaded for different conversations, the system prompt would vary, meaning the cached prefix wouldn't match and you'd lose the cache hit (a "cache bust"). By loading skills on-demand after

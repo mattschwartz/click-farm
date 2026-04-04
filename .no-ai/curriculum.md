@@ -280,8 +280,33 @@ Thinking about context as a design decision, not a default. What does this agent
 ### Fix upstream, not downstream
 The worst fix is adding more instructions to compensate for a bad environment. That compounds the problem. Find where the failure originates and fix it there. One clean fix beats three patches.
 
+### Debugging success — the harder discipline
+
+The debugging loop above triggers on failure. That's the easy case — something broke, you noticed. The harder and more important discipline is debugging success.
+
+When an agent produces the right output, the instinct is to move on. Don't. Inspect the path it took to get there. Look at tool calls, file reads, the sequence of decisions. Ask: did it arrive at the right answer for the right reasons, or did it stumble into it?
+
+**What to inspect:**
+- **Tool use** — did it find the right tool immediately, or fumble through several before landing on one that worked? Fumbling that succeeds today fails tomorrow when the context is slightly different.
+- **File access patterns** — did it know where to look, or did it search broadly and get lucky? If it repeatedly struggles to find a script, add an explicit pointer. Remove the guesswork.
+- **Accept/reject ratio** — how much of your interaction was course-correcting? Every correction is a signal that the environment could be clearer. The goal is fewer interventions per session, not zero failures.
+- **The path vs. the destination** — right output, wrong mechanism. The agent cited a file it shouldn't have needed, or skipped a step that happened to not matter this time. That's drift waiting to compound.
+
+**The refinement loop:**
+1. **Observe the mechanism** — not just what the agent produced, but how it got there
+2. **Identify friction** — where did it hesitate, retry, or take an indirect path?
+3. **Tighten the environment** — add a directive, clarify a pointer, remove an ambiguity
+4. **Observe again** — verify the path is now clean, not just the output
+
+This is iterative. Each refinement makes the environment slightly more precise, the agent's path slightly more direct. Over time, the environment trains the agent the way a well-maintained codebase trains new engineers — by making the right path the obvious path.
+
+**Why this matters:** An environment you never refine drifts. The agent adapts to your prompting style instead of the environment's structure, and you become a load-bearing part of the system. Continuous inspection keeps the environment honest and the agent's behavior rooted in structure, not habit.
+
 ### Exercise — Post-mortem
 Take a real agent failure. Walk through the debugging loop together. Identify the root cause. Write the fix. Verify it worked.
+
+### Exercise — Success Audit
+Take a task the agent completed successfully. Inspect the tool calls and file access patterns together. Find one place where the agent took an indirect path or got lucky. Write the environment fix that makes the direct path obvious. Run it again and compare.
 
 ---
 
