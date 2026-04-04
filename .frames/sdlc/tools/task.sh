@@ -168,12 +168,22 @@ cmd_complete() {
   local date_completed
   date_completed="$(date +%Y-%m-%d)"
 
-  jq --argjson id "$id" --arg date "$date_completed" \
-    '(.tasks[] | select(.id == $id)) |= . + {status: "complete", date_completed: $date}' \
-    "$TASKS_FILE" > "${TASKS_FILE}.tmp" && mv "${TASKS_FILE}.tmp" "$TASKS_FILE"
+  jq --argjson id "$id" --arg date "$date_completed" '
+    (.tasks[] | select(.id == $id)) |= . + {status: "complete", date_completed: $date}
+    | .tasks |= [.[] | .blocked_on |= (if . then map(select(. != $id)) else [] end)]
+  ' "$TASKS_FILE" > "${TASKS_FILE}.tmp" && mv "${TASKS_FILE}.tmp" "$TASKS_FILE"
 
-  # Output the updated task
-  jq --argjson id "$id" '.tasks[] | select(.id == $id)' "$TASKS_FILE"
+  # Find tasks that were unblocked by this completion
+  local unblocked
+  unblocked="$(jq --argjson id "$id" '
+    [.tasks[] | select(.status == "open" and (.blocked_on | length) == 0)] | map({id, title})
+  ' "$TASKS_FILE")"
+
+  # Output the completed task and any newly unblocked tasks
+  local completed
+  completed="$(jq --argjson id "$id" '.tasks[] | select(.id == $id)' "$TASKS_FILE")"
+  jq -n --argjson completed "$completed" --argjson unblocked "$unblocked" \
+    '{completed: $completed, unblocked: $unblocked}'
 }
 
 cmd_get() {

@@ -62,7 +62,7 @@
       "alias": "A1",
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Core Systems Architecture Spec",
       "requester": "architect",
@@ -89,14 +89,15 @@
         "Assumptions section flags load-bearing assumptions explicitly"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 17,
       "alias": "A2",
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Scandal System Architecture Spec",
       "requester": "architect",
@@ -123,9 +124,8 @@
         "The coarse risk_level enum (none | building | high) is formally contracted for UX consumption"
       ],
       "open_questions": [],
-      "blocked_on": [
-        16
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 18,
@@ -221,9 +221,7 @@
         "A basic health-check or hello-world endpoint confirms the stack works end-to-end"
       ],
       "open_questions": [],
-      "blocked_on": [
-        16
-      ]
+      "blocked_on": []
     },
     {
       "id": 21,
