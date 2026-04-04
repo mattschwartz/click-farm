@@ -117,6 +117,11 @@ Polly's other thoughts on using vague directives intentionally
   - scaffolding is definitely the right word - it's how much do you want the agent to have to hold onto vs how much do you want them to bring to the table to improvise on how to hold onto it. so it's about what you want. sometimes you _want_ box checking, but sometimes you want there to be "thought" behind the box, so you can instruct the agent more vaguely and tell it to use more judgment rather than holding onto facts (like a checkbox mentality would have you do)
 - [observation] game designer is doing pretty well going from conversation -> draft proposal -> and even creating tasks for the reviewers to check it out
 - [note] going to need to add a work planner that organizes the tasks based on their assignee and blocked_on
+- [learning/debugging] i FINALLY found the bug: "Per the frame rules, I can only enter each state once. So if I exit review, I can't re-enter it in this session." - so it's thinking that when i say you can only enter it "once" that it means "each state once" not "once per session"...updated:
+    1. You MUST ONLY enter one frame per session. (a->one, added "per session")
+    2. You MUST ONLY enter one role per session.
+    3. You MUST ONLY enter one state per session.
+- 
 
 SKills from polly
   1. "Capability packages with instructions and tools, loaded on-demand." — A skill is a bundle of a prompt (instructions) + tool access, packaged together. It's not loaded into the conversation until you actually

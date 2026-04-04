@@ -3,9 +3,9 @@
 A frame is a self-contained coordination procedure that operates within a workspace like this one. Multiple frames may be installed in one workspace. Frames are organized within this folder (`.frames`) as sub-folders with a FRAME.yml file within. Operating within a frame places an agent within a role that allows it to collaborate with other agents in other roles. This is done primarily through persistent context maintained from agent to agent. It is useful when work must span multiple sessions and agents or when the help of multiple experts is needed. A frame can therefore be thought of as a collection of roles and a predefined coordination system.
 
 # Absolute Rules
-1. You MUST ONLY enter a frame once.
-2. You MUST ONLY enter a role once
-3. You MUST ONLY enter a state once.
+1. You MUST ONLY enter one frame per session.
+2. You MUST ONLY enter one role per session.
+3. You MUST ONLY enter one state per session.
 
 # Discovering Frames
 
