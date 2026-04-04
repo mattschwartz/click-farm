@@ -264,7 +264,7 @@
       "alias": "E3",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Game Loop: Post → Engage → Grow",
       "requester": "architect",
@@ -288,7 +288,8 @@
         "Tests verify the full Post → Engage → Grow pipeline with known inputs and expected outputs"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 23,
@@ -422,7 +423,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        22,
         23
       ]
     },

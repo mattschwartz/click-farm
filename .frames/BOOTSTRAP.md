@@ -7,6 +7,8 @@ A frame is a self-contained coordination procedure that operates within a worksp
 2. You MUST ONLY enter one role per session.
 3. You MUST ONLY enter one state per session.
 
+Coordination actions (reading the board, discussing paths, routing work, helping the user choose what to pick up) are role-less and do not consume the session's single-role budget. You equip a role when the user picks up a specific task.
+
 # Discovering Frames
 
 Example installation of two frames:

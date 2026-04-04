@@ -61,6 +61,9 @@ export function clearSave(): void {
 // ---------------------------------------------------------------------------
 
 export function migrate(data: SaveData): SaveData {
+  // Future: reassign `current` as new version cases are added to the chain.
+  // For now this is effectively a pass-through with a version guard.
+  // eslint-disable-next-line prefer-const
   let current = data;
 
   // Version chain — add cases here as schema evolves:
