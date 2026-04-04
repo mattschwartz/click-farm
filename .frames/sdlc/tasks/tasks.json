@@ -132,7 +132,7 @@
       "alias": "U1",
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Core Game Screen UX Spec",
       "requester": "architect",
@@ -159,7 +159,8 @@
         "Spec addresses mid-game density problem with clear hierarchy decisions"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 19,
@@ -286,9 +287,7 @@
         "Tests verify the full Post → Engage → Grow pipeline with known inputs and expected outputs"
       ],
       "open_questions": [],
-      "blocked_on": [
-        33
-      ]
+      "blocked_on": []
     },
     {
       "id": 23,
@@ -321,9 +320,7 @@
         "Tests cover: generator output calculation, upgrade effects, trend sensitivity modification, unlock thresholds"
       ],
       "open_questions": [],
-      "blocked_on": [
-        33
-      ]
+      "blocked_on": []
     },
     {
       "id": 24,
@@ -425,8 +422,7 @@
       "open_questions": [],
       "blocked_on": [
         22,
-        23,
-        33
+        23
       ]
     },
     {
@@ -495,8 +491,7 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        26,
-        32
+        26
       ]
     },
     {
@@ -532,7 +527,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        18,
         26
       ]
     },
@@ -618,7 +612,7 @@
       "id": 32,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Define Clout-to-Follower Scaling Curve for Rebrand",
       "requester": "architect",
@@ -642,13 +636,14 @@
         "Blocks task 28 (Prestige: The Rebrand) — result must be available before that task is built"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 33,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Define Level Multiplier Curve for Engagement Rate Formula",
       "requester": "architect",
@@ -672,7 +667,8 @@
         "Blocks tasks 22, 23, 26 — result must be available before those tasks are built"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 34,
