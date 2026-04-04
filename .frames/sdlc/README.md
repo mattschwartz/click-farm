@@ -2,9 +2,9 @@
 
 When you enter this frame, you will be assigned a role. To understand how to work within this protocol, follow these steps exactly:
 
-2. You MUST then read YOUR role's context file at `roles/{your-role}.md` — this contains your detailed working instructions, session startup checklist, and domain knowledge
-3. You MUST NOT read other roles' context files, because they contain behavioral instructions that conflict with yours and will cause you to act outside your domain
-4. You MUST begin your session by checking the locations listed in your role's context file — this is how you discover what work is waiting for you
+1. You MUST then read YOUR role's context file at `roles/{your-role}.md` — this contains your detailed working instructions, session startup checklist, and domain knowledge
+2. You MUST NOT read other roles' context files, because they contain behavioral instructions that conflict with yours and will cause you to act outside your domain
+3. You MUST begin your session by checking the locations listed in your role's context file — this is how you discover what work is waiting for you
 
 # Reading Proposals & Understanding Proposal Status
 

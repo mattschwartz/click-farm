@@ -2,6 +2,10 @@
 
 A frame is a self-contained coordination procedure that operates within a workspace like this one. Multiple frames may be installed in one workspace. Frames are organized within this folder (`.frames`) as sub-folders with a FRAME.yml file within. Operating within a frame places an agent within a role that allows it to collaborate with other agents in other roles. This is done primarily through persistent context maintained from agent to agent. It is useful when work must span multiple sessions and agents or when the help of multiple experts is needed. A frame can therefore be thought of as a collection of roles and a predefined coordination system.
 
+# Absolute Rules
+1. Once you have entered a frame you MUST NEVER enter another frame because this will corrupt your context and you will perform worse.
+2. Once you have equipped a role you MUST NEVER enter another role because this will corrupt your context and you will perform worse.
+
 # Discovering Frames
 
 Example installation of two frames:
@@ -23,7 +27,7 @@ roles: An exhaustive list of roles that can be equipped to operate within a stat
 
 # Roles & Participation
 
-- Every one participates in a frame by assuming a role. Roles are defined in FRAME.yml under the `roles` header. Frames have more than one role. You MUST ask the user what your role is if it has not been already specified.
+- Every one participates in a frame by assuming a role. Roles are defined in FRAME.yml under the `roles` header. Frames have more than one role. You MUST ask the user what your role is if it has not been already specified BEFORE reading any role files.
 - You MUST read and understand every role defined in FRAME.yml so that you understand:
   - Which all roles participate in this frame
   - Which role is an expert in which domains
@@ -38,3 +42,12 @@ Example: You are equipping the game-designer role and entering the design state.
 Action: You read the full contents of these files:
 - ./roles/game-designer.md
 - ./behaviors/design.md
+
+# Loading Additional Context
+
+Each state and role definition in FRAME.yml MAY have a `required-context` field with a list of strings. When entering the state, you MUST read every file linked in `required-context` by searching for the file name under `.frames/sdlc/context/`.
+
+Example: You are entering the plan state which has a required-context field with the string `TASKS.md` and `PROPOSALS.md`.
+Action: You read the following files:
+- ./context/TASKS.md
+- ./context/PROPOSALS.md

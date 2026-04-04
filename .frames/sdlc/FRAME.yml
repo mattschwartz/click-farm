@@ -3,6 +3,7 @@ description: A coordination protocol for taking ideas from design through implem
 states:
   - name: design
     description: Deliberate on a design question to reach alignment. The goal is a written decision, not a conversation — the output is a proposal document that other roles can act on.
+    required-context: [PROPOSALS.md]
     enter: When a large or ambiguous decision is being discussed which needs to be heavily deliberated by multiple agents and/or the user.
     exit: When the design has been written to disk and the user is happy with the output.
     input: A conversation with the user, which may contain other resources and references.
@@ -11,6 +12,7 @@ states:
 
   - name: review
     description: Review a draft proposal from the perspective of your role. The goal is to leave the document better than you found it — with your feedback written in, questions answered, and new questions surfaced.
+    required-context: [PROPOSALS.md]
     enter: When a proposal document in draft needs to be reviewed.
     exit: When the proposal document has been fully read and all relevant questions addressed and feedback has been entered back into the document and the user is happy with the output.
     input: A proposal document in draft status
@@ -56,8 +58,10 @@ roles:
       - Where a boundary should be drawn between modules
       - Whether a proposed implementation will create coupling, scaling, or maintenance problems
       - How to decompose a large feature into discrete, buildable pieces
+      - What infrastructure, language, framework, etc. to use for implementation
+      - High-level functional system interactions
     excluded-knowledge:
-      - The question is about *what* to build, how it should feel to the player, or how game systems should interact — that belongs to the game designer. The architect decomposes decisions, they do not make them.
+      - The question is about how it should feel to the player, or how game systems should interact — that belongs to the game designer.
       - The question is about how to write specific code within an existing, well-defined contract — that belongs to the engineer. If the contract is clear, the engineer doesn't need the architect to hold their hand.
       - The architecture spec already answers your question — read it again before routing, because the answer may be there in a section you skimmed.
 

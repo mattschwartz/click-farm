@@ -108,7 +108,8 @@ Polly's other thoughts on using vague directives intentionally
 - [confirmed from claude api docs] As token count grows, accuracy and recall degrade, a phenomenon known as context rot. This makes curating what's in context just as important as how much space is available. https://platform.claude.com/docs/en/build-with-claude/context-windows#:~:text=As%20token%20count%20grows%2C%20accuracy%20and%20recall%20degrade%2C%20a%20phenomenon%20known%20as%20context%20rot.%20This%20makes%20curating%20what%27s%20in%20context%20just%20as%20important%20as%20how%20much%20space%20is%20available.
 - [theory] narrowing and widening the context window to craft your results
 - [theory] context window = narrowing the probability space. the more context, the wider the probability space
-- 
+- [observation] hallucinating a file path when one is not explicitly provided, but a directive says to "look for X", the agent hallucinates and guesses where X might be located, which may differ session to session
+- [theory] context engineering: think about what you want the agent to definitively do and what you want to leave open. Where you want the agent's "creativity" to fill the gaps. (like enforcing structure in a template but leaving parts open-ended for the agent to make judgment calls on how to fill it)
 
 SKills from polly
   1. "Capability packages with instructions and tools, loaded on-demand." — A skill is a bundle of a prompt (instructions) + tool access, packaged together. It's not loaded into the conversation until you actually

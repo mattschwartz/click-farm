@@ -49,21 +49,7 @@ Share your assessment of the proposal with the user. Surface concerns, ask clari
 Append a Review Log entry to the proposal document. This is the transactional step — if this doesn't happen, the review didn't happen.
 
 **Constraints:**
-- You MUST append your review to the end of the proposal using this format:
-  ```markdown
-  ---
-
-  ## Review Log
-
-  ### {your-role} — {YYYY-MM-DD}
-
-  **Assessment:** {approve | request-changes | flag-for-discussion}
-
-  {Your review — specific points, concerns, questions answered, new questions raised}
-
-  **For {next-reviewer-role or author}:**
-  - {Open question or action item}
-  ```
+- You MUST append your review to the end of the proposal using the correct format
 - You MUST NOT modify the proposal body itself, because you are a reviewer — changes to the proposal content belong to the author. Your review lives in the Review Log.
 - You MUST NOT skip this step, because a review that exists only in conversation is invisible to the next agent in the next session
 
@@ -72,8 +58,8 @@ Append a Review Log entry to the proposal document. This is the transactional st
 After writing your review, update the proposal's frontmatter to reflect your review.
 
 **Constraints:**
-- If your assessment is **approve**: You MUST remove your role from the `reviewers` list, because your review is complete
-- If your assessment is **request-changes**: You MUST leave your role in the `reviewers` list, because you need to re-review after changes are made
+- If your assessment is **Aligned**: You MUST remove your role from the `reviewers` list, because your review is complete
+- If your assessment is **Request for Comment** or **Not Aligned**: You MUST leave your role in the `reviewers` list, because you need to re-review after changes are made
 - If your review identifies questions or concerns that require input from a role NOT currently in the `reviewers` list, You MUST add that role to the `reviewers` list, because a question directed at a role that isn't listed as a reviewer will never be seen by that role — the routing only works if the frontmatter reflects who needs to respond
 - If the `reviewers` list is now empty (all roles have approved): You MUST update `status` to `accepted` and move the file to `.frames/sdlc/proposals/accepted/`
 - If the `reviewers` list is not empty: You MUST leave the file in `proposals/draft/` with `status: draft` — the next reviewer will find it

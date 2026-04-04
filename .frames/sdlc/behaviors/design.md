@@ -6,10 +6,6 @@ Use when a large or ambiguous decision needs to be explored, debated, and commit
 
 Do NOT use for small, reversible decisions that can be made inline. Do NOT use if an accepted proposal already answers the question — check `.frames/sdlc/proposals/` first.
 
-# Proposal Loading
-
-Before deciding to read an entire propopsal file, you MUST read the first 7 lines of frontmatter which will give you enough context to know whether to load the entire file or not. The frontmatter consists of the following 5 fields: name, description, author, status, and reviewers. 
-
 ---
 
 ## Inputs
@@ -62,48 +58,7 @@ Write the proposal document to `.frames/sdlc/proposals/draft/` using the exact t
 
 ## Output
 
-File location: `.frames/sdlc/proposals/draft/{short-kebab-title}.md`
-
-```markdown
----
-name: Short Title of the Decision
-description: One-line description of what this proposal decides.
-author: your-role
-status: draft
-reviewers: [role-1, role-2]
----
-
-## Decision
-
-[A single, clear statement that someone could disagree with.]
-
-## Context
-
-[What led to this decision. What problem it solves. What would happen without it.]
-
-## Options Considered
-
-| Option | Tradeoffs |
-|--------|-----------|
-| Option A | [pros and cons] |
-| Option B | [pros and cons] |
-
-## Decision Rationale
-
-[Why this option over the others. What tipped it.]
-
-## What This Locks In
-
-[What is now committed. What cannot easily be changed after this is accepted.]
-
-## What Remains Open
-
-[What this decision intentionally leaves unresolved for later.]
-
-## Rejected Approaches
-
-[What was considered and why it was ruled out.]
-```
+File location: `.frames/sdlc/proposals/draft/{short-kebab-title}.md` following the PROPOSALS template.
 
 ---
 
