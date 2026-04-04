@@ -77,9 +77,7 @@ File location: `.frames/sdlc/proposals/draft/{short-kebab-title}.md` following t
 When the proposal is written and confirmed:
 
 1. Update the `reviewers` field with all roles who need to weigh in
-2. Add a task to each reviewer's task queue: `Review proposal: {name}`
-3. Update your own task queue to mark this task complete
-4. Do NOT move the proposal out of `draft/` — that is the reviewer's responsibility
+2. Do NOT move the proposal out of `draft/` — that is the reviewer's responsibility
 
 If the user is not ready to commit: stay in Step 2. Do not force formalization.
 

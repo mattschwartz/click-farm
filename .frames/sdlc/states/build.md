@@ -2,11 +2,11 @@
 
 ## Overview
 
-Implement a clearly-defined coding task. The output is working code with passing tests that satisfies the task's done-when condition. Use this behavior when a task in `tasks/engineer.md` is ready to be picked up and built.
+Implement a clearly-defined coding or infrastructure task. The output is working code with passing tests that satisfies the task's done-when condition.
 
 ## Parameters
 
-- **task** (required): The task to implement. This may be a specific task entry in `tasks/engineer.md` or a description provided by the user.
+- **task** (required): The task to implement.
 - **spec** (optional): Path to the architecture spec or design doc that this task implements against
 
 **Constraints for parameter acquisition:**

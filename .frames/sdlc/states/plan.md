@@ -25,7 +25,7 @@ Read and understand the design that needs to be decomposed.
 - You MUST read the full source document if one is provided, because planning against a partial understanding produces tasks that miss requirements or contradict the design
 - You MUST identify any open questions or ambiguities in the source material before creating tasks, because a task built on an unanswered question will block the person who picks it up
 - If the source has open questions that affect planning, You MUST surface them to the user before proceeding, because creating tasks around ambiguity forces the implementer to make design decisions they shouldn't be making
-- You SHOULD check existing architecture docs in `architecture/` for constraints that affect decomposition
+- You SHOULD check existing architecture docs in `.frames/sdlc/architecture/` for constraints that affect decomposition
 
 ### 2. Identify Work Items
 
