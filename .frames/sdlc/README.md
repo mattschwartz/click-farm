@@ -22,7 +22,7 @@ bash .frames/sdlc/tools/board.sh
 bash .frames/sdlc/tools/board.sh --role <role>
 ```
 
-At the beginning of a session, you MUST run `.frames/sdlc/tools/board.sh` to understand the current state of the project. To see your specific work, run `.frames/sdlc/tools/board.sh --role <your-role>`.
+At the beginning of a session, you MUST run `.frames/sdlc/tools/board.sh` to understand the current state of the project. To see a specific role's work, run `.frames/sdlc/tools/board.sh --role <role-name>`. Format the output as an ASCII table listing each task's ID, title, state, complexity, and what it's blocked on.
 
 Every task has a `state` field that tells you which state to enter when working on it. When you pick up a task, you MUST enter the state declared on that task by loading the corresponding behavior file from `states/{state}.md`.
 
@@ -78,11 +78,16 @@ The script assigns an integer ID automatically and returns the full task object.
 
 ### Completing a task
 
+When all acceptance criteria have been addressed and the user is happy with the output, mark the task complete. If you only completed some acceptance criteria, do NOT mark the task complete — discuss with the user what remains.
+
 ```bash
+# mark the task complete:
 bash .frames/sdlc/tools/task.sh complete <id>
 ```
 
-Tasks are never deleted — completion updates the status and records the date.
+If you have more tasks assigned to you, first check the task's role, state, and complexity model. If your current role, state, or complexity model do not match precisely with the task's prescribed role, state, and complexity model, you MUST STOP and flag this to the user to determine how to continue.
+
+If you have no more tasks assigned to you, politely inform the user and suggest they start a new session and pick up with the next task and role.
 
 ---
 
@@ -110,13 +115,3 @@ When creating tasks:
 - Include ALL relevant files and references in `related_items` with a clear purpose for each
 - Acceptance criteria MUST include actionable output
 - If there are unknowns, list them in `open_questions` with the owner who can answer them
-
-## Completing a task
-
-When all acceptance criteria have been addressed and the user is happy with the output, mark the task complete:
-
-```bash
-bash .frames/sdlc/tools/task.sh complete <id>
-```
-
-If you only completed some acceptance criteria, do NOT mark the task complete — discuss with the user what remains.
