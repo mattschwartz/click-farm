@@ -7,6 +7,7 @@ import {
   effectiveAlgorithmModifier,
   computeGeneratorEffectiveRate,
   computeAllGeneratorEffectiveRates,
+  computeSnapshot,
   CLICK_BASE_ENGAGEMENT,
 } from './index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -501,5 +502,52 @@ describe('postClick', () => {
     const next = postClick(state, STATIC_DATA);
     expect(next.player.total_followers).toBe(0);
     expect(next.platforms.chirper.followers).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeSnapshot
+// ---------------------------------------------------------------------------
+
+describe('computeSnapshot', () => {
+  it('produces zero rates for an empty initial state', () => {
+    const state = createInitialGameState(STATIC_DATA, T0);
+    const snap = computeSnapshot(state, STATIC_DATA);
+    expect(snap.total_engagement_rate).toBe(0);
+    expect(snap.total_follower_rate).toBe(0);
+    expect(snap.platform_rates.chirper).toBe(0);
+    expect(snap.platform_rates.instasham).toBe(0);
+    expect(snap.platform_rates.grindset).toBe(0);
+  });
+
+  it('captures current algorithm_state_index', () => {
+    const state = createInitialGameState(STATIC_DATA, T0);
+    const snap = computeSnapshot(state, STATIC_DATA);
+    expect(snap.algorithm_state_index).toBe(state.algorithm.current_state_index);
+  });
+
+  it('rates are expressed per second, matching tick accumulation over 1s', () => {
+    const state = stateWithGenerator('selfies', 10, 2);
+    const snap = computeSnapshot(state, STATIC_DATA);
+    const oneSec = tick(state, T0 + 1000, 1000, STATIC_DATA);
+    expect(oneSec.player.engagement).toBeCloseTo(snap.total_engagement_rate, 6);
+    expect(oneSec.player.total_followers).toBeCloseTo(snap.total_follower_rate, 6);
+  });
+
+  it('platform_rates sum equals total_follower_rate', () => {
+    const base = stateWithGenerator('selfies', 10, 1);
+    const state: GameState = {
+      ...base,
+      platforms: {
+        ...base.platforms,
+        instasham: { ...base.platforms.instasham, unlocked: true },
+      },
+    };
+    const snap = computeSnapshot(state, STATIC_DATA);
+    const sum =
+      snap.platform_rates.chirper
+      + snap.platform_rates.instasham
+      + snap.platform_rates.grindset;
+    expect(sum).toBeCloseTo(snap.total_follower_rate, 6);
   });
 });

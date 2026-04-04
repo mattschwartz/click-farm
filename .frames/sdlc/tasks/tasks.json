@@ -398,7 +398,7 @@
       "alias": "E7",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Economy & Systems Integration",
       "requester": "architect",
@@ -423,7 +423,8 @@
         "Integration tests verify multi-system interactions with realistic play scenarios"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 27,
@@ -455,9 +456,7 @@
         "Tests verify offline calculation accuracy for various durations and algorithm state configurations"
       ],
       "open_questions": [],
-      "blocked_on": [
-        26
-      ]
+      "blocked_on": []
     },
     {
       "id": 28,
@@ -490,9 +489,7 @@
         "Tests verify: reset completeness, Clout calculation accuracy, meta-upgrade persistence and effects"
       ],
       "open_questions": [],
-      "blocked_on": [
-        26
-      ]
+      "blocked_on": []
     },
     {
       "id": 29,
@@ -530,9 +527,7 @@
         "UI communicates with backend per the interface contracts in the architecture spec"
       ],
       "open_questions": [],
-      "blocked_on": [
-        26
-      ]
+      "blocked_on": []
     },
     {
       "id": 30,
@@ -570,8 +565,7 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        17,
-        26
+        17
       ]
     },
     {

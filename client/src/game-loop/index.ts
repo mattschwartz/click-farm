@@ -20,6 +20,7 @@ import type {
   PlatformId,
   PlatformState,
   Player,
+  SnapshotState,
   StaticData,
   UpgradeId,
 } from '../types.ts';
@@ -278,6 +279,57 @@ export function tick(
   );
 
   return { player, generators, platforms, algorithm };
+}
+
+// ---------------------------------------------------------------------------
+// Snapshot
+// ---------------------------------------------------------------------------
+
+/**
+ * Produce a SnapshotState from the current GameState. Aggregates the current
+ * per-second engagement/follower rates and captures the algorithm index so
+ * the offline calculator can walk the schedule from this point.
+ *
+ * Used by the driver when saving on close, and by the offline calculator on
+ * the next open.
+ */
+export function computeSnapshot(
+  state: GameState,
+  staticData: StaticData,
+): SnapshotState {
+  const ratesPerSec = computeAllGeneratorEffectiveRates(state, staticData);
+  let total_engagement_rate = 0;
+  for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
+    total_engagement_rate += ratesPerSec[id] ?? 0;
+  }
+
+  // Convert to per-ms, compute distribution, scale back to per-sec.
+  const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
+  for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
+    ratesPerMs[id] = (ratesPerSec[id] ?? 0) / 1000;
+  }
+  const distribution = computeFollowerDistribution(
+    ratesPerMs,
+    state.platforms,
+    staticData,
+  );
+
+  // distribution rates are per-ms. Convert to per-sec for the snapshot.
+  const platform_rates = Object.fromEntries(
+    (Object.keys(state.platforms) as PlatformId[]).map((id) => [
+      id,
+      distribution.perPlatformRate[id] * 1000,
+    ]),
+  ) as Record<PlatformId, number>;
+
+  const total_follower_rate = distribution.totalRate * 1000;
+
+  return {
+    total_engagement_rate,
+    total_follower_rate,
+    algorithm_state_index: state.algorithm.current_state_index,
+    platform_rates,
+  };
 }
 
 // ---------------------------------------------------------------------------
