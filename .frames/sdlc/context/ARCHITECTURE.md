@@ -1,25 +1,8 @@
+# Project-level architecture docs
+
+Project-level architecture docs are located at: `.frames/sdlc/architecture/*.md`.
+
 # Software Architecture — General Reference
-
-> **Audience:** Mid-level. Assumes you know what a server, a database, and an API are. Focuses on *how systems fit together* — not what the individual pieces do in isolation.
-
----
-
-## Table of Contents
-
-1. [What Architecture Actually Is](#what-architecture-actually-is)
-2. [Backend Fundamentals](#backend-fundamentals)
-3. [Frontend Fundamentals](#frontend-fundamentals)
-4. [APIs — The Boundary Layer](#apis--the-boundary-layer)
-5. [Data — Storage, Shape, and Flow](#data--storage-shape-and-flow)
-6. [Networking Essentials](#networking-essentials)
-7. [Infrastructure and Deployment](#infrastructure-and-deployment)
-8. [Infrastructure as Code](#infrastructure-as-code)
-9. [Observability](#observability)
-10. [Security Fundamentals](#security-fundamentals)
-11. [Architectural Patterns](#architectural-patterns)
-12. [Common Failure Modes](#common-failure-modes)
-
----
 
 ## What Architecture Actually Is
 
