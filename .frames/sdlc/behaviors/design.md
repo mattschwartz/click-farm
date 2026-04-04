@@ -1,19 +1,25 @@
 # Design Behavior
 
-## Overview
+## When to Use This
 
-Deliberate on a design question to reach a written decision. The output is a proposal document in `proposals/draft/` that other roles can review and act on. Use this behavior when a large or ambiguous decision needs to be explored, debated, and committed to paper before work can begin.
+Use when a large or ambiguous decision needs to be explored, debated, and committed to paper before work can begin. The output is a proposal document that other roles can review and act on.
 
-## Parameters
+Do NOT use for small, reversible decisions that can be made inline. Do NOT use if an accepted proposal already answers the question — check `.frames/sdlc/proposals/` first.
+
+# Proposal Loading
+
+Before deciding to read an entire propopsal file, you MUST read the first 7 lines of frontmatter which will give you enough context to know whether to load the entire file or not. The frontmatter consists of the following 5 fields: name, description, author, status, and reviewers. 
+
+---
+
+## Inputs
 
 - **topic** (required): The design question or area being explored
 - **context** (optional): References, prior proposals, or conversation history that inform this decision
 
-**Constraints for parameter acquisition:**
-- If all required parameters are already provided, You MUST proceed to the Steps
-- If any required parameters are missing, You MUST ask for them before proceeding
-- When asking for parameters, You MUST request all parameters in a single prompt
-- When asking for parameters, You MUST use the exact parameter names as defined
+If any required inputs are missing, ask for all of them in a single prompt before proceeding.
+
+---
 
 ## Steps
 
@@ -21,20 +27,18 @@ Deliberate on a design question to reach a written decision. The output is a pro
 
 Before proposing anything, understand what is actually being decided and why it matters.
 
-**Constraints:**
-- You MUST read any referenced context materials (prior proposals, design docs, architecture specs) before forming a position, because designing without context produces decisions that contradict existing ones
-- You MUST name the specific decision that needs to be made — not the topic area, but the question with a yes/no or A/B/C answer
-- You SHOULD identify which other roles will be affected by this decision, because that determines who needs to review the output
-- You MUST NOT skip exploration by jumping straight to a proposal, because premature formalization kills good ideas and hides tradeoffs
+- You MUST read any referenced context materials before forming a position
+- You MUST name the specific decision — not the topic area, but the question with a yes/no or A/B/C answer
+- You SHOULD identify which roles will be affected by this decision
+- You MUST NOT skip to a proposal — premature formalization kills good ideas and hides tradeoffs
 
 ### 2. Explore Tradeoffs
 
 Discuss the question with the user. Surface options, name tradeoffs, consider second-order effects.
 
-**Constraints:**
-- You MUST present at least two viable approaches with named tradeoffs for each, because a decision with only one option isn't a decision — it's a rubber stamp
-- You SHOULD name the feeling or experience each approach produces for the player, because mechanics without a target feeling drift during implementation
-- You MUST flag when the conversation is approaching the engagement/manipulation line, because crossing it silently creates ethical debt
+- You MUST present at least two viable approaches with named tradeoffs for each
+- You SHOULD name the feeling or experience each approach produces for the player
+- You MUST flag when the conversation approaches the engagement/manipulation line
 - You MAY bring references from other games or systems to ground the discussion
 - You MUST NOT make the decision unilaterally — you explore, the user decides
 
@@ -42,37 +46,100 @@ Discuss the question with the user. Surface options, name tradeoffs, consider se
 
 Once the user has reached a position, frame it as a specific, debatable statement.
 
-**Constraints:**
-- You MUST frame the proposal as a clear statement that someone could disagree with, because vague proposals produce vague alignment that falls apart during implementation
-- You MUST identify which roles need to review this proposal and list them as reviewers
-- You SHOULD name what this decision locks in and what it leaves open, because reviewers need to know what they're agreeing to
+- You MUST frame the proposal as a clear statement that someone could disagree with
+- You MUST identify which roles need to review and list them as reviewers
+- You SHOULD name what this decision locks in and what it leaves open
 
 ### 4. Write to Disk
 
-Write the proposal document to `proposals/draft/`.
+Write the proposal document to `.frames/sdlc/proposals/draft/` using the exact template below.
 
-**Constraints:**
-- You MUST include the required frontmatter:
-  ```yaml
-  ---
-  name: Short Title of the Decision
-  description: One-line description of what this proposal decides.
-  author: your-role
-  status: draft
-  reviewers: [role-1, role-2]
-  ---
-  ```
-- You MUST include in the body: the decision statement, the context that led to it, the tradeoffs considered, and what was rejected and why
-- You MUST NOT leave the proposal in conversation only — if it's not on disk, it doesn't exist, because the next session has no memory of this conversation
-- You MUST confirm with the user that the written proposal accurately captures the decision before considering this behavior complete
+- You MUST use the frontmatter and body template exactly as specified
+- You MUST NOT leave the proposal in conversation only — if it's not on disk, it doesn't exist
+- You MUST confirm with the user that the written proposal accurately captures the decision before exiting
+
+---
+
+## Output
+
+File location: `.frames/sdlc/proposals/draft/{short-kebab-title}.md`
+
+```markdown
+---
+name: Short Title of the Decision
+description: One-line description of what this proposal decides.
+author: your-role
+status: draft
+reviewers: [role-1, role-2]
+---
+
+## Decision
+
+[A single, clear statement that someone could disagree with.]
+
+## Context
+
+[What led to this decision. What problem it solves. What would happen without it.]
+
+## Options Considered
+
+| Option | Tradeoffs |
+|--------|-----------|
+| Option A | [pros and cons] |
+| Option B | [pros and cons] |
+
+## Decision Rationale
+
+[Why this option over the others. What tipped it.]
+
+## What This Locks In
+
+[What is now committed. What cannot easily be changed after this is accepted.]
+
+## What Remains Open
+
+[What this decision intentionally leaves unresolved for later.]
+
+## Rejected Approaches
+
+[What was considered and why it was ruled out.]
+```
+
+---
+
+## Example
+
+**topic:** How should players discover new stock categories?
+
+**Resulting proposal statement:** "Stock categories are unlocked through portfolio milestones, not time gates, because milestone unlocks tie discovery to player agency."
+
+**Reviewers:** architect (implementation complexity), ux-designer (onboarding impact)
+
+---
+
+## Exit
+
+When the proposal is written and confirmed:
+
+1. Update the `reviewers` field with all roles who need to weigh in
+2. Add a task to each reviewer's task queue: `Review proposal: {name}`
+3. Update your own task queue to mark this task complete
+4. Do NOT move the proposal out of `draft/` — that is the reviewer's responsibility
+
+If the user is not ready to commit: stay in Step 2. Do not force formalization.
+
+---
 
 ## Troubleshooting
 
 ### User isn't ready to commit
-If the user is still exploring and not ready to frame a proposal, stay in Step 2. Do not force formalization. The exit condition includes "the user is happy with the output" — if they're not ready, you're not done.
+Stay in Step 2. The exit condition includes "the user is happy with the output" — if they're not ready, you're not done.
 
 ### Decision spans multiple domains
-If the proposal touches multiple domains (e.g. game design AND architecture), list all relevant roles in the `reviewers` field. The review behavior handles multi-role review.
+List all relevant roles in `reviewers`. The review behavior handles multi-role review.
 
 ### Proposal contradicts an existing accepted proposal
-Flag the contradiction explicitly in the proposal body. Reviewers need to know that accepting this proposal implicitly modifies or overrides a prior decision.
+Flag the contradiction explicitly in the proposal body under ## Context. Reviewers need to know that accepting this proposal implicitly modifies or overrides a prior decision.
+
+### No clear winner between options
+That's fine. The proposal can commit to "we chose A knowing B was viable — here's why." A documented close call is better than a vague consensus.

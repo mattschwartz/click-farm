@@ -6,7 +6,7 @@ Review a draft proposal from the perspective of your role. The goal is to leave 
 
 ## Parameters
 
-- **proposal_path** (required): The path to the proposal document in `proposals/draft/`
+- **proposal_path** (required): The path to the proposal document in `.frames/sdlc/proposals/draft/`
 
 **Constraints for parameter acquisition:**
 - If all required parameters are already provided, You MUST proceed to the Steps
@@ -75,7 +75,7 @@ After writing your review, update the proposal's frontmatter to reflect your rev
 - If your assessment is **approve**: You MUST remove your role from the `reviewers` list, because your review is complete
 - If your assessment is **request-changes**: You MUST leave your role in the `reviewers` list, because you need to re-review after changes are made
 - If your review identifies questions or concerns that require input from a role NOT currently in the `reviewers` list, You MUST add that role to the `reviewers` list, because a question directed at a role that isn't listed as a reviewer will never be seen by that role — the routing only works if the frontmatter reflects who needs to respond
-- If the `reviewers` list is now empty (all roles have approved): You MUST update `status` to `accepted` and move the file to `proposals/accepted/`
+- If the `reviewers` list is now empty (all roles have approved): You MUST update `status` to `accepted` and move the file to `.frames/sdlc/proposals/accepted/`
 - If the `reviewers` list is not empty: You MUST leave the file in `proposals/draft/` with `status: draft` — the next reviewer will find it
 - You MUST NOT move a proposal to `accepted/` while any role remains in the `reviewers` list, because partial alignment creates ambiguity that surfaces as bugs during implementation
 
@@ -104,7 +104,7 @@ status: draft
 reviewers: [engineer]
 ---
 ```
-Review Log entry appended. File stays in `proposals/draft/`. Engineer still needs to review.
+Review Log entry appended. File stays in `.frames/sdlc/proposals/draft/`. Engineer still needs to review.
 
 ### Example: Last reviewer approves
 
@@ -129,7 +129,7 @@ status: accepted
 reviewers: []
 ---
 ```
-File moved to `proposals/accepted/`.
+File moved to `.frames/sdlc/proposals/accepted/`.
 
 ## Troubleshooting
 

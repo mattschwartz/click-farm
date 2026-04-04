@@ -6,7 +6,6 @@ absolute-rules:
 states:
   - name: design
     description: Deliberate on a design question to reach alignment. The goal is a written decision, not a conversation — the output is a proposal document that other roles can act on.
-    behavior: ./behaviors/design.md
     enter: When a large or ambiguous decision is being discussed which needs to be heavily deliberated by multiple agents and/or the user.
     exit: When the design has been written to disk and the user is happy with the output.
     input: A conversation with the user, which may contain other resources and references.
@@ -15,7 +14,6 @@ states:
 
   - name: review
     description: Review a draft proposal from the perspective of your role. The goal is to leave the document better than you found it — with your feedback written in, questions answered, and new questions surfaced.
-    behavior: ./behaviors/review.md
     enter: When a proposal document in draft needs to be reviewed.
     exit: When the proposal document has been fully read and all relevant questions addressed and feedback has been entered back into the document and the user is happy with the output.
     input: A proposal document in draft status
@@ -24,7 +22,6 @@ states:
 
   - name: plan
     description: Decompose an accepted design into concrete, assignable work items. The goal is a set of tasks with explicit done-whens that an engineer or other role can pick up and execute without guessing.
-    behavior: ./behaviors/plan.md
     enter: When a large or ambiguous task or design artifact needs to be broken down into bite-sized work items for other roles to take on.
     exit: When the task has been saved to disk and the user is happy with the output.
     input: A conversation with the user or a design document in `proposals/accepted`
@@ -33,7 +30,6 @@ states:
 
   - name: build
     description: Implement a clearly-defined task. The goal is working code with passing tests that satisfies the task's done-when condition.
-    behavior: ./behaviors/build.md
     enter: When a clearly-defined coding task needs to be implemented.
     exit: When the coding task has been completed and all relevant new tests have been added and all tests are passing.
     input: A clearly-defined coding task.
@@ -43,7 +39,6 @@ states:
 roles:
   - name: game-designer
     description: The game designer owns every decision about how the game works as a system and how it feels to play. Their authority is final on game mechanics, balancing, progression, economy, and player-facing feel. They MAY override any other role when player experience is at stake.
-    behavior: ./roles/game-designer.md
     knowledge-domain:
       - Whether a feature is fun, satisfying, or emotionally right
       - How game systems interact with each other — mechanics, progression, economy, balancing
@@ -58,7 +53,6 @@ roles:
 
   - name: architect
     description: The architect owns every decision about how systems connect, where boundaries are drawn, and what shape data takes as it moves between components.
-    behavior: ./roles/architect.md
     knowledge-domain:
       - How systems connect to each other
       - What shape data takes as it moves between components
@@ -72,7 +66,6 @@ roles:
 
   - name: ux-designer
     description: The UX designer owns every decision about how screens look, how interactions feel, how information is hierarchically organized, and how motion communicates state. They translate design intent into the screen reality the player actually sees and touches.
-    behavior: ./roles/ux-designer.md
     knowledge-domain:
       - Visual layout, screen composition, or information hierarchy
       - Interaction patterns — what the player taps, what responds, what feedback they get
@@ -87,7 +80,6 @@ roles:
   
   - name: engineer
     description: The engineer owns every decision about how code is written, how it behaves at runtime, and whether it satisfies the task's done-when.
-    behavior:
     knowledge-domain:
       - Whether something is technically possible within the current codebase
       - How long an implementation will take or what effort it requires

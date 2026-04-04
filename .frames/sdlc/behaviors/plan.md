@@ -6,7 +6,7 @@ Decompose an accepted design into concrete, assignable work items. The output is
 
 ## Parameters
 
-- **source** (required): The accepted proposal or conversation that defines what needs to be planned. This may be a path to a file in `proposals/accepted/` or a conversation with the user.
+- **source** (required): The accepted proposal or conversation that defines what needs to be planned. This may be a path to a file in `.frames/sdlc/proposals/accepted/` or a conversation with the user.
 - **scope** (optional): Any constraints on scope — what's in and what's out for this planning pass
 
 **Constraints for parameter acquisition:**
