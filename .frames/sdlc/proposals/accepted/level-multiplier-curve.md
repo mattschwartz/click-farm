@@ -2,8 +2,8 @@
 name: Level Multiplier Curve
 description: Defines the shape of level_multiplier(level) used in the generator engagement rate formula.
 author: game-designer
-status: draft
-reviewers: [game-designer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Level Multiplier Curve
@@ -80,7 +80,8 @@ Upgrade costs are not defined in this proposal, but they must match the curve's 
 
 ## Open Questions
 
-1. **Upgrade cost formula.** The level multiplier curve is defined, but the cost to upgrade from level `n` to `n+1` is not. Costs must scale to match the curve's inflection — otherwise early levels are trivially cheap and late levels are unreachable. **Owner: game-designer** (cost pacing is a balance decision)
+1. [RESOLVED] **Upgrade cost formula.** The level multiplier curve is defined, but the cost to upgrade from level `n` to `n+1` is not. Costs must scale to match the curve's inflection — otherwise early levels are trivially cheap and late levels are unreachable. **Owner: game-designer** (cost pacing is a balance decision)
+   - **Answer:** `upgrade_cost(generator, target_level) = base_upgrade_cost[generator] × level_multiplier(target_level)`. You pay proportionally for what you get — cost grows at the same rate as output, keeping the cost/benefit ratio stable. This means upgrades always feel worth buying; the curve just requires more patience at higher levels. `base_upgrade_cost` is a per-generator constant in static data (tunable). Proposed seed values (Engagement): Selfies 50, Memes 200, Hot Takes 600, Tutorials 1,500, Livestreams 5,000, Podcasts 15,000, Viral Stunts 50,000. These must be validated against production rates during balance testing — the formula shape is committed, the constants are not. See `.frames/sdlc/proposals/draft/clout-upgrade-menu.md` for the Clout side of the economy.
 
 ---
 # Review: architect
@@ -114,4 +115,18 @@ Edge cases are clean:
 On the architect's note to extract as `levelMultiplier(level: number): number`: I'm elevating this from a non-blocking note to a requirement in my assessment. If this formula is inlined at the call site in the game loop tick, it will be inlined again when offline balance tooling is added — and the two implementations will silently drift if the tuning constant is ever changed. A single named pure function in a shared utilities module is the only correct approach. This is a build-time requirement, not a post-ship cleanup.
 
 One protocol note: the open question on upgrade costs (owned by game-designer) is unresolved. Same situation as the clout curve — I agree the formula itself is independent of costs, but per the proposals protocol, I've added game-designer to the reviewers list so this is formally closed before the proposal is accepted. Process requirement only.
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-04
+**Decision**: Aligned
+
+**Comments**
+
+Open question resolved. The upgrade cost formula is `upgrade_cost(generator, target_level) = base_upgrade_cost[generator] × level_multiplier(target_level)`. Cost scales at the same rate as output — the cost/benefit ratio stays stable across all levels, which means upgrades always feel worth buying. The curve creates natural pacing through growing absolute cost, not through punishing cost/benefit degradation.
+
+The engineer's elevation of `levelMultiplier` to a named pure function is correct and accepted. It's also the only design-safe implementation: if the denominator `5` is ever adjusted during balance testing, one constant in one function updates the entire game.
+
+Base cost seed values are proposed in the resolved open question and are intentionally not committed constants — balance validation against production rates is required. The formula shape is what's locked in here.
 
