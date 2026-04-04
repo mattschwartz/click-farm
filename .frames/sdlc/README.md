@@ -111,4 +111,26 @@ model and interface contracts can be finalized.
 
 1. Should the player ever see the full breakdown of the formula, or only the final rate? This affects whether the stack order needs to be legible or just correct. Architect cannot answer this — it is a design
 question.
+
+---
 ```
+
+### How to complete a task
+
+As an agent assigned a task, follow these steps to complete it.
+
+**Step 1. Understand the task**
+
+Read that task in full to understand what is precisely expected of you.
+
+**Step 2. Address open questions**
+
+Work with the user to close the open questions before starting. If there are items in this task which are outside your knowledge-domain, flag that to the user and suggest creating a separate task or creating a subagent of that agent and asking them directly.
+
+**Step 3. Implement the task**
+
+Fully address ALL acceptance criteria items.
+
+**Step 4. Resolve the task**
+
+Once all acceptance criteria have been addressed and the user is happy with the output, delete the task from your task file by removing only that section's content. If you only completed some acceptance criteria, remove those from the task but the task itself must otherwise remain.

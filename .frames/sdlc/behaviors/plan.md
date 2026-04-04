@@ -55,13 +55,6 @@ Write the tasks to the appropriate task queue files.
 
 **Constraints:**
 - You MUST write tasks to `tasks/{role}.md` for each assigned role
-- Every task entry MUST include:
-  - **Description** — what needs to be done
-  - **Status** — `backlog`, `next`, or `active`
-  - **Done-when** — the testable completion condition
-  - **Dependencies** — what must be complete before this task can start, or "none"
-  - **Source** — reference to the proposal or conversation that spawned this task
-- You MUST NOT set a task to `active` unless it has no unresolved dependencies, because an active task with unmet dependencies will block immediately
 - You MUST set the first task in the dependency chain to `next` (or `active` if no dependencies), and subsequent tasks to `backlog`
 - You MUST confirm with the user that the task breakdown is complete and accurate before considering this behavior complete
 

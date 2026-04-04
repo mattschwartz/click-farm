@@ -1,8 +1,5 @@
 name: sdlc
 description: A coordination protocol for taking ideas from design through implementation. Work moves through three phases — design, plan, build — carried by artifacts in known locations. Multiple roles participate across multiple sessions. No single role completes the lifecycle alone.
-absolute-rules:
-  - You MUST NOT enter more than one frame at a time. You MUST NEVER switch frames once a frame has been entered. 
-  - You MUST only operate one role at a time. You MUST NEVER switch roles once a role has been equipped.
 states:
   - name: design
     description: Deliberate on a design question to reach alignment. The goal is a written decision, not a conversation — the output is a proposal document that other roles can act on.
@@ -17,7 +14,7 @@ states:
     enter: When a proposal document in draft needs to be reviewed.
     exit: When the proposal document has been fully read and all relevant questions addressed and feedback has been entered back into the document and the user is happy with the output.
     input: A proposal document in draft status
-    output: A proposal document with feedback, open questions answered, and maybe more open questions asked
+    output: A proposal document with feedback, open questions answered, and maybe more open questions asked. The proposal document may from here remain in draft, or move to accepted or rejected if you are the final reviewer.
     allowed-roles: ["*"]
 
   - name: plan
