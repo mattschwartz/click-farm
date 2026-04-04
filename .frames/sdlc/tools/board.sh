@@ -78,7 +78,7 @@ has_open_questions() {
   n="$(awk '
     /^## Open Questions/ { inside=1; next }
     /^(## |---$)/ && inside { exit }
-    inside && /^[0-9]+\./ { count++ }
+    inside && /^[0-9]+\./ && !/\[RESOLVED\]/ { count++ }
     END { print count+0 }
   ' "$file")"
   [[ "$n" -gt 0 ]]
@@ -106,7 +106,7 @@ oqs_for_role() {
     /^## Open Questions/ { inside=1; next }
     /^## / && inside { exit }
     /^---$/ && inside { exit }
-    inside && /^[0-9]+\./ && tolower($0) ~ role { print }
+    inside && /^[0-9]+\./ && !/\[RESOLVED\]/ && tolower($0) ~ role { print }
   ' "$file"
 }
 

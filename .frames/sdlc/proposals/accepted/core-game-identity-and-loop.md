@@ -154,11 +154,16 @@ The main alternative considered was playing the social media theme straight — 
 
 ## Open Questions
 
-1. **How should the UI represent the Algorithm state?** This is a UX question — the game designer defines that the algorithm is visible and reactive, but how it's displayed on screen (ambient visualization? explicit dashboard? somewhere in between?) is a UX decision. **Owner: ux-designer**
-2. **What is the technical architecture for the algorithm shift system?** Server-side timer? Client-side with seed? This affects whether players can predict/manipulate shifts in unintended ways. **Owner: architect**
-3. **How many platforms at launch?** This is a scoping question that depends on implementation complexity. The design supports 3-6 but the right number depends on what's buildable. **Owner: architect**
-4. **Should idle gains be calculated on-open or tick in background?** Affects architecture and player experience of returning to the game. **Owner: architect**
-5. **What does "going viral" look like on screen?** The moment a post goes viral is the game's peak emotional beat — it needs to feel explosive and surprising. How to deliver that visually is a UX question. **Owner: ux-designer**
+1. [RESOLVED] **How should the UI represent the Algorithm state?** This is a UX question — the game designer defines that the algorithm is visible and reactive, but how it's displayed on screen (ambient visualization? explicit dashboard? somewhere in between?) is a UX decision. **Owner: ux-designer**
+   - **Answer:** An ambient weather-like metaphor. Each Algorithm state has a name and visual mood (color palette shift, background motion, iconography). A subtle instability indicator builds as a shift approaches — visual tension like clouds gathering, not a countdown. On shift: visible environmental transition with affected generators showing a brief visual pulse. See ux-designer review for full spec.
+2. [RESOLVED] **What is the technical architecture for the algorithm shift system?** Server-side timer? Client-side with seed? This affects whether players can predict/manipulate shifts in unintended ways. **Owner: architect**
+   - **Answer:** Client-side with a seeded PRNG. The seed determines the full shift schedule deterministically — works offline, is reproducible for debugging, requires no server polling. The fuzzy window is a base interval ± a seeded random offset. If leaderboards or social features come later, the seed can be server-issued without changing shift logic. See architect review for full spec.
+3. [RESOLVED] **How many platforms at launch?** This is a scoping question that depends on implementation complexity. The design supports 3-6 but the right number depends on what's buildable. **Owner: architect**
+   - **Answer:** 3 platforms. Cross-posting needs at least 3 for interesting tradeoffs (2 is binary). Each platform carries its own follower count, content affinity, and unlock threshold. A 4th can be added post-launch without structural changes if the platform entity is well-defined.
+4. [RESOLVED] **Should idle gains be calculated on-open or tick in background?** Affects architecture and player experience of returning to the game. **Owner: architect**
+   - **Answer:** Calculate-on-open. Standard for the genre. The "no negative events offline" rule makes it clean: `time_elapsed × production_rate_at_close`. Algorithm state advances while offline (the seed makes this deterministic), but no negative effects from shifts fire until the player returns.
+5. [RESOLVED] **What does "going viral" look like on screen?** The moment a post goes viral is the game's peak emotional beat — it needs to feel explosive and surprising. How to deliver that visually is a UX question. **Owner: ux-designer**
+   - **Answer:** A sustained 5-10 second cascade event. Engagement counter visibly accelerates in real-time, screen energy escalates (particle burst, subtle shake, generator glow), a distinct sound signature cuts through ambient audio. The payoff is watching the cascade unfold, not seeing a result after the fact. See ux-designer review for full spec.
 
 ---
 
