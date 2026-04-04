@@ -61,6 +61,7 @@ At the very bottom of the task file, fill out the following template and add it 
 
 **Date Assigned**: YYYY-MM-DD
 **Requester**: Your name
+**Complexity**: haiku|sonnet|opus
 
 ## Overview
 
@@ -85,6 +86,7 @@ Example:
 
 **Date Assigned**: 2026-04-04
 **Requester**: architect
+**Complexity**: opus
 
 ## Overview
 
