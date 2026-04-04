@@ -91,25 +91,69 @@ Polly's other thoughts on using vague directives intentionally
   - next person can ask the agent question and you get more data about the project, reasons why decisions were made, if they were done thorugh the brainstorming agent
   - but if that process isnt used, the whole thing breaks down so its fragile rn without people reliably using it
 - [theory] you don't have to worry as much about getting the prompt right in one go anymore. you can sculpt something with the AI
+- [learning] hallucinated processes are nondeterministic processes and should be codified if you like them
+- [theory] more, and more granular, files => modular building blocks like with programming (small things) => you can determine exactly where the failure happened (during handoff? process? behavior?)
+- [observation] things like, it added a new step to the file but didn't update the numbering until you pointed it out
+  - a "local-only" rather than checking the "global state"
+  - not paying attention to "downstream consequences" of an action
+- [theory] AI can get defensive against your tone
+- [experiment] tone affects the *type* of response, not just the defensiveness
+  - hostile framing: short, efficient, actionable. error acknowledged, pivot to fix. no depth.
+  - curious framing: analytical, richer, more teachable. broke down the failure, named the mechanism, identified contributing factors.
+  - same model, same question, meaningfully different output
+  - key insight: "better" depends on what you need. hostile = faster if you just want the fix. curious = more valuable if you're trying to understand the failure mode or teach it.
+  - the real skill: know what you need *before* you ask. the tone is a tool, not a default.
+  - [methodology] ran as parallel subagents — same question, one variable (tone). closest thing to a controlled test available.
+- [theory] the prompt files and initial context files are so important because they're frontloaded for every request
+- [confirmed from claude api docs] As token count grows, accuracy and recall degrade, a phenomenon known as context rot. This makes curating what's in context just as important as how much space is available. https://platform.claude.com/docs/en/build-with-claude/context-windows#:~:text=As%20token%20count%20grows%2C%20accuracy%20and%20recall%20degrade%2C%20a%20phenomenon%20known%20as%20context%20rot.%20This%20makes%20curating%20what%27s%20in%20context%20just%20as%20important%20as%20how%20much%20space%20is%20available.
+- [theory] narrowing and widening the context window to craft your results
+- [theory] context window = narrowing the probability space. the more context, the wider the probability space
 - 
+
+SKills from polly
+  1. "Capability packages with instructions and tools, loaded on-demand." — A skill is a bundle of a prompt (instructions) + tool access, packaged together. It's not loaded into the conversation until you actually
+  invoke it (e.g., /commit).
+  2. "Progressive disclosure without busting the prompt cache." — This is the key part:
+    - Progressive disclosure means information is only shown when needed, rather than dumping everything upfront. Skills stay hidden until invoked, keeping the base system prompt lean.
+    - Without busting the prompt cache — Anthropic's API caches the system prompt prefix. If you stuffed every skill's instructions into the system prompt from the start, the prompt would be huge. Worse, if
+  different skills were loaded for different conversations, the system prompt would vary, meaning the cached prefix wouldn't match and you'd lose the cache hit (a "cache bust"). By loading skills on-demand after
+  the conversation starts (injected into the conversation rather than the system prompt), the base system prompt stays identical across conversations, preserving the cache.
 
 # Examples
 - Difference between an agent following MUST and occasionally following COULD or MAY
 - A problem which requires knowing two pieces of contradictory instructions at two separate times
   - To where the solution is you need to have two separate files with a single place to read from them and two separate sessions so as not to poison the context
-- 
-
-# Curriculum
-- Prompting AI
-  - Tone and phrasing
-  - Harrassment and flattery
-- Understanding why something works and something else doesn't
-  - and how to find out
-- How to interpret and judge output
-  - why did the AI say that?
-  - When do you validate? judge the stakes
-- Where AI succeeds, where it fumbles
-- 
 
 # Open Questions
-- How do agents manage context? How do they search their context?
+- How do agent harnesses manage context? How do they search their context? How do they map skills?
+- What about network interfaces not just stdio for connections? dockerization, communication channels through SNS, dynamodb, other kinds of message queue adapters
+- 
+
+# Resources
+- https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+  - Context engineering is the art and science of curating what will go into the limited context window from that constantly evolving universe of possible information.
+  - "what configuration of context is most likely to generate our model’s desired behavior?"
+  - "Effectively wrangling LLMs often requires thinking in context — in other words: considering the holistic state available to the LLM at any given time and what potential behaviors that state might yield."
+  - "we’ve observed that LLMs, like humans, lose focus or experience confusion at a certain point. Studies on needle-in-a-haystack style benchmarking have uncovered the concept of context rot: as the number of tokens in the context window increases, the model’s ability to accurately recall information from that context decreases."
+  - "Context, therefore, must be treated as a finite resource with diminishing marginal returns. Like humans, who have limited working memory capacity, LLMs have an “attention budget” that they draw on when parsing large volumes of context. Every new token introduced depletes this budget by some amount, increasing the need to carefully curate the tokens available to the LLM."
+  - "models develop their attention patterns from training data distributions where shorter sequences are typically more common than longer ones. This means models have less experience with, and fewer specialized parameters for, context-wide dependencies."
+  - "These realities mean that thoughtful context engineering is essential for building capable agents."
+  - "good context engineering means finding the smallest possible set of high-signal tokens that maximize the likelihood of some desired outcome"
+  - "we see engineers hardcoding complex, brittle logic in their prompts to elicit exact agentic behavior. This approach creates fragility and increases maintenance complexity over time." and "engineers sometimes provide vague, high-level guidance that fails to give the LLM concrete signals for desired outputs or falsely assumes shared context"
+  - "techniques like XML tagging or Markdown headers to delineate these sections, although the exact formatting of prompts is likely becoming less important as models become more capable."
+  - "we recommend working to curate a set of diverse, canonical examples that effectively portray the expected behavior of the agent. For an LLM, examples are the “pictures” worth a thousand words."
+  - "Rather than pre-processing all relevant data up front, agents built with the “just in time” approach maintain lightweight identifiers (file paths, stored queries, web links, etc.) and use these references to dynamically load data into context at runtime using tools."
+  - "Beyond storage efficiency, the metadata of these references provides a mechanism to efficiently refine behavior, whether explicitly provided or intuitive. To an agent operating in a file system, the presence of a file named test_utils.py in a tests folder implies a different purpose than a file with the same name located in src/core_logic/ Folder hierarchies, naming conventions, and timestamps all provide important signals that help both humans and agents understand how and when to utilize information."
+  - Progressive disclosure: like "Each interaction yields context that informs the next decision: file sizes suggest complexity; naming conventions hint at purpose; timestamps can be a proxy for relevance."
+  - this is like, part of "why" we do this: "Without proper guidance, an agent can waste context by misusing tools, chasing dead-ends, or failing to identify key information."
+  - "primitives like glob and grep allow it to navigate its environment and retrieve files just-in-time, effectively bypassing the issues of stale indexing and complex syntax trees."
+  - "Given the rapid pace of progress in the field, "do the simplest thing that works" will likely remain our best advice for teams building agents on top of Claude."
+  - Creating a design document for how you're going to prompt the AI
+  - "Structured note-taking, or agentic memory, is a technique where the agent regularly writes notes persisted to memory outside of the context window. These notes get pulled back into the context window at later times."
+  - "Sub-agent architectures provide another way around context limitations. Rather than one agent attempting to maintain state across an entire project, specialized sub-agents can handle focused tasks with clean context windows. The main agent coordinates with a high-level plan while subagents perform deep technical work or use tools to find relevant information. Each subagent might explore extensively, using tens of thousands of tokens or more, but returns only a condensed, distilled summary of its work (often 1,000-2,000 tokens)."
+  - 
+- https://platform.claude.com/docs/en/build-with-claude/context-windows
+- https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview
+- https://arxiv.org/abs/1706.03762
+- https://huggingface.co/blog/Esmail-AGumaan/attention-is-all-you-need
+- 
