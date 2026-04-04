@@ -28,6 +28,10 @@ Enumerate your thoughts on the proposal and summarize your decision.
 
 If you are the last reviewer and are Aligned, you MUST read the doc to understand if there are any open questions. If there are, you MUST ensure the reviewers list contains that role. Only if ALL open questions have been answered should you then move the proposal to accepted or rejected.
 
+# Resolving Open Questions
+
+To resolve an open question, mark the open question as [RESOLVED] inline with the question and respond to the question inline.
+
 # Updating a proposal
 
 When a reviewer marks a proposal as Not Aligned or Request for Comment, the author updates the proposal body to address the feedback before re-review.
