@@ -23,7 +23,11 @@ At the beginning of a session, you MUST identify all the proposals and their cur
 
 # Reading Tasks & Understanding Board Status
 
-Each role has their own task file under `./tasks` (eg `./tasks/architect.md`). To quickly check if a role has work to do, get the file size of each task list. A nonzero file size means that role has at least one task and needs to be invoked. You SHOULD NOT read any tasks until you equip a role and only then should you only ever look at that role's task list.
+Each role has their own task file under `./tasks` (eg `./tasks/architect.md`). To quickly check if a role has work to do, get the file size of each task list. A nonzero file size means that role has at least one task and needs to be invoked. You SHOULD NOT read any tasks until you equip a role and only then should you only ever look at that role's task list unless the user asks you to explicitly.
+
+## Printing your task list
+
+When the user asks to see your entire task list and breakdown, read the entire task file and list each task including the task name, description, and complexity.
 
 ---
 
@@ -80,7 +84,7 @@ List with numbers everything that MUST be done in order to complete this task. B
 
 ## Open Questions
 
-If there are any open questions, you MUST list and number them here. Open questions are questions which you yourself cannot answer but MUST be answered before the task can begin because without this additional knowledge that the agent's expertise requires the task will be improperly completed. As the agent working on the task, it is your job to find answers to these questions by either applying your judgment and expertise or by directly asking the user.
+If there are any open questions, you MUST list and number them here along with their owner (role or user). Open questions are questions which you yourself cannot answer but MUST be answered before the task can begin because without this additional knowledge that the agent's expertise requires the task will be improperly completed. As the agent working on the task, it is your job to find answers to these questions by either applying your judgment and expertise or by directly asking the user.
 ```
 
 Example:
@@ -114,8 +118,8 @@ model and interface contracts can be finalized.
 
 ## Open Questions
 
-1. Should the player ever see the full breakdown of the formula, or only the final rate? This affects whether the stack order needs to be legible or just correct. Architect cannot answer this — it is a design
-question.
+1. [game-designer] Should the player ever see the full breakdown of the formula? 
+2. [ux-designer] Should the spinner be red or green?
 
 ---
 ```
