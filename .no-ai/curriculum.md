@@ -344,6 +344,25 @@ Each agent knows what it needs to know for its role — nothing more. An archite
 ### Staying in lane
 Well-defined roles produce a natural behavior: agents flag when something belongs to another role rather than handling it themselves. That boundary-awareness is a feature of good role design, not something you have to enforce constantly.
 
+### Roles signal scope, not just ownership
+
+The value of a well-defined role isn't just that it has clear ownership — it's that it communicates what categories of work are real in this project.
+
+When an architect exists, an agent knows architecture work should exist. Not just that someone will do it — that it needs to happen. The role's presence makes the domain of concern legitimate and legible.
+
+This works in both directions:
+- A defined role signals that its domain matters. An agent working near that domain doesn't skip it — it routes to the role.
+- An absent role is not neutral. If there's no QA agent, the swarm doesn't just lack QA work — it fails to notice that QA work is missing. The category drops out of the mental model entirely.
+
+So roles do three things simultaneously:
+1. **Own work** — obvious
+2. **Signal what work should exist** — less obvious, more important
+3. **Make the absence of that work visible** — the inverse, and the one that matters most at scale
+
+At small team sizes, a human notices the gaps. At twenty agents in parallel, the only way to know a concern is uncovered is if the roster is legible enough to show the hole.
+
+**Implication for role design:** an undefined role isn't a gap you fill later. It's an active suppression of that concern across the whole swarm.
+
 ### Handoffs
 Output from one agent becomes input to another. The handoff has to be explicit — what was produced, what decision was made, what the next agent needs to know. Implicit handoffs are where coordination breaks down.
 

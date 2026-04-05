@@ -149,6 +149,10 @@ Polly's other thoughts on using vague directives intentionally
 - [task] need to make the task cleanup work really well. probably something we codify instead of leaving it to the agents to self-decide
 - [observation] the agents all tend to review proposals positively... not much friction between the bots. might need to inject some antagonism in the reviews
 - [observation] more taks more problems.. if we keep adding new tasks and tweaking it can make older tasks redundant. need a groomer (not that kind)
+- [theory] having distinct roles with clear boundaries also helps the agents understand breadth of work better. like, "the architect exists, so i should probably have some architecture work exist here"
+  - Polly:   The role signals what categories of work are real in this project. It's not just breadth awareness — it's a legitimacy signal. An agent without an architect in the room might produce something that works but never ask whether it's structured well. The architect's existence changes what questions are on the table.
+  - It's almost like the team roster is a schema for the project's concerns. If a role doesn't exist, that domain of concern either doesn't exist or it falls into the gap between roles — and gaps are where things quietly rot.
+- [learning] we need something like plan -> work in progress -> **done** like we need to track when something was actually completed, too
 - 
 
 SKills from polly
