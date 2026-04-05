@@ -192,6 +192,9 @@ export function GameScreen() {
     }
   }, [offlineResult]);
 
+  // Upgrade drawer open state — used to dim the platform panel per spec §1.
+  const [upgradeDrawerOpen, setUpgradeDrawerOpen] = useState(false);
+
   // Approximate algorithm interval from static schedule — used for
   // instability scaling (we don't have the exact current-interval value
   // available; base ± variance is close enough for visual intent).
@@ -261,12 +264,14 @@ export function GameScreen() {
             onUpgrade={upgrade}
             viralGeneratorId={viralActive?.source_generator_id ?? null}
             riskLevels={scandalUIState.riskLevels}
+            onDrawerOpenChange={setUpgradeDrawerOpen}
           />
           <PlatformPanel
             state={state}
             staticData={STATIC_DATA}
             viralPlatformId={viralActive?.source_platform_id ?? null}
             riskLevels={scandalUIState.riskLevels}
+            drawerDimmed={upgradeDrawerOpen}
           />
         </div>
       </main>

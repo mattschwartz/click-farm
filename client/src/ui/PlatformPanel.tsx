@@ -32,9 +32,14 @@ interface Props {
    * warmth (building) or pulsing amber (high) risk indicators.
    */
   riskLevels?: Record<string, RiskLevel>;
+  /**
+   * When true, dims the platform panel to 40% opacity while the upgrade
+   * drawer is open (per UX spec ux/upgrade-curve-drawer-spec.md §1).
+   */
+  drawerDimmed?: boolean;
 }
 
-export function PlatformPanel({ state, staticData, viralPlatformId, riskLevels }: Props) {
+export function PlatformPanel({ state, staticData, viralPlatformId, riskLevels, drawerDimmed }: Props) {
   // Compute follower rates per platform for the rate indicators (UX §7.1).
   const engagementRates = computeAllGeneratorEffectiveRates(state, staticData);
   const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
@@ -56,7 +61,7 @@ export function PlatformPanel({ state, staticData, viralPlatformId, riskLevels }
   );
 
   return (
-    <aside className="platform-panel">
+    <aside className={`platform-panel${drawerDimmed ? ' drawer-dimmed' : ''}`}>
       {PLATFORM_ORDER.map((id) => {
         const p = state.platforms[id];
         const threshold = staticData.unlockThresholds.platforms[id] ?? 0;

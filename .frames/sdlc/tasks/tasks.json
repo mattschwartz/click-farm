@@ -1052,12 +1052,12 @@
       "id": 45,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Prestige: Clout Shop modal & Rebrand Ceremony",
       "requester": "engineer",
       "complexity": "opus",
-      "overview": "The core game screen (task #29) is live but players currently have no way to purchase Clout upgrades — the spec intentionally keeps Clout off the core screen (§5.3), so Clout lives on the prestige surface. This task implements the two prestige surfaces defined in the UX spec: (1) the persistent Clout Shop modal accessible during a run via the Upgrades affordance, and (2) the theatrical 4-phase Rebrand Ceremony (Threshold → Eulogy → Commit → Dissolution→Rebirth, 6–10s). The underlying simulation — calculateRebrand, applyRebrand, purchaseCloutUpgrade, the clout_upgrades map — is already built (task #28). This task wires the UI to it.\n\nEntry points to add to the core game screen: an 'Upgrades' button that opens the shop modal, and a Rebrand affordance that replaces the minimal corner button already in place. The shop modal must not pause the running game (core-game-screen.md §7.4 — the ticker keeps moving). Post-rebrand re-entry is silent (§1 / §6) — no welcome modal.",
+      "overview": "[SUPERSEDED 2026-04-05 by task #59 decomposition.] This monolith opus task was broken into 5 smaller sonnet/haiku build tasks — #62 (prestige cluster + Phase 1 modal, kills window.confirm), #63 (CloutUpgrade schema migration + data), #64 (Clout Shop modal full), #65 (Rebrand Ceremony Phases 2-4), #66 (post-rebrand badge + ambient copy). Engineer should pick up #62 and #63 first (unblocked).\n\n--- Original overview ---\n\nThe core game screen (task #29) is live but players currently have no way to purchase Clout upgrades — the spec intentionally keeps Clout off the core screen (§5.3), so Clout lives on the prestige surface. This task implements the two prestige surfaces defined in the UX spec: (1) the persistent Clout Shop modal accessible during a run via the Upgrades affordance, and (2) the theatrical 4-phase Rebrand Ceremony (Threshold → Eulogy → Commit → Dissolution→Rebirth, 6–10s). The underlying simulation — calculateRebrand, applyRebrand, purchaseCloutUpgrade, the clout_upgrades map — is already built (task #28). This task wires the UI to it.",
       "related_items": [
         {
           "ref": ".frames/sdlc/ux/prestige-rebrand-screen.md",
@@ -1100,7 +1100,8 @@
           "owner": "ux-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 46,
@@ -1668,7 +1669,7 @@
       "id": 59,
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Decompose prestige/rebrand system into build tasks",
       "requester": "ux-designer",
@@ -1722,7 +1723,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 60,

@@ -1394,3 +1394,239 @@
   border-color: rgba(255, 255, 255, 0.36);
   color: var(--text-p0);
 }
+
+/* --- Upgrade drawer (UX: ux/upgrade-curve-drawer-spec.md) ---------------- */
+
+/*
+ * Backdrop — transparent full-screen overlay that catches outside-tap to
+ * dismiss the drawer. Z-order: above normal content, below the drawer itself.
+ */
+.upgrade-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: transparent;
+}
+
+/*
+ * The drawer itself — fixed position, slides in from the right edge of the
+ * generator list, overlapping the platform panel column.
+ * Width: 340px per spec §1.
+ * right: 16px — aligned to the screen's right margin.
+ */
+.upgrade-drawer {
+  position: fixed;
+  right: 16px;
+  width: 340px;
+  z-index: 201;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-top: 3px solid var(--drawer-color, var(--panel-border));
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.48);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  animation: drawer-slide-in 300ms ease-out both;
+}
+
+.upgrade-drawer.upgrade-drawer-closing {
+  animation: drawer-slide-out 150ms ease-in both;
+}
+
+@keyframes drawer-slide-in {
+  from { transform: translateX(110%); opacity: 0.6; }
+  to   { transform: translateX(0);    opacity: 1;   }
+}
+
+@keyframes drawer-slide-out {
+  from { transform: translateX(0);    opacity: 1;   }
+  to   { transform: translateX(110%); opacity: 0;   }
+}
+
+/* Header — generator name + current level readout */
+.upgrade-drawer-header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.upgrade-drawer-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-p0);
+  margin-bottom: 4px;
+}
+
+.upgrade-drawer-current {
+  font-size: 13px;
+  color: var(--text-p2);
+}
+
+/* Level rows */
+.upgrade-drawer-levels {
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.upgrade-level-row {
+  display: grid;
+  grid-template-columns: 48px 72px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+/* Action row — elevated treatment with tinted background. */
+.upgrade-level-row.action-row {
+  background: rgba(var(--drawer-color-rgb, 200, 180, 150), 0.08);
+}
+
+.upgrade-level-row.action-row:hover {
+  background: rgba(var(--drawer-color-rgb, 200, 180, 150), 0.12);
+}
+
+/* Preview rows — readable but clearly not actionable (4.5:1 contrast). */
+.upgrade-level-row.preview-row {
+  opacity: 0.65;
+}
+
+.upgrade-level-lv {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-p0);
+}
+
+.upgrade-level-multi {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--drawer-color, var(--text-p1));
+}
+
+.upgrade-level-cost {
+  font-size: 13px;
+  color: var(--text-p2);
+}
+
+.upgrade-level-cost.insufficient {
+  color: #e8a835; /* amber — matches Buy button insufficient treatment */
+}
+
+/* "need N more" hint below action row. */
+.upgrade-insufficient-hint {
+  font-size: 11px;
+  font-style: italic;
+  color: #e8a835;
+  padding: 2px 10px 4px;
+  animation: hint-fade-in 150ms ease-out both;
+}
+
+@keyframes hint-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Upgrade button — right-aligned in the action row. */
+.upgrade-btn {
+  width: 100px;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--drawer-color, #666);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 120ms ease-out, transform 60ms ease-out;
+  flex-shrink: 0;
+}
+
+.upgrade-btn:hover {
+  filter: brightness(1.10);
+}
+
+.upgrade-btn:active {
+  transform: scale(0.97);
+  filter: brightness(1.15);
+}
+
+.upgrade-btn.insufficient {
+  background: rgba(255, 255, 255, 0.12);
+  color: #e8a835;
+  cursor: default;
+}
+
+.upgrade-btn.upgrade-btn-shake {
+  animation: upgrade-btn-shake 200ms ease-out;
+}
+
+@keyframes upgrade-btn-shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-4px); }
+  40%  { transform: translateX(4px); }
+  60%  { transform: translateX(-3px); }
+  80%  { transform: translateX(3px); }
+  100% { transform: translateX(0); }
+}
+
+/* Footer */
+.upgrade-drawer-footer {
+  padding: 10px 16px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.upgrade-close-btn {
+  width: 80px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  color: var(--text-p2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 100ms, color 100ms;
+}
+
+.upgrade-close-btn:hover {
+  border-color: rgba(255, 255, 255, 0.42);
+  color: var(--text-p0);
+}
+
+/* Platform panel dims to 40% opacity while upgrade drawer is open (spec §1). */
+.platform-panel.drawer-dimmed {
+  opacity: 0.40;
+  pointer-events: none;
+  transition: opacity 200ms ease-out;
+}
+
+.platform-panel {
+  transition: opacity 200ms ease-out;
+}
+
+/* Generator row highlight when its drawer is open. */
+.generator-row.drawer-open {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Upgrade affordance button — distinct visual from Buy. */
+.row-btn-upgrade.active {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+/* Reduce Motion — drawer appears/disappears instantly; dim still applies. */
+@media (prefers-reduced-motion: reduce) {
+  .upgrade-drawer {
+    animation: none;
+  }
+
+  .upgrade-drawer.upgrade-drawer-closing {
+    animation: none;
+  }
+}
