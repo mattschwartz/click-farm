@@ -1108,6 +1108,184 @@
 }
 
 /* ==========================================================================
+   Rebrand Ceremony — Phases 2–4 (UX §4.3–4.5, task #65)
+   ========================================================================== */
+
+/* --- Phase 2: Eulogy ------------------------------------------------------ */
+
+.ceremony-modal-eulogy {
+  width: 560px;
+  padding: 60px 48px 36px;
+  text-align: center;
+  background: rgba(14, 16, 22, 0.98);
+  /* Desaturation via custom property (0.0 → 0.4) */
+  filter: saturate(calc(1 - var(--eulogy-desat, 0)));
+  transition: filter 600ms ease-out;
+}
+
+.eulogy-stanzas {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.eulogy-stanza {
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--text-p1);
+  margin: 0;
+  max-width: 440px;
+  opacity: 0.45;
+  transition: opacity 600ms ease-out;
+  letter-spacing: 0.005em;
+}
+
+.eulogy-stanza-active {
+  opacity: 1;
+  animation: eulogy-fade-in 600ms ease-out;
+}
+
+@keyframes eulogy-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.eulogy-skip-btn {
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--text-p3);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 120ms;
+}
+
+.eulogy-skip-btn:hover {
+  color: var(--text-p1);
+}
+
+/* --- Phase 3: Commit ------------------------------------------------------ */
+
+.ceremony-modal-commit {
+  width: 480px;
+  padding: 72px 48px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+}
+
+.commit-headline {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--text-p0);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.commit-btn {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  width: 280px;
+  height: 80px;
+  border-radius: 10px;
+  background: rgba(255, 214, 107, 0.14);
+  border: 1px solid rgba(255, 214, 107, 0.45);
+  color: var(--accent-gold);
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 120ms, border-color 120ms, transform 80ms;
+}
+
+.commit-btn:hover {
+  background: rgba(255, 214, 107, 0.22);
+  border-color: rgba(255, 214, 107, 0.62);
+}
+
+.commit-btn-pressing {
+  transform: scale(0.96);
+}
+
+/* --- Phase 4: Dissolution → Rebirth --------------------------------------- */
+
+.ceremony-modal-dissolution {
+  width: 560px;
+  padding: 72px 48px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  transition: opacity 600ms ease-in-out, filter 600ms ease-in-out;
+}
+
+.ceremony-stage-dissolving {
+  opacity: 1;
+}
+
+.ceremony-stage-wash {
+  opacity: 0.4;
+  filter: blur(2px);
+}
+
+.ceremony-stage-rebirth {
+  opacity: 0;
+  filter: blur(8px);
+}
+
+.dissolution-counters {
+  display: flex;
+  gap: 48px;
+  justify-content: center;
+}
+
+.dissolution-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.dissolution-counter-value {
+  font-size: 36px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-p0);
+  letter-spacing: 0.01em;
+}
+
+.dissolution-counter-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-p3);
+}
+
+/* Screen-reader-only — visually hidden but announced by assistive tech */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ==========================================================================
    Viral burst visual choreography (UX §9.2)
    Three phases: Build (0–1500ms) → Peak (variable) → Decay (last 1000ms).
    ========================================================================== */

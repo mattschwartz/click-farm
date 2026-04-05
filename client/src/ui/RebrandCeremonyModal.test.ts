@@ -11,6 +11,7 @@ import {
   buildResetItems,
   buildPersistItems,
   isEligibleToRebrand,
+  isSkipVisible,
 } from './RebrandCeremonyModal.tsx';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -209,5 +210,25 @@ describe('buildPersistItems', () => {
     const upgradeItem = items.find((r) => r.label === 'Clout upgrades');
     // engagement_boost (2) and platform_headstart_instasham (1) → 2 owned
     expect(upgradeItem?.value).toBe('2 owned');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isSkipVisible
+// ---------------------------------------------------------------------------
+
+describe('isSkipVisible', () => {
+  it('hides skip on first rebrand (count=0) until stanza index 2', () => {
+    expect(isSkipVisible(0, 0)).toBe(false);
+    expect(isSkipVisible(0, 1)).toBe(false);
+    expect(isSkipVisible(0, 2)).toBe(true);
+    expect(isSkipVisible(0, 3)).toBe(true);
+  });
+
+  it('shows skip immediately on subsequent rebrands (count > 0)', () => {
+    expect(isSkipVisible(1, 0)).toBe(true);
+    expect(isSkipVisible(1, 1)).toBe(true);
+    expect(isSkipVisible(5, 0)).toBe(true);
+    expect(isSkipVisible(100, 2)).toBe(true);
   });
 });

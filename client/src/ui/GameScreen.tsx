@@ -249,10 +249,15 @@ export function GameScreen() {
   };
 
   const handleCeremonyConfirm = () => {
-    // Perform rebrand, then close modal and resume the loop.
+    // Phase 3 commit — perform the rebrand. Modal stays open for Phase 4.
     rebrand();
+  };
+
+  const handleCeremonyComplete = () => {
+    // Phase 4 finished — close modal, resume loop, return focus.
     setShowCeremonyModal(false);
     resumeLoop();
+    rebrandBtnRef.current?.focus();
   };
 
   return (
@@ -403,6 +408,7 @@ export function GameScreen() {
           state={state}
           onCancel={handleCeremonyCancel}
           onConfirm={handleCeremonyConfirm}
+          onComplete={handleCeremonyComplete}
         />
       )}
     </>
