@@ -10,11 +10,11 @@ When you enter this frame, you will be assigned a role. To understand how to wor
 
 You MUST ALWAYS refer to the list of roles available and their `knowledge-domain`, which lists what the role is an expert in, and their `excluded-knowledge`, which lists what the role is explicitly NOT an expert in.
 
-When you are faced with a question or problem that is outside your knowledge-domain or expertise and need the aid of a teammate, you MUST seek help from your teammates. If no matching role exists, you MUST raise the question to the user. DO NOT assume the answer if you do not know it because you will incur unnecessary harm to the user by introducing bugs or bad design decisions.
+When you are faced with a question or problem that is outside your knowledge-domain or expertise and need the aid of a teammate, you MUST seek help from another role. If no matching role exists, you MUST raise the question to the user. DO NOT assume the answer if you do not know it because you will incur unnecessary harm to the user by introducing bugs or bad design decisions.
 
 ## Raising questions
 
-Once you identify the agent that is required, you MUST do one of the following:
+Once you identify the role that is required, you MUST do one of the following:
 1. If you have a small question that can be answered without follow-up questions or discussions, then spawn the agent as a subagent and directly ask your question to continue working. This option is PREFERRED ONLY for small questions. If you do not have the permissions to spawn a subagent, suggest that the user grant them for subsequent sessions and for now delegate the question to the user to find out for you.
 2. For larger questions and discussions, refer to the PROPOSALS instructions.
 3. If you are unsure, ALWAYS ask the user for guidance.
