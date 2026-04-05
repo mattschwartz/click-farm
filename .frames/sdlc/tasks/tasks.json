@@ -4259,7 +4259,7 @@
       "alias": "D1",
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Resolve manual-action-ladder Unlock-phase balance gaps",
       "requester": "architect",
@@ -4295,7 +4295,8 @@
         "Resolutions are written back into manual-action-ladder.md (appended revision note OR inline in §14) so the engineer can read a single source of truth"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 116,
@@ -4365,7 +4366,7 @@
       "alias": "A2",
       "role": "architect",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Supersession edits to 4 accepted proposals per manual-action-ladder",
       "requester": "architect",
@@ -4401,7 +4402,8 @@
         "Each edit preserves historical context (do not delete superseded text; mark it superseded inline or alongside)"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 118,
@@ -4591,7 +4593,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        115,
         116,
         119
       ]
