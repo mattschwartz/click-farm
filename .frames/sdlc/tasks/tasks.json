@@ -1,5 +1,5 @@
 {
-  "next_id": 103,
+  "next_id": 106,
   "tasks": [
     {
       "id": 1,
@@ -3573,7 +3573,7 @@
       "id": 102,
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Decompose Audience Mood into architecture spec + engineer build tasks",
       "requester": "architect",
@@ -3622,7 +3622,173 @@
           "owner": "game-designer"
         }
       ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 103,
+      "alias": "UX1",
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Write ux/audience-mood.md UX spec (mood strip, copy pools, motion)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Write the UX spec for Audience Mood — the diagnostic mood strip that appears on platform cards when retention drops below the degradation threshold. The ux-designer's review on proposals/accepted/audience-mood-retention.md (dated 2026-04-05) already provided the spec direction — strip anatomy, copy direction, motion notes. This task formalizes that guidance as a standalone UX spec doc that the engineer can build against, and updates ux/core-game-screen.md to reflect the new zone.\n\nThe arch spec at .frames/sdlc/architecture/audience-mood.md names the contract the UI consumes: per-platform `retention`, `dominant_pressure`, `dominant_generator`. The UX spec defines how those fields render.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/audience-mood-retention.md",
+          "purpose": "source proposal; ux-designer's review at the bottom contains the starting spec direction for strip anatomy, copy pools, and motion"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/audience-mood.md",
+          "purpose": "arch spec defining the UI contract (retention, dominant_pressure, dominant_generator) and the degradation_threshold (0.95) at which the strip appears"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "zone map must be updated to show the mood strip's position in the platform card"
+        },
+        {
+          "ref": ".frames/sdlc/ux/scandal-system.md",
+          "purpose": "superseded UX spec — reference only; do not build from it"
+        },
+        {
+          "ref": ".frames/sdlc/ux/visual-identity.md",
+          "purpose": "risk-language amber lives here; mood strip tints pull from this palette (NOT the algorithm-mood weather vocabulary)"
+        }
+      ],
+      "acceptance_criteria": [
+        "File .frames/sdlc/ux/audience-mood.md created",
+        "Strip anatomy specified: 18px height, 1px hairline divider, flavor text (10px italic left), retention number (10px weight 500 right), severity tint bands (three amber opacity steps at retention thresholds 0.95/0.8/0.5)",
+        "Vocabulary separation from algorithm-mood explicitly called out — no shared color language",
+        "Copy pools expanded from the review starter set: at least 8 lines each for Content Fatigue, Neglect, Algorithm Misalignment (rotation pool per pressure)",
+        "Motion spec: strip fade-in 150ms ease-out opacity 0→1 on retention crossing degradation_threshold downward; fade-out 150ms ease-out on recovery to 1.0; reduce-motion snaps in/out",
+        "Variable platform card height behavior documented: either a reserved 18px gutter or a 200ms ease-out reflow on strip appear/disappear (ux-designer chooses, spec names the choice)",
+        "CVD pass: flavor text + retention number convey cause and magnitude without color dependency",
+        "ux/core-game-screen.md zone map updated to place the mood strip within the platform card",
+        "Content Fatigue flavor text rendering specified: when dominant pressure is content_fatigue, the flavor line must name the specific generator type (from dominant_generator in the contract)"
+      ],
+      "open_questions": [],
       "blocked_on": []
+    },
+    {
+      "id": 104,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Implement Audience Mood model layer (data, pressures, retention, migration)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the model-layer half of Audience Mood per .frames/sdlc/architecture/audience-mood.md. This task delivers the data model, pressure accumulators, composition rule, retention integration into follower distribution, and save-schema migration. No UI work — the mood strip UI lands in a separate follow-up task (E2) that depends on both this task and the UX spec (UX1).\n\nThis task is blocked on #100 (scandal removal) — the codebase must be scandal-free before retention fields are added to PlatformState. #100 bumps the save schema to V7 (its AC names V6 but that's already consumed — the engineer picking up #100 will bump to V7). This task then adds V7→V8.\n\nScope is model-layer only; the game will be playable after this task with retention mechanics active but no on-screen mood strip. That's an acceptable interim — the retention multiplier will quietly affect follower gains. E2 lands immediately after.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/audience-mood.md",
+          "purpose": "authoritative spec — data model, pressure update rules, composition formula, integration point, migration plan"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/audience-mood-retention.md",
+          "purpose": "source proposal for design intent and tuning philosophy"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "PlatformState (line ~168) gains four fields: retention, content_fatigue, neglect, algorithm_misalignment"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "post event handler and computeFollowerDistribution call site — both need hookup"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "add V7→V8 migration initializing retention fields"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "add audience_mood static-data group per arch spec (placeholder values)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "follower-distribution formula at ~line 388 is the integration point"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "stacking order declaration — retention registers in the platform-scoped multipliers chain"
+        }
+      ],
+      "acceptance_criteria": [
+        "PlatformState in client/src/types.ts gains fields: retention: number, content_fatigue: Record<GeneratorId, number>, neglect: number, algorithm_misalignment: number",
+        "New module client/src/audience-mood/index.ts exports applyPostToPressures, advanceNeglect, recomputeRetention, recomputeAllRetention per the interface contracts in the arch spec",
+        "audience_mood static-data group added to client/src/static-data/index.ts with all tuning knobs from the arch spec (retention_floor, degradation_threshold, content_fatigue_per_post_same_gen, content_fatigue_decay_per_post_other_gen, neglect_per_tick, neglect_reset_on_post, misalignment_per_off_trend_post, misalignment_decay_per_aligned_post, composition_priority, *_weight values) initialized with placeholder values",
+        "game-loop/index.ts calls applyPostToPressures on every post event (after the post is recorded, before follower distribution for that tick)",
+        "game-loop/index.ts calls advanceNeglect on every tick with the tick delta; offline-catchup path does NOT call advanceNeglect",
+        "computeFollowerDistribution (or its call site) multiplies per-platform follower gain by platform.retention — verified by unit test showing follower gain scales linearly with retention",
+        "retention registered in the creator-kit stacking-order chain per creator-kit.md §Stacking Order — declares its position (platform-scoped multipliers, after content-affinity weighting, before viral burst)",
+        "Save schema bumped to V8 (assuming #100 landed V7); migrateV7toV8 added that initializes retention=1.0 and all three pressure accumulators to 0/empty-map on every platform",
+        "migrateV7toV8 test case added loading a V7 fixture and asserting retention fields are present and initialized correctly in the resulting V8 state",
+        "Save load path calls recomputeAllRetention after migration so loaded retention values are normalized against pressure values",
+        "Unit tests cover: content_fatigue accumulates on same-generator post and decays on other-generator post; neglect accumulates per tick and resets on post; algorithm_misalignment accumulates on off-trend post and decays on aligned post; composition rule produces expected retention for single-pressure and multi-pressure cases; retention clamps to retention_floor; dominant_pressure tie-breaking follows composition_priority",
+        "offline calculator applies platform.retention as a constant scalar (retention value at last_close_time) over the offline follower accrual window — verified by test",
+        "Full typecheck passes with zero errors",
+        "Full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        100
+      ]
+    },
+    {
+      "id": 105,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Implement Audience Mood strip UI on platform cards",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the mood strip UI on platform cards per .frames/sdlc/ux/audience-mood.md (written by UX1). Consumes the contract exposed by the model layer (E1): per-platform retention, dominant_pressure, dominant_generator. Renders the strip only when retention < degradation_threshold (0.95). Content Fatigue flavor lines use dominant_generator to name the specific content type.\n\nThis task depends on both the UX spec (for strip anatomy, copy pools, motion) and the model layer (for the data to render). When this ships, the Audience Mood system is fully visible to the player — the retention multiplier's cause and effect are on-screen.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/audience-mood.md",
+          "purpose": "UX spec — strip anatomy, copy pools, motion, CVD requirements"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/audience-mood.md",
+          "purpose": "model contract — retention, dominant_pressure, dominant_generator per platform"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "platform card zone — updated by UX1"
+        },
+        {
+          "ref": ".frames/sdlc/ux/visual-identity.md",
+          "purpose": "risk-language amber palette for strip tint bands"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "platform card rendering — mood strip is appended below the card body"
+        }
+      ],
+      "acceptance_criteria": [
+        "Mood strip renders within each platform card when that platform's retention < degradation_threshold (0.95); strip is absent when retention >= threshold",
+        "Strip layout matches ux/audience-mood.md: 18px height, 1px hairline divider, italic flavor text left-aligned, retention number (×0.7 etc) right-aligned, severity tint bands at the three opacity steps",
+        "Flavor text is drawn from a copy pool per pressure type (content_fatigue / neglect / algorithm_misalignment), with rotation across the pool per appearance",
+        "When dominant_pressure === content_fatigue, the flavor line names the specific generator (from dominant_generator) — pulls from a template that can substitute generator name",
+        "Motion: strip fades in 150ms ease-out when retention crosses degradation_threshold downward; fades out 150ms ease-out on recovery to 1.0; reduce-motion snaps in/out",
+        "Variable platform card height handled per ux spec (reserved gutter OR ease-out reflow — matches whichever UX1 chose)",
+        "CVD accessibility test: strip is readable via text + number alone, without relying on color — verified under protanopia/deuteranopia simulation",
+        "No per-post multiplier annotation on floating follower-gain numbers (per ux OQ#6) — floating numbers remain as raw gain only",
+        "Unit or component tests cover: strip visibility toggles on retention threshold, flavor text selection by dominant_pressure, generator name substitution for content_fatigue, motion is applied, reduce-motion disables motion",
+        "Full typecheck passes with zero errors",
+        "Full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        103,
+        104
+      ]
     }
   ]
 }
