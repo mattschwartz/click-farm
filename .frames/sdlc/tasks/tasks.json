@@ -1,5 +1,5 @@
 {
-  "next_id": 122,
+  "next_id": 124,
   "tasks": [
     {
       "id": 1,
@@ -3880,7 +3880,7 @@
       "alias": "E1",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Implement light-mode base tokens and apply across GameScreen.css",
       "requester": "architect",
@@ -3918,7 +3918,8 @@
         "Manual visual check: GameScreen renders, all five algorithm states load without visual regression beyond the intentional base flip, no illegible text found"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 109,
@@ -4052,7 +4053,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        108,
         109
       ]
     },
@@ -4671,6 +4671,69 @@
         119,
         120
       ]
+    },
+    {
+      "id": 122,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Implement GameScreen HUD refinements — top-bar layout + number formatting + icon collision",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Implement the unblocked sections of the game-screen HUD refinements spec. Three concrete fixes observed in the live GameScreen on 2026-04-05: (1) the top bar has three text layers z-stacking into each other, clobbering the title, the 'followers' label, and overlaying a '↑ kit' unit label on top of the primary currency; (2) number formatting is inconsistent — generator rows use SI notation (868.43M/s) while platform cards emit raw digits (+127097600.7/s), a trust-signal failure; (3) platform-card follower counts render with strikethrough/icon-overlap corruption next to influencer icons. Sections 2 (multiplier pill magnitude encoding) and 3 (BUY vs LVL↑ hierarchy) are NOT in scope — they are blocked on game-designer sign-off. Multiplier pill contrast (§2.2) IS in scope — it is an accessibility floor fix with no open question.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/game-screen-hud-refinements.md",
+          "purpose": "The spec. §1 (top-bar), §2.2 (pill contrast), §4 (formatting + icon collision) are in scope for this task."
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "Parent layout spec — §2 zone map defines the 80px top-bar strip and three-zone structure."
+        },
+        {
+          "ref": ".frames/sdlc/ux/visual-identity.md",
+          "purpose": "Token set — --accent-penalty and --accent-boost tokens referenced for pill contrast fix."
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "GameScreen styles — top-bar layout and multiplier pill styles live here."
+        }
+      ],
+      "acceptance_criteria": [
+        "Top bar: no two text elements share pixels at any viewport width ≥1024px; 'followers' label fully legible; unit label ('↑ kit') sits below its value in flow, not overlaid; transient messages like 'You are new again.' render outside top-bar element bounds (dedicated toast layer, top-center, 16px below the strip, 2.4s dismiss)",
+        "Top bar: no absolute-positioned children in the three-zone layout; zones A/B/C are flex columns with the width rules from §1.2 of the spec; overflow policy from §1.3 implemented (engagement/followers truncate with SI suffix before overflowing; Zone A subtitle ellipses before title does)",
+        "Number formatting: a single SI formatter is applied to every rate, count, and delta on GameScreen — matching the table in §4.2 of the spec (integer <1K, 2-decimal K/M/B/T with /s suffix for rates, +/− prefix for deltas); '+127097600.7/s' style output no longer appears anywhere",
+        "Platform cards: follower-count numbers and influencer icons do not share pixels; any stray text-decoration:line-through on numeric readouts is removed",
+        "Multiplier pills: every pill (positive and negative) achieves ≥3:1 contrast against the rust page background under actual measurement (not estimation); if --accent-penalty does not currently hit 3:1, flag back to ux-designer for a darker token rather than improvising a color",
+        "No regressions to existing per-row affordance states (dormant/armed/ready/maxed) documented in ux/generator-max-level-state.md"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 123,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Decide multiplier-pill magnitude encoding + LVL↑ status-line threshold",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Two open questions from the game-screen-hud-refinements UX spec need game-designer sign-off before the remaining sections can be implemented. Both are small, self-contained calls. (1) Multiplier pills currently show the same visual for ×0.96 and ×0.90 — magnitude of effect is invisible at a glance. Spec proposes two options for encoding magnitude. (2) The LVL↑ button column currently shows a price label at full weight regardless of affordability, competing with the BUY button. Spec proposes that when the player is <50% of the level-up cost, LVL↑ drops its button chrome entirely and becomes a flat status line ('LVL 7 · next: 99.84B'). The 50% tip-over is a gameplay-feel call.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/game-screen-hud-refinements.md",
+          "purpose": "The spec — §2.3 (magnitude encoding options) and §3.2 (LVL↑ threshold) contain the full framing of both questions."
+        }
+      ],
+      "acceptance_criteria": [
+        "Decision recorded: multiplier magnitude encoding — Option A (chevron count: 1/2/3 chevrons by |Δ| banding) or Option B (pill fill opacity mapped to |Δ|). Write the decision and rationale directly into §2.3 of the spec.",
+        "Decision recorded: LVL↑ flat-status-line threshold — confirm 50% of level-up cost as the tip-over point, or specify an alternative (earlier for more chrome visibility, later for longer quiet periods). Write the decision and rationale directly into §3.2 of the spec.",
+        "Both decisions moved from the Open Questions table (§5) to their respective sections so the engineer can implement without ambiguity."
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }

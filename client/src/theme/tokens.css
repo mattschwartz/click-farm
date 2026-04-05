@@ -1,0 +1,170 @@
+/* Visual theming tokens — two-tier system per
+ * `.frames/sdlc/architecture/visual-theming.md`.
+ *
+ * Tier 1 — Palette: raw hex values and per-state palette entries. Internal.
+ *                   Components MUST NOT reference these directly.
+ * Tier 2 — Semantic: role-named tokens. Components consume these and only
+ *                    these.
+ *
+ * Light-mode values from:
+ *   proposals/accepted/visual-identity-light-mode.md §1
+ *   ux/accent-palette-light-mode.md (functional accents)
+ *   architecture/visual-theming.md §Data Model (mood-edge palette)
+ *
+ * A v2 dark-mode retrofit adds a second set of Tier 1 + Tier 2 bindings
+ * gated on [data-theme="dark"] at this file. Component code does not change.
+ */
+
+/* ========================================================================
+ * Tier 1 — Palette (raw values, internal)
+ * ====================================================================== */
+:root {
+  /* Base palette — visual-identity-light-mode §1 */
+  --palette-warm-white: #FAF8F5;
+  --palette-white: #FFFFFF;
+  --palette-near-black: #1A1A1A;
+  --palette-text-secondary: #6B6B6B;
+  --palette-text-receded: #9B9B9B;
+  --palette-border-default: #E8E4DF;
+  --palette-border-subtle: #F0ECE7;
+
+  /* Functional accent palette — ux/accent-palette-light-mode.md */
+  --palette-gold: #A0730E;          /* ready-to-buy (~5.0:1 on white) */
+  --palette-green: #2F7A3A;         /* boost / success (~5.2:1) */
+  --palette-amber: #C45A10;         /* armed / penalty (~4.6:1) */
+  --palette-red: #B71C1C;           /* danger / loss (~6.7:1) */
+  --palette-platinum: #5C6A86;      /* maxed tier (~5.7:1) */
+  --palette-platinum-deep: #3A4556; /* platinum borders (~9.8:1) */
+
+  /* Mood-edge palette, per algorithm state — architecture/visual-theming.md
+   * §Data Model. These hues are defined at the architecture level; the
+   * data-attribute binding below resolves one of them into --mood-color-edge
+   * at runtime. Opacities currently unified at 0.18 within spec band
+   * [0.14, 0.22] — ux-designer may tune per-state during algorithm-mood
+   * revision. */
+  --palette-mood-short-form-surge: #E87B3C;
+  --palette-mood-authenticity-era: #4F8A7A;
+  --palette-mood-engagement-bait: #D63A82;
+  --palette-mood-nostalgia-wave: #7A4FA8;
+  --palette-mood-corporate-takeover: #8A95A8;
+}
+
+/* ========================================================================
+ * Tier 2 — Semantic bindings (what components consume)
+ * ====================================================================== */
+:root {
+  /* Surfaces */
+  --surface-canvas: var(--palette-warm-white);
+  --surface-panel: var(--palette-white);
+  --surface-overlay: var(--palette-white);
+
+  /* Text */
+  --text-primary: var(--palette-near-black);
+  --text-secondary: var(--palette-text-secondary);
+  --text-receded: var(--palette-text-receded);
+  --text-inverse: var(--palette-white);
+
+  /* Borders */
+  --border-default: var(--palette-border-default);
+  --border-subtle: var(--palette-border-subtle);
+
+  /* Interactive-state tokens — dark-on-light overlays for hover, pressed,
+   * and border emphasis. These replace the dark-mode white-on-dark overlay
+   * ladder at component call sites. */
+  --surface-hover: rgba(26, 26, 26, 0.04);
+  --surface-pressed: rgba(26, 26, 26, 0.08);
+  --border-emphasis: rgba(26, 26, 26, 0.14);
+  --border-strong: rgba(26, 26, 26, 0.22);
+
+  /* Glow/halo effects — bright warm gold, exposed as RGB channels for
+   * compositing at varying opacity in keyframes. Distinct from the dark
+   * goldenrod --accent-gold (a signal color); this is a decorative warm
+   * wash used in viral-burst halos. */
+  --glow-halo-rgb: 255, 214, 107;
+
+  /* RGB channel exports — for rgba() compositing at varying opacity in
+   * keyframes and multi-stop gradients (Lvl↑ maxed plaque, bevels, etc.). */
+  --palette-platinum-rgb: 92, 106, 134;      /* matches #5C6A86 */
+  --palette-near-black-rgb: 26, 26, 26;      /* matches #1A1A1A */
+  --palette-white-rgb: 255, 255, 255;        /* matches #FFFFFF */
+  --palette-black-rgb: 0, 0, 0;              /* pure black, for overlays */
+  --palette-gold-rgb: 160, 115, 14;          /* matches #A0730E accent-gold */
+  --palette-red-rgb: 183, 28, 28;            /* matches #B71C1C accent-red */
+
+  /* Creator Kit accent — indigo hue reserved for kit chrome per
+   * ux/creator-kit-panel.md. Hoisted from GameScreen.css during the
+   * light-mode flip (task #108) so no raw literals live outside this file.
+   * CONTRAST FLAG: #6868b8 on white resolves ~4.08:1, marginal for AA body
+   * text (threshold 4.5:1). Kit label/chevron/cost are rendered with
+   * opacity 0.65–0.70 which drops further. ux-designer should confirm this
+   * remains the kit accent on light mode, or nominate a darker indigo, in
+   * a follow-up audit. */
+  --kit-accent: #6868B8;
+  --kit-accent-rgb: 104, 104, 184;
+
+  /* Legacy modal surfaces — hold the pre-flip dark-modal values until E3
+   * (task #110) re-themes the modal shells (Offline, Shop, Ceremony,
+   * Settings). Hoisted during task #108 to keep GameScreen.css literal-
+   * free; all `--modal-*-legacy` tokens retire once E3 lands. */
+  --modal-bg-legacy: #161923;                /* offline-modal surface */
+  --modal-bg-shop-legacy: 18, 21, 28;        /* shop/settings rgba channels */
+  --modal-bg-ceremony-legacy: 14, 16, 22;    /* ceremony rgba channels */
+  --modal-danger-rgb-legacy: 255, 107, 107;  /* settings reset danger */
+  --modal-danger-soft-rgb-legacy: 255, 140, 140;
+  --modal-danger-wash-rgb-legacy: 255, 200, 200;
+  --modal-success-text-rgb-legacy: 140, 220, 140;
+  --modal-success-tint-rgb-legacy: 70, 160, 70;
+
+  /* Functional accents — names preserved from dark mode, values re-derived
+   * per ux/accent-palette-light-mode.md so existing `var(--accent-*)` call
+   * sites continue to work. */
+  --accent-gold: var(--palette-gold);
+  /* Bright gold variant — warm-gold peak used in breathing/pulsing
+   * animations where the accent-gold border lifts toward a lighter
+   * saturated gold (same hue as --glow-halo-rgb). Not for static chrome;
+   * contrast is insufficient for text/icons on white. */
+  --accent-gold-bright: rgb(var(--glow-halo-rgb));
+  --accent-green: var(--palette-green);
+  --accent-amber: var(--palette-amber);
+  --accent-red: var(--palette-red);
+  --accent-platinum: var(--palette-platinum);
+  --accent-platinum-deep: var(--palette-platinum-deep);
+
+  /* Elevation — value deferred to ux-designer per arch spec OQ4. Slot is
+   * named so components can reference it without waiting. Default is a
+   * quiet lift sufficient to separate white panels from the warm canvas. */
+  --panel-shadow: 0 1px 2px rgba(26, 26, 26, 0.04),
+                  0 2px 6px rgba(26, 26, 26, 0.05);
+}
+
+/* ========================================================================
+ * Tier 2 — Algorithm-mood binding (runtime)
+ * ------------------------------------------------------------------------
+ * The mood-edge vignette reads --mood-color-edge and --mood-edge-opacity.
+ * AlgorithmBackground writes `document.documentElement.dataset.algorithmState`
+ * to switch which Tier-1 palette entry resolves here.
+ *
+ * Vignette component & write-path wiring is engineer's remit on task #109.
+ * This block provides the token bindings; the vignette layer itself is
+ * implemented against these vars.
+ * ====================================================================== */
+:root[data-algorithm-state="short_form_surge"] {
+  --mood-color-edge: var(--palette-mood-short-form-surge);
+  --mood-edge-opacity: 0.18;
+}
+:root[data-algorithm-state="authenticity_era"] {
+  --mood-color-edge: var(--palette-mood-authenticity-era);
+  --mood-edge-opacity: 0.18;
+}
+:root[data-algorithm-state="engagement_bait"] {
+  --mood-color-edge: var(--palette-mood-engagement-bait);
+  --mood-edge-opacity: 0.18;
+}
+:root[data-algorithm-state="nostalgia_wave"] {
+  --mood-color-edge: var(--palette-mood-nostalgia-wave);
+  --mood-edge-opacity: 0.18;
+}
+:root[data-algorithm-state="corporate_takeover"] {
+  --mood-color-edge: var(--palette-mood-corporate-takeover);
+  --mood-edge-opacity: 0.18;
+}
