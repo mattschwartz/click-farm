@@ -2,8 +2,8 @@
 name: Creator Kit Upgrades (Per-Run)
 description: Introduces a themed per-run upgrade menu — Camera, Laptop, Phone, Wardrobe, Mogging — purchased with Engagement and wiped on rebrand, giving players a diegetic "invest in yourself as a creator" layer between generator-buying and prestige.
 author: game-designer
-status: draft
-reviewers: [architect]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Creator Kit Upgrades (Per-Run)
@@ -201,3 +201,96 @@ Key non-blocking observations the follow-up spec must carry:
 4. **Kit wipe on rebrand is a ceremony beat.** The rebrand ceremony already carries gravitas (per the prestige flow in progress). "Your kit falls away as you pivot" is a natural diegetic addition — no extra ceremony length, just a kit-clearing moment folded into the existing sequence. Flagged for the rebrand ceremony spec, not this proposal.
 
 Architect still needs to review (OQ1 Phone ceiling, OQ2 Wardrobe application point). I'm removing ux-designer from the reviewers list.
+
+---
+# Review: architect
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Aligned. Creator Kit is a clean mirror of the CloutUpgrade architecture — same data shape, parallel effects table, single-line addition to `applyRebrand`, two new effect types. No new component boundaries, no hidden coupling. The architectural risk surface is low because the pattern is already proven.
+
+Resolving the two architect-owned open questions (OQ#1, OQ#2) and recording the data-model delta that the follow-on architecture spec will formalize.
+
+**OQ#2 — Wardrobe application point. Recommendation: apply at the conversion step (Option A).**
+
+The brief offers two interpretations:
+- **A. At the conversion step.** Wardrobe multiplier enters the tick's follower-distribution formula alongside `content_affinity` (`core-systems.md` line 388). Every engagement→follower tick is multiplied.
+- **B. Retroactively to unlock thresholds.** Each Wardrobe level-up lowers follower thresholds for unlocks, causing unlocks to happen earlier.
+
+**I recommend A.** Three reasons:
+
+1. The design brief says "multiplies the Engagement → Followers *conversion rate*." By plain reading that is Option A. Option B is a different mechanic — unlock acceleration — being called by Wardrobe's name. The wrong abstraction.
+2. Option B retroactively mutates unlock state on a separate axis. Every Wardrobe level-up would trigger a threshold-recomputation pass over generators and platforms. That's state churn on a subsystem (unlocks) that currently has no conceptual relationship to engagement-follower conversion.
+3. Option A mirrors how Camera (engagement_multiplier) already works — a single multiplier at one known point in the tick pipeline, one step later in the chain. The architectural symmetry is the feature.
+
+Game-designer can confirm the feel, but the data model points clearly at A.
+
+**OQ#1 — Phone ceiling behavior (implementability confirmation).**
+
+All three fallback behaviors are implementable. Ranking by architectural fit:
+
+- **Inert** (purchasable, no effect when all platforms already head-started): one-pass check over `platforms`, trivial. Honest but may feel bad.
+- **Hidden** (kit item gated out of the menu when saturated): dynamic menu-item visibility — already a pattern in the UI. Cleanest.
+- **Fallback-Benefit** (Phone converts to a different effect when saturated): implementable, but introduces variable-effect kit items. No current Clout or Kit item has this shape — each item has one effect. Adds a coupling I would prefer to avoid because it complicates the effect-type contract and sets a precedent for multi-modal items.
+
+**My recommendation to game-designer: pick between Inert and Hidden. Avoid Fallback-Benefit** to preserve the single-effect invariant for all kit/clout items. Both Inert and Hidden are architecturally trivial; the choice is a design/feel call.
+
+**Data model delta (for the follow-on architecture spec):**
+
+Player state additions:
+```
+creator_kit: map<kit_item_id, int>   // wiped on rebrand
+```
+
+Static data additions:
+```
+creatorKitItems: Record<KitItemId, KitItemDef>
+```
+
+`KitItemDef` mirrors `CloutUpgradeDef` in shape (id, max_level, values-per-level, effect discriminator). New effect discriminators required:
+
+- `follower_conversion_multiplier` (Wardrobe) — multiplies per-tick follower output at `core-systems.md` line 388
+- `viral_burst_amplifier` (Mogging) — new read point in the viral burst system
+
+Existing effect types are reused directly:
+
+- `engagement_multiplier` (Camera) — identical to Clout's Engagement Boost
+- `algorithm_lookahead` (Laptop) — same shape as `algorithm_insight` (increments visible-upcoming-states count; stacks **additively** per proposal)
+- `platform_headstart` (Phone) — same effect type as Clout's, with sequential-platform selection semantics (picks next available platform not already head-started by Clout)
+
+**`applyRebrand` integration — one line.**
+
+The reset pass in `applyRebrand` (`core-systems.md` §Rebrand) gains `creator_kit = {}`. Kit state MUST NOT appear in the preservation list (which currently preserves `clout`, `clout_upgrades`, `lifetime_followers`, `rebrand_count`, and seed). This is a contained, well-fenced change.
+
+**Save schema:**
+
+Version bump required. Existing saves default `creator_kit = {}` on load. Forward-only migration — trivial.
+
+**Stacking contract (non-blocking architectural note):**
+
+The proposal specifies Camera × Clout Engagement Boost as multiplicative. Multiplicative stacking is order-independent, so there is no ambiguity in the current design. However, the follow-on architecture spec should record the stacking-order convention explicitly (e.g., "pre-clout bonuses vs post-clout bonuses"), because additive or clamped effects in future items will need a defined evaluation order. Flagging for the arch spec; not blocking this proposal.
+
+**Coupling summary:**
+
+| Touchpoint | Integration | New coupling? |
+|---|---|---|
+| Economy (engagement spend) | Same pattern as Clout purchase | No |
+| Tick (Camera, Wardrobe, Laptop effects) | One multiplier in an existing formula line | No |
+| Platform system (Phone head-starts) | Same effect type as Clout `platform_headstart` | No |
+| Viral burst system (Mogging) | One new read point for burst multiplier | One new read, no data-flow change |
+| Rebrand (wipe on `applyRebrand`) | One line in the reset pass | No |
+
+Five touchpoints, all at known integration points, one genuinely new read path (Mogging → viral burst). This is a low-risk architectural addition.
+
+**Open questions remaining:**
+
+- **OQ#3** (Mogging cap) — game-designer balance pass
+- **OQ#4** (cost curves) — game-designer balance pass
+- **OQ#5** (level counts per item) — game-designer balance pass
+
+All three are author-scoped balance work, explicitly flagged in the proposal as "balance pass" items. Following the precedent set on typography-system: author-owned downstream work does not block acceptance of the architectural direction. OQ#6 and OQ#7 were already resolved by ux-designer.
+
+**Summary:** Aligned on the design. OQ#2 resolved (Wardrobe = conversion-step multiplier). OQ#1 architecturally cleared (Inert or Hidden, game-designer to pick feel). Data model delta documented for the follow-on architecture spec I will write after acceptance. Removing myself from reviewers; moving to accepted.
