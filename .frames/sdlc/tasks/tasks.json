@@ -2898,9 +2898,7 @@
         "Validate that the ten named phases from level-multiplier-curve.md still map onto the felt pacing"
       ],
       "open_questions": [],
-      "blocked_on": [
-        100
-      ]
+      "blocked_on": []
     },
     {
       "id": 89,
@@ -3182,9 +3180,7 @@
         "A 'felt stakes' statement that balance tuners (game-designer on task #88 and beyond) can test against"
       ],
       "open_questions": [],
-      "blocked_on": [
-        100
-      ]
+      "blocked_on": []
     },
     {
       "id": 95,
@@ -3223,9 +3219,7 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": [
-        100
-      ]
+      "blocked_on": []
     },
     {
       "id": 96,
@@ -3395,7 +3389,7 @@
       "alias": "E1",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Remove Scandals system from client + supersede historical docs",
       "requester": "architect",
@@ -3514,7 +3508,8 @@
         "Manual smoke-test verified: a new save loads, generators purchase, rebrand works, settings modal renders without the Reduce Time Pressure row and with a legitimate MOTION section containing only Reduce Motion"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 101,
@@ -3736,9 +3731,7 @@
         "Full test suite passes"
       ],
       "open_questions": [],
-      "blocked_on": [
-        100
-      ]
+      "blocked_on": []
     },
     {
       "id": 105,
