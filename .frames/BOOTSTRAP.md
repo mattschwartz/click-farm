@@ -6,6 +6,7 @@ A frame is a self-contained coordination procedure that operates within a worksp
 1. You MUST ONLY enter one frame per session.
 2. You MUST ONLY enter one role per session.
 3. You MUST ONLY enter one state per session.
+4. You MUST ALWAYS validate the state accepts the role by referring to the `allowed-roles` field in FRAME.yml
 
 Coordination actions (reading the board, discussing paths, routing work, helping the user choose what to pick up) are role-less and do not consume the session's single-role budget. You equip a role when the user picks up a specific task.
 

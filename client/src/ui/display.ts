@@ -13,6 +13,7 @@ import type {
   AlgorithmStateId,
   GeneratorId,
   PlatformId,
+  ScandalTypeId,
 } from '../types.ts';
 
 // ---------------------------------------------------------------------------
@@ -84,6 +85,28 @@ export const GENERATOR_DISPLAY: Record<GeneratorId, GeneratorDisplay> = {
     color: '#e8b84a',
     tagline: 'Massive spikes, cooldown period.',
   },
+  // Post-prestige generators — unlocked only via Clout upgrades.
+  ai_slop: {
+    name: 'AI Slop',
+    icon: '🤖',
+    category: 'late',
+    color: '#8a8ae8',
+    tagline: 'Infinite content, zero soul.',
+  },
+  deepfakes: {
+    name: 'Deepfakes',
+    icon: '🎭',
+    category: 'late',
+    color: '#c265c2',
+    tagline: 'Fake celebrities, real engagement.',
+  },
+  algorithmic_prophecy: {
+    name: 'Algorithmic Prophecy',
+    icon: '🔮',
+    category: 'late',
+    color: '#d4af37',
+    tagline: 'Tell people what they already thought.',
+  },
 };
 
 /**
@@ -98,6 +121,9 @@ export const GENERATOR_ORDER: readonly GeneratorId[] = [
   'livestreams',
   'podcasts',
   'viral_stunts',
+  'ai_slop',
+  'deepfakes',
+  'algorithmic_prophecy',
 ];
 
 export const CATEGORY_ORDER: readonly GeneratorCategory[] = [
@@ -111,6 +137,16 @@ export const CATEGORY_LABEL: Record<GeneratorCategory, string> = {
   mid: 'MID',
   late: 'LATE',
 };
+
+/**
+ * Post-prestige generators — unlocked only via Clout upgrades, displayed in
+ * the Clout Shop modal (not in the main generator list). Task #70.
+ */
+export const POST_PRESTIGE_GENERATORS: readonly GeneratorId[] = [
+  'ai_slop',
+  'deepfakes',
+  'algorithmic_prophecy',
+];
 
 // ---------------------------------------------------------------------------
 // Platform display
@@ -208,6 +244,44 @@ export const ALGORITHM_MOOD: Record<AlgorithmStateId, AlgorithmMood> = {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Scandal display
+// ---------------------------------------------------------------------------
+
+export interface ScandalDisplay {
+  /** Short name shown in the scandal card header. */
+  name: string;
+  /** Satirical one-liner — the comedic beat before the decision pressure. */
+  flavorText: string;
+}
+
+export const SCANDAL_DISPLAY: Record<ScandalTypeId, ScandalDisplay> = {
+  content_burnout: {
+    name: 'Content Burnout',
+    flavorText: 'Your audience is bored of seeing the same thing. Again. And again.',
+  },
+  platform_neglect: {
+    name: 'Platform Neglect',
+    flavorText: "Your followers think you ghosted them. They're not wrong.",
+  },
+  hot_take_backlash: {
+    name: 'Hot Take Backlash',
+    flavorText: 'Your take did not age well. Turns out, it did not even age a day.',
+  },
+  trend_chasing: {
+    name: 'Trend Chasing',
+    flavorText: "Your audience can tell you're pandering. They always can.",
+  },
+  growth_scrutiny: {
+    name: 'Growth Scrutiny',
+    flavorText: "People are asking if you bought your followers. Did you? We're not judging.",
+  },
+  fact_check: {
+    name: 'Fact Check',
+    flavorText: 'Someone checked your sources. The results were instructive.',
+  },
+};
 
 /** Build a top-3 list of generators this platform favors. */
 export function topAffinityGenerators(

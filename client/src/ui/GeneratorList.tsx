@@ -17,7 +17,7 @@
 // - §6.4: Count numeral pulses on additional purchases.
 
 import { useEffect, useRef, useState } from 'react';
-import type { GameState, GeneratorId, StaticData } from '../types.ts';
+import type { GameState, GeneratorId, RiskLevel, StaticData } from '../types.ts';
 import {
   generatorBuyCost,
   generatorUpgradeCost,
@@ -32,9 +32,11 @@ import {
   CATEGORY_ORDER,
   GENERATOR_DISPLAY,
   GENERATOR_ORDER,
+  POST_PRESTIGE_GENERATORS,
   type GeneratorCategory,
 } from './display.ts';
 import { fmtCompact } from './format.ts';
+import { UpgradeDrawer } from './UpgradeDrawer.tsx';
 
 interface Props {
   state: GameState;
@@ -43,6 +45,16 @@ interface Props {
   onUpgrade: (id: GeneratorId) => void;
   /** When set, the matching row gets a pulsing gold halo (UX §9.2 Phase 1–2). */
   viralGeneratorId?: GeneratorId | null;
+  /**
+   * Risk levels keyed by "generator:{id}". When present, rows show amber
+   * warmth (building) or pulsing amber (high) risk indicators.
+   */
+  riskLevels?: Record<string, RiskLevel>;
+  /**
+   * Called when the upgrade drawer opens or closes. Parent uses this to dim
+   * the platform panel while the drawer is open (per UX spec §1).
+   */
+  onDrawerOpenChange?: (open: boolean) => void;
 }
 
 const BADGE_SHAPE: Record<GeneratorCategory, string> = {
@@ -58,7 +70,7 @@ const BADGE_SHAPE: Record<GeneratorCategory, string> = {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGeneratorId }: Props) {
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGeneratorId, riskLevels, onDrawerOpenChange }: Props) {
   // Track modifier pulses — when the algorithm state index changes, each
   // affected row pulses once (UX §4.4).
   const [pulseKey, setPulseKey] = useState(0);
@@ -70,10 +82,37 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGenera
     }
   }, [state.algorithm.current_state_index]);
 
+  // Upgrade drawer state — only one open at a time.
+  const [openDrawerId, setOpenDrawerId] = useState<GeneratorId | null>(null);
+  const [drawerAnchorTop, setDrawerAnchorTop] = useState<number>(0);
+
+  const handleOpenDrawer = (id: GeneratorId, anchorTop: number) => {
+    setOpenDrawerId(id);
+    setDrawerAnchorTop(anchorTop);
+  };
+
+  const handleCloseDrawer = () => {
+    setOpenDrawerId(null);
+  };
+
+  // Notify parent when drawer open state changes so it can dim the platform panel.
+  const prevDrawerOpen = useRef(false);
+  useEffect(() => {
+    const isOpen = openDrawerId !== null;
+    if (isOpen !== prevDrawerOpen.current) {
+      prevDrawerOpen.current = isOpen;
+      onDrawerOpenChange?.(isOpen);
+    }
+  }, [openDrawerId, onDrawerOpenChange]);
+
   // Build rows grouped by category in stable order.
+  // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
+  // excluded from the main list — they render in the Clout Shop modal instead.
+  // Task #70: filter out post-prestige generators until Clout Shop ships.
   const byCategory = new Map<GeneratorCategory, GeneratorId[]>();
   for (const cat of CATEGORY_ORDER) byCategory.set(cat, []);
   for (const id of GENERATOR_ORDER) {
+    if (POST_PRESTIGE_GENERATORS.includes(id)) continue;
     const display = GENERATOR_DISPLAY[id];
     byCategory.get(display.category)?.push(id);
   }
@@ -96,11 +135,28 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGenera
                 onUpgrade={onUpgrade}
                 pulseKey={pulseKey}
                 viralHalo={viralGeneratorId === id}
+                riskLevel={riskLevels?.[`generator:${id}`] ?? 'none'}
+                isDrawerOpen={openDrawerId === id}
+                onOpenDrawer={handleOpenDrawer}
               />
             ))}
           </div>
         );
       })}
+
+      {/* Upgrade drawer — portal-rendered over the platform column. */}
+      {openDrawerId && (
+        <UpgradeDrawer
+          id={openDrawerId}
+          generatorState={state.generators[openDrawerId]}
+          display={GENERATOR_DISPLAY[openDrawerId]}
+          staticData={staticData}
+          engagement={state.player.engagement}
+          anchorTop={drawerAnchorTop}
+          onUpgrade={() => onUpgrade(openDrawerId)}
+          onClose={handleCloseDrawer}
+        />
+      )}
     </section>
   );
 }
@@ -116,6 +172,15 @@ interface RowProps {
   pulseKey: number;
   /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
   viralHalo?: boolean;
+  /** Scandal risk level for this generator. 'none' = normal rendering. */
+  riskLevel?: RiskLevel;
+  /** True while this generator's upgrade drawer is open. */
+  isDrawerOpen?: boolean;
+  /**
+   * Called when the player taps the row or the ⬆ affordance to open the
+   * upgrade drawer. Passes viewport-relative anchorTop of the row.
+   */
+  onOpenDrawer?: (id: GeneratorId, anchorTop: number) => void;
 }
 
 function GeneratorRow({
@@ -123,9 +188,12 @@ function GeneratorRow({
   state,
   staticData,
   onBuy,
-  onUpgrade,
+  onUpgrade: _onUpgrade, // kept in RowProps for GeneratorList to wire to drawer; not called directly by row
   pulseKey,
   viralHalo,
+  riskLevel = 'none',
+  isDrawerOpen,
+  onOpenDrawer,
 }: RowProps) {
   const g = state.generators[id];
   const def = staticData.generators[id];
@@ -142,6 +210,12 @@ function GeneratorRow({
 
   const badgeShape = BADGE_SHAPE[display.category];
   const style = { '--gen-color': display.color } as React.CSSProperties;
+
+  // Row ref — used to read bounding rect for drawer anchor. Declared here
+  // (before any early returns) so hook order stays stable across the
+  // unowned → owned transition. React's Rules of Hooks require every hook
+  // to run on every render in the same order.
+  const rowRef = useRef<HTMLDivElement>(null);
 
   // First-purchase animation — fires once when owned transitions false → true.
   const prevOwned = useRef(g.owned);
@@ -209,15 +283,35 @@ function GeneratorRow({
   const buyCost = generatorBuyCost(id, g.count, staticData);
   const upgradeCost = generatorUpgradeCost(id, g.level, staticData);
   const canBuy = state.player.engagement >= buyCost;
-  // Upgrading is a no-op (and throws in the model) when count=0. This state
-  // occurs post-rebrand when a generator_unlock head-start grants owned=true
-  // without any units. Require at least one unit before the button activates.
-  const canUpgrade = g.count > 0 && state.player.engagement >= upgradeCost;
+  // Upgrading requires at least one unit. This can be 0 post-rebrand when a
+  // generator_unlock head-start grants owned=true without any units.
+  const canOpenDrawer = g.count > 0;
 
+  const openDrawer = () => {
+    if (!canOpenDrawer) return;
+    if (!onOpenDrawer) return;
+    const rect = rowRef.current?.getBoundingClientRect();
+    onOpenDrawer(id, rect?.top ?? 100);
+  };
+
+  const riskClass = riskLevel !== 'none' ? ` risk-${riskLevel}` : '';
+  const drawerOpenClass = isDrawerOpen ? ' drawer-open' : '';
   return (
     <div
-      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}${viralHalo ? ' viral-halo' : ''}`}
+      ref={rowRef}
+      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}${viralHalo ? ' viral-halo' : ''}${riskClass}${drawerOpenClass}`}
       style={style}
+      onClick={openDrawer}
+      role={canOpenDrawer ? 'button' : undefined}
+      tabIndex={canOpenDrawer ? 0 : undefined}
+      onKeyDown={canOpenDrawer ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openDrawer();
+        }
+      } : undefined}
+      aria-expanded={canOpenDrawer ? isDrawerOpen : undefined}
+      aria-label={canOpenDrawer ? `${display.name} — tap to view upgrade options` : undefined}
     >
       <div
         className={`badge ${badgeShape}${g.owned ? ' badge-owned' : ''}`}
@@ -232,22 +326,32 @@ function GeneratorRow({
         ×{g.count}
       </div>
       <div className="generator-rate">{fmtCompact(rate)}/s</div>
-      <ModifierChip value={effMod} pulseKey={pulseKey} />
-      <div className="row-actions">
+      {/* Stop propagation on chip so chip-taps don't open the drawer. */}
+      <span onClick={(e) => e.stopPropagation()}>
+        <ModifierChip value={effMod} pulseKey={pulseKey} />
+      </span>
+      <div className="row-actions" onClick={(e) => e.stopPropagation()}>
         <CompactBuyButton
           costLabel={fmtCompact(buyCost)}
           canBuy={canBuy}
           onBuy={() => onBuy(id)}
         />
+        {/* ⬆ affordance — opens the upgrade drawer. */}
         <button
-          className="row-btn"
-          onClick={() => onUpgrade(id)}
-          disabled={!canUpgrade}
+          className={`row-btn row-btn-upgrade${!canOpenDrawer ? ' row-btn-disabled' : ''}${isDrawerOpen ? ' active' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!canOpenDrawer || !onOpenDrawer) return;
+            const rect = rowRef.current?.getBoundingClientRect();
+            onOpenDrawer(id, rect?.top ?? 100);
+          }}
+          disabled={!canOpenDrawer}
           title={
             g.count <= 0
               ? `Buy at least one ${display.name} before upgrading`
-              : `Upgrade to L${g.level + 1} for ${fmtCompact(upgradeCost)} engagement`
+              : `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)})`
           }
+          aria-label={`Open upgrade drawer for ${display.name}`}
         >
           <span className="label">Lvl ↑</span>
           {fmtCompact(upgradeCost)}

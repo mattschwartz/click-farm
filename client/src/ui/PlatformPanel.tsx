@@ -9,6 +9,7 @@ import type {
   GameState,
   GeneratorId,
   PlatformId,
+  RiskLevel,
   StaticData,
 } from '../types.ts';
 import { computeAllGeneratorEffectiveRates } from '../game-loop/index.ts';
@@ -26,9 +27,19 @@ interface Props {
   staticData: StaticData;
   /** When set, this platform's card edges illuminate (UX §9.2 Phase 1–2). */
   viralPlatformId?: PlatformId | null;
+  /**
+   * Risk levels keyed by "platform:{id}". When present, cards show amber
+   * warmth (building) or pulsing amber (high) risk indicators.
+   */
+  riskLevels?: Record<string, RiskLevel>;
+  /**
+   * When true, dims the platform panel to 40% opacity while the upgrade
+   * drawer is open (per UX spec ux/upgrade-curve-drawer-spec.md §1).
+   */
+  drawerDimmed?: boolean;
 }
 
-export function PlatformPanel({ state, staticData, viralPlatformId }: Props) {
+export function PlatformPanel({ state, staticData, viralPlatformId, riskLevels, drawerDimmed }: Props) {
   // Compute follower rates per platform for the rate indicators (UX §7.1).
   const engagementRates = computeAllGeneratorEffectiveRates(state, staticData);
   const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
@@ -50,7 +61,7 @@ export function PlatformPanel({ state, staticData, viralPlatformId }: Props) {
   );
 
   return (
-    <aside className="platform-panel">
+    <aside className={`platform-panel${drawerDimmed ? ' drawer-dimmed' : ''}`}>
       {PLATFORM_ORDER.map((id) => {
         const p = state.platforms[id];
         const threshold = staticData.unlockThresholds.platforms[id] ?? 0;
@@ -67,6 +78,7 @@ export function PlatformPanel({ state, staticData, viralPlatformId }: Props) {
             staticData={staticData}
             heaviestGenerator={heaviestByPlatform[id]}
             viralIlluminate={id === viralPlatformId}
+            riskLevel={riskLevels?.[`platform:${id}`] ?? 'none'}
           />
         );
       })}
@@ -86,6 +98,8 @@ interface CardProps {
   heaviestGenerator: GeneratorId | null;
   /** True while this card is the viral burst destination (UX §9.2 Phase 1–2). */
   viralIlluminate?: boolean;
+  /** Scandal risk level for this platform. 'none' = normal rendering. */
+  riskLevel?: RiskLevel;
 }
 
 function PlatformCard({
@@ -97,6 +111,7 @@ function PlatformCard({
   staticData,
   heaviestGenerator,
   viralIlluminate,
+  riskLevel = 'none',
 }: CardProps) {
   const display = PLATFORM_DISPLAY[id];
   const def = staticData.platforms[id];
@@ -123,8 +138,9 @@ function PlatformCard({
     );
   }
 
+  const riskClass = riskLevel !== 'none' ? ` risk-${riskLevel}` : '';
   return (
-    <div className={`platform-card${viralIlluminate ? ' viral-illuminate' : ''}`} style={style}>
+    <div className={`platform-card${viralIlluminate ? ' viral-illuminate' : ''}${riskClass}`} style={style}>
       <div className="platform-header">
         <span className="platform-icon">{display.icon}</span>
         <span className="platform-name">{display.name}</span>

@@ -1,5 +1,5 @@
 {
-  "next_id": 58,
+  "next_id": 89,
   "tasks": [
     {
       "id": 1,
@@ -537,7 +537,7 @@
       "alias": "E11",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Risk Accumulators & Scandal Events [stretch]",
       "requester": "architect",
@@ -567,14 +567,15 @@
         "Tests cover: each trigger type, empire scaling, magnitude bounds, offline freeze/resume, stacking suppression"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 31,
       "alias": "E12",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "PR Response & Scandal UI [stretch]",
       "requester": "architect",
@@ -602,9 +603,8 @@
         "Tests cover: state machine transitions, slider damage reduction calculation, timer behavior, risk indicator thresholds"
       ],
       "open_questions": [],
-      "blocked_on": [
-        30
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 32,
@@ -1052,12 +1052,12 @@
       "id": 45,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Prestige: Clout Shop modal & Rebrand Ceremony",
       "requester": "engineer",
       "complexity": "opus",
-      "overview": "The core game screen (task #29) is live but players currently have no way to purchase Clout upgrades — the spec intentionally keeps Clout off the core screen (§5.3), so Clout lives on the prestige surface. This task implements the two prestige surfaces defined in the UX spec: (1) the persistent Clout Shop modal accessible during a run via the Upgrades affordance, and (2) the theatrical 4-phase Rebrand Ceremony (Threshold → Eulogy → Commit → Dissolution→Rebirth, 6–10s). The underlying simulation — calculateRebrand, applyRebrand, purchaseCloutUpgrade, the clout_upgrades map — is already built (task #28). This task wires the UI to it.\n\nEntry points to add to the core game screen: an 'Upgrades' button that opens the shop modal, and a Rebrand affordance that replaces the minimal corner button already in place. The shop modal must not pause the running game (core-game-screen.md §7.4 — the ticker keeps moving). Post-rebrand re-entry is silent (§1 / §6) — no welcome modal.",
+      "overview": "[SUPERSEDED 2026-04-05 by task #59 decomposition.] This monolith opus task was broken into 5 smaller sonnet/haiku build tasks — #62 (prestige cluster + Phase 1 modal, kills window.confirm), #63 (CloutUpgrade schema migration + data), #64 (Clout Shop modal full), #65 (Rebrand Ceremony Phases 2-4), #66 (post-rebrand badge + ambient copy). Engineer should pick up #62 and #63 first (unblocked).\n\n--- Original overview ---\n\nThe core game screen (task #29) is live but players currently have no way to purchase Clout upgrades — the spec intentionally keeps Clout off the core screen (§5.3), so Clout lives on the prestige surface. This task implements the two prestige surfaces defined in the UX spec: (1) the persistent Clout Shop modal accessible during a run via the Upgrades affordance, and (2) the theatrical 4-phase Rebrand Ceremony (Threshold → Eulogy → Commit → Dissolution→Rebirth, 6–10s). The underlying simulation — calculateRebrand, applyRebrand, purchaseCloutUpgrade, the clout_upgrades map — is already built (task #28). This task wires the UI to it.",
       "related_items": [
         {
           "ref": ".frames/sdlc/ux/prestige-rebrand-screen.md",
@@ -1100,13 +1100,14 @@
           "owner": "ux-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 46,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Generator upgrade drawer",
       "requester": "engineer",
@@ -1142,7 +1143,8 @@
         "Drawer dismisses on outside-tap or explicit close; game loop keeps ticking behind it"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 47,
@@ -1553,7 +1555,7 @@
       "id": 56,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Consolidate total_followers to a purely derived field",
       "requester": "architect",
@@ -1581,13 +1583,14 @@
         "Existing tick tests still pass; add a unit test that asserts total_followers always equals the sum of platform followers after a tick"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 57,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Revise algorithm-mood-visibility for light-mode base",
       "requester": "game-designer",
@@ -1625,6 +1628,1282 @@
           "owner": "ux-designer"
         }
       ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 58,
+      "role": "ux-designer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Reconcile core-game-screen.md §4.2 mood library with light-mode edge colors",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "The §4.2 mood library table in core-game-screen.md was written against a dark base with background gradients like 'Warm amber → orange gradient' over #0b0d12. The revised algorithm-mood-visibility proposal (now in draft, re-derived for the warm near-white base #FAF8F5) supersedes those color directions. §4.3 instability logic and §4.4 400ms crossfade timing are color-space independent and stand as written.\n\nThis task updates §4.2 to point at the algorithm-mood-visibility proposal for edge-color values and revises the 'Background base' column to reflect the light-mode system (fixed base + shifting accent layer).\n\nState-name drift (core-game-screen.md has `algorithm_winter` / `viral_storm`; algorithm-mood-visibility has `nostalgia_wave` / `corporate_takeover`) is out of scope — flag it but do not resolve.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§4.2 is the table to revise; §4.3-4.4 stand as written"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/algorithm-mood-visibility.md",
+          "purpose": "source of truth for light-mode edge colors"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/visual-identity-light-mode.md",
+          "purpose": "light-mode base commitment"
+        }
+      ],
+      "acceptance_criteria": [
+        "Update §4.2 mood library table to reference algorithm-mood-visibility for edge-color values rather than duplicating them",
+        "Revise the 'Background base' column to reflect a fixed warm near-white base with shifting accent layer (not per-state gradients)",
+        "Preserve the 'Motion signature' column — it is color-space independent and stands",
+        "Flag the state-name drift (algorithm_winter/viral_storm vs nostalgia_wave/corporate_takeover) in a scope note for a future reconciliation task",
+        "Do not edit §4.3 or §4.4 — only their specific color values belong downstream of the proposal; the logic and timing stand"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 59,
+      "role": "architect",
+      "state": "plan",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Decompose prestige/rebrand system into build tasks",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "The prestige/rebrand system is fully designed across proposal, UX spec, and architecture docs, but has not been decomposed into buildable engineering tasks. Engineering currently ships a placeholder single-button stub (GameScreen.tsx ~line 322) with a window.confirm dialog and no Upgrades button, which leaves 'Clout' as an undefined currency with no surface that teaches what it does. Players see 'Rebrand · +78 Clout' with zero context. The fix is to ship the real spec. This task is the plan step: break the accepted design+UX+architecture into discrete, assignable chunks an engineer can pick up. Likely chunks include: prestige cluster (two-button affordance + locked states + tooltips), Clout Shop modal (layout, upgrade rows, purchase flow, states), Rebrand Ceremony phases 1-4 (threshold review, eulogy, commit, dissolution/rebirth), post-rebrand re-entry (silent return, rebrand count badge, first-rebrand ambient copy), Reduce Motion variants, and replacement of window.confirm with in-app Phase 1 modal. Sequencing matters: the two-button cluster should land before or with the Rebrand Ceremony so Clout gains meaning from the visible Upgrades button.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "§7 Prestige — original design proposal for the mechanic, Clout economy, narrative framing"
+        },
+        {
+          "ref": "proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Clout Shop design — upgrade categories, effects, purchase model"
+        },
+        {
+          "ref": "proposals/accepted/clout-to-follower-scaling-curve.md",
+          "purpose": "Balance curve for Clout earned on rebrand"
+        },
+        {
+          "ref": "ux/prestige-rebrand-screen.md",
+          "purpose": "Full UX spec — two-button cluster, Clout Shop modal, 4-phase ceremony, motion briefs, accessibility, post-rebrand re-entry"
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "Contracts: CloutUpgrade, calculateRebrand, applyRebrand, clout_upgrades map, what persists vs resets"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Current placeholder button implementation (~line 322) to be replaced; also uses window.confirm which violates the SOP on dialogs and must be removed"
+        }
+      ],
+      "acceptance_criteria": [
+        "A set of discrete build tasks created and assigned to engineer, each with its own overview, acceptance criteria, and related_items",
+        "Tasks are sequenced with explicit blocked_on relationships so engineering can pick them up in the intended order",
+        "The two-button prestige cluster (Upgrades + Rebrand) is scoped before or concurrent with the Rebrand Ceremony, so Clout has a visible spending surface from first encounter",
+        "Replacement of the current window.confirm dialog is explicitly tasked — no build chunk leaves it in place as an interim",
+        "Reduce Motion variants (per ux/prestige-rebrand-screen.md §7) are either included in each relevant chunk or carried as a dedicated follow-up task",
+        "Any ambiguities discovered during decomposition are surfaced as open_questions on the created tasks with the correct owner role (game-designer for tuning values, ux-designer for UX clarifications)"
+      ],
+      "open_questions": [
+        {
+          "question": "Rebrand eligibility threshold — at what total_followers value does the Rebrand button first unlock? Listed as open in ux/prestige-rebrand-screen.md §9.1. Architect should either resolve via existing proposals or flag to game-designer before engineering starts on the locked-state affordance.",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Initial Clout upgrade cost/cap values — affects Clout Shop empty-state readability per ux/prestige-rebrand-screen.md §9.4. May or may not be a blocker depending on whether shop chunk can ship with a minimal tuned set and expand later.",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Eulogy stanza template library — Phase 2 pulls from data-driven templates. Needed for the ceremony chunk. Per ux/prestige-rebrand-screen.md §9.3.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 60,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "UX spec: Gigs variant cards (Brand Deal / Livestream / Convention)",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Write the per-variant card spec for the Gigs system. Three variants share the core Gig card grammar (corporate-green lane, tap-to-activate, expiry fade) but must be recognizable at a glance because duration determines the player's decision window (Brand Deal 20s, Livestream 60s, Convention 10s). The gigs-system proposal (accepted/draft) resolved the direction: duration is the loudest element on the card, rarity signals through arrival motion (not static art), and 'Convention' is the on-card label (not 'Con', to avoid scandal-vocabulary collision). This task produces the full asset-level spec the engineer can build against.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/gigs-system.md",
+          "purpose": "parent proposal with direction in OQ3 and ux-designer review log"
+        },
+        {
+          "ref": ".frames/sdlc/ux/brand-deal-card.md",
+          "purpose": "existing single-card spec this extends/supersedes per-variant"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/brand-deal-boost.md",
+          "purpose": "original card mechanic and ux review (slow fade, corporate-green lane, stamp/snap activation)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/viral-burst-event-signal.md",
+          "purpose": "compound-moment visual when a Gig overlaps a viral burst"
+        }
+      ],
+      "acceptance_criteria": [
+        "Visual hierarchy spec per variant: duration > variant name > icon > body copy (inverted from conventional card order, deliberate)",
+        "Per-variant entrance motion spec: Brand Deal baseline, Livestream slower/heavier, Convention faster/punchier with distinct audio-visual signature — sufficient to produce the 'Oh, a con!' emotional register without relying on static art",
+        "Per-variant color accent specified within the corporate-green lane (Brand Deal baseline, Livestream warm-toward-amber, Convention cooled-toward-teal), all passing WCAG 1.4.11 3:1 UI-component contrast against card background",
+        "Per-variant icon: phone/handshake (Brand Deal), broadcast dot / go-live badge (Livestream), crowd / badge-lanyard (Convention) — single glyph at card-header scale",
+        "Copy: on-card label is 'Convention' (full word); short forms like 'Con' permitted only in secondary/acknowledgment copy",
+        "Expiry fade and activation stamp/snap behavior carried forward from brand-deal-card.md — any per-variant deltas called out explicitly",
+        "Spec written to .frames/sdlc/ux/gig-cards.md"
+      ],
+      "open_questions": [
+        {
+          "question": "Should Convention's distinct entrance have a dedicated SFX, or is visual signature enough given current audio scope?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 61,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "UX spec: Creator Kit panel placement and peek-signal",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Write the UX spec for the Creator Kit per-run upgrade menu. The creator-kit-upgrades proposal (draft) resolved direction in OQ6: dedicated collapsible panel (not inline with generators), with a peek-visible spend signal near the currency readout that surfaces when the player can afford the next kit tier. This task produces the full placement, panel behavior, open/close interaction, spend-signal affordance, icon set, and copy drafts. Core screen is getting dense (generators, Actions column, algorithm mood, scandals, currency, rebrand prompt, now kit) — the kit panel must live in the interface without competing with the generator list for first-glance attention.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/creator-kit-upgrades.md",
+          "purpose": "parent proposal with direction in OQ6, OQ7, and ux-designer review log"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "structural template for a flat multi-level upgrade menu (shape the kit items mirror)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "parody-with-affection tone for flavor copy"
+        }
+      ],
+      "acceptance_criteria": [
+        "Panel placement specified: dedicated collapsible shelf, not inline with generator list; position relative to generator list and Actions column called out",
+        "Panel open/close interaction specified: trigger, transition, collapsed vs. open footprint, default state on first run and subsequent runs",
+        "Peek-signal affordance specified: surfaces near currency readout when Engagement balance crosses next-affordable kit tier; subtle enough not to compete with generator list; clears on purchase",
+        "Visual weight spec: kit rows use smaller type scale and more receded color treatment than generator rows — explicit numbers/tokens",
+        "Icon set drafted for all five items (Camera, Laptop, Phone, Wardrobe, Mogging) at list-row scale",
+        "Flavor copy drafted per item, satirical-but-warm tone (parody-with-affection, not sneering) — written jointly with game-designer",
+        "First-run cognitive load called out explicitly: how the panel defaults behave for a brand-new player so the 'no tutorial' test survives introducing five simultaneous kit items",
+        "Spec written to .frames/sdlc/ux/creator-kit-panel.md"
+      ],
+      "open_questions": [
+        {
+          "question": "Should the panel default to collapsed or open on first-ever run (pre-first-rebrand)?",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "Does the peek-signal affordance also fire for generator-unit affordability, or is it kit-exclusive to preserve signal strength?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 62,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Prestige cluster (Upgrades + Rebrand buttons) + Phase 1 rebrand modal",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Replace the current single-button rebrand-corner in GameScreen.tsx (~line 321) with the two-button prestige cluster per ux/prestige-rebrand-screen.md §2.1–2.3. Both buttons are visually grouped (~12px spacing, shared tint/border) and sit bottom-right, visually deferential to the engagement counter and generator list. Before the player reaches the first-rebrand eligibility threshold, both buttons render at 3:1 contrast (not hidden) — seeing them teases the system. Hover tooltips: Upgrades shows current Clout balance (e.g. '42 Clout'); Rebrand shows Clout-on-rebrand preview (e.g. 'Rebrand → +8 Clout') using the existing cloutForRebrand(total_followers) function.\n\nThis task also KILLS window.confirm. The existing handleRebrand() uses window.confirm, which violates the project SOP on browser dialogs. Replace it with a modal that renders only Phase 1 of the Rebrand Ceremony (the Threshold Review, per §4.2): a factual account of 'Current followers / Clout earned / New Clout balance' and side-by-side 'What resets' and 'What persists' lists, with Cancel and Continue buttons. Cancel closes the modal and resumes the game loop. Continue calls the existing driver rebrand() method and returns immediately to the main screen (Phases 2–4 land in E4). The game loop MUST pause while the ceremony modal is open (production halts, Algorithm shifts pause) per §4.1.\n\nThe Upgrades button opens a Clout Shop modal SHELL for now — header 'Rebrand Upgrades', Clout balance display, × close affordance (plus Esc and backdrop click), but an empty list body ('Upgrades coming soon' or equivalent). The real shop list and purchase flow land in E3. Game loop continues ticking when shop is open (not paused, backdrop ~30% opacity) per §3.1. Keyboard nav: Esc closes both modals, Tab focus-traps while open, Enter confirms primary action.\n\nThis chunk must ship a working replacement for window.confirm — no interim state leaves the confirm call in place.",
+      "related_items": [
+        {
+          "ref": "ux/prestige-rebrand-screen.md",
+          "purpose": "§2 entry points (prestige cluster, Upgrades button, Rebrand button), §3.1–3.2 shop modal shell & Clout balance display, §4.1–4.2 ceremony trigger & Phase 1 Threshold Review, §7 accessibility/keyboard, §8 motion brief"
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "Player entity, calculateRebrand/applyRebrand contracts, clout & rebrand_count fields"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Current placeholder handleRebrand with window.confirm (~line 212) and rebrand-corner (~line 321) to be replaced"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Driver exposes rebrand() method and cloutForRebrand helper — already wired, reuse as-is"
+        }
+      ],
+      "acceptance_criteria": [
+        "Two-button prestige cluster renders bottom-right of GameScreen, visually grouped, at 3:1 contrast when locked and full contrast once rebrand eligibility threshold is reached",
+        "Upgrades button hover tooltip shows current Clout balance; Rebrand button hover tooltip shows Clout-on-rebrand preview from cloutForRebrand(total_followers)",
+        "window.confirm is removed from handleRebrand and from the codebase entirely — no interim uses remain",
+        "Tapping Rebrand opens a Phase 1 Threshold Review modal with Current followers / Clout earned / New Clout balance, What resets, What persists sections per §4.2",
+        "Phase 1 Cancel closes the modal and resumes the game loop; Continue calls driver.rebrand() and returns to main screen with new run state",
+        "Game loop pauses (production halted, Algorithm shifts paused) for the duration the ceremony modal is open; resumes on close",
+        "Tapping Upgrades opens a Clout Shop modal shell (header, Clout balance, close affordances, placeholder body) — backdrop dims main screen to ~30% opacity and game loop continues ticking",
+        "Both modals support Esc-to-close, Tab focus-trap, and backdrop-click-to-close; focus returns to the triggering button on close",
+        "Unit/component tests cover: locked-state rendering, tooltip content, Phase 1 modal open/cancel/continue flow, game-loop pause on ceremony open and resume on close, shop shell open/close"
+      ],
+      "open_questions": [
+        {
+          "question": "Rebrand eligibility threshold — at what total_followers value does the Rebrand button first unlock from its 3:1 locked state? UX spec §9.1 flags this as open. ux/prestige-rebrand-screen.md §2.3 example tooltip shows 'Rebrand at 1,000 followers'; clout-upgrade-menu.md implies ~10,000 followers for first good rebrand (Tier 1 = 10 Clout = sqrt(10,000)/10). These are ~10x apart and need reconciliation before the locked-state affordance can be tuned.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 63,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Migrate CloutUpgrade schema to per-level arrays + add missing data entries",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The CloutUpgrade data model in architecture/core-systems.md was updated to use per-level arrays (`values: float[]`, `lookaheads: int[]`) to support non-uniform effects across levels (e.g. engagement_boost L1=1.5×, L2=2.5×, L3=5×). The current code in client/src/types.ts, client/src/static-data/index.ts, and client/src/game-loop/index.ts still uses the OLD single-scalar schema (`value: number`, `lookahead: number`). This task brings the code up to the architecture spec and populates the full upgrade + post-prestige generator data set per the accepted clout-upgrade-menu.md proposal. This is a pure backend/data task — no player-facing UI changes. It is a prerequisite for E3 (the Clout Shop UI) to correctly display and consume per-level effects.\n\nScope:\n\n1) Type migration in client/src/types.ts:\n   - { type: 'engagement_multiplier'; value: number } → { type: 'engagement_multiplier'; values: number[] }\n   - { type: 'algorithm_insight'; lookahead: number } → { type: 'algorithm_insight'; lookaheads: number[] }\n   - Keep generator_unlock and platform_headstart as-is (max_level: 1)\n\n2) Update static data entries in client/src/static-data/index.ts:\n   - Add `engagement_boost`: cost [10, 30, 75], max_level 3, values [1.5, 2.5, 5.0]\n   - Update `algorithm_insight`: cost [15, 40], max_level 2, lookaheads [1, 2]\n   - Update `platform_headstart_instasham`: cost [20]\n   - Update `platform_headstart_grindset`: cost [50]\n   - Remove `platform_headstart_chirper` if present (chirper is starter platform)\n   - Add `ai_slop_unlock`: cost [25], effect { type: 'generator_unlock', generator_id: 'ai_slop' }\n   - Add `deepfakes_unlock`: cost [60], effect { type: 'generator_unlock', generator_id: 'deepfakes' }\n   - Add `algorithmic_prophecy_unlock`: cost [100], effect { type: 'generator_unlock', generator_id: 'algorithmic_prophecy' }\n\n3) Add post-prestige generator definitions to generator static data:\n   - `ai_slop`: base_engagement_rate = 8× Viral Stunts, follower_conversion_rate 0.6, trend_sensitivity 0.1\n   - `deepfakes`: base_engagement_rate = 15× Viral Stunts, follower_conversion_rate 0.3, trend_sensitivity 0.95\n   - `algorithmic_prophecy`: base_engagement_rate = 40× Viral Stunts, follower_conversion_rate 0.5, trend_sensitivity 0.5\n   - These generators MUST have NO entry in unlockThresholds.generators (never follower-unlocked; unlocked only via Clout upgrade)\n\n4) Update game-loop effect consumption (client/src/game-loop/index.ts) to index into arrays:\n   - engagement_multiplier: cloutBonus reads `effect.values[level - 1]` instead of scalar.\n   - algorithm_insight: prestige/index.ts getUpcomingShifts reads `effect.lookaheads[level - 1]`\n\n5) Verify applyRebrand re-applies `generator_unlock` effects after resetting generators to owned:false, per architecture §Prestige post-reset Clout re-application order. Fix if missing. Same for platform_headstart on platform reset.\n\n6) Update tests in client/src/game-loop/index.test.ts, client/src/prestige/index.test.ts, client/src/driver/index.test.ts to match new schema. Add test coverage for post-prestige generator unlocking via applyRebrand.",
+      "related_items": [
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "§Data Model CloutUpgrade and UpgradeEffect tagged union (per-level arrays), §applyRebrand post-reset re-application order"
+        },
+        {
+          "ref": "proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Full upgrade roster with costs, levels, and effect values; post-prestige generator stats; architect + engineer reviews confirming data model wiring"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "UpgradeEffect type union (line 42) — current old schema, needs migration"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "CLOUT_UPGRADE_DEFS (line 240) — current entries to migrate + new entries to add; generator defs to extend"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "cloutBonus logic (line 102) reads engagement_multiplier.value — update to array index"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "applyRebrand (line 115) — verify generator_unlock re-application; getUpcomingShifts (line 274) reads algorithm_insight.lookahead"
+        }
+      ],
+      "acceptance_criteria": [
+        "UpgradeEffect type union uses per-level arrays for engagement_multiplier (values: number[]) and algorithm_insight (lookaheads: number[])",
+        "CLOUT_UPGRADE_DEFS contains engagement_boost, algorithm_insight, platform_headstart_instasham, platform_headstart_grindset, ai_slop_unlock, deepfakes_unlock, algorithmic_prophecy_unlock with costs and values per clout-upgrade-menu.md",
+        "Generator static data includes ai_slop, deepfakes, algorithmic_prophecy with the specified base_engagement_rate (relative to Viral Stunts), follower_conversion_rate, and trend_sensitivity",
+        "Post-prestige generators have NO entry in unlockThresholds.generators — they cannot be follower-unlocked",
+        "Game-loop cloutBonus correctly indexes effect.values[level - 1] for engagement_multiplier upgrades",
+        "getUpcomingShifts correctly indexes effect.lookaheads[level - 1] for algorithm_insight upgrade",
+        "applyRebrand iterates clout_upgrades after resetting generators and sets generators[generator_id].owned = true for each generator_unlock effect at level ≥ 1",
+        "applyRebrand iterates clout_upgrades after resetting platforms and sets platforms[platform_id].unlocked = true for each platform_headstart effect at level ≥ 1",
+        "All existing tests updated to new schema and pass; new test coverage added for post-prestige generator unlocking on rebrand, engagement_boost multi-level values, algorithm_insight multi-level lookaheads"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 64,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Clout Shop modal — full upgrade list + purchase flow + states",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Replace the Clout Shop modal shell from E1 with the full shop per ux/prestige-rebrand-screen.md §3. The shop is ~720×560px, centered, dark-backdrop-at-30%, and MUST NOT pause the game loop — the main screen continues ticking at the modal edges. This is planning, not escape.\n\nScope:\n\n1) Clout balance header (§3.2): 'Clout: N' top of modal body, 36px/weight-600 numeral, P0 contrast (15.8:1), animates downward (400ms tick) on purchase.\n\n2) Upgrade categories (§3.4), in fixed order: ENGAGEMENT (engagement_multiplier effects), UNLOCKS (generator_unlock + platform_headstart effects merged), INSIGHT (algorithm_insight effect). Within each category, rows sort by ascending cost so next-affordable is near category top.\n\n3) Upgrade row anatomy (§3.3): 72px row height, 28px icon, 16px/weight-500 name, 12px muted-7:1 description (always shown, not hover), 'Lv N/M' / 'owned' / 'locked' state, cost (or MAX or ✓), right-aligned ⬆ purchase button.\n\n4) Purchase flow (§3.5): tap ⬆ → button depress scale 0.97 (60ms) → row pulse 1.0→1.02→1.0 (250ms) → Clout balance tick-down (400ms) → row updates (level advances, cost updates or becomes MAX/✓) → small positive chime sound. No confirmation dialog.\n\n5) Insufficient-Clout state (§3.5): button at 3:1 contrast (not faded), cost label amber (not red), on tap: 4px horizontal shake for 200ms, no state change, no sound.\n\n6) Shop states (§3.6): empty (first visit, Clout:0, all rows locked, header copy 'Earn Clout by rebranding. Your first rebrand is ahead.'), partial (default), all-maxed (footer 'You\\'ve mastered the system. Rebrand to reset the stage.').\n\n7) Reduce Motion variants (§7 / §8 motion brief): replace Clout tick-down animation with instant value update, replace row purchase pulse with instant, replace insufficient shake with no motion (preserve amber cost + no-sound signal). Gate by same Reduce Motion detection used in core-game-screen.md §12.\n\n8) Accessibility: CVD-safe (no color-only signals — text labels ✓/MAX/locked/cost/glyph pair with state), P0/P1/P2 contrasts per role standards, ⬆ button ≥44×44px hit area, full keyboard nav, focus trap while modal open.",
+      "related_items": [
+        {
+          "ref": "ux/prestige-rebrand-screen.md",
+          "purpose": "§3 full Clout Shop spec (layout, balance, rows, categories, purchase flow, states), §7 accessibility, §8 motion brief"
+        },
+        {
+          "ref": "proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Upgrade descriptions and flavor copy for row text"
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "CloutUpgrade data model, UpgradeEffect union, clout_upgrades player state map"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Driver exposes purchase method for Clout upgrades (or needs one added — engineer confirm)"
+        }
+      ],
+      "acceptance_criteria": [
+        "Clout Shop modal renders ~720×560px, centered, with backdrop at ~30% opacity; main game loop continues ticking while shop is open",
+        "Clout balance displays at 36px/weight-600 at top of modal body; animates down (400ms) on purchase",
+        "Upgrade rows grouped into ENGAGEMENT → UNLOCKS → INSIGHT categories in fixed order; within each category rows sort by ascending cost",
+        "Each row shows icon, name, description, level indicator (Lv N/M | owned | locked), cost (or MAX or ✓), and right-aligned ⬆ button per §3.3",
+        "Tapping ⬆ on affordable upgrade: button scale 0.97 (60ms), row pulse 1.0→1.02→1.0 (250ms), Clout tick-down (400ms), row state updates, positive chime sound",
+        "Insufficient-Clout: button at 3:1 contrast, amber cost label, 200ms horizontal shake on tap, no state change, no sound",
+        "Empty state (zero Clout, no owned upgrades): shows header copy and all locked rows per §3.6",
+        "All-maxed state: footer copy 'You\\'ve mastered the system. Rebrand to reset the stage.' per §3.6",
+        "Reduce Motion preference detected: balance updates instantly, no row pulse, no shake — audible feedback preserved",
+        "Upgrade category colors pass CVD simulators; all state signals paired with text/glyph (never color-alone)",
+        "Esc/×/backdrop-click closes modal; Tab focus-traps; ⬆ buttons are ≥44×44px hit areas",
+        "Component tests cover: category ordering, row rendering per state, purchase flow (successful and insufficient), empty/partial/all-maxed states, Reduce Motion variant"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 65,
+      "alias": "E4",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Rebrand Ceremony — Phases 2 (Eulogy), 3 (Commit), 4 (Dissolution→Rebirth)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Extend E1's minimal Phase 1 modal into the full 4-phase Rebrand Ceremony per ux/prestige-rebrand-screen.md §4.3–4.6. Total runtime ~8s first rebrand (unskipped), ~5s subsequent (eulogy skipped). The ceremony must feel earned — it fires rarely and deserves its runtime. Game loop stays paused for the entire ceremony (established in E1).\n\nScope:\n\n1) Phase 2 Eulogy (§4.3, ~3–4s, skippable): 3–4 sequential stanzas, each fading in over 600ms and lingering ~1s. Content sources: top platform by followers, top generator by lifetime engagement, longest-held Algorithm state during run, total engagement earned. Stanzas pulled from a data-driven template library with run-state substitution (see open question). Background desaturates 0% → 40% over 3s (linear). Skip link bottom-right: first rebrand (rebrand_count === 0 → 1) HIDES skip until 3rd stanza appears; subsequent rebrands show skip immediately. Tone: affectionate, deadpan, satirical. Auto-advances to Phase 3 1s after final stanza — no manual advance.\n\n2) Phase 3 Commit (§4.4, ~1s): single headline 'Become someone new.' (24px/weight-500), one 280×80px button labeled 'Rebrand' (biggest button in the game). No Cancel button. Backdrop-click/Esc cancels. On tap: button scale 0.96 (80ms), low-register tone (lowest in game), transition to Phase 4.\n\n3) Phase 4 Dissolution → Rebirth (§4.5, ~3.8s):\n   - Dissolution (0–2s): backdrop counters (engagement, followers, generators) tick downward rapidly (0→1000ms ease-in), background desaturates to 10% (500→2000ms ease-in), descending-pitch whoosh sound (800→1800ms), screen fades to deep-muted-blue wash (1500→2000ms ease-in).\n   - Rebirth (2–3.8s): 400ms held silence on dark wash, single clean opening tone (higher register than commit tone, 2400→2600ms), fade to fresh main screen over 900ms (2600→3500ms ease-out).\n   - Phase 4 has NO cancellation — rebrand is committed to state when Phase 4 begins; visual is just playing out.\n\n4) Cancellation behavior (§4.6): Phase 2 backdrop-click/Esc cancels (no visible Cancel). Phase 3 backdrop-click/Esc cancels (no visible Cancel). Phase 4 cannot cancel.\n\n5) Reduce Motion variants (§7): replace counter tick-down dissolution with single 1s fade-to-zero, replace Phase 2 background desaturation with instant, replace Phase 4 desaturation with instant, preserve sound design AND held-silence timing AND fade-back timing (timing is not motion).\n\n6) Screen reader support (§7): Phase 2 stanzas render with aria-live='polite'. Phase 4 announces 'Rebranding. Run N beginning.' via aria-live.\n\n7) Call driver.rebrand() at the Commit tap (transition from Phase 3 to Phase 4) — this commits the rebrand to state. Phase 4 visual plays out after state is committed.",
+      "related_items": [
+        {
+          "ref": "ux/prestige-rebrand-screen.md",
+          "purpose": "§4.3 Phase 2 Eulogy, §4.4 Phase 3 Commit, §4.5 Phase 4 Dissolution→Rebirth, §4.6 cancellation, §7 accessibility & Reduce Motion, §8 motion brief"
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "calculateRebrand/applyRebrand contracts, rebrand_count for first-rebrand detection"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "driver.rebrand() method — call at Phase 3→4 transition"
+        }
+      ],
+      "acceptance_criteria": [
+        "Phase 2 plays 3–4 stanzas pulled from template library with run-state substitution, each fading in 600ms and holding 1s, background desaturating 0%→40% over 3s",
+        "Phase 2 Skip link: hidden until 3rd stanza on first rebrand (rebrand_count 0→1), visible immediately on subsequent rebrands",
+        "Phase 2 auto-advances to Phase 3 1s after final stanza",
+        "Phase 3 renders 'Become someone new.' headline and single 280×80px Rebrand button with no visible Cancel; backdrop/Esc cancels",
+        "Phase 3 tap: button scales 0.96 (80ms), plays low-register commit tone, calls driver.rebrand(), transitions to Phase 4",
+        "Phase 4 Dissolution plays counter tick-down, desaturation, descending whoosh, fade-to-wash per timing brief §4.5; Phase 4 is non-cancellable",
+        "Phase 4 Rebirth plays 400ms held silence, opening tone, fade to fresh main screen over 900ms",
+        "Phase 2 and Phase 3 support Esc/backdrop cancellation (no visible Cancel button) — closing resumes game loop with no state change since rebrand() has not been called yet",
+        "Reduce Motion variant: dissolution is single 1s fade-to-zero, desaturations are instant, sounds and held silence preserved",
+        "Phase 2 stanzas render with aria-live='polite'; Phase 4 emits aria-live announcement 'Rebranding. Run N beginning.'",
+        "Total unskipped ceremony runtime: ~8s first rebrand, ~5s subsequent (eulogy skip flows through faster)",
+        "Component/integration tests cover: first-rebrand skip-hiding, subsequent-rebrand skip-visible, Phase 2→3→4 chain, Phase 2/3 cancellation returning to main screen, Phase 4 non-cancellability, Reduce Motion variant"
+      ],
+      "open_questions": [
+        {
+          "question": "Eulogy stanza template library — Phase 2 pulls from a data-driven template library with run-state substitution. Need an initial set of ~20 templates for variety, in the game's satirical-affectionate-deadpan voice. Voice ownership is game-designer; format/length constraints are from the UX spec (short stanzas, punchlines via juxtaposition). Flagged in ux/prestige-rebrand-screen.md §9.3.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 66,
+      "alias": "E5",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Post-rebrand re-entry: RUN badge + first-rebrand ambient copy",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Add the post-rebrand re-entry surface per ux/prestige-rebrand-screen.md §5. Intentionally minimal — no welcome modal, no tutorial, no encouragement. The cleared main screen IS the reward. This task adds only the two ambient elements that exist.\n\nScope:\n\n1) Rebrand count badge: appears inline with the algorithm state name in the top bar (top-left), format 'RUN N' (e.g. 'RUN 2'), 11px, uppercase, muted 4.5:1 contrast. Introduced on first rebrand (rebrand_count transitions 0→1, badge shows 'RUN 2'). Persists across all subsequent runs. Fades in over 400ms on first appearance.\n\n2) First-rebrand ambient copy: ONLY on first rebrand (rebrand_count === 1 post-rebrand), show quiet copy 'You are new again.' in top-right. 600ms fade-in, 4s hold, 600ms fade-out. No interaction, no button. Purely ambient. Never shown again.\n\n3) Audit the cleared main screen to confirm it already satisfies §5's 'what they don't see' list: no modal, no welcome copy, no tutorial, no encouragement. This is likely already true — post-rebrand returns through normal GameScreen rendering with new state. Confirm with test coverage or inline audit note.\n\nDo NOT build: persona naming (flagged open in §9.2, not scoped here).",
+      "related_items": [
+        {
+          "ref": "ux/prestige-rebrand-screen.md",
+          "purpose": "§5 Post-Rebrand Re-Entry — badge placement, format, first-rebrand ambient copy behavior"
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "player.rebrand_count field for first-rebrand detection"
+        }
+      ],
+      "acceptance_criteria": [
+        "Rebrand count badge renders inline with algorithm state name, top-left, 'RUN N' format, 11px uppercase at 4.5:1 contrast",
+        "Badge is absent when rebrand_count === 0; appears with 400ms fade-in on first post-rebrand render (rebrand_count === 1); persists across runs",
+        "First-rebrand ambient copy 'You are new again.' appears top-right after first rebrand only, 600ms fade-in, 4s hold, 600ms fade-out; never shown for subsequent rebrands",
+        "Cleared main screen shows no welcome modal, no welcome copy, no tutorial — verified by audit or test",
+        "Component tests cover: badge absence at rebrand_count 0, badge appearance at rebrand_count 1, badge persistence at rebrand_count ≥ 2, first-rebrand ambient copy on rebrand_count 1, ambient copy absence at rebrand_count ≥ 2"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 67,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Left-align Upgrade button in generator upgrade drawer",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Small adjustment to the upgrade drawer shipped in task #46. The Upgrade button is currently right-aligned inside the 340px drawer, which opens from the right edge of the generator row. On desktop (mouse), the player taps ⬆ on the row and then has to move ~300px further right to hit Upgrade — and the drawer stays open for repeat upgrades, so they re-aim that gap every time. Left-aligning the Upgrade button puts it on the drawer edge nearest the trigger, cutting pointer travel to ~20–40px. Preview rows and all other drawer content stay exactly where they are.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/upgrade-curve-drawer-spec.md",
+          "purpose": "Amended spec — see Decision #6 and §2.3 (action row distinction). Layout diagram in §2 also updated."
+        },
+        {
+          "ref": "task #46",
+          "purpose": "Original drawer build — this task amends that work only."
+        }
+      ],
+      "acceptance_criteria": [
+        "Upgrade button on the action row is left-aligned within the drawer (was right-aligned)",
+        "Button size (100×36px), style, hover/press behavior, and insufficient-engagement state are unchanged",
+        "Preview rows (Lv+2, Lv+3) and all other drawer content remain in their current positions",
+        "Close button in the footer remains right-aligned"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 68,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Conditional drawer close-on-upgrade based on affordability",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Adjustment to the post-upgrade behavior of the generator upgrade drawer (shipped in task #46). Currently the drawer always stays open after a successful upgrade. New rule: the drawer's close behavior is conditional on whether the player can afford the NEXT level after the upgrade. This preserves the fast repeat-upgrade loop when the player has runway, and stops stranding them on a disabled button when they don't. Spec amended — see Decision #4 and §4 in ux/upgrade-curve-drawer-spec.md.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/upgrade-curve-drawer-spec.md",
+          "purpose": "Amended spec — Decision #4 (rule) and §4 Upgrade Confirmation (sequence)"
+        },
+        {
+          "ref": "task #46",
+          "purpose": "Original drawer build — this task amends post-upgrade behavior"
+        },
+        {
+          "ref": "task #67",
+          "purpose": "Parallel UX fix (button left-align) — independent, can ship in either order"
+        }
+      ],
+      "acceptance_criteria": [
+        "After a successful upgrade, if the player can afford the new next level, the drawer stays open and re-renders against the new level (action row shows new level, new cost, new multiplier)",
+        "After a successful upgrade, if the player CANNOT afford the new next level, the drawer closes (slide back right, 150ms per §7)",
+        "After a successful upgrade, if the new level IS the max level, the drawer stays open and re-renders in the max-level state (§5.4)",
+        "When the drawer re-renders in place against a new level, there is no close+reopen animation — content updates in situ",
+        "The insufficient-engagement state (§5.3) is still reachable by opening the drawer while broke — unchanged"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 69,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Implement three affordance states on Lvl ↑ row button",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Replace the binary enabled/disabled visual on the per-row Lvl ↑ button (GeneratorList.tsx) with three distinct visual states — dormant, armed, ready — so players can tell at a glance whether tapping will open a drawer with something they can actually buy. Full spec in the referenced proposal; this task is purely implementation.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/lvl-up-button-affordance-states.md",
+          "purpose": "The UX spec — read first. Contains exact colors, borders, motion, reduce-motion variants, accessibility glyphs, and the stagger/de-escalation rules."
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "The component to modify. The button lives at roughly lines 328–346 inside GeneratorRow; affordability derivation happens around lines 273–278."
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Where to add the new keyframes and modifier classes. Existing patterns at lines 540–663 (row-btn base + buy-btn-glow + row-btn-shake + row-btn-buy-glow), 935–965 (viral-row-halo), 1617–1621 (.row-btn-upgrade.active). Add the new rules near line 1617."
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-badge-breathing.md",
+          "purpose": "Prior-art for the 2400ms slow-breathe cadence and --breathe-delay stagger pattern. Reuse the existing CSS var rather than inventing a new one."
+        }
+      ],
+      "acceptance_criteria": [
+        "Derive a canAfford boolean in GeneratorRow (state.player.engagement >= upgradeCost) and pass it to the button alongside the existing canOpenDrawer.",
+        "Replace the single row-btn-disabled conditional with three mutually-exclusive modifier classes: row-btn-lvl-dormant (count===0), row-btn-lvl-armed (count>0 && !canAfford), row-btn-lvl-ready (count>0 && canAfford). The button remains clickable in both armed and ready states; only dormant keeps the disabled attribute.",
+        "Dormant state matches existing row-btn-disabled visuals (border 0.08 white, text-p3 label and cost, not-allowed cursor, disabled attribute, unchanged tooltip).",
+        "Armed state: border rgba(255,255,255,0.14), label color text-p2, cost numeral in --accent-amber at 60% opacity via color-mix, a leading ⊖ glyph (10px) before the cost numeral, no animation. Tooltip shows deficit engagement amount in addition to existing text.",
+        "Ready state: border 1px solid var(--accent-gold), background rgba(255,214,107,0.08), cost numeral in --accent-gold full strength weight 600, label color text-p1, a ▲ chevron (8px) inline inside the .label span before LVL ↑. Tooltip ends with '— ready'.",
+        "Ready state animates a lvl-ready-breathe keyframe: 2400ms ease-in-out infinite, animates box-shadow from 0 0 0 0 rgba(255,214,107,0) to 0 0 8px 1px rgba(255,214,107,0.35) and border-color from #ffd66b to #ffe89a and back. No transform/scale. No translate.",
+        "Breathing is staggered per-row using the existing --breathe-delay (or gen-index) CSS var already plumbed on .badge-owned. Apply as animation-delay: calc(var(--breathe-delay, 0ms) * -1) or negative-delay equivalent so rows are out of phase on mount.",
+        "Hover on ready: background rgba(255,214,107,0.14), box-shadow 0 0 12px 2px rgba(255,214,107,0.55), breathing animation paused (locks at peak) via animation-play-state: paused on :hover.",
+        "Click feedback on ready: reuse the existing row-btn-buy-glow 200ms keyframe on press.",
+        "Compute a ready-count in GeneratorList (count of rows where count>0 && canAfford) and apply a many-ready class on .generator-list when count >= 4. Under .many-ready, lvl-ready-breathe duration becomes 3200ms and peak shadow opacity drops to 0.18 (border remains full-strength gold).",
+        "When the upgrade drawer is open for this row (.row-btn-upgrade.active), suppress the breathing animation (animation: none) but keep the gold border and chevron.",
+        "Reduce Motion: under @media (prefers-reduced-motion: reduce), the ready-state animation is removed and the box-shadow holds at the fixed peak value 0 0 8px 1px rgba(255,214,107,0.35). All static color/border/glyph signals remain.",
+        "All three states are distinguishable without color: verify border weight progression (0.08 → 0.14 → full gold), non-color glyphs (⊖ on armed, ▲ on ready), and cursor differences are preserved per the spec's accessibility table.",
+        "No regression on existing generator row behaviors (first-buy-anim, viral-halo, drawer-open, risk- classes). Check that viral-halo + ready can coexist visually without double-flashing (they should — viral is 1s on the row, breathe is 2.4s on the button)."
+      ],
+      "open_questions": [
+        {
+          "question": "Should the ready halo also fire when a deeper tier (L+2, L+3) is affordable while L+1 is already covered? Spec defaults to NO — tie to the exact cost the button shows.",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Is gold the right hue for affordance-met, or is it reserved for engagement/viral signals? Spec defaults to gold (mental association with viral-gold class).",
+          "owner": "game-designer"
+        },
+        {
+          "question": "When .row-btn-upgrade.active (drawer already open on this row), should the breathing continue or be suppressed? Spec defaults to SUPPRESS — keep gold border, remove animation.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 70,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Remove post-prestige generators from main generator list",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are currently rendered in the main generator list in GameScreen, below Viral Stunts, each showing a — x1.00 multiplier and a 'Buy' action priced in engagement (e.g. 'Buy AI Slop — cost: 200.00M engagement'). This contradicts the accepted spec ux/prestige-rebrand-screen.md §3.1 and §3.4, which places these generators in the Clout Shop modal under the UNLOCKS category, priced in Clout, purchased via the Upgrades button in the prestige cluster (bottom-right).\n\nThe Clout Shop is a separate planned task (see the existing 'Clout Shop modal — full upgrade list + purchase flow + states' build task). Until it lands, post-prestige generators should simply NOT appear in the main generator list at all. When the Clout Shop ships, they will render there as UNLOCKS rows per spec.\n\nThis is a surgical filter change: the generator list rendering logic should exclude any generator whose id is in the postPrestige set (already defined in save/index.ts as ['ai_slop', 'deepfakes', 'algorithmic_prophecy']).\n\nThe three symptoms this fixes (all currently visible on screen):\n1. The locked state reads as broken — '— x1.00' is ambiguous between 'no multiplier' and 'row failed to load'\n2. No PRESTIGE band label — these rows sit below the LATE band in visual no-man's-land\n3. Cost is denominated in engagement without any engagement-pool indicator visible on the main screen, so the player has no way to reason about proximity to unlock\n\nAll three evaporate when the generators stop rendering here. They will re-emerge in the correct surface (Clout Shop, in Clout) when that task ships.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/prestige-rebrand-screen.md",
+          "purpose": "§3.1 Clout Shop modal layout (shows AI Slop as an UNLOCKS row with 'locked cost: 25 ⬆'), §3.4 category definitions — UNLOCKS merges generator_unlock + platform_headstart effect types"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "postPrestige array at ~line 203 defines the set of generator ids to filter: ['ai_slop', 'deepfakes', 'algorithmic_prophecy']"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Generator definitions including ai_slop (line 122), deepfakes (line 132), algorithmic_prophecy — these stay in static data, they just shouldn't render in the main list"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Main generator list rendering — apply the filter here"
+        }
+      ],
+      "acceptance_criteria": [
+        "Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) no longer render in the main generator list in GameScreen",
+        "The LATE band is the last band visible in the generator list (no orphan rows below it)",
+        "Generator data definitions for post-prestige generators remain intact in static-data/index.ts — only the main-list rendering is filtered",
+        "Existing tests still pass; no test references the post-prestige generators rendering in the main list",
+        "Visual verification against the screenshot in this task: the generator list should end cleanly at Viral Stunts"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 71,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Wire up typography system — Space Grotesk + Fraunces via Google Fonts",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The typography-system proposal is accepted. This task installs the infrastructure: load both webfonts from Google Fonts CDN, swap the current system-ui declarations to Space Grotesk (the UI face), and make Fraunces available for downstream application. Fraunces is NOT applied to any surface yet — that belongs to a future task once UX ships the downstream typography spec defining which surfaces get the voice face. The goal here is: the whole app reads in Space Grotesk after this lands, with Fraunces loaded and ready but unused.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/typography-system.md",
+          "purpose": "Accepted proposal — see architect review for the loading strategy contract"
+        },
+        {
+          "ref": "client/index.html",
+          "purpose": "Add preconnect links + Google Fonts stylesheet link here"
+        },
+        {
+          "ref": "client/src/index.css",
+          "purpose": "Replace system-ui on line 2; add metric-adjusted @font-face fallback blocks here"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Replace system-ui on line 70 with the shared var(--font-ui) or equivalent"
+        },
+        {
+          "ref": "client/src/ui/DebugApp.tsx",
+          "purpose": "Replace inline fontFamily system-ui on line 86"
+        }
+      ],
+      "acceptance_criteria": [
+        "client/index.html has <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"> and <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin> in <head>",
+        "client/index.html loads both families in a single Google Fonts stylesheet link: Space Grotesk wght@300..700 and Fraunces with opsz,wght,SOFT,WONK axes, with &display=swap",
+        "client/src/index.css defines CSS custom properties for the two faces (e.g. --font-ui and --font-voice) so downstream CSS can reference them without hard-coding names",
+        "client/src/index.css defines metric-adjusted @font-face fallback blocks for the UI face (size-adjust, ascent-override, descent-override, line-gap-override tuned against Space Grotesk's metrics) so the swap is near-invisible",
+        "All existing system-ui declarations are replaced: client/src/index.css line 2, client/src/ui/GameScreen.css line 70, client/src/ui/DebugApp.tsx line 86",
+        "The fallback stack in every declaration ends in the metric-adjusted system-ui fallback, then generic sans-serif",
+        "Fraunces is loaded via the stylesheet link but NOT applied to any surface in this task — it is available via --font-voice for future tasks",
+        "Running the dev server and loading GameScreen shows Space Grotesk rendering throughout (verify in DevTools Network tab that the Google Fonts CSS loaded and at least one Space Grotesk woff2 file was fetched)",
+        "No layout shift visible on cold load (metric-adjusted fallbacks working) — verify by throttling network in DevTools and reloading",
+        "All existing tests still pass"
+      ],
+      "open_questions": [
+        {
+          "question": "What size-adjust / ascent-override / descent-override values should be used for the Space Grotesk fallback? If you cannot find authoritative values, use values generated by Fontsource's fallback metrics generator or Malte Ubl's fallback font generator tool and document the source in a comment above the @font-face block.",
+          "owner": "engineer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 72,
+      "role": "architect",
+      "state": "plan",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Write architecture/creator-kit.md + plan Creator Kit engineer tasks",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The Creator Kit Upgrades proposal is accepted. The architect review recorded the data model delta, two new effect types, the applyRebrand integration, the save-schema bump, the stacking-order convention note, and resolved OQ#1 and OQ#2. That material needs to land in a formal architecture spec before engineer build tasks can be filed. This task: (1) write .frames/sdlc/architecture/creator-kit.md formalizing the contracts, (2) add a short stacking-order convention note to core-systems.md (or embed it in creator-kit.md and cross-link), (3) decompose Creator Kit into engineer build tasks and file them. Game-designer still owes final calls on OQ#1 (Inert vs Hidden for Phone ceiling) and OQ#3/#4/#5 (balance pass) — flag those as blockers on specific build tasks where relevant, don't wait for them to write the arch doc.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/creator-kit-upgrades.md",
+          "purpose": "Accepted proposal — architect review at the bottom carries the contracts, OQ#2 resolution, and OQ#1 recommendation"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Existing CloutUpgrade data model to mirror; tick formula at line 388 is Wardrobe integration point; applyRebrand reset pass needs one-line addition for creator_kit wipe"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Structural template — Creator Kit mirrors this menu's shape"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/viral-burst-event-signal.md",
+          "purpose": "Mogging's integration target — viral_burst_amplifier effect reads into burst multiplier computation"
+        }
+      ],
+      "acceptance_criteria": [
+        ".frames/sdlc/architecture/creator-kit.md exists with: Scope (one sentence in, what's out), Data model (Player.creator_kit, KitItemDef static data shape, all five items), Interface contracts (new effect types: follower_conversion_multiplier, viral_burst_amplifier; reused types documented), Coupling analysis (the five touchpoints table from architect review), applyRebrand integration (one-line addition documented), Save schema migration (version bump + default), Stacking-order convention, Open questions labeled by owner (OQ#1 Phone ceiling for game-designer, balance-pass OQs for game-designer)",
+        "Stacking-order convention is documented either inline in creator-kit.md with a cross-link from core-systems.md, OR added as a new section to core-systems.md — architect picks which reads better",
+        "Engineer build tasks are filed covering: (a) Player.creator_kit state + save migration, (b) KitItemDef static data + five item definitions with placeholder balance values, (c) engagement_multiplier + algorithm_lookahead + platform_headstart integration for kit effects (reuse Clout patterns), (d) new follower_conversion_multiplier effect wired into tick, (e) new viral_burst_amplifier effect wired into viral burst system, (f) applyRebrand wipes creator_kit, (g) Creator Kit menu UI shell (collapsible panel, peek-signal affordance deferred to ux spec task)",
+        "Any build tasks that depend on a still-open OQ have that OQ explicitly called out in the task's open_questions field with the game-designer as owner, so the engineer knows what they're blocked on",
+        "A ux-designer task is filed for the creator-kit-panel UX spec (panel placement, peek-signal affordance, icon set, copy drafts) referenced in the proposal's OQ#6/OQ#7 resolutions"
+      ],
+      "open_questions": [
+        {
+          "question": "OQ#1 from the proposal (Phone ceiling): game-designer picks Inert vs Hidden. Architect review recommended avoiding Fallback-Benefit to preserve single-effect invariant. Flag on the relevant build task but do not block filing.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 73,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit foundation: state field, types, save migration, rebrand wipe",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Add the foundational scaffolding for Creator Kit per the architecture spec. No effects are wired yet — this task only establishes the data model, types, save migration, and rebrand integration. Specifically: (1) add Player.creator_kit: map<KitItemId, int> to the Player entity, (2) define the KitEffect tagged union type with all five discriminators (engagement_multiplier, algorithm_lookahead, platform_headstart_sequential, follower_conversion_multiplier, viral_burst_amplifier), (3) define the KitItemDef type mirroring CloutUpgradeDef shape, (4) add creatorKitItems to the StaticData interface (empty record is acceptable — E2 populates), (5) bump the save format version and write the forward-only migration that defaults player.creator_kit to {} on load, (6) add the one-line player.creator_kit = {} to applyRebrand's reset pass (MUST NOT appear in the preservation list).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Architecture spec — Data Model, KitEffect union, Save Schema Migration, Rebrand wipe sections"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Existing Player entity, StaticData, CloutUpgradeDef shape to mirror, applyRebrand reset pass"
+        }
+      ],
+      "acceptance_criteria": [
+        "Player type has creator_kit: Record<KitItemId, number> field",
+        "KitEffect tagged union is defined with all five discriminators as specified in creator-kit.md",
+        "KitItemDef type is defined with id, max_level, cost[], effect fields",
+        "StaticData.creatorKitItems: Record<KitItemId, KitItemDef> is declared",
+        "Save format version is bumped; loading a pre-bump save returns state with player.creator_kit = {}",
+        "applyRebrand sets player.creator_kit = {} and creator_kit is NOT in any preservation list",
+        "Unit tests cover: save migration from previous version, applyRebrand wipes creator_kit, type-level: KitEffect discriminators compile"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 74,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit static data: five item definitions with placeholder balance",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Populate StaticData.creatorKitItems with the five Creator Kit items defined in the architecture spec (camera, laptop, phone, wardrobe, mogging). Use PLACEHOLDER balance values — game-designer owns final numbers (balance OQs #3, #4, #5). Placeholder guidance: 3 levels per item; cost[] in Engagement roughly calibrated against generator costs; effect value arrays that produce a visible-but-not-absurd result at each level (e.g. Camera values [1.5, 2.5, 4.0] cumulative, Wardrobe [1.25, 1.75, 2.5], Laptop lookaheads [1, 2, 3], Mogging [1.2, 1.5, 2.0]). Phone has no value array (sequential semantics — level count IS the value). Mark every placeholder with a // BALANCE: placeholder comment so game-designer can find them.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "The Five Items table, KitItemDef shape, effect type semantics"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/creator-kit-upgrades.md",
+          "purpose": "Design intent for each item — what each effect should feel like"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Reference costs and level counts for calibration"
+        }
+      ],
+      "acceptance_criteria": [
+        "StaticData.creatorKitItems contains exactly five entries: camera, laptop, phone, wardrobe, mogging",
+        "Each item has a correctly-typed KitEffect matching its role (Camera → engagement_multiplier, Laptop → algorithm_lookahead, Phone → platform_headstart_sequential, Wardrobe → follower_conversion_multiplier, Mogging → viral_burst_amplifier)",
+        "cost[] and value arrays are monotonic (ascending costs, non-decreasing cumulative effects)",
+        "Every placeholder numeric value is marked with a // BALANCE: placeholder comment",
+        "Unit test: each item's cost[] and values[] (if present) have length === max_level"
+      ],
+      "open_questions": [
+        {
+          "question": "OQ#3, #4, #5: exact balance values (level counts, costs, effect magnitudes) — placeholders used, game-designer owns final pass.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [
+        73
+      ]
+    },
+    {
+      "id": 75,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit purchase handler",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the kit-purchase action. The handler validates the purchase, spends engagement, and increments the player's level for that item. It MUST expose a post-purchase hook (or otherwise be extensible) so E6 (Phone mid-run head-start) can cleanly layer in without rewriting the handler. Steps per the architecture spec §Purchase: (1) validate player.creator_kit[item_id] < KitItemDef.max_level, (2) validate player.engagement >= KitItemDef.cost[current_level], (3) decrement engagement, (4) increment level. Reject the action if either validation fails; do not mutate state. Follow the existing UI→game-loop action dispatch pattern used for Clout purchases.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Purchase contract — validation steps, mid-run application note for Phone"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Existing action-dispatch pattern; Clout purchase is the reference implementation"
+        }
+      ],
+      "acceptance_criteria": [
+        "Purchase action handler exists, validates max_level and affordability, spends engagement, increments level",
+        "Invalid purchases (maxed item, insufficient engagement) leave state unchanged and signal rejection",
+        "Handler is structured so a post-purchase hook (needed by E6 for Phone) can layer in without rewriting",
+        "Unit tests cover: successful purchase, max-level rejection, insufficient-engagement rejection, engagement balance after purchase, level increment"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": 76,
+      "alias": "E4",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit tick integration: Camera + Wardrobe",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Wire Camera (engagement_multiplier) and Wardrobe (follower_conversion_multiplier) into the tick formulas per creator-kit.md §Integration Points §2 and §3. Camera folds into the multiplicative engagement-rate chain AFTER Clout effects, BEFORE event effects (per the Stacking Order convention). Wardrobe multiplies the entire per-platform follower-distribution sum at the engagement→follower conversion step (core-systems.md line 388 region). Both effects read from player.creator_kit and lookup the cumulative value at the owned level from StaticData.creatorKitItems[item_id].effect.values[level-1]. If the player owns level 0 (not purchased), the multiplier is 1.0 (no-op).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Stacking Order convention; Integration Points §2 (Camera) and §3 (Wardrobe)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Effective-rate formula and line 388 follower-distribution formula"
+        }
+      ],
+      "acceptance_criteria": [
+        "Camera's engagement_multiplier is applied in the tick's per-generator effective-rate calculation, folded into the multiplicative chain after Clout engagement_multiplier",
+        "Wardrobe's follower_conversion_multiplier wraps the per-platform follower distribution sum per the formula in creator-kit.md §Integration Points §3",
+        "Level-0 (unpurchased) items are a 1.0 no-op — do not change tick output",
+        "Stacking is multiplicative and order-independent for the current effect set",
+        "Unit tests cover: Camera level 0/1/2 affects engagement rate correctly; Wardrobe level 0/1/2 affects follower distribution correctly; Camera × Clout engagement_multiplier stacks multiplicatively"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": 77,
+      "alias": "E5",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit Laptop: additive algorithm lookahead stacking with Clout",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Wire Laptop (algorithm_lookahead) into the populator for AlgorithmState.upcoming_states[] per creator-kit.md §Integration Points §4. The total lookahead used to populate upcoming_states is clout_lookahead + kit_lookahead, clamped to the number of states the schedule-walker can produce. Laptop uses the same effect type shape as Clout's algorithm_insight. Stacking is ADDITIVE (not multiplicative) per the design proposal. Note: upcoming_states is consumed by UI only — not persisted, not used by the tick logic.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Integration Points §4 (Laptop)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "AlgorithmState.upcoming_states field and its populator"
+        }
+      ],
+      "acceptance_criteria": [
+        "upcoming_states[] length = clout_lookahead + kit_lookahead (clamped to available states)",
+        "Laptop level 0 contributes 0 lookahead (no-op when unpurchased)",
+        "Unit tests cover: laptop-only lookahead, clout-only lookahead, both stacked additively, clamp when sum exceeds available states"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": 78,
+      "alias": "E6",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit Phone: sequential platform head-start with mid-run apply",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement Phone's sequential platform head-start per creator-kit.md §Integration Points §5. When Phone is purchased mid-run, iterate platforms in static-declaration order and unlock the next still-locked platform that is NOT already covered by a Clout platform_headstart. The number of platforms unlocked by Phone equals the Phone level. Hook into the purchase handler's post-purchase extension point (from E3). NOTE: There is no applyRebrand work for Phone — creator_kit is already wiped to {} before Phone would run. Phone is purchase-handler-only.\n\nIMPORTANT — OQ#1 (Phone ceiling): game-designer has not yet picked Inert vs Hidden for when all platforms are already head-started. Architect recommended avoiding Fallback-Benefit. IMPLEMENT INERT AS PLACEHOLDER (purchase succeeds, no platform unlocks) and leave a clear // OQ#1: game-designer to pick Inert vs Hidden comment at the decision site. If game-designer picks Hidden, UI will gate the item out of the menu — the handler's Inert behavior is harmless.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Integration Points §5 (Phone); Stacking Order §Sequential stacking"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "applyRebrand platform_headstart re-application pattern (reference implementation for sequential semantics)"
+        }
+      ],
+      "acceptance_criteria": [
+        "Phone purchase unlocks the next still-locked platform in static-declaration order, skipping Clout-covered platforms",
+        "When all platforms are already unlocked/head-started, Phone purchase succeeds as Inert (engagement spent, level incremented, no platform change) — flagged with // OQ#1 comment at the decision site",
+        "Kit wipe on rebrand implicitly resets Phone — no Phone-specific rebrand code required (verify test)",
+        "Unit tests cover: Phone L1 with no Clout head-starts → first platform unlocks, Phone L1 with Clout head-start on platform[0] → platform[1] unlocks, Phone L2 with no Clout head-starts → first two platforms unlock, Phone purchase when all platforms already unlocked → Inert (engagement spent, no unlock change)"
+      ],
+      "open_questions": [
+        {
+          "question": "OQ#1: Phone ceiling behavior when all platforms already head-started — Inert vs Hidden. Architect recommends avoiding Fallback-Benefit. Currently implemented as Inert with a marker comment. If Hidden is picked, the UI will gate the item out of the menu and no handler change is needed.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [
+        73,
+        74,
+        75
+      ]
+    },
+    {
+      "id": 79,
+      "alias": "E7",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit Mogging: viral burst amplifier",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Wire Mogging (viral_burst_amplifier) into the viral burst trigger per creator-kit.md §Integration Points §6. At viral burst trigger time, multiply the rolled boost_factor by the kit amplifier value before magnitude is computed. Specifically: read kit_amplifier = creatorKitItems.mogging.effect.values[level-1] (or 1.0 at level 0), then boost_factor = boost_factor_raw * kit_amplifier. The existing magnitude and bonus_rate_per_ms formulas from viral-burst-event-signal.md §3 then use the amplified boost_factor unchanged. This is ONE new read point in the viral burst trigger — no other changes to the viral burst subsystem.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Integration Points §6 (Mogging)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/viral-burst-event-signal.md",
+          "purpose": "§3 Magnitude calculation — existing boost_factor roll and magnitude formulas"
+        }
+      ],
+      "acceptance_criteria": [
+        "Viral burst magnitude computation reads player.creator_kit.mogging and applies the amplifier to boost_factor before magnitude is computed",
+        "Level 0 (unpurchased) Mogging is a 1.0 no-op — boost_factor is unchanged",
+        "Amplified boost_factor flows through to both magnitude and bonus_rate_per_ms (per existing formulas)",
+        "Unit tests cover: Mogging level 0 viral burst matches pre-kit behavior; Mogging level N scales boost_factor and produces proportionally higher magnitude; bonus_rate_per_ms is consistent with the amplified boost_factor"
+      ],
+      "open_questions": [
+        {
+          "question": "OQ#3: should a hard cap on total post-amplification boost_factor be enforced? Architecturally trivial to add a clamp step. Not implemented now — game-designer balance pass.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": 80,
+      "alias": "U1",
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "UX spec: creator-kit-panel (placement, peek signal, icons, copy)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Write the follow-up UX spec for the Creator Kit panel at .frames/sdlc/ux/creator-kit-panel.md. The accepted proposal resolved the direction (dedicated collapsible panel, receded visual weight, peek-visible spend signal tied to currency readout) but deferred the detailed treatment. This task: specify exact panel placement relative to the generator list and action column, the collapsed/expanded behavior, the peek-signal affordance (triggered when the player's Engagement balance crosses the next-affordable kit tier), type scale and color treatment that differentiates kit rows from generator rows, the icon set for the five items (Camera, Laptop, Phone, Wardrobe, Mogging — one glyph each, legible at list-row scale), and satirical-but-warm copy drafts. Coordinate copy drafts with game-designer per OQ#7 resolution.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/creator-kit-upgrades.md",
+          "purpose": "OQ#6 and OQ#7 resolutions define direction and constraints"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "The five items and their effects — the content the panel must present"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/typography-system.md",
+          "purpose": "Type scale constraints for the kit panel differentiation"
+        }
+      ],
+      "acceptance_criteria": [
+        ".frames/sdlc/ux/creator-kit-panel.md exists with sections: panel placement, collapsed/expanded behavior, peek-signal affordance, visual differentiation from generator rows, icon set (one glyph per item), copy drafts",
+        "Peek-signal trigger is specified: what threshold, what affordance treatment, where it surfaces (near currency readout, not inside the panel)",
+        "Copy drafts for all five items are present and reviewed with game-designer for satirical-but-warm tone",
+        "No competing visual weight with the generator list — differentiation via placement, type scale, color specified explicitly",
+        "Spec references accepted-proposal OQ#6 and OQ#7 resolutions as the source of constraints"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 81,
+      "alias": "E8",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit menu UI shell (collapsible panel + purchase rows)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the Creator Kit UI panel per the UX spec produced in U1. The panel is a collapsible container showing the five kit items (Camera, Laptop, Phone, Wardrobe, Mogging) with their current level, cost to next level, and a buy button wired to the E3 purchase handler. The peek-signal affordance is also implemented per the UX spec (surfaces near the currency readout when balance crosses a kit affordability threshold). Visual differentiation from generator rows follows the UX spec's type scale and color treatment. Icons from the UX spec asset set.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/creator-kit-panel.md",
+          "purpose": "UX spec — placement, peek signal, visual treatment, icons, copy (produced by U1)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Data model (player.creator_kit, KitItemDef) and purchase handler contract"
+        }
+      ],
+      "acceptance_criteria": [
+        "Creator Kit panel renders all five items with current level, next-level cost, and buy button",
+        "Panel is collapsible per UX spec behavior",
+        "Buy button dispatches the purchase action implemented in E3; disabled states match validation (max level, insufficient engagement)",
+        "Peek-signal affordance surfaces per UX spec when Engagement balance crosses a kit affordability threshold",
+        "Visual treatment (type scale, color, placement) matches UX spec and does not compete with generator list",
+        "Component tests cover: rendering, disabled-state logic, purchase dispatch, peek-signal trigger condition"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        73,
+        74,
+        75
+      ]
+    },
+    {
+      "id": 82,
+      "role": "architect",
+      "state": "review",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Review generator-level-growth-curves proposal",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "Game-designer has authored a draft proposal to fix the Infinity-overflow bug in generator leveling. The proposal makes two balance calls (restore cost/reward parity per the already-accepted level-multiplier-curve.md, and introduce max_level=10 on all generators) plus belt-and-braces Infinity clamps. It flags two questions specifically for architect review: (1) whether adding a `max_level: number` field to GeneratorDefinition is acceptable as a data-contract change in the same PR that applies the fix, and (2) what migration shape to use for already-broken saves that hold Infinity values or levels above the new cap (silent clamp vs one-time repair notice). A third question — whether L=10 headroom is safe under the full multiplier stack — is engineer-owned and not your concern here. Leave your feedback written into the proposal document itself per the review state protocol. If the data-contract change and migration answers are concrete, mark the proposal accepted; if it needs a further round, leave it in draft with your questions written in.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/generator-level-growth-curves.md",
+          "purpose": "The proposal under review — read this first"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "The already-accepted curve decision that the cost formula drifted from"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "levelMultiplier at line 78 — the overflow site"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "generatorUpgradeCost at line 59 — the drift from accepted curve"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "GeneratorDefinition type — where max_level would be added"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "save schema + migration surface — context for the migration question"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the draft proposal end-to-end and the accepted level-multiplier-curve.md it references",
+        "Answer architect-owned question #1: is the GeneratorDefinition max_level field acceptable as a same-PR contract change, or must it ship separately?",
+        "Answer architect-owned question #2: migration strategy for saves holding Infinity engagement or generator levels > new cap (silent clamp vs one-time repair notice vs something else)",
+        "Record answers + any additional architectural feedback directly in the proposal document under a new review section",
+        "Decide proposal disposition: accepted (move to proposals/accepted/), rejected, or remain in draft with new open questions for a further round"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 83,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Balance pass: Badge Pro Shop milestone thresholds",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Forward work from Badge Pro Shop proposal OQ1, formally deferred on 2026-04-05. Once the progression curve is locked (follower scaling, rebrand cadence, viral frequency, brand-deal frequency), set concrete milestone thresholds for each of the five launch badges. Current launch set requires thresholds for: Micro-Influencer (1K followers — likely fine as-is), Main Character Energy (10K followers — likely fine as-is), Going Viral (first viral burst — already self-gating, no threshold needed), Sellout (first brand deal claimed — self-gating), New Me, Who Dis (first rebrand — self-gating). Most of the launch set is self-gated by first-occurrence triggers, so the real balance question is whether the follower thresholds (1K, 10K) feel right once the progression curve is set, and whether additional badges at higher follower tiers (100K, 1M per the category table) want to join the launch set or slot post-launch. Also: set the small clout cost per badge per §3 (affordable after any rebrand, ceremonial friction, not a real decision).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/badge-shop.md",
+          "purpose": "The accepted proposal — OQ1 is marked deferred and points here"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-to-follower-scaling-curve.md",
+          "purpose": "Follower scaling curve — input to threshold balancing"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "Level multiplier curve — input to progression pacing"
+        }
+      ],
+      "acceptance_criteria": [
+        "Concrete milestone thresholds set for each of the five launch badges, or confirmation that self-gating triggers are sufficient and no threshold tuning is needed",
+        "Clout cost per badge set per §3 (small, flat, affordable immediately after any rebrand)",
+        "Decision documented as a revision to badge-shop.md or as a balance-pass note attached to it"
+      ],
+      "open_questions": [
+        {
+          "question": "Does the progression curve require larger-follower badges (100K, 1M) to join the launch set, or do they slot post-launch?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 84,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Balance pass: Gigs variant unlock thresholds + selection weights",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Forward work from Gigs System proposal OQ1 and OQ2, both formally deferred on 2026-04-05. Two balance questions, grouped because they touch the same system and will likely be tuned in the same session. (1) OQ1 — variant-specific follower unlock thresholds for Livestream and Convention (Brand Deal inherits its threshold from the original brand-deal-boost.md). The diegetic progression is: small creators get brand deals, mid-tier creators go live, established creators get con invites. Concrete follower counts depend on the progression curve. (2) OQ2 — selection weights. Launch ships with 60/30/10 (Brand Deal / Livestream / Convention). After playtesting, evaluate whether Convention at 10% is rare enough to produce the 'Oh, a con!' feeling without becoming forgotten, or whether a 70/25/5 or similar split is better. Rarity carries emotional weight and weights are StaticData-tunable without code changes.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/gigs-system.md",
+          "purpose": "The accepted proposal — OQ1 and OQ2 are marked deferred and point here"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/brand-deal-boost.md",
+          "purpose": "Original Brand Deal threshold — Livestream and Convention calibrate against this"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-to-follower-scaling-curve.md",
+          "purpose": "Follower scaling — input to unlock threshold balancing"
+        }
+      ],
+      "acceptance_criteria": [
+        "Livestream and Convention follower unlock thresholds set against the finalized progression curve",
+        "Selection weights confirmed or revised from 60/30/10 starting values after playtesting",
+        "Decisions documented as a revision to gigs-system.md or as a balance-pass note attached to it"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 85,
+      "role": "engineer",
+      "state": "review",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Review generator-level-growth-curves proposal",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Game-designer has authored a draft proposal to fix the Infinity-overflow bug in generator leveling. The proposal makes two balance calls (restore cost/reward parity per the already-accepted level-multiplier-curve.md, and introduce max_level=10 on all generators) plus belt-and-braces Infinity clamps. It flags one question specifically for engineer review: whether the L=10 headroom is safe under the full multiplier stack at runtime (interaction of per-level multiplier × generator base rate × clout upgrades × viral burst × brand-deal/gig boost, etc.). Architect is reviewing in parallel (task #82) for the data-contract and save-migration questions; those are out of scope for engineer review. Leave your feedback written into the proposal document itself per the review state protocol. If L=10 is safe, mark Aligned; if there is a realistic multiplier-stack path that still overflows or loses precision at L=10, state the path concretely and leave yourself in the reviewers list.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/generator-level-growth-curves.md",
+          "purpose": "The proposal under review — read this first"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "The already-accepted curve decision — input to the headroom math"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "levelMultiplier at line 78 — the overflow site and the tick path where multipliers stack"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "generatorUpgradeCost at line 59 — context for the cost/reward parity call"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "GeneratorDefinition type — sees the proposed max_level field"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the draft proposal end-to-end and the accepted level-multiplier-curve.md it references",
+        "Answer engineer-owned question: under the full runtime multiplier stack (generator base × level multiplier × clout × viral × gigs, etc.), is L=10 safe from Infinity/precision loss? Show the upper-bound math or name the concrete failure path.",
+        "Record findings directly in the proposal document under a new Review section with Decision: Aligned / Not Aligned / Request for Comment",
+        "If Aligned and you are the last reviewer, move proposal to proposals/accepted/ per the review state protocol; otherwise leave in draft with yourself listed in reviewers"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 86,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "UX spec: per-variant Gig card treatments (ux/gig-cards.md)",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Follow-up UX spec committed to during the ux-designer review of the Gigs System proposal (2026-04-05, now accepted). The gigs-system proposal introduces three Gig variants — Brand Deal (3× / 20s), Livestream (2× / 60s), Convention (5× / 10s) — sharing one Actions-column slot. ux-designer committed direction during review but deferred the asset-level per-variant card spec to this follow-up. Produce ux/gig-cards.md extending the existing ux/brand-deal-card.md spec with three distinct card treatments. Direction is already set in the accepted proposal (OQ3 resolution) and must be honored: (1) duration is the loudest element on the card — visual hierarchy is duration > variant name > icon > body copy (inverts conventional reading order, deliberate, because Convention's 10s leaves no room for misread); (2) rarity signals through arrival motion, not static art — uniform entrance with different icons kills the emotional register; Brand Deal keeps baseline motion, Livestream enters slower/heavier, Convention enters fast+punchier with distinct audio/visual signature; (3) all three cards live in the corporate-green lane with secondary accent (Brand Deal baseline green, Livestream warm green-toward-amber, Convention cooled green-toward-teal) passing 3:1 UI contrast; (4) iconography: phone/handshake (Brand Deal), broadcast dot / go-live badge (Livestream), crowd / badge-lanyard (Convention); (5) on-card copy: 'Convention' full word, never 'Con' (collides with Scandal system vocabulary — 'con' as scheme/fraud). Final icon assets, exact accent hex values, and per-variant motion timings are the outputs of this spec.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/gigs-system.md",
+          "purpose": "The accepted proposal — OQ3 resolution contains the committed direction this spec must honor"
+        },
+        {
+          "ref": ".frames/sdlc/ux/brand-deal-card.md",
+          "purpose": "Existing single-variant card spec this extends; baseline motion for Brand Deal comes from here"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "Color system — corporate-green lane, 3:1 contrast rules, accent palette constraints"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/actions-column.md",
+          "purpose": "Actions-column framing — Gigs as one citizen, not three"
+        }
+      ],
+      "acceptance_criteria": [
+        "Create .frames/sdlc/ux/gig-cards.md with per-variant card specs for Brand Deal, Livestream, and Convention",
+        "Visual hierarchy defined explicitly: duration > variant name > icon > body copy, with type sizes/weights per layer",
+        "Per-variant entrance motion defined (timing, easing, distinct signature per variant) — not just different icons on identical motion",
+        "Per-variant accent color defined with exact values passing 3:1 UI-component contrast against card background",
+        "Per-variant iconography finalized (phone/handshake, broadcast/go-live, crowd/lanyard)",
+        "On-card copy confirmed: 'Convention' full word on primary label; short forms allowed only in secondary copy",
+        "Cross-reference added to ux/brand-deal-card.md pointing to the new spec"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 87,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Plan: decompose generator-level-growth-curves into engineer build tasks",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The generator-level-growth-curves proposal is now accepted. It fixes a save-breaking Infinity bug caused by divergence between the reward curve (2^(L²/5)) and the cost curve (4^(L-1)), and installs a hard L=10 cap plus runtime clamps. Needs to be decomposed into discrete engineer build tasks with clear done-whens. Architect review on the proposal already specified the shape of every change required, so this is decomposition and sequencing, not fresh design.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-level-growth-curves.md",
+          "purpose": "The accepted proposal to decompose — includes architect and engineer reviews with specific implementation guidance"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "The reward curve and originally-accepted cost formula that this work restores"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "Current (buggy) generatorUpgradeCost at line 59 — the 4^(L-1) formula that needs to be swapped for levelMultiplier(targetLevel)"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "levelMultiplier implementation at line 78 — needs input clamp to [1, 20]"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Existing migration chain (V1→V4) — new migrateV4toV5 appends here, bump CURRENT_VERSION to 5"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "GeneratorDef at line 358 gains max_level: number field (precedent: CloutUpgradeDef.max_level at line 412); doc comment on base_upgrade_cost at line 390 still encodes the old formula and needs updating"
+        }
+      ],
+      "acceptance_criteria": [
+        "Engineer build task(s) filed that together cover: (1) swap cost formula to ceil(base_upgrade_cost × levelMultiplier(targetLevel)), (2) add max_level: 10 to GeneratorDef and enforce at-cap guard in generatorUpgradeCost/upgradeGenerator, (3) Lvl↑ affordance shows MAX label at cap, (4) runtime clamp in levelMultiplier input to [1,20], (5) player.engagement clamped to Number.MAX_SAFE_INTEGER on every tick write, (6) V4→V5 save migration that silently clamps engagement and per-generator levels with console.warn for diagnostics, (7) update stale doc comment at types.ts:390",
+        "Tasks are granular enough that each is 1 role + 1 state, and they sequence correctly (data-contract changes before tick integration, migration after schema changes land)",
+        "Each engineer task includes the specific file paths and line references from the proposal reviews"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 88,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Balance pass: base_upgrade_cost seed values after cost/reward parity fix",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Deferred follow-up to the accepted generator-level-growth-curves proposal (Open Question 4). With cost now tracking reward 1:1 via levelMultiplier(targetLevel), the provisional base_upgrade_cost seed values from generator-balance-and-algorithm-states.md (selfies 100, memes 1,000, …, viral_stunts 200M, plus the post-prestige generators ai_slop/deepfakes/algorithmic_prophecy) may produce runs that feel too long or too short. The proposal locks the SHAPE of the curve; this task retunes the SEED values after the fixed economy can be felt end-to-end in playtest. Not a blocker for implementation — this only makes sense to do once the correctness fix has shipped and there's real play data to respond to.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-level-growth-curves.md",
+          "purpose": "Parent proposal — Q4 explicitly defers this rebalance"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Provisional base_upgrade_cost values that may need retuning"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "The ten named phases — retuned seed costs should still produce that felt progression"
+        }
+      ],
+      "acceptance_criteria": [
+        "Playtest the fixed economy end-to-end (at minimum: reach L=10 on 2-3 early generators, one rebrand cycle)",
+        "Identify which generators feel too cheap or too expensive at their current base_upgrade_cost values",
+        "Propose revised seed values (or confirm current values hold) in a short design note or amendment to generator-balance-and-algorithm-states.md",
+        "Validate that the ten named phases from level-multiplier-curve.md still map onto the felt pacing"
+      ],
+      "open_questions": [],
       "blocked_on": []
     }
   ]

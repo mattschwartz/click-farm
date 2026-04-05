@@ -93,7 +93,9 @@ export function checkGeneratorUnlocks(
   for (const id of Object.keys(generators) as GeneratorId[]) {
     if (!generators[id].owned) {
       const threshold = staticData.unlockThresholds.generators[id];
-      if (totalFollowers >= threshold) {
+      // Missing entry = generator is never unlocked by follower threshold
+      // (e.g. post-prestige generators, which unlock via Clout upgrades).
+      if (threshold !== undefined && totalFollowers >= threshold) {
         next[id] = { ...generators[id], owned: true };
         changed = true;
       }

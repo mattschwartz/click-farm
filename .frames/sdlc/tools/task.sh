@@ -69,6 +69,39 @@ validate_task_input() {
   fi
 }
 
+# Validate that a role/state combination is allowed.
+# Source of truth: .frames/sdlc/FRAME.yml — keep in sync if states or roles change.
+#   build  → engineer only
+#   plan   → architect, producer only
+#   design → any role
+#   review → any role
+validate_role_state() {
+  local role="$1"
+  local state="$2"
+
+  case "$state" in
+    build)
+      if [[ "$role" != "engineer" ]]; then
+        echo "Error: state 'build' is only allowed for role 'engineer' (got '$role')" >&2
+        return 1
+      fi
+      ;;
+    plan)
+      if [[ "$role" != "architect" && "$role" != "producer" ]]; then
+        echo "Error: state 'plan' is only allowed for roles 'architect' or 'producer' (got '$role')" >&2
+        return 1
+      fi
+      ;;
+    design|review)
+      # any role permitted
+      ;;
+    *)
+      echo "Error: unknown state '$state' (valid: design, review, plan, build)" >&2
+      return 1
+      ;;
+  esac
+}
+
 # --- commands ---
 
 cmd_add() {
@@ -103,6 +136,10 @@ cmd_add() {
 
   # Validate
   validate_task_input "$input" || exit 1
+
+  local state
+  state="$(echo "$input" | jq -r '.state')"
+  validate_role_state "$role" "$state" || exit 1
 
   # Get next ID
   local id
@@ -469,6 +506,12 @@ cmd_plan() {
       echo "Error: task $alias_hint (index $i) missing required fields: ${missing[*]}" >&2
       exit 1
     fi
+
+    # Validate role/state combination
+    local t_role t_state
+    t_role="$(echo "$task_input" | jq -r '.role')"
+    t_state="$(echo "$task_input" | jq -r '.state')"
+    validate_role_state "$t_role" "$t_state" || exit 1
 
     local alias
     alias="$(echo "$task_input" | jq -r '.alias')"

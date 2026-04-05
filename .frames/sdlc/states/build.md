@@ -53,6 +53,16 @@ Write the code.
 
 Write tests and verify the implementation.
 
+**Commands** (run from the repo root or from `client/`):
+
+| Command | What it does |
+|---|---|
+| `cd client && npm test` | One-shot run of the full suite. Same as `vitest run`. |
+| `npx vitest run path/to/file.test.ts` | Run a single test file. |
+| `npx vitest run -t "part of name"` | Filter by test name. |
+
+`npm test` is the script defined in `client/package.json`. The `npx vitest` commands work from either the repo root or `client/` — vitest finds the config automatically.
+
 **Constraints:**
 - You MUST write tests for any code that touches core game state, money, progression, or player-facing behavior, because these are the areas where bugs have consequences
 - You MUST run the full test suite and verify all tests pass — not just the new tests, because a change that passes its own tests but breaks existing ones is not complete
@@ -77,6 +87,7 @@ Mark the task done so that `tasks.json` reflects the completed state before it i
 - You MUST mark the task complete using `bash .frames/sdlc/tools/task.sh complete <id>`
 - You MUST NOT consider the task complete until the done-when condition is satisfied and all tests pass
 - If completing this task unblocks other tasks (check their dependencies), You SHOULD note which tasks are now unblocked, because the next planning session needs to know what's ready
+- You MUST NOT stop here — marking the task complete is not the end of the session. You MUST proceed to Step 7 and commit, because uncommitted work does not exist as far as the rest of the team is concerned.
 
 ### 7. Commit
 

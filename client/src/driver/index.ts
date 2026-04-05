@@ -31,6 +31,14 @@ import {
   type RebrandResult,
 } from '../prestige/index.ts';
 import type { ScheduledShift } from '../algorithm/index.ts';
+import {
+  createScandalSessionSnapshot,
+  freezeAccumulators,
+  unfreezeAccumulators,
+  updateAccumulatorsOnPurchase,
+  createDefaultStateMachine,
+  onPlayerConfirm,
+} from '../scandal/index.ts';
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -49,6 +57,23 @@ export const SAVE_INTERVAL_MS = 30_000;
 export type Unsubscribe = () => void;
 export type StateListener = (state: GameState) => void;
 export type ViralBurstListener = (payload: ViralBurstPayload) => void;
+
+/** Which driver action was attempted when the error fired. */
+export type ActionName = 'click' | 'buy' | 'upgrade' | 'buyCloutUpgrade';
+
+/**
+ * Fired when a player-triggered action throws out of the model layer. The
+ * driver catches the throw, logs it, and invokes all action-error listeners.
+ * State is not mutated when this fires (the throw happened before applyState).
+ */
+export interface ActionError {
+  action: ActionName;
+  error: Error;
+  /** Action arguments at time of failure — e.g. { generatorId: 'memes' }. */
+  context: Record<string, unknown>;
+}
+
+export type ActionErrorListener = (e: ActionError) => void;
 
 export interface DriverOptions {
   /** Injectable clock for tests. Defaults to Date.now. */
@@ -99,10 +124,29 @@ export interface GameDriver {
   /** Upcoming algorithm shifts visible via the algorithm_insight upgrade. */
   getUpcomingShifts(): ScheduledShift[];
   /**
+   * Player confirms the PR Response with a chosen engagement spend.
+   * Transitions scandal state machine from scandal_active → resolving.
+   * The game loop applies damage on the next tick.
+   */
+  confirmPR(engagementSpent: number): void;
+  /**
+   * Dismiss the aftermath resolution display. Clears lastResolution from
+   * the state machine so the UI can stop showing the aftermath card.
+   */
+  dismissScandalResolution(): void;
+  /**
    * Subscribe to viral burst events. Fires once per event, synchronously,
    * before state subscribers are notified. Returns an unsubscribe function.
    */
   onViralBurst(listener: ViralBurstListener): Unsubscribe;
+  /**
+   * Subscribe to action errors. Player-triggered actions (click, buy, upgrade,
+   * buyCloutUpgrade) that throw from the model layer are caught here rather
+   * than propagated — the driver logs the error to console and fires this
+   * listener with the action name, original error, and arg context. Useful
+   * for surfacing "that didn't work" feedback in the UI.
+   */
+  onActionError(listener: ActionErrorListener): Unsubscribe;
 }
 
 // ---------------------------------------------------------------------------
@@ -162,11 +206,52 @@ export function createDriver(options: DriverOptions): GameDriver {
     return createInitialGameState(staticData, now());
   })();
 
+  // Scandal: unfreeze accumulators (they were frozen on last save/close),
+  // ensure state machine exists for old saves, and take a fresh session
+  // snapshot for the magnitude floor. This runs on every open/foreground.
+  {
+    const unfrozen = unfreezeAccumulators(state.accumulators ?? []);
+    const sm = state.scandalStateMachine ?? createDefaultStateMachine(staticData);
+    const snapshot = createScandalSessionSnapshot(state, now());
+    state = {
+      ...state,
+      accumulators: unfrozen,
+      scandalStateMachine: sm,
+      scandalSessionSnapshot: snapshot,
+    };
+  }
+
   let lastTickAt = now();
   const listeners = new Set<StateListener>();
   const viralListeners = new Set<ViralBurstListener>();
+  const errorListeners = new Set<ActionErrorListener>();
   let tickHandle: number | null = null;
   let saveHandle: number | null = null;
+
+  /**
+   * Wrap a player action in try/catch. If the model throws, log to console
+   * with structured context and fan out to error listeners — don't re-throw.
+   * This prevents UI-level silent failures (model throws, React event handler
+   * logs, state doesn't update, user sees "nothing happens"). Errors become
+   * observable: listeners can surface toasts, log analytics, etc.
+   */
+  function runAction(
+    action: ActionName,
+    context: Record<string, unknown>,
+    fn: () => void,
+  ): void {
+    try {
+      fn();
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      // Structured console log so the error is greppable and its context
+      // is preserved even when no listeners are attached.
+      // eslint-disable-next-line no-console
+      console.error(`[driver] action '${action}' failed`, { context, error });
+      const payload: ActionError = { action, error, context };
+      for (const listener of errorListeners) listener(payload);
+    }
+  }
 
   function notify(): void {
     for (const l of listeners) l(state);
@@ -213,6 +298,8 @@ export function createDriver(options: DriverOptions): GameDriver {
         last_close_state: snapshot,
         last_close_time: t,
       },
+      // Freeze accumulators on save so they resume correctly on next open.
+      accumulators: freezeAccumulators(state.accumulators),
     };
     // Don't go through applyState here — last_close_state / last_close_time
     // changes on save shouldn't re-render the UI, but keep local state
@@ -235,15 +322,30 @@ export function createDriver(options: DriverOptions): GameDriver {
     },
 
     click() {
-      applyState(postClick(state, staticData));
+      runAction('click', {}, () => {
+        applyState(postClick(state, staticData));
+      });
     },
 
     buy(generatorId) {
-      applyState(buyGenerator(state, generatorId, staticData));
+      runAction('buy', { generatorId }, () => {
+        const prevState = state;
+        const afterBuy = buyGenerator(prevState, generatorId, staticData);
+        // Update Trend Chasing accumulator based on the output mix shift.
+        const updatedAccumulators = updateAccumulatorsOnPurchase(
+          afterBuy.accumulators,
+          prevState,
+          afterBuy,
+          staticData,
+        );
+        applyState({ ...afterBuy, accumulators: updatedAccumulators });
+      });
     },
 
     upgrade(generatorId) {
-      applyState(upgradeGenerator(state, generatorId, staticData));
+      runAction('upgrade', { generatorId }, () => {
+        applyState(upgradeGenerator(state, generatorId, staticData));
+      });
     },
 
     step(deltaMs) {
@@ -296,14 +398,39 @@ export function createDriver(options: DriverOptions): GameDriver {
     },
 
     buyCloutUpgrade(upgradeId) {
-      applyState(purchaseCloutUpgrade(state, upgradeId, staticData));
+      runAction('buyCloutUpgrade', { upgradeId }, () => {
+        applyState(purchaseCloutUpgrade(state, upgradeId, staticData));
+      });
     },
 
     getUpcomingShifts: () => getUpcomingShifts(state, staticData),
 
+    confirmPR(engagementSpent) {
+      const sm = state.scandalStateMachine;
+      if (sm.state !== 'scandal_active') return;
+      const nextSm = onPlayerConfirm(sm, engagementSpent);
+      applyState({ ...state, scandalStateMachine: nextSm });
+    },
+
+    dismissScandalResolution() {
+      const sm = state.scandalStateMachine;
+      if (sm.lastResolution === null) return;
+      applyState({
+        ...state,
+        scandalStateMachine: { ...sm, lastResolution: null },
+      });
+    },
+
     onViralBurst(listener) {
       viralListeners.add(listener);
       return () => viralListeners.delete(listener);
+    },
+
+    onActionError(listener) {
+      errorListeners.add(listener);
+      return () => {
+        errorListeners.delete(listener);
+      };
     },
   };
 }

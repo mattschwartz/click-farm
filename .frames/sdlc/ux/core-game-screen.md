@@ -120,17 +120,21 @@ Per proposal §4 and UX review Q1: ambient weather metaphor. The Algorithm is th
 
 ### 4.2 Mood library (reference palette per state)
 
-These are *directions*, not final values. Engineer/UX can iterate on specific hex values during implementation.
+**Base:** Fixed warm near-white `#FAF8F5` across all states. Per-state color is carried by a shifting accent layer (screen-edge mood vignette), not by per-state background gradients. See `proposals/draft/algorithm-mood-visibility.md` for the authoritative edge-color values, opacities, and the Corporate Takeover light-mode signature. This table no longer duplicates those values.
 
-| State | Mood direction | Background base | Motion signature |
-|-------|----------------|-----------------|------------------|
-| `short_form_surge` | Electric, impatient | Warm amber → orange gradient | Fast-drifting particles, 6s cycle |
-| `authenticity_era` | Cool, quiet | Muted teal → deep blue | Slow breathing gradient, 12s cycle |
-| `engagement_bait` | Garish, pulsing | Magenta → yellow gradient | Jittery pulse at 4s cycle |
-| `algorithm_winter` | Flat, cold | Desaturated grey-blue | Near-still, very slow drift 20s |
-| `viral_storm` | Chaotic, energetic | Violet → red streaks | Fast streaks, 3s cycle |
+The **Motion signature** column is color-space independent and stands as written.
+
+| State | Mood direction | Motion signature |
+|-------|----------------|------------------|
+| `short_form_surge` | Electric, impatient | Fast-drifting particles, 6s cycle |
+| `authenticity_era` | Cool, quiet | Slow breathing gradient, 12s cycle |
+| `engagement_bait` | Garish, pulsing | Jittery pulse at 4s cycle |
+| `algorithm_winter` | Flat, cold | Near-still, very slow drift 20s |
+| `viral_storm` | Chaotic, energetic | Fast streaks, 3s cycle |
 
 **Rule:** Every mood must pass the P0 contrast check for the engagement counter. Counter-readability trumps mood fidelity — if a mood makes the counter illegible, desaturate the mood.
+
+**Scope note — state-name drift:** This table uses `algorithm_winter` and `viral_storm`, matching the rest of this spec (§4.3–§4.5) and the accepted `generator-balance-and-algorithm-states` proposal. The `algorithm-mood-visibility` draft uses `nostalgia_wave` and `corporate_takeover` in place of those two states. Reconciliation (pick one set of names across spec + proposal + code) is **out of scope** for this revision and needs a follow-up task.
 
 ### 4.3 Instability indicator
 

@@ -17,7 +17,7 @@
 //     pipeline exists yet.
 //   - Upgrade drawer with 3-level preview (UX §6.3) — follow-up UX task.
 
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useGame } from './useGame.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import {
@@ -35,6 +35,9 @@ import { PostZone } from './PostZone.tsx';
 import { GeneratorList } from './GeneratorList.tsx';
 import { PlatformPanel } from './PlatformPanel.tsx';
 import { OfflineGainsModal } from './OfflineGainsModal.tsx';
+import { ScandalModal, ScandalAftermathCard } from './ScandalModal.tsx';
+import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
+import { CloutShopModal } from './CloutShopModal.tsx';
 import { GENERATOR_DISPLAY, PLATFORM_DISPLAY } from './display.ts';
 import { fmtCompactInt } from './format.ts';
 import './GameScreen.css';
@@ -76,6 +79,14 @@ const VIRAL_PARTICLES = Array.from({ length: 18 }, (_, i) => ({
   duration: 85 + (i % 4) * 20,  // 85–145 (÷100 = 0.85–1.45s)
 }));
 
+/**
+ * Whether the first-rebrand ambient copy should be shown.
+ * Only appears on the first rebrand (rebrand_count === 1). Task #66, UX §5.
+ */
+export function shouldShowAmbientCopy(rebrandCount: number): boolean {
+  return rebrandCount === 1;
+}
+
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
@@ -89,6 +100,12 @@ export function GameScreen() {
     offlineResult,
     clearOfflineResult,
     rebrand,
+    scandalUIState,
+    confirmPR,
+    dismissScandalResolution,
+    pauseLoop,
+    resumeLoop,
+    buyCloutUpgrade,
   } = useGame();
 
   // Render-time derived values --------------------------------------------
@@ -188,6 +205,9 @@ export function GameScreen() {
     }
   }, [offlineResult]);
 
+  // Upgrade drawer open state — used to dim the platform panel per spec §1.
+  const [upgradeDrawerOpen, setUpgradeDrawerOpen] = useState(false);
+
   // Approximate algorithm interval from static schedule — used for
   // instability scaling (we don't have the exact current-interval value
   // available; base ± variance is close enough for visual intent).
@@ -201,18 +221,79 @@ export function GameScreen() {
     return () => window.clearInterval(t);
   }, []);
 
-  // Rebrand affordance — minimal corner button; the full prestige screen
-  // is a separate task. Disabled when no followers have been earned.
+  // Prestige cluster — two-button affordance bottom-right (spec §2.1–2.3).
+  // Replaces the old single rebrand-corner button and window.confirm.
   const rebrandPreview = cloutForRebrand(state.player.total_followers);
-  const lastRebrandRef = useRef<number | null>(null);
-  const handleRebrand = () => {
-    if (state.player.total_followers <= 0) return;
-    if (!window.confirm(
-      `Rebrand for ${rebrandPreview} Clout? This wipes your current run.`,
-    )) return;
-    const r = rebrand();
-    lastRebrandRef.current = r.cloutEarned;
+  const prestigeEligible = isEligibleToRebrand(state);
+
+  // Modal visibility state.
+  const [showCeremonyModal, setShowCeremonyModal] = useState(false);
+  const [showShopModal, setShowShopModal] = useState(false);
+
+  // Refs for returning focus to the triggering button on modal close.
+  const rebrandBtnRef = useRef<HTMLButtonElement>(null);
+  const upgradesBtnRef = useRef<HTMLButtonElement>(null);
+
+  // First-rebrand ambient copy (task #66, UX §5).
+  // Show 'You are new again.' top-right on first rebrand (rebrand_count === 1),
+  // fade in 600ms, hold 4s, fade out 600ms, then dismiss.
+  const [showAmbientCopy, setShowAmbientCopy] = useState(false);
+  const [ambientCopyFading, setAmbientCopyFading] = useState(false);
+  const ambientCopyShownRef = useRef(false);
+
+  useEffect(() => {
+    if (shouldShowAmbientCopy(state.player.rebrand_count) && !ambientCopyShownRef.current) {
+      ambientCopyShownRef.current = true;
+      setShowAmbientCopy(true);
+      // Hold for 4s, then fade out for 600ms
+      const t1 = window.setTimeout(() => {
+        setAmbientCopyFading(true);
+      }, 4000);
+      const t2 = window.setTimeout(() => {
+        setShowAmbientCopy(false);
+        setAmbientCopyFading(false);
+      }, 4600);
+      return () => {
+        window.clearTimeout(t1);
+        window.clearTimeout(t2);
+      };
+    }
+  }, [state.player.rebrand_count]);
+
+  // Upgrades button — opens Clout Shop shell.
+  const handleUpgradesClick = () => {
+    setShowShopModal(true);
   };
+
+  const handleShopClose = () => {
+    setShowShopModal(false);
+    upgradesBtnRef.current?.focus();
+  };
+
+  // Rebrand button — opens Rebrand Ceremony (Phase 1) and pauses the game loop.
+  const handleRebrandClick = () => {
+    if (!prestigeEligible) return;
+    pauseLoop();
+    setShowCeremonyModal(true);
+  };
+
+  const handleCeremonyCancel = useCallback(() => {
+    setShowCeremonyModal(false);
+    resumeLoop();
+    rebrandBtnRef.current?.focus();
+  }, [resumeLoop]);
+
+  const handleCeremonyConfirm = useCallback(() => {
+    // Phase 3 commit — perform the rebrand. Modal stays open for Phase 4.
+    rebrand();
+  }, [rebrand]);
+
+  const handleCeremonyComplete = useCallback(() => {
+    // Phase 4 finished — close modal, resume loop, return focus.
+    setShowCeremonyModal(false);
+    resumeLoop();
+    rebrandBtnRef.current?.focus();
+  }, [resumeLoop]);
 
   return (
     <>
@@ -242,6 +323,7 @@ export function GameScreen() {
           totalFollowers={state.player.total_followers}
           viralGold={viralPhase !== null}
           summaryBadge={summaryBadge}
+          rebrandCount={state.player.rebrand_count}
         />
 
         <div className="game-body">
@@ -256,11 +338,15 @@ export function GameScreen() {
             onBuy={buy}
             onUpgrade={upgrade}
             viralGeneratorId={viralActive?.source_generator_id ?? null}
+            riskLevels={scandalUIState.riskLevels}
+            onDrawerOpenChange={setUpgradeDrawerOpen}
           />
           <PlatformPanel
             state={state}
             staticData={STATIC_DATA}
             viralPlatformId={viralActive?.source_platform_id ?? null}
+            riskLevels={scandalUIState.riskLevels}
+            drawerDimmed={upgradeDrawerOpen}
           />
         </div>
       </main>
@@ -296,25 +382,80 @@ export function GameScreen() {
         />
       )}
 
-      <div className="rebrand-corner">
+      {/* PR Response modal — shown when a scandal is active */}
+      {scandalUIState.activeScandal && (
+        <ScandalModal
+          activeScandal={scandalUIState.activeScandal}
+          onConfirm={confirmPR}
+        />
+      )}
+
+      {/* Aftermath display — shown after a scandal resolves */}
+      {scandalUIState.lastResolution && !scandalUIState.activeScandal && (
+        <ScandalAftermathCard
+          resolution={scandalUIState.lastResolution}
+          onDismiss={dismissScandalResolution}
+        />
+      )}
+
+      {/* Prestige cluster — bottom-right, two buttons, visually grouped.
+          Both buttons render at 3:1 contrast when locked (spec §2.1). */}
+      <div className="prestige-cluster">
         <button
-          className="rebrand-btn"
-          onClick={handleRebrand}
-          disabled={state.player.total_followers <= 0}
+          ref={upgradesBtnRef}
+          className={`prestige-btn prestige-btn-upgrades${!prestigeEligible ? ' prestige-btn-locked' : ''}`}
+          onClick={handleUpgradesClick}
+          title={`${fmtCompactInt(state.player.clout)} Clout`}
+          aria-label={`Rebrand Upgrades — ${fmtCompactInt(state.player.clout)} Clout`}
+        >
+          ⚙ Upgrades
+        </button>
+        <button
+          ref={rebrandBtnRef}
+          className={`prestige-btn prestige-btn-rebrand${!prestigeEligible ? ' prestige-btn-locked' : ''}`}
+          onClick={handleRebrandClick}
+          disabled={!prestigeEligible}
           title={
-            state.player.total_followers > 0
-              ? `Rebrand for ${fmtCompactInt(rebrandPreview)} Clout (${fmtCompactInt(state.player.total_followers)} followers this run)`
+            prestigeEligible
+              ? `Rebrand → +${fmtCompactInt(rebrandPreview)} Clout`
               : 'Earn followers first'
           }
+          aria-label={
+            prestigeEligible
+              ? `Rebrand — earn ${fmtCompactInt(rebrandPreview)} Clout`
+              : 'Rebrand locked — earn followers first'
+          }
         >
-          Rebrand · +{fmtCompactInt(rebrandPreview)} Clout
+          ↻ Rebrand
         </button>
-        {state.player.clout > 0 && (
-          <div className="rebrand-tooltip">
-            {fmtCompactInt(state.player.clout)} Clout · {state.player.rebrand_count} rebrands
-          </div>
-        )}
       </div>
+
+      {/* Clout Shop — game loop continues ticking (spec §3.1). */}
+      {showShopModal && (
+        <CloutShopModal
+          state={state}
+          onClose={handleShopClose}
+          onPurchase={buyCloutUpgrade}
+        />
+      )}
+
+      {/* Rebrand Ceremony Phase 1 — game loop is paused while open (spec §4.1). */}
+      {showCeremonyModal && (
+        <RebrandCeremonyModal
+          state={state}
+          onCancel={handleCeremonyCancel}
+          onConfirm={handleCeremonyConfirm}
+          onComplete={handleCeremonyComplete}
+        />
+      )}
+
+      {/* First-rebrand ambient copy (task #66, UX §5) — top-right, 600ms fade-in,
+          4s hold, 600ms fade-out. Never shown after rebrand_count >= 2. */}
+      {showAmbientCopy && (
+        <div className={`ambient-copy${ambientCopyFading ? ' ambient-copy-fading' : ''}`}>
+          You are new again.
+        </div>
+      )}
     </>
   );
 }

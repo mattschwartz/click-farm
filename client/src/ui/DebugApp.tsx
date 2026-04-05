@@ -22,11 +22,13 @@ import type { GeneratorId, PlatformId, UpgradeId } from '../types.ts';
 import '../App.css';
 
 const UPGRADE_ORDER: UpgradeId[] = [
-  'faster_engagement',
+  'engagement_boost',
   'algorithm_insight',
-  'platform_headstart_chirper',
   'platform_headstart_instasham',
   'platform_headstart_grindset',
+  'ai_slop_unlock',
+  'deepfakes_unlock',
+  'algorithmic_prophecy_unlock',
 ];
 
 const GENERATOR_ORDER: GeneratorId[] = [
@@ -37,6 +39,9 @@ const GENERATOR_ORDER: GeneratorId[] = [
   'livestreams',
   'podcasts',
   'viral_stunts',
+  'ai_slop',
+  'deepfakes',
+  'algorithmic_prophecy',
 ];
 
 const PLATFORM_ORDER: PlatformId[] = ['chirper', 'instasham', 'grindset'];
@@ -78,7 +83,7 @@ export function DebugApp() {
   const rebrandPreview = cloutForRebrand(state.player.total_followers);
 
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', padding: 16, maxWidth: 960, margin: '0 auto' }}>
+    <main style={{ fontFamily: "var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif", padding: 16, maxWidth: 960, margin: '0 auto' }}>
       <h1 style={{ marginBottom: 4 }}>Click Farm — Debug</h1>
       <p style={{ marginTop: 0, opacity: 0.7, fontSize: 12 }}>
         E7 integration harness. Not the final UI. Remove <code>?debug</code> from the URL to see the real screen.
@@ -181,10 +186,14 @@ export function DebugApp() {
               const g = state.generators[id];
               const threshold = STATIC_DATA.unlockThresholds.generators[id];
               if (!g.owned) {
+                const statusText =
+                  threshold === undefined
+                    ? 'locked (Clout upgrade)'
+                    : `locked (needs ${threshold} followers)`;
                 return (
                   <tr key={id} style={{ opacity: 0.5 }}>
                     <td>{id}</td>
-                    <td>locked (needs {threshold} followers)</td>
+                    <td>{statusText}</td>
                     <td colSpan={4} />
                   </tr>
                 );

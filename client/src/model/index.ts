@@ -14,6 +14,10 @@ import type {
   StaticData,
   UpgradeId,
 } from '../types.ts';
+import {
+  createAccumulators,
+  createDefaultStateMachine,
+} from '../scandal/index.ts';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -27,6 +31,11 @@ const ALL_GENERATOR_IDS: GeneratorId[] = [
   'livestreams',
   'podcasts',
   'viral_stunts',
+  // Post-prestige — present in state but owned=false until a Clout
+  // `generator_unlock` upgrade is purchased.
+  'ai_slop',
+  'deepfakes',
+  'algorithmic_prophecy',
 ];
 
 const ALL_PLATFORM_IDS: PlatformId[] = ['chirper', 'instasham', 'grindset'];
@@ -37,11 +46,13 @@ const ALL_PLATFORM_IDS: PlatformId[] = ['chirper', 'instasham', 'grindset'];
 
 export function createPlayer(seed: number, now: number = Date.now()): Player {
   const allUpgradeIds: UpgradeId[] = [
-    'faster_engagement',
+    'engagement_boost',
     'algorithm_insight',
-    'platform_headstart_chirper',
     'platform_headstart_instasham',
     'platform_headstart_grindset',
+    'ai_slop_unlock',
+    'deepfakes_unlock',
+    'algorithmic_prophecy_unlock',
   ];
   const clout_upgrades = Object.fromEntries(
     allUpgradeIds.map((id) => [id, 0])
@@ -131,7 +142,20 @@ export function createInitialGameState(
 
   const viralBurst = { active_ticks_since_last: 0, active: null };
 
-  return { player, generators, platforms, algorithm, viralBurst };
+  // Initialize scandal state.
+  const accumulators = createAccumulators(generators, platforms, staticData);
+  const scandalStateMachine = createDefaultStateMachine(staticData);
+
+  return {
+    player,
+    generators,
+    platforms,
+    algorithm,
+    viralBurst,
+    accumulators,
+    scandalStateMachine,
+    scandalSessionSnapshot: null, // driver sets this on open/foreground
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -236,9 +260,10 @@ export function earnFollowers(
     ...platformState,
     followers: platformState.followers + amount,
   };
+  // Note: total_followers is derived and must be synced via syncTotalFollowers().
+  // This function only updates lifetime_followers.
   const newPlayer: Player = {
     ...player,
-    total_followers: player.total_followers + amount,
     lifetime_followers: player.lifetime_followers + amount,
   };
   return { platform: newPlatform, player: newPlayer };

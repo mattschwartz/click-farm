@@ -67,7 +67,7 @@
   z-index: 1;
   min-height: 100vh;
   color: var(--text-p0);
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif;
   display: grid;
   grid-template-rows: 80px 1fr;
   max-width: 1280px;
@@ -132,6 +132,24 @@
   font-size: 12px;
   color: var(--text-p2);
   font-style: italic;
+}
+
+/* RUN badge — appears inline with algorithm state name (task #66, UX §5).
+   Hidden at rebrand_count 0; 400ms fade-in on first appearance (rebrand_count 1). */
+.run-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-p3); /* ~4.5:1 contrast, muted per spec */
+  margin-left: 8px;
+  animation: run-badge-fade-in 400ms ease-out;
+}
+
+@keyframes run-badge-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .engagement-slot {
@@ -832,44 +850,658 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* --- Rebrand corner affordance (minimal, full UI is separate screen) ---- */
+/* --- Prestige cluster — two-button bottom-right affordance (spec §2.1–2.3) */
 
-.rebrand-corner {
+.prestige-cluster {
   position: fixed;
   bottom: 16px;
   right: 16px;
   z-index: 3;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.rebrand-corner .rebrand-btn {
-  font-family: inherit;
-  font-size: 12px;
+  flex-direction: row;
+  gap: 12px;  /* spec §2.1: ~12px spacing */
+  align-items: center;
   padding: 8px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(18, 21, 28, 0.82);
-  color: var(--text-p2);
-  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 24px;
   backdrop-filter: blur(4px);
 }
 
-.rebrand-corner .rebrand-btn:hover:not(:disabled) {
+.prestige-btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: var(--text-p1);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.prestige-btn:hover:not(:disabled):not(.prestige-btn-locked) {
   color: var(--text-p0);
-  border-color: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.36);
 }
 
-.rebrand-corner .rebrand-btn:disabled {
+/* Locked state — 3:1 contrast per spec §2.1. --text-p3 = rgba(255,255,255,0.42) ≈ 3:1 */
+.prestige-btn-locked {
   color: var(--text-p3);
-  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.10);
+  cursor: default;
 }
 
-.rebrand-corner .rebrand-tooltip {
+.prestige-btn-rebrand:not(.prestige-btn-locked):not(:disabled) {
+  color: var(--accent-gold);
+  border-color: rgba(255, 214, 107, 0.28);
+}
+
+.prestige-btn-rebrand:not(.prestige-btn-locked):not(:disabled):hover {
+  border-color: rgba(255, 214, 107, 0.48);
+}
+
+/* --- Clout Shop modal (shell — full purchase UI is task #64) -------------- */
+
+.shop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* ~30% opacity backdrop — game loop continues, spec §3.1.
+     Light dim so the empire remains visible behind the shop. */
+  background: rgba(0, 0, 0, 0.30);
+  animation: fade-in 200ms ease-out;
+}
+
+.shop-modal {
+  background: rgba(18, 21, 28, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  width: 720px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  color: var(--text-p0);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+}
+
+.shop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.shop-title {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.shop-close-btn {
+  font-family: inherit;
+  font-size: 20px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-p2);
+  cursor: pointer;
+  line-height: 1;
+  transition: color 120ms, border-color 120ms;
+}
+
+.shop-close-btn:hover {
+  color: var(--text-p0);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Clout balance — 36px/weight 600 per spec §3.2. */
+.shop-balance {
+  padding: 20px 24px 8px;
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--text-p0); /* P0 contrast per spec */
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.005em;
+}
+
+/* Empty-state hint — above the categories when Clout:0 & no rebrands. */
+.shop-empty-hint {
+  padding: 0 24px 16px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-p3);
+  letter-spacing: 0.04em;
+}
+
+/* All-maxed footer — muted hint line. */
+.shop-all-maxed {
+  padding: 16px 24px 20px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-p3);
+  text-align: center;
+  font-style: italic;
+}
+
+/* --- Shop categories & rows --------------------------------------------- */
+
+.shop-categories {
+  padding: 0 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.shop-category-header {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--text-p2);
+  padding: 8px 0 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 4px;
+}
+
+.shop-category-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Row — 72px height, icon + text + level + cost + ⬆ button. */
+.shop-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto auto 48px;
+  align-items: center;
+  gap: 14px;
+  min-height: 72px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: background 120ms, border-color 120ms;
+}
+
+.shop-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.shop-row-atmax {
+  opacity: 0.82;
+}
+
+.shop-row-icon {
+  font-size: 28px;
+  text-align: center;
+  line-height: 1;
+}
+
+.shop-row-text {
+  min-width: 0;
+}
+
+.shop-row-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-p1);
+  margin-bottom: 3px;
+}
+
+.shop-row-desc {
+  font-size: 12px;
+  color: var(--text-p2); /* ~7:1 contrast per spec §3.3 */
+  line-height: 1.4;
+}
+
+.shop-row-level {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-p2);
+  min-width: 56px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-row-cost {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-p1);
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+  text-align: right;
+}
+
+/* Insufficient: amber cost label per spec §3.5 (not red). */
+.shop-row-cost-insufficient {
+  color: var(--accent-amber);
+}
+
+/* MAX / ✓ state. */
+.shop-row-cost-max {
+  color: var(--text-p3);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+/* ⬆ button — ≥44×44px hit area per spec accessibility. */
+.shop-row-btn {
+  font-family: inherit;
+  font-size: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 214, 107, 0.45);
+  background: rgba(255, 214, 107, 0.10);
+  color: var(--accent-gold);
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms, transform 60ms;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-row-btn:hover {
+  background: rgba(255, 214, 107, 0.18);
+  border-color: rgba(255, 214, 107, 0.62);
+}
+
+.shop-row-btn:active {
+  transform: scale(0.97);
+}
+
+/* Insufficient — 3:1 contrast (not faded) per spec §3.5. */
+.shop-row-btn-insufficient {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-p3);
+}
+
+.shop-row-btn-insufficient:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Reserve space where the button would be, to keep grid cols aligned. */
+.shop-row-btn-placeholder {
+  width: 44px;
+  height: 44px;
+}
+
+/* Purchase pulse — 1.0 → 1.02 → 1.0 over 250ms per spec §3.5. */
+.shop-row-pulsing {
+  animation: shop-row-pulse 250ms ease-out;
+}
+
+@keyframes shop-row-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+/* Insufficient shake — 4px horizontal, 200ms per spec §3.5. */
+.shop-row-shaking {
+  animation: shop-row-shake 200ms ease-in-out;
+}
+
+@keyframes shop-row-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+/* Reduce Motion — disable pulse, shake, and rely on static state signals. */
+@media (prefers-reduced-motion: reduce) {
+  .shop-row-pulsing,
+  .shop-row-shaking {
+    animation: none;
+  }
+  .shop-row-btn:active {
+    transform: none;
+  }
+}
+
+/* --- Rebrand Ceremony modal (Phase 1 — Threshold Review, spec §4.2) ------- */
+
+.ceremony-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* ~80% opacity — main screen dims to ~20% per spec §4.1. */
+  background: rgba(0, 0, 0, 0.82);
+  animation: fade-in 300ms ease-out;
+}
+
+.ceremony-modal {
+  background: rgba(14, 16, 22, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 36px 40px 32px;
+  width: 520px;
+  max-width: calc(100vw - 40px);
+  color: var(--text-p0);
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.7);
+}
+
+.ceremony-headline {
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
+  margin: 0 0 24px;
+  color: var(--text-p1);
+  letter-spacing: 0.01em;
+}
+
+/* Stat box — "the math is shown" per spec §4.2 */
+.ceremony-stat-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.ceremony-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 5px 0;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ceremony-stat-row-final {
+  border-bottom: none;
+  padding-top: 9px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.ceremony-stat-label {
+  color: var(--text-p2);
+}
+
+.ceremony-stat-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--text-p0);
+}
+
+.ceremony-stat-positive {
+  color: var(--accent-gold);
+}
+
+/* Reset / Persist columns */
+.ceremony-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.ceremony-column-header {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-p2);
+  margin: 0 0 10px;
+}
+
+.ceremony-column-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 13px;
+}
+
+.ceremony-col-bullet {
+  color: var(--text-p3);
   font-size: 10px;
+  flex-shrink: 0;
+}
+
+.ceremony-col-label {
+  color: var(--text-p1);
+  flex: 1;
+}
+
+.ceremony-col-value {
+  color: var(--text-p2);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+
+/* Actions */
+.ceremony-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.ceremony-btn {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms, color 120ms;
+}
+
+.ceremony-btn-cancel {
+  background: transparent;
+  color: var(--text-p2);
+}
+
+.ceremony-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-p0);
+}
+
+.ceremony-btn-continue {
+  background: rgba(255, 214, 107, 0.12);
+  border-color: rgba(255, 214, 107, 0.32);
+  color: var(--accent-gold);
+}
+
+.ceremony-btn-continue:hover {
+  background: rgba(255, 214, 107, 0.20);
+  border-color: rgba(255, 214, 107, 0.50);
+}
+
+/* ==========================================================================
+   Rebrand Ceremony — Phases 2–4 (UX §4.3–4.5, task #65)
+   ========================================================================== */
+
+/* --- Phase 2: Eulogy ------------------------------------------------------ */
+
+.ceremony-modal-eulogy {
+  width: 560px;
+  padding: 60px 48px 36px;
+  text-align: center;
+  background: rgba(14, 16, 22, 0.98);
+  /* Desaturation via custom property (0.0 → 0.4) */
+  filter: saturate(calc(1 - var(--eulogy-desat, 0)));
+  transition: filter 600ms ease-out;
+}
+
+.eulogy-stanzas {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.eulogy-stanza {
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--text-p1);
+  margin: 0;
+  max-width: 440px;
+  opacity: 0.45;
+  transition: opacity 600ms ease-out;
+  letter-spacing: 0.005em;
+}
+
+.eulogy-stanza-active {
+  opacity: 1;
+  animation: eulogy-fade-in 600ms ease-out;
+}
+
+@keyframes eulogy-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.eulogy-skip-btn {
+  font-family: inherit;
+  font-size: 12px;
   color: var(--text-p3);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 120ms;
+}
+
+.eulogy-skip-btn:hover {
+  color: var(--text-p1);
+}
+
+/* --- Phase 3: Commit ------------------------------------------------------ */
+
+.ceremony-modal-commit {
+  width: 480px;
+  padding: 72px 48px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+}
+
+.commit-headline {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--text-p0);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.commit-btn {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  width: 280px;
+  height: 80px;
+  border-radius: 10px;
+  background: rgba(255, 214, 107, 0.14);
+  border: 1px solid rgba(255, 214, 107, 0.45);
+  color: var(--accent-gold);
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 120ms, border-color 120ms, transform 80ms;
+}
+
+.commit-btn:hover {
+  background: rgba(255, 214, 107, 0.22);
+  border-color: rgba(255, 214, 107, 0.62);
+}
+
+.commit-btn-pressing {
+  transform: scale(0.96);
+}
+
+/* --- Phase 4: Dissolution → Rebirth --------------------------------------- */
+
+.ceremony-modal-dissolution {
+  width: 560px;
+  padding: 72px 48px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  transition: opacity 600ms ease-in-out, filter 600ms ease-in-out;
+}
+
+.ceremony-stage-dissolving {
+  opacity: 1;
+}
+
+.ceremony-stage-wash {
+  opacity: 0.4;
+  filter: blur(2px);
+}
+
+.ceremony-stage-rebirth {
+  opacity: 0;
+  filter: blur(8px);
+}
+
+.dissolution-counters {
+  display: flex;
+  gap: 48px;
+  justify-content: center;
+}
+
+.dissolution-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.dissolution-counter-value {
+  font-size: 36px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-p0);
+  letter-spacing: 0.01em;
+}
+
+.dissolution-counter-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-p3);
+}
+
+/* Screen-reader-only — visually hidden but announced by assistive tech */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ==========================================================================
@@ -1096,5 +1728,587 @@
 @media (prefers-reduced-motion: reduce) {
   .viral-particles-overlay {
     display: none;
+  }
+}
+
+/* ==========================================================================
+   Scandal system — risk indicators + PR Response modal + aftermath
+   ========================================================================== */
+
+/* --- Risk indicators ------------------------------------------------------- */
+
+/* building: subtle amber warmth on the border/glow.
+   Attentive players notice; inattentive players are not punished for missing. */
+.generator-row.risk-building,
+.platform-card.risk-building {
+  box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.35), 0 0 8px rgba(255, 179, 71, 0.12);
+}
+
+/* high: amber intensifies with a slow pulse (1.5–2s cycle, ease-in-out).
+   Unmistakable on a glance; pulse rate is slow enough to avoid anxiety. */
+.generator-row.risk-high,
+.platform-card.risk-high {
+  box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.65), 0 0 14px rgba(255, 179, 71, 0.28);
+  animation: risk-pulse 1.75s ease-in-out infinite;
+}
+
+@keyframes risk-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.45), 0 0 10px rgba(255, 179, 71, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(255, 179, 71, 0.85), 0 0 22px rgba(255, 179, 71, 0.42);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .generator-row.risk-high,
+  .platform-card.risk-high {
+    /* Keep the amber glow but skip the pulse animation. */
+    animation: none;
+  }
+}
+
+/* --- PR Response modal ------------------------------------------------------ */
+
+.scandal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.scandal-card {
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: rgba(22, 25, 36, 0.97);
+  border: 1px solid rgba(255, 179, 71, 0.28);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.12), 0 24px 48px rgba(0, 0, 0, 0.6);
+}
+
+/* Timer bar — drains left to right */
+.scandal-timer-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+
+.scandal-timer-bar {
+  height: 100%;
+  background: var(--accent-amber);
+  transition: width 100ms linear;
+}
+
+.scandal-timer-bar.urgent {
+  background: var(--accent-red);
+}
+
+.scandal-card-body {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scandal-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.scandal-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent-amber);
+  letter-spacing: 0.01em;
+}
+
+.scandal-platform {
+  font-size: 13px;
+  color: var(--text-p2);
+}
+
+.scandal-flavor {
+  font-size: 14px;
+  color: var(--text-p1);
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Damage section */
+.scandal-damage-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scandal-damage-label {
+  font-size: 13px;
+  color: var(--text-p2);
+}
+
+.scandal-damage-label strong {
+  color: var(--accent-red);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.scandal-damage-bar-track {
+  height: 8px;
+  background: rgba(255, 107, 107, 0.15);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.scandal-damage-max {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 107, 107, 0.2);
+}
+
+.scandal-damage-projected {
+  height: 100%;
+  background: var(--accent-red);
+  border-radius: 4px;
+  transition: width 80ms ease-out;
+}
+
+.scandal-damage-range {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-p3);
+}
+
+/* Spend slider section */
+.scandal-spend-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scandal-spend-section.inactive {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.scandal-spend-label {
+  font-size: 13px;
+  color: var(--text-p2);
+}
+
+.read-beat-hint {
+  color: var(--text-p3);
+  font-style: italic;
+}
+
+.scandal-slider {
+  width: 100%;
+  accent-color: var(--accent-amber);
+  cursor: pointer;
+}
+
+.scandal-spend-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-p2);
+}
+
+.spend-amount {
+  color: var(--accent-amber);
+  font-weight: 500;
+}
+
+/* Confirm button */
+.scandal-confirm-btn {
+  width: 100%;
+  padding: 11px 16px;
+  background: rgba(255, 179, 71, 0.12);
+  border: 1px solid rgba(255, 179, 71, 0.35);
+  border-radius: 8px;
+  color: var(--accent-amber);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+
+.scandal-confirm-btn:hover:not(:disabled) {
+  background: rgba(255, 179, 71, 0.22);
+  border-color: rgba(255, 179, 71, 0.55);
+}
+
+.scandal-confirm-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* --- Aftermath card -------------------------------------------------------- */
+
+.scandal-aftermath {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  width: 300px;
+  background: rgba(22, 25, 36, 0.96);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 10px;
+  padding: 16px 18px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  animation: aftermath-enter 200ms ease-out;
+}
+
+@keyframes aftermath-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.aftermath-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.aftermath-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-amber);
+}
+
+.aftermath-platform {
+  font-size: 12px;
+  color: var(--text-p2);
+}
+
+.aftermath-loss {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-red);
+  letter-spacing: -0.01em;
+}
+
+.aftermath-suppressed {
+  font-size: 12px;
+  color: var(--text-p2);
+  font-style: italic;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.aftermath-dismiss {
+  align-self: flex-end;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  color: var(--text-p2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 100ms, color 100ms;
+}
+
+.aftermath-dismiss:hover {
+  border-color: rgba(255, 255, 255, 0.36);
+  color: var(--text-p0);
+}
+
+/* --- Upgrade drawer (UX: ux/upgrade-curve-drawer-spec.md) ---------------- */
+
+/*
+ * Backdrop — transparent full-screen overlay that catches outside-tap to
+ * dismiss the drawer. Z-order: above normal content, below the drawer itself.
+ */
+.upgrade-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: transparent;
+}
+
+/*
+ * The drawer itself — fixed position, slides in from the right edge of the
+ * generator list, overlapping the platform panel column.
+ * Width: 340px per spec §1.
+ * right: 16px — aligned to the screen's right margin.
+ */
+.upgrade-drawer {
+  position: fixed;
+  right: 16px;
+  width: 340px;
+  z-index: 201;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-top: 3px solid var(--drawer-color, var(--panel-border));
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.48);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  animation: drawer-slide-in 300ms ease-out both;
+}
+
+.upgrade-drawer.upgrade-drawer-closing {
+  animation: drawer-slide-out 150ms ease-in both;
+}
+
+@keyframes drawer-slide-in {
+  from { transform: translateX(110%); opacity: 0.6; }
+  to   { transform: translateX(0);    opacity: 1;   }
+}
+
+@keyframes drawer-slide-out {
+  from { transform: translateX(0);    opacity: 1;   }
+  to   { transform: translateX(110%); opacity: 0;   }
+}
+
+/* Header — generator name + current level readout */
+.upgrade-drawer-header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.upgrade-drawer-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-p0);
+  margin-bottom: 4px;
+}
+
+.upgrade-drawer-current {
+  font-size: 13px;
+  color: var(--text-p2);
+}
+
+/* Level rows */
+.upgrade-drawer-levels {
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.upgrade-level-row {
+  display: grid;
+  grid-template-columns: 48px 72px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+/* Action row — elevated treatment with tinted background. */
+.upgrade-level-row.action-row {
+  background: rgba(var(--drawer-color-rgb, 200, 180, 150), 0.08);
+  /* Button sits on the drawer edge nearest the row trigger (left edge) —
+     cuts pointer travel for repeat upgrades. See spec §2.3 / Decision #6. */
+  grid-template-columns: auto 48px 72px 1fr;
+}
+
+.upgrade-level-row.action-row .upgrade-btn {
+  grid-column: 1;
+  grid-row: 1;
+}
+.upgrade-level-row.action-row .upgrade-level-lv {
+  grid-column: 2;
+}
+.upgrade-level-row.action-row .upgrade-level-multi {
+  grid-column: 3;
+}
+.upgrade-level-row.action-row .upgrade-level-cost {
+  grid-column: 4;
+}
+
+.upgrade-level-row.action-row:hover {
+  background: rgba(var(--drawer-color-rgb, 200, 180, 150), 0.12);
+}
+
+/* Preview rows — readable but clearly not actionable (4.5:1 contrast). */
+.upgrade-level-row.preview-row {
+  opacity: 0.65;
+}
+
+.upgrade-level-lv {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-p0);
+}
+
+.upgrade-level-multi {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--drawer-color, var(--text-p1));
+}
+
+.upgrade-level-cost {
+  font-size: 13px;
+  color: var(--text-p2);
+}
+
+.upgrade-level-cost.insufficient {
+  color: #e8a835; /* amber — matches Buy button insufficient treatment */
+}
+
+/* "need N more" hint below action row. */
+.upgrade-insufficient-hint {
+  font-size: 11px;
+  font-style: italic;
+  color: #e8a835;
+  padding: 2px 10px 4px;
+  animation: hint-fade-in 150ms ease-out both;
+}
+
+@keyframes hint-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Upgrade button — left-aligned in the action row (spec §2.3 / Decision #6). */
+.upgrade-btn {
+  width: 100px;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--drawer-color, #666);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 120ms ease-out, transform 60ms ease-out;
+  flex-shrink: 0;
+}
+
+.upgrade-btn:hover {
+  filter: brightness(1.10);
+}
+
+.upgrade-btn:active {
+  transform: scale(0.97);
+  filter: brightness(1.15);
+}
+
+.upgrade-btn.insufficient {
+  background: rgba(255, 255, 255, 0.12);
+  color: #e8a835;
+  cursor: default;
+}
+
+.upgrade-btn.upgrade-btn-shake {
+  animation: upgrade-btn-shake 200ms ease-out;
+}
+
+@keyframes upgrade-btn-shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-4px); }
+  40%  { transform: translateX(4px); }
+  60%  { transform: translateX(-3px); }
+  80%  { transform: translateX(3px); }
+  100% { transform: translateX(0); }
+}
+
+/* Footer */
+.upgrade-drawer-footer {
+  padding: 10px 16px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.upgrade-close-btn {
+  width: 80px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  color: var(--text-p2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 100ms, color 100ms;
+}
+
+.upgrade-close-btn:hover {
+  border-color: rgba(255, 255, 255, 0.42);
+  color: var(--text-p0);
+}
+
+/* Platform panel dims to 40% opacity while upgrade drawer is open (spec §1). */
+.platform-panel.drawer-dimmed {
+  opacity: 0.40;
+  pointer-events: none;
+  transition: opacity 200ms ease-out;
+}
+
+.platform-panel {
+  transition: opacity 200ms ease-out;
+}
+
+/* Generator row highlight when its drawer is open. */
+.generator-row.drawer-open {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Upgrade affordance button — distinct visual from Buy. */
+.row-btn-upgrade.active {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+/* ==========================================================================
+   Post-rebrand ambient surfaces (task #66, UX §5)
+   ========================================================================== */
+
+/* First-rebrand ambient copy — top-right, 600ms fade-in, 4s hold, 600ms fade-out.
+   Only shown when rebrand_count === 1. */
+.ambient-copy {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 40;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--text-p2);
+  pointer-events: none;
+  animation: ambient-copy-fade-in 600ms ease-out;
+}
+
+.ambient-copy.ambient-copy-fading {
+  animation: ambient-copy-fade-out 600ms ease-out forwards;
+}
+
+@keyframes ambient-copy-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ambient-copy-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Reduce Motion — drawer appears/disappears instantly; dim still applies. */
+@media (prefers-reduced-motion: reduce) {
+  .upgrade-drawer {
+    animation: none;
+  }
+
+  .upgrade-drawer.upgrade-drawer-closing {
+    animation: none;
   }
 }

@@ -50,6 +50,8 @@ Content types that produce Engagement. Unlocked progressively by follower thresh
 effective_rate = count × base_engagement_rate × level_multiplier(level) × algorithm_modifier(trend_sensitivity, current_algorithm_state) × clout_bonus(clout_upgrades)
 ```
 
+**Stacking order across effect families:** When multiple effect families (Clout, Creator Kit, events) stack on the same axis, the evaluation order is defined in `.frames/sdlc/architecture/creator-kit.md` §Stacking Order. All new effect types MUST declare where they fall in that chain.
+
 ### Platform
 
 Parallel progression tracks. Each has an independent follower count and content affinity.

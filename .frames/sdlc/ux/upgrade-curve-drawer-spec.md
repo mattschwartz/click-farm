@@ -17,8 +17,9 @@
 1. **Slide-out from right of row, overlapping the platform column temporarily.** Per core-game-screen.md §6.3 direction. The drawer does not shift other content — it floats over the platform cards with a soft backdrop dim on those cards only.
 2. **Show current level + 3 forward levels, not the full curve.** Level 4 away is already post-prestige territory per the multiplier curve. Showing more is noise.
 3. **Only the next level is purchasable from the drawer.** Levels +2 and +3 are *preview only*. Players upgrade one level at a time. Multi-buy adds complexity without earning it at current scope.
-4. **The drawer closes after a successful upgrade.** Not auto-re-opening to show the new state. The row itself communicates the upgrade via pulse + rate flare (per purchase-feedback spec); re-opening the drawer would duplicate that signal and delay the player.
+4. **The drawer's post-upgrade behavior is conditional on affordability.** Amended after initial build. If the player can afford the *next* level after the upgrade, the drawer stays open — this preserves the fast repeat-upgrade loop. If they can't afford the next level, the drawer closes; the row pulse + rate flare (per purchase-feedback spec) carry the feedback and the player isn't stranded staring at a button they can't press. If the upgrade brought the generator to max level, the drawer stays open and transitions to the §5.4 max-level state — that acknowledgment moment matters and shouldn't be missed. This means the insufficient-engagement state (§5.3) is only reachable by opening the drawer while broke (shopping/planning), not as a post-upgrade landing.
 5. **Max level has its own state.** When a generator is at maximum level, the drawer reads as an acknowledgment, not a dead-end — "You've taken this as far as it goes. Rebrand to reset the stage."
+6. **Upgrade button is left-aligned inside the drawer, not right-aligned.** Amended after initial build. The drawer opens from the right edge of the row, so a right-aligned Upgrade button sat ~300px from the tap point and taxed every repeat upgrade (desktop mouse especially). Left-aligning places the button on the edge nearest the trigger — the pointer travels ~20–40px instead of ~300. Preview rows and all other content remain in place.
 
 ---
 
@@ -44,7 +45,7 @@
                                   ├──────────────────────────────────────┤
                                   │                                      │
                                   │  Lv 3    ×2.83    cost: 250          │
-                                  │                      [  Upgrade  ]   │  ← action row (next level)
+                                  │   [  Upgrade  ]                      │  ← action row (next level)
                                   │                                      │
                                   │  Lv 4    ×5.66    cost: 1,200        │  ← preview
                                   │  Lv 5    ×12.13   cost: 4,800        │  ← preview
@@ -81,7 +82,7 @@ Lv N    ×M.MM    cost: X
 
 The action row is visually elevated relative to the preview rows:
 - **Background:** subtle tinted band behind the row (generator's semantic color at ~8% opacity)
-- **Upgrade button:** right-aligned, 100×36px
+- **Upgrade button:** left-aligned, 100×36px — sits on the drawer edge nearest the trigger to minimize pointer travel from the ⬆ tap. (See Decision #6.)
 - **On hover (desktop):** row background tint bumps to 12%
 
 ### 2.4 Footer
@@ -126,11 +127,15 @@ When the player taps Upgrade with sufficient engagement:
 2. **t=0–16ms:** Upgrade sound cue fires (warm, single chime — same family as Buy confirm)
 3. **t=0–400ms:** Engagement counter ticks down to new value (visible decrement)
 4. **t=60–180ms:** Button scales back to 1.0
-5. **t=100–250ms:** Drawer closes (slide back right, 150ms) — see §7 motion
-6. **t=150–400ms:** Behind the closed drawer, generator row pulses (scale 1.02, per core-game-screen.md §6.3)
-7. **t=150–550ms:** Rate display flares + delta readout (per purchase-feedback spec §5)
+5. **t=60ms:** Drawer content re-renders against the new level (new action row shows level+1 of the new level, new cost, new multiplier). This happens in place — no close, no re-open.
+6. **t=100–250ms (conditional):** Drawer close behavior per Decision #4:
+   - **Next level affordable:** drawer stays open; player can immediately tap Upgrade again
+   - **Next level NOT affordable:** drawer closes (slide back right, 150ms) — see §7 motion
+   - **New level is max:** drawer stays open and re-renders in §5.4 max-level state
+7. **t=150–400ms:** Generator row pulses (scale 1.02, per core-game-screen.md §6.3) — behind the drawer if it stayed open, on the main surface if it closed
+8. **t=150–550ms:** Rate display flares + delta readout (per purchase-feedback spec §5)
 
-**Why close the drawer immediately:** the row pulse and rate flare communicate the result. Holding the drawer open would delay the "I did that" moment and force the player to visually shift attention. Closing routes attention back to the main screen where the consequence is.
+**Why conditional close:** the row pulse and rate flare communicate the result regardless of drawer state. When the player can keep upgrading, staying open preserves the fast loop — the Upgrade button (left-aligned per Decision #6) is already under the pointer. When they can't, closing routes attention back to the main screen where the consequence is, and doesn't strand them on a disabled button.
 
 ---
 

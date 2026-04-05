@@ -144,6 +144,10 @@ Polly's other thoughts on using vague directives intentionally
 - [observation] agent flagged an implicitly defined rule (but didn't prevent itself from doing it, so..): "Task is assigned to architect with state: build, but build is engineer-only. Per protocol I must stop and flag this."
 - [observation] unit tests help the agent orient when it breaks things that previously worked, which is why they're still useful even if they're the ones writing them
 - [theory] agents learn to recognize frictions with tools and can come up with workarounds, sometimes unintentionally like piping output from a tool into a python script so it can pretty-print the results for the user or pull fewer fields out
+- [observation] the UI will help, but right now it's hard to manage so many instances because it's all the same agent so i need to rename the windows. it's also more annoying to manage because i have to be more explicit about which role i want an instance to be in. and the state thing not being able to switch is kind of annoying too.
+- [observation] it didn't confirm before entering a state that it was able to in that role :(
+- [task] need to make the task cleanup work really well. probably something we codify instead of leaving it to the agents to self-decide
+- [observation] the agents all tend to review proposals positively... not much friction between the bots. might need to inject some antagonism in the reviews
 - 
 
 SKills from polly

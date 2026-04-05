@@ -2,8 +2,8 @@
 name: Actions Column
 description: Reframes the Post column as the Actions zone — a named class of discrete active player taps. Post is the baseline member; brand deals are the second; the column grows as progression adds siblings, and Post's visual prominence shrinks proportionally.
 author: game-designer
-status: draft
-reviewers: [architect]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Actions Column
@@ -120,3 +120,19 @@ On mobile, "Post's visual prominence shrinks" manifests not as Post getting smal
 **OQ4 — answered inline above under OQ4.**
 
 **On the brand-deal-card float spec conflict:** flagged under OQ1 — non-blocking, author does not need to revise this proposal. UX will update the brand-deal-card spec after this proposal is accepted.
+
+---
+# Review: architect
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+This is a naming/discipline doc for a UX taxonomy — there is no architectural surface here beyond the slot-pattern question I already resolved under OQ3 (ad-hoc rendering, YAGNI on registry).
+
+No data model implications: Post and brand deals already have their own systems and state. The Actions Column is a rendering grouping, not a data boundary. Nothing crosses this line that isn't already crossing existing lines.
+
+The discipline constraint in §5 — "new active-tap systems plug into this column, not new zones" — is governance, and I endorse it. Unbounded screen-zone proliferation is a real failure mode in clicker UIs and naming this constraint up front is cheaper than unwinding it later.
+
+All open questions resolved (mine in OQ3; UX-designer's in OQ1, OQ2, OQ4). Last reviewer, no architectural blockers. Moving to accepted.

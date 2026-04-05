@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { save, load, clearSave, migrate, migrateV1toV2 } from './index.ts';
+import { save, load, clearSave, migrate, migrateV1toV2, migrateV3toV4 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import type { SaveData } from '../types.ts';
@@ -139,16 +139,16 @@ describe('clearSave', () => {
 // ---------------------------------------------------------------------------
 
 describe('migrate', () => {
-  it('passes through current-version (v2) data unchanged', () => {
+  it('passes through current-version (v4) data unchanged', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const data: SaveData = {
-      version: 2,
+      version: 4,
       state,
       lastCloseTime: 0,
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(2);
+    expect(result.version).toBe(4);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -199,5 +199,95 @@ describe('migrateV1toV2', () => {
     const result = migrateV1toV2(v1Data);
     expect(result.state.player.id).toBe(state.player.id);
     expect(result.lastCloseTime).toBe(42);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// migrateV3toV4 — CloutUpgrade schema + post-prestige generator entries
+// ---------------------------------------------------------------------------
+
+describe('migrateV3toV4', () => {
+  function makeV3SaveData(): SaveData {
+    // Build a V3 state shape using the v4 createInitialGameState as a base,
+    // then overwrite the fields that changed in v4 (clout_upgrades keys +
+    // post-prestige generator entries) with their pre-v4 equivalents.
+    const base = createInitialGameState(STATIC_DATA, 0);
+    const { ai_slop: _a, deepfakes: _d, algorithmic_prophecy: _p, ...preV4Gens } =
+      base.generators;
+    const state = {
+      ...base,
+      generators: preV4Gens,
+      player: {
+        ...base.player,
+        clout_upgrades: {
+          faster_engagement: 2,
+          algorithm_insight: 1,
+          platform_headstart_chirper: 1,
+          platform_headstart_instasham: 1,
+          platform_headstart_grindset: 0,
+        },
+      },
+    } as unknown as SaveData['state'];
+    return { version: 3, state, lastCloseTime: 0, lastCloseState: null };
+  }
+
+  it('bumps version from 3 to 4', () => {
+    const result = migrateV3toV4(makeV3SaveData());
+    expect(result.version).toBe(4);
+  });
+
+  it('renames faster_engagement → engagement_boost, preserving level', () => {
+    const result = migrateV3toV4(makeV3SaveData());
+    expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
+    expect(
+      (result.state.player.clout_upgrades as Record<string, number>).faster_engagement,
+    ).toBeUndefined();
+  });
+
+  it('clamps engagement_boost level to new max_level (3)', () => {
+    const data = makeV3SaveData();
+    (data.state.player.clout_upgrades as Record<string, number>).faster_engagement = 9;
+    const result = migrateV3toV4(data);
+    expect(result.state.player.clout_upgrades.engagement_boost).toBe(3);
+  });
+
+  it('drops platform_headstart_chirper (no-op upgrade)', () => {
+    const result = migrateV3toV4(makeV3SaveData());
+    expect(
+      (result.state.player.clout_upgrades as Record<string, number>)
+        .platform_headstart_chirper,
+    ).toBeUndefined();
+  });
+
+  it('preserves algorithm_insight and other platform_headstart levels', () => {
+    const result = migrateV3toV4(makeV3SaveData());
+    expect(result.state.player.clout_upgrades.algorithm_insight).toBe(1);
+    expect(result.state.player.clout_upgrades.platform_headstart_instasham).toBe(1);
+    expect(result.state.player.clout_upgrades.platform_headstart_grindset).toBe(0);
+  });
+
+  it('adds new generator_unlock upgrade keys at level 0', () => {
+    const result = migrateV3toV4(makeV3SaveData());
+    expect(result.state.player.clout_upgrades.ai_slop_unlock).toBe(0);
+    expect(result.state.player.clout_upgrades.deepfakes_unlock).toBe(0);
+    expect(result.state.player.clout_upgrades.algorithmic_prophecy_unlock).toBe(0);
+  });
+
+  it('adds post-prestige GeneratorState entries (owned=false, level=1, count=0)', () => {
+    const result = migrateV3toV4(makeV3SaveData());
+    for (const id of ['ai_slop', 'deepfakes', 'algorithmic_prophecy'] as const) {
+      const g = result.state.generators[id];
+      expect(g).toBeDefined();
+      expect(g.owned).toBe(false);
+      expect(g.level).toBe(1);
+      expect(g.count).toBe(0);
+    }
+  });
+
+  it('integrates with migrate() — a v3 save reaches v4 via the chain', () => {
+    const result = migrate(makeV3SaveData());
+    expect(result.version).toBe(4);
+    expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
+    expect(result.state.generators.ai_slop).toBeDefined();
   });
 });
