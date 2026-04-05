@@ -2,8 +2,8 @@
 name: Viral Burst Event Signal
 description: Defines the trigger condition, signal transport, and engagement application model for the viral burst event — the emotional peak of the core game loop.
 author: architect
-status: draft
-reviewers: [engineer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Viral Burst Event Signal
@@ -189,6 +189,24 @@ All values are starting points for the game-designer to tune without code change
    - Game-designer input incorporated: hard floor 15 min confirmed; frequency bands (early 45–60 min, mid 20–30 min, late 15–20 min) confirmed; active-play-tick tracking confirmed.
 
 2. **Tick signature** — the existing tick implementation has already extended the architecture contract with a `now` argument (see comment in `game-loop/index.ts`). The viral burst extension does not change the signature further. The architect contract update for `now` is still pending. **Owner: architect** (update `core-systems.md` interface contract in the same pass as this implementation).
+
+---
+# Review: engineer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Implementation is technically sound and maps cleanly onto the existing codebase. Three notes for build:
+
+1. **Driver transition detection ordering.** `doTick()` currently passes its result directly into `applyState()`. To fire `onViralBurst` listeners before `notify()`, the driver must explicitly capture `state.viralBurst.active` before calling `tick()`, check the `null → non-null` transition on the result, fire listeners, then call `applyState()`. This is straightforward but needs to be deliberate — if it gets buried inside `applyState` it won't work correctly.
+
+2. **PRNG injection for testability.** The proposal correctly calls for exporting the trigger as a testable pure helper. That helper must accept an injectable random function (signature `() => number`, defaulting to `Math.random()`) so unit tests can exercise each gate deterministically. This is consistent with the seeded PRNG pattern already used for algorithm shifts.
+
+3. **Save migration path.** Adding `viralBurst` to `GameState` requires bumping `CURRENT_VERSION` from 1 → 2 and implementing `migrateV1toV2`. The migration chain is already stubbed in `save/index.ts`. The "clear `active` on load" behavior belongs in the migration — inject `{ active_ticks_since_last: 0, active: null }` as the default for pre-viral saves. Handling it separately in `load()` is fragile; the migration chain is the right place.
+
+OQ2 remains open for the architect — the `now` argument contract update is pending and out of scope for this review.
 
 ---
 # Review: game-designer
