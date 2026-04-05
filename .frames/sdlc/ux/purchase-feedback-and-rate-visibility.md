@@ -198,14 +198,17 @@ Currently generators look identical before and after purchase. The row needs to 
 
 ### 6.2 The breathing pulse
 
-Every owned generator row has a **breathing indicator** — a subtle pulse tied to its production rate.
+Every owned generator row has a **breathing indicator** — a subtle scale pulse on the badge. Full spec in `proposals/draft/generator-badge-breathing.md`. Summary:
 
-- **Treatment:** the badge (icon + category shape) has a soft glow that pulses at the tick cadence
-- **Pulse cadence:** matches the generator's individual tick rate. A generator producing 1/sec pulses once per second. A generator producing 20/sec pulses rapidly.
-- **Amplitude:** very subtle — glow opacity oscillates between 15% and 35%, no scale change. Should not compete with the upgrade pulse or algorithm shift pulse.
-- **Color:** the generator's semantic color
+- **Treatment:** badge (icon + category shape) scales 1.0 → 1.025 → 1.0
+- **Cadence:** 2.5s per cycle, ease-in-out — uniform across all generators, not rate-coupled
+- **Phase offset:** staggered by unlock order index so badges breathe out of phase with each other, producing organic rather than mechanical feel
+- **Amplitude:** barely perceptible at a glance — felt rather than seen. Engineer tunes in-browser (1.015–1.04 range).
+- **Color:** no glow — scale only. The badge's existing fill color is sufficient.
 
-**Why on the badge, not the whole row:** pulsing the whole row at 20Hz would be visually exhausting. Pulsing the badge contains the motion and makes "this thing is running" a property of the item itself, not the list.
+**Why uniform cadence, not rate-coupled:** rate-coupled breathing (faster generators pulse faster) produces competing rhythms that feel agitated at mid-game density. Staggered uniform cadence achieves organic feel without information overload. Rate information is already carried by the rate label on each row.
+
+**Why on the badge, not the whole row:** pulsing the whole row would be visually exhausting. Pulsing the badge contains the motion and makes "this thing is running" a property of the item itself, not the list.
 
 ### 6.3 First-purchase animation
 

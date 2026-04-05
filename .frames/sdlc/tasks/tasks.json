@@ -1,5 +1,5 @@
 {
-  "next_id": 49,
+  "next_id": 53,
   "tasks": [
     {
       "id": 1,
@@ -1164,6 +1164,10 @@
           "purpose": "The surface being sharpened — this task extends §§5, 6, 8 rather than replacing them"
         },
         {
+          "ref": ".frames/sdlc/proposals/draft/generator-badge-breathing.md",
+          "purpose": "Refines the per-generator running state indicator (AC #2) — specifies staggered phase offset, unified 2.5s cadence, amplitude 1.025. Read this before implementing badge breathing so the result is consistent with this design decision."
+        },
+        {
           "ref": "client/src/ui/TopBar.tsx",
           "purpose": "Engagement + rate display lives here; rate promotion to P0 lands here"
         },
@@ -1225,6 +1229,187 @@
         "Settings state is persisted in localStorage alongside the save"
       ],
       "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 49,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Fix affinity chip glow animation selector",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "The affinity chip glow animation on platform cards is broken due to a CSS selector mismatch. The animation is designed and implemented correctly but never fires.\n\nThe CSS selector is `.affinity-chip .glow` (descendant combinator) but the React code applies the `glow` class to the `.affinity-chip` element itself, not a child element. The selector should be `.affinity-chip.glow` (compound selector, no space).\n\nFile: `client/src/ui/GameScreen.css`\nCurrent: `.affinity-chip .glow { animation: affinity-glow 1.5s ease-in-out infinite; }`\nFix: `.affinity-chip.glow { animation: affinity-glow 1.5s ease-in-out infinite; }`\n\nThe animation keyframes and React logic are correct — this is a one-character fix.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Line with broken .affinity-chip .glow selector"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "React code applying the glow class to the chip element"
+        }
+      ],
+      "acceptance_criteria": [
+        "CSS selector changed from `.affinity-chip .glow` to `.affinity-chip.glow`",
+        "Affinity chip glow animation fires visibly in-browser on the heaviest-contributing generator chip for each platform card"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 50,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Viral burst engine — trigger, signal transport, magnitude",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Implements the game-loop and driver side of the viral burst event per the accepted signal spec. The UI choreography is a separate task blocked on this one.\n\nConcretely:\n- Add `ViralBurstState`, `ActiveViralEvent`, `ViralBurstPayload` to `types.ts`; extend `GameState` and `StaticData`\n- Add tick pipeline steps 10–12 to `game-loop/index.ts` (cooldown counter, probability gates, algorithm affinity boost, active burst amortization). Export trigger logic as a testable pure helper with injectable PRNG (`() => number`, defaulting to `Math.random()`)\n- Add `onViralBurst(listener)` to `GameDriver` interface and `createDriver`. Detection: capture `state.viralBurst.active` before calling `tick()`, check null→non-null transition on the result, fire listeners synchronously before calling `applyState()` (see engineer review note in signal spec)\n- Add `viralBurst` section to `static-data/` with tunable starting values per spec §4\n- Save migration: bump `CURRENT_VERSION` 1→2, implement `migrateV1toV2` in save chain injecting `{ active_ticks_since_last: 0, active: null }` as default. Clear `active` in migration, not in `load()` directly",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/viral-burst-event-signal.md",
+          "purpose": "Full spec — trigger model, state shape, tick pipeline, driver contract, static data"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Add ViralBurstState, ActiveViralEvent, ViralBurstPayload; extend GameState and StaticData"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "Add steps 10–12 to tick(); export trigger helper"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Add onViralBurst to GameDriver interface and createDriver"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Bump version, add migrateV1toV2, clear active on load via migration"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Add viralBurst tuning section"
+        }
+      ],
+      "acceptance_criteria": [
+        "ViralBurstState, ActiveViralEvent, ViralBurstPayload types exist in types.ts; GameState.viralBurst field present",
+        "tick() correctly advances active_ticks_since_last each tick and evaluates all three trigger gates (cooldown, probability, algorithm affinity) when no viral is active",
+        "When a viral fires, ActiveViralEvent is constructed with correct source_generator_id, source_platform_id, duration_ms (random 5000–10000), and magnitude per the boost formula",
+        "During an active viral, bonus_rate_per_ms is added to engagement each tick on top of normal production",
+        "Viral clears correctly when now >= start_time + duration_ms",
+        "onViralBurst fires once per event, synchronously before notify(), with the correct ViralBurstPayload",
+        "Trigger helper is exported and unit-tested: each gate can be exercised deterministically via injectable PRNG",
+        "Save version bumped to 2; migrateV1toV2 injects viralBurst defaults; active is never persisted across saves",
+        "All existing tests pass"
+      ],
+      "open_questions": [
+        {
+          "question": "OQ2 from signal spec: the `now` argument contract update to core-systems.md is still pending. Does this implementation require resolving that first, or is the existing tick signature sufficient?",
+          "owner": "architect"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 51,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Viral burst visual choreography",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Implements the full 3-phase visual choreography for the viral burst event on the core game screen. Requires task #50 (viral burst engine) to be complete first — this task wires the UI to the `onViralBurst` driver callback and drives the visual sequence from `GameState.viralBurst.active`.\n\nThe choreography has three phases per UX spec §9.2:\n\nPhase 1 — Build (0–1500ms): counter accelerates and shifts to viral gold; source generator row gains pulsing halo; source platform card edges illuminate; background saturation bumps +20%; rising sweep sound begins.\n\nPhase 2 — Peak (1500–end): counter ticks at 3–5× normal rate (real — the engine is producing it); particle burst emits from source generator row drifting toward source platform card (sustained); screen-edge vignette pulses in platform-affinity color at 2s cycle; subtle ±1% zoom pulse on the screen.\n\nPhase 3 — Decay (last 1000–1500ms): tick rate decelerates to baseline; counter color returns to baseline (400ms fade); particles dissipate; edge glow fades; summary badge 'VIRAL +N' appears near counter for 1.5s then fades.\n\nThe counter tick-rate drama is the star. All other effects frame it. Per spec §9.3: easing the tick rate across the 3 phases (accelerate → sustain → decelerate) is essential — a flat burst feels cheap.\n\nNote: the edge vignette during viral override uses the source platform's affinity color, not the mood color. This is a state on the same vignette layer as the algorithm mood — they do not stack. See algorithm-mood-visibility.md proposal for the vignette layer architecture.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§9 full choreography spec — phases, timing, motion, sound direction"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/viral-burst-event-signal.md",
+          "purpose": "Engine contract — ViralBurstPayload shape, onViralBurst callback, GameState.viralBurst.active"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/algorithm-mood-visibility.md",
+          "purpose": "Vignette layer architecture — viral burst takes over the edge vignette color during the event"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Root component — viral state and onViralBurst subscription wire in here"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Source generator row halo during viral"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "Source platform card edge illumination + particle arrival target"
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "Counter color shift to viral gold + tick-rate drama"
+        }
+      ],
+      "acceptance_criteria": [
+        "Phase 1 (0–1500ms): engagement counter numerals crossfade to viral gold over 300ms; source generator row gains pulsing glow halo; source platform card border illuminates",
+        "Phase 2 (peak): particle burst emits continuously from source generator row and arrives at source platform card for the duration of the event; screen-edge vignette pulses in platform-affinity color at 2s cycle",
+        "Phase 3 (decay): counter color returns to baseline over 400ms; particles dissipate; summary badge 'VIRAL +N' (formatted) appears near the engagement counter, persists 1.5s, then fades",
+        "Counter tick-rate drama is eased: visibly accelerates in Phase 1, sustains in Phase 2, decelerates in Phase 3 — not a flat rate change",
+        "All effects respect the Reduce Motion toggle: particle burst replaced with static glow, zoom pulse disabled, counter color shift and summary badge preserved (they are informational, not decorative)",
+        "Viral state is derived from GameState.viralBurst.active — no duplicate state in the UI layer",
+        "All effects clean up correctly if the component unmounts mid-event"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        50
+      ]
+    },
+    {
+      "id": 52,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Brand deal card UX spec",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "The brand-deal-boost proposal (proposals/draft/brand-deal-boost.md) has been reviewed and aligned by ux-designer. The review provides high-level UX direction for the deal card, but a full screen spec is needed before the engineer can build it. This task produces that spec.",
+      "related_items": [
+        {
+          "ref": "proposals/draft/brand-deal-boost.md",
+          "purpose": "The approved proposal — review section contains the UX direction that this spec must flesh out"
+        },
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "Screen layout and zone map — deal card lives at bottom of screen; §9 viral burst choreography — deal activation must feel distinct"
+        },
+        {
+          "ref": "ux/purchase-feedback-and-rate-visibility.md",
+          "purpose": "§5.1 rate flare spec — deal activation triggers this; §6.2 breathing pulse — interaction context"
+        },
+        {
+          "ref": "proposals/accepted/viral-burst-event-signal.md",
+          "purpose": "Viral burst model — compound moment (deal + viral) is a key design target"
+        }
+      ],
+      "acceptance_criteria": [
+        "Card anatomy defined: dimensions, position on screen, content hierarchy (deal name, multiplier, duration), appearance animation",
+        "Expiry feedback specified: slow opacity fade in final 33% of window, no countdown text, final fade-out timing",
+        "Activation choreography specified: snap animation, stamp sound direction, corporate green color lane, rate flare integration",
+        "Deal-active badge spec: position near engagement counter, anatomy, progress bar, 20s depletion",
+        "Compound moment signal specified: deal badge pulses viral gold during overlap",
+        "Reduce Motion variant specified",
+        "Spec written to ux/brand-deal-card.md and committed"
+      ],
+      "open_questions": [
+        {
+          "question": "OQ3 from the proposal (architect) — how does brandDeal.active state live in GameState, and how does the driver expose the offer and activation callback? Card spec needs this to define the data the card renders.",
+          "owner": "architect"
+        }
+      ],
       "blocked_on": []
     }
   ]

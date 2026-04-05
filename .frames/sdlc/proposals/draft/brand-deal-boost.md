@@ -3,7 +3,7 @@ name: Brand Deal Boost
 description: Defines the appearance, activation, duration, and economy integration of brand deals — a randomly-appearing, player-triggered engagement rate boost that rewards timed activation during viral bursts.
 author: game-designer
 status: draft
-reviewers: [architect, ux-designer]
+reviewers: [architect]
 ---
 
 # Proposal: Brand Deal Boost
@@ -101,3 +101,40 @@ Brand deals pass. The expiry creates urgency but not guilt — you missed an opp
 2. **Deal magnitude vs. viral burst magnitude** — should brand deal boost multiplier (3×) match, exceed, or fall below the viral burst multiplier (3–5×)? Starting symmetric but worth tuning once both are implemented. **Owner: game-designer** (balance pass)
 3. **Signal and state design** — how does active brand deal state live alongside `GameState.viralBurst`? Is a parallel `brandDeal.active` state the right model, and how does the driver expose the deal offer and activation callback? **Owner: architect**
 4. **Card UI and expiry feedback** — how does the offer card communicate urgency as expiry approaches without triggering anxiety? How does activation feel distinct from the viral burst visual? **Owner: ux-designer**
+   - **[RESOLVED — ux-designer, 2026-04-05]** See review below for full UX direction. Summary: slow opacity fade communicates impermanence without alarm; activation uses a stamp/snap animation + corporate green color lane (distinct from viral gold) + a persistent deal-active badge at the counter.
+
+---
+# Review: ux-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+The mechanic is sound from a UX perspective. Passive peak (viral) + active peak (deal) is a strong emotional structure — and the compound moment rationale is exactly right. Two distinct feel targets in the same economy means the counter is the star of both, which keeps information hierarchy clean.
+
+**OQ4 — Expiry without anxiety**
+
+The anxiety in expiry timers comes from "hurry up" signals — countdown numbers, color alarms, urgent sound cues. None of those belong here. The deal is an opportunity, not a threat. The UX treatment should communicate *impermanence*, not *urgency*.
+
+Direction: the card fades out slowly. In the final 30 seconds of the 90s window (final 33%), the card's opacity begins a linear ease from 1.0 → 0.4. At expiry, it fades completely (400ms final fade). No timer text. No countdown. No color shift. The player who's paying attention sees it getting dim and understands. The player who doesn't notice it expire didn't lose anything that mattered to them in that moment.
+
+**OQ4 — Activation distinctness from viral burst**
+
+Viral burst is: automatic, full-screen, gold, sustained 5–10s chaos. Brand deal activation must feel significant but *different* — triggered, finite, and thematically on-brand (it's a corporate transaction).
+
+Activation choreography:
+1. **Tap → card snaps shut** (scale 1.0 → 0.0, 200ms spring, ease-in). Sound: a satisfying dry "stamp" or paper-slap — contract-signed, not explosion.
+2. **Engagement rate numeral shifts to corporate green** (distinct from viral gold — green reads "money/deal" culturally). Rate flare fires per purchase-feedback spec §5.1.
+3. **Deal-active badge appears near the engagement counter** — small pill label, corporate green, "BRAND DEAL" text with a linear progress bar depleting over the 20s duration. This timer is *fine* once activated — the player has committed, they want to know how long they have to maximize it.
+4. No vignette override, no particle burst, no background change. The visual footprint is intentionally smaller than viral. During a compound moment, the smaller footprint of the deal *adds to* the viral rather than competing with it.
+
+**Compound moment signal**
+
+When deal and viral are simultaneously active, the deal-active badge pulses gold (viral color bleeds into the badge) for the duration of the overlap. Small acknowledgment that something exceptional is happening without adding new layers to an already intense screen.
+
+**Follow-up needed**
+
+A full brand deal card UX spec is required before the engineer builds this — card anatomy, positioning, appearance animation, the full activation choreography, and the deal-active badge spec. I will produce that spec as a follow-up task.
+
+This proposal has enough direction for the architect to design the state model (OQ3). The card spec can follow once OQ3 is resolved.
