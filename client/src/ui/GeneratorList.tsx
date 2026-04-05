@@ -207,6 +207,12 @@ function GeneratorRow({
   const badgeShape = BADGE_SHAPE[display.category];
   const style = { '--gen-color': display.color } as React.CSSProperties;
 
+  // Row ref — used to read bounding rect for drawer anchor. Declared here
+  // (before any early returns) so hook order stays stable across the
+  // unowned → owned transition. React's Rules of Hooks require every hook
+  // to run on every render in the same order.
+  const rowRef = useRef<HTMLDivElement>(null);
+
   // First-purchase animation — fires once when owned transitions false → true.
   const prevOwned = useRef(g.owned);
   const [firstBuyAnim, setFirstBuyAnim] = useState(false);
@@ -276,9 +282,6 @@ function GeneratorRow({
   // Upgrading requires at least one unit. This can be 0 post-rebrand when a
   // generator_unlock head-start grants owned=true without any units.
   const canOpenDrawer = g.count > 0;
-
-  // Row ref — used to read bounding rect for drawer anchor.
-  const rowRef = useRef<HTMLDivElement>(null);
 
   const handleRowClick = (e: React.MouseEvent) => {
     if (!canOpenDrawer) return;
