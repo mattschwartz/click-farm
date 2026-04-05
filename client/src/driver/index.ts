@@ -11,7 +11,13 @@
 // Architecture contract: single-player, client-authoritative. The driver IS
 // the authority during play. See core-systems.md §Component Boundaries.
 
-import type { GameState, GeneratorId, StaticData, UpgradeId } from '../types.ts';
+import type {
+  GameState,
+  GeneratorId,
+  StaticData,
+  UpgradeId,
+  ViralBurstPayload,
+} from '../types.ts';
 import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
 import { buyGenerator, upgradeGenerator } from '../generator/index.ts';
 import { createInitialGameState } from '../model/index.ts';
@@ -42,6 +48,7 @@ export const SAVE_INTERVAL_MS = 30_000;
 
 export type Unsubscribe = () => void;
 export type StateListener = (state: GameState) => void;
+export type ViralBurstListener = (payload: ViralBurstPayload) => void;
 
 export interface DriverOptions {
   /** Injectable clock for tests. Defaults to Date.now. */
@@ -91,6 +98,11 @@ export interface GameDriver {
   buyCloutUpgrade(upgradeId: UpgradeId): void;
   /** Upcoming algorithm shifts visible via the algorithm_insight upgrade. */
   getUpcomingShifts(): ScheduledShift[];
+  /**
+   * Subscribe to viral burst events. Fires once per event, synchronously,
+   * before state subscribers are notified. Returns an unsubscribe function.
+   */
+  onViralBurst(listener: ViralBurstListener): Unsubscribe;
 }
 
 // ---------------------------------------------------------------------------
@@ -152,6 +164,7 @@ export function createDriver(options: DriverOptions): GameDriver {
 
   let lastTickAt = now();
   const listeners = new Set<StateListener>();
+  const viralListeners = new Set<ViralBurstListener>();
   let tickHandle: number | null = null;
   let saveHandle: number | null = null;
 
@@ -169,7 +182,21 @@ export function createDriver(options: DriverOptions): GameDriver {
     const t = now();
     const deltaMs = Math.max(0, t - lastTickAt);
     lastTickAt = t;
-    applyState(tick(state, t, deltaMs, staticData));
+    // Capture viral active state before tick so we can detect null → non-null.
+    const prevViralActive = state.viralBurst.active;
+    const next = tick(state, t, deltaMs, staticData);
+    // Fire viral burst listeners synchronously before notifying state subscribers.
+    if (prevViralActive === null && next.viralBurst.active !== null) {
+      const active = next.viralBurst.active;
+      const payload: ViralBurstPayload = {
+        source_generator_id: active.source_generator_id,
+        source_platform_id: active.source_platform_id,
+        duration_ms: active.duration_ms,
+        magnitude: active.magnitude,
+      };
+      for (const listener of viralListeners) listener(payload);
+    }
+    applyState(next);
   }
 
   function doSave(): void {
@@ -273,5 +300,10 @@ export function createDriver(options: DriverOptions): GameDriver {
     },
 
     getUpcomingShifts: () => getUpcomingShifts(state, staticData),
+
+    onViralBurst(listener) {
+      viralListeners.add(listener);
+      return () => viralListeners.delete(listener);
+    },
   };
 }

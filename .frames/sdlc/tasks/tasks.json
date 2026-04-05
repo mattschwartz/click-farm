@@ -1236,7 +1236,7 @@
       "id": 49,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Fix affinity chip glow animation selector",
       "requester": "ux-designer",
@@ -1257,13 +1257,14 @@
         "Affinity chip glow animation fires visibly in-browser on the heaviest-contributing generator chip for each platform card"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 50,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Viral burst engine — trigger, signal transport, magnitude",
       "requester": "ux-designer",
@@ -1312,7 +1313,8 @@
           "owner": "architect"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 51,
@@ -1364,9 +1366,7 @@
         "All effects clean up correctly if the component unmounts mid-event"
       ],
       "open_questions": [],
-      "blocked_on": [
-        50
-      ]
+      "blocked_on": []
     },
     {
       "id": 52,

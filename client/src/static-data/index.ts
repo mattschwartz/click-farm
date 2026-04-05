@@ -17,6 +17,7 @@ import type {
   AlgorithmStateId,
   CloutUpgradeDef,
   UpgradeId,
+  ViralBurstConfig,
 } from '../types.ts';
 
 // ---------------------------------------------------------------------------
@@ -260,6 +261,26 @@ const CLOUT_UPGRADE_DEFS: Record<UpgradeId, CloutUpgradeDef> = {
 };
 
 // ---------------------------------------------------------------------------
+// Viral burst tuning
+// Probabilities target: early 45-60 min, mid 20-30 min, late 15-20 min
+// between events at 10 ticks/sec (100ms tick interval).
+// All values are starting points — tune during balance pass without code changes.
+// ---------------------------------------------------------------------------
+
+const VIRAL_BURST_CONFIG: ViralBurstConfig = {
+  minCooldownTicks: 9_000,       // 15 min at 100ms/tick (active-play only)
+  baseProbabilityEarly: 0.000037, // ~1 viral / 45-60 min before tutorials
+  baseProbabilityMid:   0.000067, // ~1 viral / 20-30 min after tutorials
+  baseProbabilityLate:  0.000095, // ~1 viral / 15-20 min after viral_stunts
+  algorithmBoostThreshold: 1.5,  // effective modifier required to boost
+  algorithmBoostMultiplier: 2.0, // doubles frequency when algorithm is hot
+  durationMsMin: 5_000,
+  durationMsMax: 10_000,
+  magnitudeBoostMin: 3.0,        // 3–5× normal engagement rate during viral
+  magnitudeBoostMax: 5.0,
+};
+
+// ---------------------------------------------------------------------------
 // Exported static data
 // ---------------------------------------------------------------------------
 
@@ -288,4 +309,5 @@ export const STATIC_DATA: StaticData = {
       grindset: PLATFORM_DEFS.grindset.unlock_threshold,
     },
   },
+  viralBurst: VIRAL_BURST_CONFIG,
 };

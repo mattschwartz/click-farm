@@ -735,7 +735,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.affinity-chip .glow {
+.affinity-chip.glow {
   animation: affinity-glow 1.5s ease-in-out infinite;
 }
 

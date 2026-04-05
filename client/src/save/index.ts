@@ -2,10 +2,10 @@
 // Responsibility: serialize/deserialize game state to/from localStorage,
 // with versioned migrations. See core-systems.md — "Save Module".
 
-import type { GameState, SaveData } from '../types.ts';
+import type { GameState, SaveData, ViralBurstState } from '../types.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -50,7 +50,20 @@ export function load(): GameState | null {
   }
 
   const migrated = migrate(parsed as SaveData);
-  return migrated.state;
+  const gameState = migrated.state;
+
+  // Always ensure viralBurst is present — a v2 save written before the field
+  // existed will be missing it entirely and would crash doTick on load.
+  // Also always clear active: an in-progress viral from a previous session is
+  // stale and cannot be safely resumed.
+  const viralBurst: ViralBurstState = gameState.viralBurst ?? {
+    active_ticks_since_last: 0,
+    active: null,
+  };
+  return {
+    ...gameState,
+    viralBurst: { ...viralBurst, active: null },
+  };
 }
 
 /** Remove save data from localStorage. */
@@ -64,14 +77,30 @@ export function clearSave(): void {
 // Add a new case here whenever the save format changes.
 // ---------------------------------------------------------------------------
 
+/**
+ * Migrate a V1 save (no viralBurst field) to V2.
+ * Injects the correct default for viralBurst so the rest of the pipeline can
+ * assume GameState always has the field.
+ */
+export function migrateV1toV2(data: SaveData): SaveData {
+  const oldState = data.state as GameState & { viralBurst?: ViralBurstState };
+  const viralBurst: ViralBurstState = oldState.viralBurst ?? {
+    active_ticks_since_last: 0,
+    active: null,
+  };
+  return {
+    ...data,
+    version: 2,
+    state: { ...oldState, viralBurst },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
-  // Future: reassign `current` as new version cases are added to the chain.
-  // For now this is effectively a pass-through with a version guard.
-  // eslint-disable-next-line prefer-const
   let current = data;
 
-  // Version chain — add cases here as schema evolves:
-  // if (current.version === 1) { current = migrateV1toV2(current); }
+  if (current.version === 1) {
+    current = migrateV1toV2(current);
+  }
 
   if (current.version !== CURRENT_VERSION) {
     throw new Error(

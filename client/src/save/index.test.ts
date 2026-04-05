@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { save, load, clearSave, migrate } from './index.ts';
+import { save, load, clearSave, migrate, migrateV1toV2 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import type { SaveData } from '../types.ts';
@@ -93,6 +93,23 @@ describe('save and load', () => {
     vi.useRealTimers();
   });
 
+  it('injects viralBurst when the field is absent in a v2 save', () => {
+    // Simulates a save written as v2 before viralBurst was part of the schema.
+    const state = createInitialGameState(STATIC_DATA, 0);
+    const { viralBurst: _dropped, ...stateWithoutViral } = state as typeof state & { viralBurst?: unknown };
+    const rawSave = JSON.stringify({
+      version: 2,
+      state: stateWithoutViral,
+      lastCloseTime: null,
+      lastCloseState: state.player.last_close_state,
+    });
+    localStorage.setItem('click_farm_save', rawSave);
+    const loaded = load();
+    expect(loaded).not.toBeNull();
+    expect(loaded!.viralBurst).toBeDefined();
+    expect(loaded!.viralBurst.active).toBeNull();
+  });
+
   it('returns null when no save exists', () => {
     expect(load()).toBeNull();
   });
@@ -121,16 +138,16 @@ describe('clearSave', () => {
 // ---------------------------------------------------------------------------
 
 describe('migrate', () => {
-  it('passes through current-version data unchanged', () => {
+  it('passes through current-version (v2) data unchanged', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const data: SaveData = {
-      version: 1,
+      version: 2,
       state,
       lastCloseTime: 0,
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(1);
+    expect(result.version).toBe(2);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -143,5 +160,43 @@ describe('migrate', () => {
       lastCloseState: null,
     };
     expect(() => migrate(data)).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// migrateV1toV2
+// ---------------------------------------------------------------------------
+
+describe('migrateV1toV2', () => {
+  it('bumps version from 1 to 2', () => {
+    const state = createInitialGameState(STATIC_DATA, 0);
+    const v1Data = { version: 1, state, lastCloseTime: 0, lastCloseState: null } as SaveData;
+    const result = migrateV1toV2(v1Data);
+    expect(result.version).toBe(2);
+  });
+
+  it('injects viralBurst defaults when field is absent', () => {
+    const state = createInitialGameState(STATIC_DATA, 0);
+    // Strip viralBurst to simulate a V1 save without the field
+    const { viralBurst: _, ...stateWithoutViral } = state;
+    const v1Data = {
+      version: 1,
+      state: stateWithoutViral as SaveData['state'],
+      lastCloseTime: 0,
+      lastCloseState: null,
+    };
+    const result = migrateV1toV2(v1Data);
+    expect(result.state.viralBurst).toEqual({
+      active_ticks_since_last: 0,
+      active: null,
+    });
+  });
+
+  it('preserves all other state fields', () => {
+    const state = createInitialGameState(STATIC_DATA, 0);
+    const v1Data = { version: 1, state, lastCloseTime: 42, lastCloseState: null } as SaveData;
+    const result = migrateV1toV2(v1Data);
+    expect(result.state.player.id).toBe(state.player.id);
+    expect(result.lastCloseTime).toBe(42);
   });
 });

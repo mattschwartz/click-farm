@@ -119,7 +119,9 @@ export function createInitialGameState(
   const firstStateId = Object.keys(staticData.algorithmStates)[0] as AlgorithmStateId;
   const algorithm = createAlgorithmState(firstStateId, 0, staticData, now);
 
-  return { player, generators, platforms, algorithm };
+  const viralBurst = { active_ticks_since_last: 0, active: null };
+
+  return { player, generators, platforms, algorithm, viralBurst };
 }
 
 // ---------------------------------------------------------------------------

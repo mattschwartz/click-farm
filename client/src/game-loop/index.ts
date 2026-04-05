@@ -14,6 +14,7 @@
 // All functions are pure. State in → new state out. No mutation.
 
 import type {
+  ActiveViralEvent,
   GameState,
   GeneratorId,
   GeneratorState,
@@ -23,6 +24,7 @@ import type {
   SnapshotState,
   StaticData,
   UpgradeId,
+  ViralBurstState,
 } from '../types.ts';
 import { advanceAlgorithm, getAlgorithmModifier } from '../algorithm/index.ts';
 import {
@@ -170,6 +172,120 @@ export function computeAllGeneratorEffectiveRates(
 }
 
 // ---------------------------------------------------------------------------
+// Viral burst trigger — exported for deterministic unit testing
+// ---------------------------------------------------------------------------
+
+/**
+ * Evaluates whether a viral burst should fire this tick.
+ *
+ * All three gates must pass:
+ *   Gate 1 — cooldown: enough active-play ticks since the last viral.
+ *   Gate 2 — probability: random roll < p_viral (adjusted by Gate 3).
+ *   Gate 3 — algorithm affinity: top generator's effective modifier ≥ threshold
+ *             doubles p_viral.
+ *
+ * Returns a fully-constructed `ActiveViralEvent` on trigger, or null otherwise.
+ *
+ * @param state      current game state (viralBurst.active must be null — caller
+ *                   verifies this before calling)
+ * @param staticData balance config
+ * @param now        current epoch ms (becomes start_time on the event)
+ * @param random     injectable PRNG, defaults to Math.random — inject for tests
+ */
+export function evaluateViralTrigger(
+  state: GameState,
+  staticData: StaticData,
+  now: number,
+  random: () => number = Math.random,
+): ActiveViralEvent | null {
+  const config = staticData.viralBurst;
+  const { viralBurst, generators, platforms, algorithm } = state;
+
+  // Gate 1 — cooldown (hard floor, active-play ticks only)
+  if (viralBurst.active_ticks_since_last < config.minCooldownTicks) {
+    return null;
+  }
+
+  // Require at least one generator producing — no viral from empty content farm
+  const rates = computeAllGeneratorEffectiveRates(state, staticData);
+  const rateEntries = Object.entries(rates) as [GeneratorId, number][];
+  if (rateEntries.length === 0) return null;
+
+  // Determine phase-based p_viral
+  let p_viral: number;
+  if (!generators.tutorials.owned) {
+    p_viral = config.baseProbabilityEarly;
+  } else if (!generators.viral_stunts.owned) {
+    p_viral = config.baseProbabilityMid;
+  } else {
+    p_viral = config.baseProbabilityLate;
+  }
+
+  // Gate 3 — algorithm affinity boost (applied to p_viral before the roll)
+  let topGenId: GeneratorId = rateEntries[0][0];
+  let topRate = rateEntries[0][1];
+  for (const [id, rate] of rateEntries) {
+    if (rate > topRate) {
+      topRate = rate;
+      topGenId = id;
+    }
+  }
+  const rawMod = getAlgorithmModifier(algorithm, topGenId);
+  const topGenDef = staticData.generators[topGenId];
+  const effectiveMod = effectiveAlgorithmModifier(rawMod, topGenDef.trend_sensitivity);
+  if (effectiveMod > config.algorithmBoostThreshold) {
+    p_viral *= config.algorithmBoostMultiplier;
+  }
+
+  // Gate 2 — probability roll
+  if (random() >= p_viral) {
+    return null;
+  }
+
+  // All gates passed — select source platform
+  const unlockedPlatformIds = (Object.keys(platforms) as PlatformId[]).filter(
+    (id) => platforms[id].unlocked,
+  );
+  if (unlockedPlatformIds.length === 0) return null;
+
+  let sourcePlatformId = unlockedPlatformIds[0];
+  let maxAffinity =
+    staticData.platforms[sourcePlatformId].content_affinity[topGenId] ?? 0;
+  for (const id of unlockedPlatformIds) {
+    const affinity = staticData.platforms[id].content_affinity[topGenId] ?? 0;
+    if (affinity > maxAffinity) {
+      maxAffinity = affinity;
+      sourcePlatformId = id;
+    }
+  }
+
+  // Compute magnitude — amortized rate boost over the event window
+  // total_engagement_rate_per_ms = sum of all generator rates (per-sec) / 1000
+  const totalRatePerMs =
+    rateEntries.reduce((sum, [, r]) => sum + r, 0) / 1000;
+  const duration_ms = Math.floor(
+    config.durationMsMin +
+      random() * (config.durationMsMax - config.durationMsMin),
+  );
+  const boostFactor =
+    config.magnitudeBoostMin +
+    random() * (config.magnitudeBoostMax - config.magnitudeBoostMin);
+  // During the viral: effective rate = normal_rate × boostFactor
+  // Bonus = normal_rate × (boostFactor - 1) per ms
+  const bonus_rate_per_ms = totalRatePerMs * (boostFactor - 1);
+  const magnitude = bonus_rate_per_ms * duration_ms;
+
+  return {
+    source_generator_id: topGenId,
+    source_platform_id: sourcePlatformId,
+    start_time: now,
+    duration_ms,
+    magnitude,
+    bonus_rate_per_ms,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Tick — the core state → state function
 // ---------------------------------------------------------------------------
 
@@ -278,7 +394,40 @@ export function tick(
     staticData,
   );
 
-  return { player, generators, platforms, algorithm };
+  // 10. Advance active_ticks_since_last by 1 (active-play tick counter).
+  let viralBurst: ViralBurstState = {
+    ...state.viralBurst,
+    active_ticks_since_last: state.viralBurst.active_ticks_since_last + 1,
+  };
+
+  // 11 / 12. Process active viral or evaluate trigger.
+  if (viralBurst.active !== null) {
+    if (now >= viralBurst.active.start_time + viralBurst.active.duration_ms) {
+      // 11a. Viral expired — clear it.
+      viralBurst = { ...viralBurst, active: null };
+    } else {
+      // 11b. Viral still running — apply bonus engagement on top of normal production.
+      player = {
+        ...player,
+        engagement: player.engagement + viralBurst.active.bonus_rate_per_ms * deltaMs,
+      };
+    }
+  } else {
+    // 12. No active viral — evaluate trigger with the state assembled this tick.
+    const triggerState: GameState = {
+      player,
+      generators,
+      platforms,
+      algorithm,
+      viralBurst,
+    };
+    const event = evaluateViralTrigger(triggerState, staticData, now);
+    if (event !== null) {
+      viralBurst = { active_ticks_since_last: 0, active: event };
+    }
+  }
+
+  return { player, generators, platforms, algorithm, viralBurst };
 }
 
 // ---------------------------------------------------------------------------

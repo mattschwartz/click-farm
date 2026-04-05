@@ -133,6 +133,38 @@ export interface AlgorithmState {
 }
 
 // ---------------------------------------------------------------------------
+// ViralBurst — transient state for the viral burst event
+// ---------------------------------------------------------------------------
+
+export interface ViralBurstState {
+  /** Active-play ticks accumulated since the last viral ended (or run start). */
+  active_ticks_since_last: number;
+  /** Non-null while a viral burst is in progress. Never persisted across saves. */
+  active: ActiveViralEvent | null;
+}
+
+export interface ActiveViralEvent {
+  source_generator_id: GeneratorId;
+  source_platform_id: PlatformId;
+  /** Epoch ms when the viral started. */
+  start_time: number;
+  /** Total duration of the event (ms). 5000–10000. */
+  duration_ms: number;
+  /** Total bonus engagement the event produces above normal production. */
+  magnitude: number;
+  /** Precomputed: magnitude / duration_ms. Applied per ms in tick. */
+  bonus_rate_per_ms: number;
+}
+
+/** Payload fired to UI subscribers at the moment of trigger. Internal fields stripped. */
+export interface ViralBurstPayload {
+  source_generator_id: GeneratorId;
+  source_platform_id: PlatformId;
+  duration_ms: number;
+  magnitude: number;
+}
+
+// ---------------------------------------------------------------------------
 // GameState — the complete in-memory state passed to the tick function
 // ---------------------------------------------------------------------------
 
@@ -141,6 +173,7 @@ export interface GameState {
   generators: Record<GeneratorId, GeneratorState>;
   platforms: Record<PlatformId, PlatformState>;
   algorithm: AlgorithmState;
+  viralBurst: ViralBurstState;
 }
 
 // ---------------------------------------------------------------------------
@@ -205,6 +238,29 @@ export interface CloutUpgradeDef {
   effect: UpgradeEffect;
 }
 
+export interface ViralBurstConfig {
+  /** Active-play ticks before a viral can fire again. At 100ms/tick, 9000 = 15 min. */
+  minCooldownTicks: number;
+  /** Per-tick fire probability before tutorials are unlocked (~45–60 min between virals). */
+  baseProbabilityEarly: number;
+  /** Per-tick fire probability mid-game (~20–30 min between virals). */
+  baseProbabilityMid: number;
+  /** Per-tick fire probability late-game (~15–20 min between virals). */
+  baseProbabilityLate: number;
+  /** If top generator's effective algorithm modifier exceeds this, p_viral is boosted. */
+  algorithmBoostThreshold: number;
+  /** Multiplier applied to p_viral when the algorithm boost threshold is met. */
+  algorithmBoostMultiplier: number;
+  /** Minimum viral burst duration in ms. */
+  durationMsMin: number;
+  /** Maximum viral burst duration in ms. */
+  durationMsMax: number;
+  /** Minimum engagement rate multiplier during viral (3× normal). */
+  magnitudeBoostMin: number;
+  /** Maximum engagement rate multiplier during viral (5× normal). */
+  magnitudeBoostMax: number;
+}
+
 export interface StaticData {
   generators: Record<GeneratorId, GeneratorDef>;
   platforms: Record<PlatformId, PlatformDef>;
@@ -220,6 +276,7 @@ export interface StaticData {
     generators: Record<GeneratorId, number>;
     platforms: Record<PlatformId, number>;
   };
+  viralBurst: ViralBurstConfig;
 }
 
 // ---------------------------------------------------------------------------
