@@ -204,6 +204,12 @@ Generators use a four-differentiator system (per `ux/core-game-screen.md` §6.1)
 
 ## 3. Scandal Visual Identity
 
+> ⚠️ **SUPERSEDED — section preserved for historical reference only.**
+> The Scandals system was removed from the client per
+> `proposals/accepted/remove-scandals-interim.md`. Do not implement from
+> this section. Red-accent icon guidance remains valid as a color-lane
+> reservation but is not presently in use.
+
 Scandals use a unified **red accent** family (`#df3a3a` range) as their semantic color — distinct from the risk-building amber (`building` state) and from the generator/platform color vocabulary. The player has already seen amber as "this is getting risky"; red is "it happened."
 
 Each scandal card appears during the PR Response window (per `ux/scandal-system.md`). The icon appears in the scandal card header alongside the scandal name.
