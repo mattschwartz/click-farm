@@ -1,5 +1,5 @@
 {
-  "next_id": 58,
+  "next_id": 59,
   "tasks": [
     {
       "id": 1,
@@ -1587,7 +1587,7 @@
       "id": 57,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Revise algorithm-mood-visibility for light-mode base",
       "requester": "game-designer",
@@ -1625,6 +1625,41 @@
           "owner": "ux-designer"
         }
       ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 58,
+      "role": "ux-designer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Reconcile core-game-screen.md §4.2 mood library with light-mode edge colors",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "The §4.2 mood library table in core-game-screen.md was written against a dark base with background gradients like 'Warm amber → orange gradient' over #0b0d12. The revised algorithm-mood-visibility proposal (now in draft, re-derived for the warm near-white base #FAF8F5) supersedes those color directions. §4.3 instability logic and §4.4 400ms crossfade timing are color-space independent and stand as written.\n\nThis task updates §4.2 to point at the algorithm-mood-visibility proposal for edge-color values and revises the 'Background base' column to reflect the light-mode system (fixed base + shifting accent layer).\n\nState-name drift (core-game-screen.md has `algorithm_winter` / `viral_storm`; algorithm-mood-visibility has `nostalgia_wave` / `corporate_takeover`) is out of scope — flag it but do not resolve.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§4.2 is the table to revise; §4.3-4.4 stand as written"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/algorithm-mood-visibility.md",
+          "purpose": "source of truth for light-mode edge colors"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/visual-identity-light-mode.md",
+          "purpose": "light-mode base commitment"
+        }
+      ],
+      "acceptance_criteria": [
+        "Update §4.2 mood library table to reference algorithm-mood-visibility for edge-color values rather than duplicating them",
+        "Revise the 'Background base' column to reflect a fixed warm near-white base with shifting accent layer (not per-state gradients)",
+        "Preserve the 'Motion signature' column — it is color-space independent and stands",
+        "Flag the state-name drift (algorithm_winter/viral_storm vs nostalgia_wave/corporate_takeover) in a scope note for a future reconciliation task",
+        "Do not edit §4.3 or §4.4 — only their specific color values belong downstream of the proposal; the logic and timing stand"
+      ],
+      "open_questions": [],
       "blocked_on": []
     }
   ]
