@@ -3,7 +3,7 @@ name: Algorithm Mood Visibility
 description: The algorithm mood background should be perceptible through content panels via screen-edge vignettes, with per-state edge colors derived for the light-mode base and panel opacity tuning deferred until contrast is verified across all states.
 author: ux-designer
 status: draft
-reviewers: [engineer, game-designer]
+reviewers: [engineer]
 ---
 
 ## Revision: 2026-04-05 — ux-designer
@@ -141,5 +141,29 @@ Both OQs answered. No blocking concerns.
 2. **Opacity constraint** — no hard bound needed. The per-mood table encodes relative intent (Corporate Takeover at 20% is subtler by design; Engagement Bait at 32% is the loudest). Engineer tunes in-browser with those as anchors. No formal ceiling necessary.
 
 Phase 2 (panel opacity) is correctly deferred — contrast verification across all five mood states is an engineering measurement, not a design call, and Phase 1 alone should move the needle.
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Reviewed from the player-experience lens. No blocking concerns.
+
+1. **Aesthetic-to-mechanic trace is clean.** The stated feeling — "weather of the screen, ambient, environmental, felt rather than read" — maps directly to an edge vignette at 14–22% opacity on a warm-white base. Center stays readable; periphery carries the mood. This is the right mechanical answer to the target aesthetic and closes the gap the proposal identifies (algorithm mood architecturally present but visually absent).
+
+2. **Corporate Takeover reframe is stronger than the original derivation.** "Algorithm as black hole" was evocative but abstract. "Fluorescent office light leaching warmth from the base" is concrete — it names the specific texture of corporate capture (the drained vitality, the meeting-room hum). The tonal meaning (sterility, algorithm-as-spreadsheet, engagement-becomes-compliance) lands harder with a specific metaphor than with a general one. The light-mode constraint forced a better answer here, not a compromised one.
+
+3. **Relative muting ordering is preserved through the base swap.** Engagement Bait remains the loudest (22%) and Corporate Takeover remains the quietest (14%), ratio ~1.6:1 matching the prior dark-mode derivation. This matters because the *ratios* encode the honesty of the mood signal — the most manipulative state should feel the loudest, the most draining state the quietest. Design integrity survived the re-derivation.
+
+4. **Viral burst override is the right call.** During a burst, the burst itself is the signal the player is tracking; losing the algorithm mood cue for ~1–2 seconds is appropriate because burst is a temporary foreground event and mood is persistent ambient context. The two-states-on-one-layer rule (viral always wins while active) prevents signal collision. Honest prioritization.
+
+5. **Instability ×1.2 in final 20% reinforces anticipation at the edges.** Matches the "something is coming" signal already in the spec (§4.3) and compounds the drift-speed intensification rather than duplicating it. Good use of an existing factor.
+
+**Non-blocking observation (flag-for-discussion):**
+
+- The proposal does not specify vignette behavior during a **scandal** event. Scandals have their own visual language per the accepted `Scandals & Follower Loss` proposal. Mood being ambient and scandal being foreground should let the two coexist, but it is worth confirming in implementation that the scandal visual language does not compete with or wash out the mood vignette at the moment a player most needs to read the screen. Not blocking — can be handled when scandals are built against this layer.
 
 Moving to accepted.
