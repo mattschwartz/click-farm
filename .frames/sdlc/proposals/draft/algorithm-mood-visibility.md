@@ -53,6 +53,13 @@ Corporate Takeover remains the most muted by design. Its edge color is subtle �
 
 **Instability intensification:** Per UX spec §4.3, in the final 20% of a shift interval, the vignette opacity scales up by ×1.2 (same instability factor already applied to the background drift speed). This reinforces the "something is coming" signal at the screen edges.
 
+**Viral burst override:** During a viral burst event (UX spec §9.2), the vignette color is taken over by the source platform's affinity color. State machine:
+1. Burst fires → crossfade from mood color to platform-affinity color over 300ms
+2. Phase 2 (peak) → platform-affinity color pulses at 2s cycle at the mood vignette's current opacity
+3. Phase 3 end (burst complete) → crossfade back to current mood color over 400ms
+
+These are two states on the same layer — they do not stack. The viral color always wins while the burst is active.
+
 ### Phase 2 (follow-up): Panel opacity tuning
 
 Reducing panel opacity from 82% to ~72–74% would let the background gradient itself contribute to mood presence, compounding the vignette effect. This is deferred because:

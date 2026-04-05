@@ -76,6 +76,8 @@ The engagement count **must tick at the rate it is earning**. At 6.8/sec, the co
 
 **Rule:** The count never batches. A 3-second batched jump from 100 to 120 feels dead. A 60-tick climb from 100 to 120 feels alive.
 
+**Implementation:** This behavior is delivered by RAF-based predictive interpolation in the UI layer — the game loop tick rate is unchanged. See `proposals/draft/engagement-counter-interpolation.md` for the full spec. The `useInterpolatedValue` hook defined there is what makes §3.1 and §3.2 possible at mid-to-late game rates.
+
 ### 3.2 Tick increment sizing
 
 At high rates, integer ticks are visually appropriate. At low rates (<1/sec), **fractional accumulation must still produce visible motion**. Options:
@@ -287,7 +289,7 @@ When this spec and the main spec disagree, **this spec wins** for the elements i
 1. **If the UX treatment doesn't resolve the feel problem, the numbers themselves may need tuning.** (Carried from task #40.) After this spec is implemented, observe the game again. If the feel is still flat, the game-designer should revisit the upgrade delta curve — rates too small to feel even with perfect UX are a tuning problem, not a design problem. **Owner: game-designer (post-implementation check).**
 2. **Does the breathing pulse need a Reduce Motion alternative?** The breathing pulse is persistent and runs at variable cadence. For players with motion sensitivity, the pulse could be replaced with a static glow halo on owned rows. **Owner: ux-designer (settings spec integration).**
 3. **At very high rates (100+/sec), does the breathing pulse become stroboscopic?** A generator pulsing 100×/sec would flicker. Cap: once rate exceeds 10/sec, the pulse transitions to a steady glow rather than a rapid flicker. This is specified in §6.2 amplitude, but the transition threshold needs confirmation during implementation. **Owner: engineer (tune at build time).**
-4. **Should the delta readout stack on rapid successive purchases?** If the player buys 3 generators in quick succession, do they see three delta readouts? This spec assumes only the latest delta shows (previous fades quickly); stacking could be considered if it feels better in implementation. **Owner: ux-designer / engineer (tune at build time).**
+4. **Should the delta readout stack on rapid successive purchases?** If the player buys 3 generators in quick succession, do they see three delta readouts? **[RESOLVED — ux-designer, 2026-04-05]** No stacking. Latest delta replaces prior (previous fades immediately on supersession). The rate flare already communicates "multiple things changed" — stacking delta readouts adds noise with no additional insight. The cumulative change is visible in the rate numeral itself.
 
 ---
 

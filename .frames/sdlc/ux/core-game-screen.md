@@ -328,12 +328,14 @@ Viral triggers are determined by the game loop, not this spec. The UX assumes th
 - Ambient background saturation bumps up 20%
 - Sound: a tonal rising sweep begins (2s duration)
 
-**Phase 2 — Peak (1500–6500ms, variable):**
+**Phase 2 — Peak (Build end → event_end − decay window, variable):**
 - Counter ticks at 3–5× normal rate (visually — math is sampled from the engine signal)
 - Particle burst from source generator row, drifting toward the platform card (sustained, not single-shot)
-- Screen edge vignette glow (platform-affinity color) pulses at 2s cycle
+- Screen edge vignette glow (platform-affinity color) pulses at 2s cycle — see note below on vignette layer
 - Subtle camera-style zoom pulse (±1%) on bass beats of the sound cue
 - Sound: sustained layered whoosh + harmonic bed
+
+**Vignette layer during viral burst:** The screen-edge vignette (defined in `proposals/draft/algorithm-mood-visibility.md`) normally carries the current algorithm mood color. During a viral burst, the viral platform-affinity color takes over: crossfade in over 300ms at burst start, pulse at 2s cycle through Phase 2, crossfade back to mood color over 400ms at Phase 3 end. The two states share the same CSS layer — they do not stack.
 
 **Phase 3 — Decay (last 1000–1500ms):**
 - Tick rate decelerates to baseline
