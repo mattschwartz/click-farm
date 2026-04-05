@@ -1,5 +1,5 @@
 {
-  "next_id": 114,
+  "next_id": 115,
   "tasks": [
     {
       "id": 1,
@@ -4061,7 +4061,7 @@
       "id": 111,
       "role": "architect",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Review manual-action-ladder proposal",
       "requester": "game-designer",
@@ -4104,13 +4104,14 @@
         "If you are the final reviewer and all OQs resolved, move the proposal to accepted/"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 112,
       "role": "ux-designer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Review manual-action-ladder proposal",
       "requester": "game-designer",
@@ -4140,13 +4141,14 @@
         "Update the reviewers field: remove self if aligned; leave self in if Not Aligned or Request for Comment"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 113,
       "role": "engineer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Review manual-action-ladder proposal for implementation feasibility",
       "requester": "game-designer",
@@ -4181,6 +4183,72 @@
         "Flag any non-obvious migration concerns (save version bump requirements, tick pipeline reordering, driver/ui contract changes)",
         "Add a review section at the bottom of the document following the PROPOSALS.md template (Date, Decision: Aligned/Not Aligned/Request for Comment, Comments)",
         "Update the reviewers field: remove self if aligned; leave self in if Not Aligned or Request for Comment"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 114,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Plan manual-action-ladder implementation",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Decompose the accepted manual-action-ladder proposal into concrete, assignable tasks for engineer, ux-designer, and (self-assigned) architect supersession-edit work. The proposal is fully structurally + balance locked (17/17 OQs resolved, all 4 reviewers signed off), so this is pure decomposition — no new design decisions. The goal is a set of tasks with explicit done-whens that can be picked up and executed without guessing.\n\nThe proposal names three task-tracks that need filing:\n\n1. **Engineer engine-refactor task** — implement the yield/rate split, postClick(verbId) dispatch, manual_clickable flag, Player.last_manual_click_at field, save v8→v9 migration, seed chirps into static-data per §14. The engineer's re-review (lines 488-538 of the accepted proposal) pre-cleared this as ~1 session, sonnet-complexity, with a defined 5-step refactor spec from the architect (lines 260-286 of the proposal's original architect review). All concrete balance cells are in §14. This task should be granular enough for a single build session — you may decompose further (e.g., data-model-split task + postClick-refactor task + migration task) if a single 'engine refactor' task would exceed sonnet-complexity scope.\n\n2. **UX-designer ladder-spec task** — author the full Actions-column ladder UX spec covering ghost-slot anatomy, live-verb-button anatomy (pulse indicator, cooldown ring, automate-level badge, per-verb iconography), spotlight-slot transition animation, and mobile anchor-dynamics. UX committed to this as a follow-up in their review (line 343 of the proposal). This task BLOCKS the per-verb Actions-column UI wiring task (see item 4).\n\n3. **Architect supersession-edits task (self-assigned)** — edit the affected accepted proposals in place per the proposal's §Supersession Notes: actions-column.md §2 (baseline member: Post → Chirp), generator-balance-and-algorithm-states.md §Manual Click Value (supersede CLICK_BASE_ENGAGEMENT assumption), core-game-identity-and-loop.md §2 Core Loop (per-verb automator, rotating ladder of click verbs), and mark post-button-rate-scaled-clicks.md (draft) as superseded per OQ7 resolution. Each edit should include a back-reference to the manual-action-ladder proposal.\n\n4. **UI wiring task (engineer, blocked on UX ladder spec + engine refactor)** — wire per-verb Actions-column buttons against the engineer's post-refactor contract and UX's ladder spec. This task should be filed with blocked_on pointing to tasks from items 1 and 2.\n\nWhen filing the engineer task(s), reference the specific line ranges of the accepted proposal for the architect's 5-step refactor spec, the cooldown-gate snippet (including ?? 0 guard), the §14 balance tables, and the §12 'What This Locks In' summary. The engineer should not need to re-derive anything — only implement what's locked.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "The accepted proposal to decompose — read end-to-end (frontmatter, §1-§14, Supersession Notes, References) plus all 4 review logs for implementation detail"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/actions-column.md",
+          "purpose": "Target of a supersession edit (§2 baseline member)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Target of a supersession edit (§Manual Click Value); also the source spec for existing generator balance that chirps is calibrated against"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Target of a supersession edit (§2 Core Loop)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/post-button-rate-scaled-clicks.md",
+          "purpose": "Target of a supersession mark (will be superseded per OQ7 resolution)"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "Primary refactor site (L55 CLICK_BASE_ENGAGEMENT, L62 CLICK_GENERATOR_ID, L575-597 postClick, L156-177 computeGeneratorEffectiveRate)"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Types that need updating: GeneratorDef (split base_engagement_rate, add manual_clickable), Player (add last_manual_click_at)"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Save migration site — needs new v8→v9 migration seeding player.last_manual_click_at={}"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Generator static-data — needs split values per §14a/b and new chirps entry per §14c"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "click() → click(verbId) API break site"
+        }
+      ],
+      "acceptance_criteria": [
+        "A set of tasks is filed covering: (a) engineer engine-refactor, (b) ux-designer ladder-spec, (c) architect supersession-edits (self-assigned), (d) engineer UI-wiring (blocked on a + b)",
+        "Each task has a clear, self-contained overview that a role can execute without needing to re-read the accepted proposal end-to-end (though they should reference it)",
+        "Each task has acceptance criteria that are actionable and verifiable",
+        "Each task has related_items with purpose annotations pointing at the specific artifacts needed",
+        "Blocking relationships are encoded via blocked_on (e.g., UI wiring blocked on engine refactor + ladder spec)",
+        "The engineer engine-refactor task either fits in a single sonnet-complexity session, or is decomposed into sub-tasks that each do",
+        "Each task's state field matches its role (engineer → build, ux-designer → design, architect → design for supersession edits)",
+        "When done, file the tasks via task.sh add per the SDLC frame's tooling discipline — do not edit tasks.json directly"
       ],
       "open_questions": [],
       "blocked_on": []
