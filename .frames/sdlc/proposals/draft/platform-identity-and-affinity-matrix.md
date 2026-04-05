@@ -1,9 +1,10 @@
 ---
 name: Platform Identity & Affinity Matrix
 description: Names each of the 3 launch platforms, defines their satirical voice and audience character, specifies the platform × generator affinity matrix, and sets follower-based unlock thresholds.
+created: 2026-04-05
 author: game-designer
 status: draft
-reviewers: [game-designer, ux-designer, architect]
+reviewers: [game-designer, architect]
 ---
 
 # Proposal: Platform Identity & Affinity Matrix
@@ -229,4 +230,18 @@ The moment a player unlocks a new platform is a peak beat. Here's what each unlo
 2. **Platform affinity magnitude: ×1.5 / ×1.0 / ×0.6 target — too wide, too narrow, or right?** The 0.6 penalty is strong enough to discourage off-platform posting without making penalty content useless. 1.5 boost stacks meaningfully with Algorithm modifiers without trivializing non-boosted play. Balance pass may retune after playtest. **Owner: game-designer (balance)**
 3. **Does Algorithmic Prophecy's universal boost trivialize platform identity in the endgame?** It is intended to, as a satirical beat. If endgame playtest reveals platforms feel meaningless after Prophecy, consider boost→neutral on one platform to preserve differentiation. **Owner: game-designer (post-launch tuning)**
 4. **Per-platform retention floors: does the architect need a per-platform field, or does the retention floor become `platform.retention_floor` in the data model?** Audience Mood proposal specifies floor ∈ 0.3–0.5 as a single range; this proposal splits it per-platform. Architect should confirm the data model change is a single field addition on Platform and not a larger refactor. **Owner: architect**
-5. **Does the visual/UX language for each platform (color, iconography, card treatment) need to be proposed alongside, or as a separate ux-designer follow-up?** Recommend separate follow-up — this proposal locks character; UX locks surface. **Owner: ux-designer**
+5. **Does the visual/UX language for each platform (color, iconography, card treatment) need to be proposed alongside, or as a separate ux-designer follow-up?** Recommend separate follow-up — this proposal locks character; UX locks surface. **Owner: ux-designer** **[RESOLVED — ux-designer, 2026-04-05]** Separate follow-up authored: `proposals/draft/platform-card-visual-identity.md`. That proposal builds directly on the character sheets in §2 to define per-platform card treatments (shape, color palette, texture, motion character).
+
+---
+# Review: ux-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+1. The character sheets in §2 are exactly what UX needs to design against. "Confetti," "gallery opening," and "investment portfolio" are actionable feel targets — each maps cleanly to distinct visual treatments (card shape, color palette, motion character). The separate UX follow-up proposal (`proposals/draft/platform-card-visual-identity.md`) builds directly on these.
+2. The 2-boost / 2-neutral / 3-penalty symmetry per platform (§4) is good for the affinity chip system — it means each card has a readable mix of glowing and neutral chips without any card being all-boost or all-penalty. No UX concerns with the matrix shape.
+3. Per-platform retention floors (§5) create visible behavioral asymmetry between platforms: Skroll's numbers will visibly decay faster than Grindset's. This reinforces the character differentiation at the UX layer — the cards won't just *look* different, they'll *behave* differently. Strong.
+4. Fixed unlock order (§3) means UX can design each unlock as a specific teaching moment with a known predecessor state. No concerns.
+5. OQ#5 resolved — visual/UX language is a separate follow-up, now authored.

@@ -1,3 +1,7 @@
+/* Theme tokens load before any component styles — see
+   architecture/visual-theming.md. */
+@import './theme/tokens.css';
+
 :root {
   /* Typography faces — see proposals/accepted/typography-system.md.
      --font-ui is the workhorse (Space Grotesk) used for chrome, data, numerals.
@@ -7,7 +11,7 @@
   --font-voice: 'Fraunces', 'Space Grotesk Fallback', Georgia, serif;
 
   font-family: var(--font-ui);
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
 /* Metric-adjusted fallback for Space Grotesk.
@@ -25,4 +29,6 @@
 
 body {
   margin: 0;
+  background: var(--surface-canvas);
+  color: var(--text-primary);
 }

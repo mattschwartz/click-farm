@@ -1,6 +1,7 @@
 ---
 name: First Five Minutes — Onboarding Through Progressive Reveal
 description: Defines the teaching philosophy, sequence, and safety rails for the player's first five minutes — progressive affordance-driven reveal with a single anchoring voice moment, no modal tutorials, and Algorithm + Audience Mood held back until they can do design work.
+created: 2026-04-05
 author: game-designer
 status: accepted
 reviewers: []

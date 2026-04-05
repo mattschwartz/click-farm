@@ -57,6 +57,7 @@ You MUST ALWAYS follow this template when creating, updating, or reviewing a pro
 ---
 name: Short Title of the Decision
 description: One-line description of what this proposal decides.
+created: YYYY-MM-DD
 author: your-role
 status: draft
 reviewers: [role-1, role-2]
@@ -87,6 +88,7 @@ List with numbers all areas of ambiguity along with an owner (either an agent or
 ---
 name: Proposal 1
 description: Description of proposal 1.
+created: 2026-01-01
 author: role-1
 status: draft
 reviewers: [role-2, role-3]

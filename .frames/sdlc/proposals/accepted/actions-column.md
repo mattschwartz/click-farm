@@ -1,6 +1,7 @@
 ---
 name: Actions Column
 description: Reframes the Post column as the Actions zone — a named class of discrete active player taps. Post is the baseline member; brand deals are the second; the column grows as progression adds siblings, and Post's visual prominence shrinks proportionally.
+created: 2026-04-05
 author: game-designer
 status: accepted
 reviewers: []
@@ -38,6 +39,8 @@ This distinguishes actions from:
 - **Modals and drawers** — occasional context surfaces
 
 ### 2. Post Is the Baseline Member
+
+> **[SUPERSEDED by `proposals/accepted/manual-action-ladder.md` — 2026-04-05]** The baseline Actions member is no longer a single "Post" button. It is **Chirp**, the first rung of the manual-action ladder (5 content-medium verbs: chirps → selfies → livestreams → podcasts → viral_stunts). The "always available" and "diegetic anchor" properties transfer to Chirp: Chirp is unlocked at engagement 0, has no unlock cost, and is the only action in the column at game start. The column's growing population is now carried by the ladder's Unlock → Upgrade → Automate lifecycle — each ladder rung crosses its engagement threshold and becomes a new Actions-column member. Historical text below preserved for context.
 
 Post remains in the Actions column as its founding member. It is not given a new internal decision. It remains:
 - The diegetic anchor — pressing Post is being a poster

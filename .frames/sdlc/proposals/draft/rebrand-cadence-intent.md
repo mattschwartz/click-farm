@@ -1,6 +1,7 @@
 ---
 name: Rebrand Cadence Intent
 description: Defines the designed felt pacing of the prestige (Rebrand) loop across its lifetime — time-to-first-rebrand, how rebrands 1/3/5/10 should feel, and when the loop shifts from ceremonial to strategic.
+created: 2026-04-05
 author: game-designer
 status: draft
 reviewers: [game-designer]

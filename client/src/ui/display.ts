@@ -191,49 +191,60 @@ export const PLATFORM_ORDER: readonly PlatformId[] = [
 
 export interface AlgorithmMood {
   name: string;
-  /** CSS gradient for the ambient background layer. */
-  background: string;
   /** Seconds for one full drift cycle (UX §4.2 motion signature). */
   cycleSeconds: number;
   /** Narrative tone for flavor text — one line. */
   tagline: string;
+  /**
+   * Per-state edge color for the mood vignette (hex).
+   * MUST match the Tier-1 --palette-mood-* value in tokens.css.
+   */
+  moodEdgeColor: string;
+  /**
+   * Base opacity for the mood vignette, [0.14, 0.22].
+   * MUST match the --mood-edge-opacity value in tokens.css.
+   */
+  moodEdgeOpacity: number;
 }
 
+// Per-state moodEdgeColor and moodEdgeOpacity MUST match the Tier-1
+// palette entries and --mood-edge-opacity values in tokens.css. See
+// architecture/visual-theming.md §Coupling Analysis for why both exist.
 export const ALGORITHM_MOOD: Record<AlgorithmStateId, AlgorithmMood> = {
   short_form_surge: {
     name: 'Short-Form Surge',
-    background:
-      'linear-gradient(135deg, #3a1d0a 0%, #6e2c0a 45%, #a84710 100%)',
     cycleSeconds: 6,
     tagline: 'Electric, impatient.',
+    moodEdgeColor: '#E87B3C',
+    moodEdgeOpacity: 0.18,
   },
   authenticity_era: {
     name: 'Authenticity Era',
-    background:
-      'linear-gradient(135deg, #0c2a2e 0%, #143e52 50%, #0e2440 100%)',
     cycleSeconds: 12,
     tagline: 'Cool, quiet.',
+    moodEdgeColor: '#4F8A7A',
+    moodEdgeOpacity: 0.18,
   },
   engagement_bait: {
     name: 'Engagement Bait',
-    background:
-      'linear-gradient(135deg, #4b0d3d 0%, #8a1674 45%, #b7811a 100%)',
     cycleSeconds: 4,
     tagline: 'Garish, pulsing.',
+    moodEdgeColor: '#D63A82',
+    moodEdgeOpacity: 0.22,
   },
   nostalgia_wave: {
     name: 'Nostalgia Wave',
-    background:
-      'linear-gradient(135deg, #1e1233 0%, #3d2056 50%, #6a2f61 100%)',
     cycleSeconds: 15,
     tagline: 'Warm, slow, looping.',
+    moodEdgeColor: '#7A4FA8',
+    moodEdgeOpacity: 0.18,
   },
   corporate_takeover: {
     name: 'Corporate Takeover',
-    background:
-      'linear-gradient(135deg, #1a1a22 0%, #2d2d38 50%, #3d3a4a 100%)',
     cycleSeconds: 20,
     tagline: 'Flat, cold, inevitable.',
+    moodEdgeColor: '#8A95A8',
+    moodEdgeOpacity: 0.14,
   },
   // algorithm_winter and viral_storm from the mood library are not in
   // AlgorithmStateId yet — they'd be added when the algorithm state roster

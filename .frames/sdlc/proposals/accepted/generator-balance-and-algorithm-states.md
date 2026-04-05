@@ -1,6 +1,7 @@
 ---
 name: Generator Balance & Algorithm States
 description: Formalises the generator rate table, trend sensitivities, and algorithm state definitions as official design targets, replacing the provisional values in static-data/index.ts.
+created: 2026-04-04
 author: game-designer
 status: accepted
 reviewers: []
@@ -202,6 +203,8 @@ This is affirmed as the starting target. Five minutes is long enough to feel the
 ---
 
 ### Manual Click Value
+
+> **[SUPERSEDED by `proposals/accepted/manual-action-ladder.md` — 2026-04-05]** The flat `CLICK_BASE_ENGAGEMENT = 1.0` constant does not survive. Manual click value becomes **per-verb**, calibrated to each verb's own `base_event_yield` (the yield half of the `base_engagement_rate` split introduced by manual-action-ladder §12/§14). The spirit of "generators take over" is preserved but reframed: **automators take over per verb**, while the player's hand retains meaningful contribution via any verb they choose to tap. At the 0.01s cooldown floor (human peak tap ~10/sec bounded against automator throughput ~100/sec), manual output is structurally capped at ~10% of passive output per verb — the "supplementary" target holds numerically, without a flat constant. See manual-action-ladder §14f for the per-verb supplementary-ratio table. Historical text below preserved for context.
 
 `CLICK_BASE_ENGAGEMENT = 1.0` is affirmed. This mirrors the selfies base rate, making clicking roughly equivalent to one selfies generator at level 1 (before level multiplier). The intent: clicking is the early-game bootstrap mechanism, not a primary long-term income source. Once the player has several generators, clicking becomes supplementary. The value should not be raised — that would undermine the "generators take over" arc.
 

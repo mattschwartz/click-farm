@@ -147,17 +147,21 @@ describe('fmtCompactInt', () => {
 // fmtRate
 // ---------------------------------------------------------------------------
 describe('fmtRate', () => {
-  it('returns 0/sec for zero or negative', () => {
-    expect(fmtRate(0)).toBe('0/sec');
-    expect(fmtRate(-5)).toBe('0/sec');
+  it('returns 0/s for zero or negative', () => {
+    expect(fmtRate(0)).toBe('0/s');
+    expect(fmtRate(-5)).toBe('0/s');
   });
 
   it('formats a small rate', () => {
-    expect(fmtRate(18)).toBe('+18.0/sec');
+    expect(fmtRate(18)).toBe('+18.0/s');
   });
 
   it('formats a K rate', () => {
-    expect(fmtRate(12_500)).toBe('+12.5K/sec');
+    expect(fmtRate(12_500)).toBe('+12.5K/s');
+  });
+
+  it('formats a large rate with SI suffix (§4.2 — no raw digits)', () => {
+    expect(fmtRate(127_097_600.7)).toBe('+127.10M/s');
   });
 });
 

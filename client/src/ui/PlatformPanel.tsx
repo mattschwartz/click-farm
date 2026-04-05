@@ -1,10 +1,6 @@
 // Platform panel — 3 cards with per-platform follower counts, top affinity
 // generators, and per-platform follower rate arrows (UX §7).
-//
-// Floating +N numbers rise briefly when followers tick into a platform —
-// per UX §7.2, this visualises cross-posting flow without drawing lines.
 
-import { useEffect, useRef, useState } from 'react';
 import type {
   GameState,
   GeneratorId,
@@ -19,7 +15,7 @@ import {
   PLATFORM_ORDER,
   topAffinityGenerators,
 } from './display.ts';
-import { fmtCompactInt } from './format.ts';
+import { fmtCompact, fmtCompactInt } from './format.ts';
 
 interface Props {
   state: GameState;
@@ -107,9 +103,6 @@ function PlatformCard({
   const def = staticData.platforms[id];
   const topAffinities = topAffinityGenerators(def.content_affinity, 3);
 
-  // Track follower gains for a floating +N indicator.
-  const floats = useFollowerFloats(followers);
-
   const style = {
     '--platform-accent': display.accent,
   } as React.CSSProperties;
@@ -134,7 +127,12 @@ function PlatformCard({
         <span className="platform-icon">{display.icon}</span>
         <span className="platform-name">{display.name}</span>
       </div>
-      <div className="platform-followers">{fmtCompactInt(followers)}</div>
+      <div className="platform-followers-row">
+        <span className="platform-followers">{fmtCompactInt(followers)}</span>
+        <span className={`platform-rate${ratePerSec > 0 ? ' gaining' : ''}`}>
+          {ratePerSec > 0 ? `▲ +${fmtCompact(ratePerSec)}/s` : '— stalled'}
+        </span>
+      </div>
       <div className="platform-sub-label">followers</div>
 
       <div className="affinity-row">
@@ -150,20 +148,6 @@ function PlatformCard({
         })}
       </div>
 
-      <div className={`rate-row${ratePerSec > 0 ? ' gaining' : ''}`}>
-        {ratePerSec > 0 ? '▲' : '—'}{' '}
-        {ratePerSec > 0 ? `+${ratePerSec.toFixed(1)}/s` : 'stalled'}
-      </div>
-
-      {floats.map((f) => (
-        <span
-          key={f.id}
-          className="float-number"
-          style={{ left: '50%', bottom: '10px', top: 'auto' }}
-        >
-          +{Math.max(1, Math.floor(f.value))}
-        </span>
-      ))}
     </div>
   );
 }
@@ -171,40 +155,6 @@ function PlatformCard({
 // ---------------------------------------------------------------------------
 // Hooks & helpers
 // ---------------------------------------------------------------------------
-
-interface FloatItem {
-  id: number;
-  value: number;
-}
-
-/**
- * Watches `followers` and emits floating-tick items when the value climbs
- * past the next integer boundary. Emits at most ~2 per second to avoid
- * visual spam — floats are semantic, not exact accounting.
- */
-function useFollowerFloats(followers: number): FloatItem[] {
-  const [floats, setFloats] = useState<FloatItem[]>([]);
-  const prev = useRef(followers);
-  const lastEmit = useRef(0);
-  const nextId = useRef(0);
-
-  useEffect(() => {
-    const delta = followers - prev.current;
-    prev.current = followers;
-    if (delta <= 0) return;
-    const now = Date.now();
-    if (now - lastEmit.current < 500) return;
-    if (delta < 1) return; // wait for a full follower to accrue
-    lastEmit.current = now;
-    const id = nextId.current++;
-    setFloats((prevFloats) => [...prevFloats, { id, value: delta }]);
-    window.setTimeout(() => {
-      setFloats((prevFloats) => prevFloats.filter((f) => f.id !== id));
-    }, 600);
-  }, [followers]);
-
-  return floats;
-}
 
 function computeHeaviestContributor(
   engagementRates: Partial<Record<GeneratorId, number>>,

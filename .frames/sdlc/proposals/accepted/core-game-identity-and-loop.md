@@ -1,6 +1,7 @@
 ---
 name: Core Game Identity & Loop
 description: Defines the fantasy, tone, core loop, progression arc, economy, and prestige mechanic for Click Farm as a satirical social media clicker game.
+created: 2026-04-04
 author: game-designer
 status: accepted
 reviewers: []
@@ -28,6 +29,8 @@ This proposal establishes the foundational design: the player fantasy, tone, cor
 - **Submission:** The satisfying trance of numbers climbing and systems humming — the reason clicker games work
 
 ### 2. Core Loop
+
+> **[EXTENDED by `proposals/accepted/manual-action-ladder.md` — 2026-04-05]** The "click to post" active input is extended into a **rotating ladder of content-medium verbs** (chirps → selfies → livestreams → podcasts → viral_stunts), each unlocked via engagement thresholds and independently Upgraded/Automated. The "auto-poster" is per-verb: each ladder rung gets its own automator that takes over that verb's cadence while the player's hand migrates to the next rung. The early-game beat reads as: "Tap Chirp. Watch engagement accumulate. Unlock Selfies. Automate Chirp so it runs on its own while your hand moves up the ladder." The three-beat structure below (Post → Engage → Grow) remains correct at the system level; the "Post" beat is now a menu of verbs rather than a single button. Historical text below preserved for context.
 
 The core loop has three beats:
 

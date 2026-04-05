@@ -1,6 +1,7 @@
 ---
 name: Algorithm Mood Visibility
 description: The algorithm mood background should be perceptible through content panels via screen-edge vignettes, with per-state edge colors derived for the light-mode base and panel opacity tuning deferred until contrast is verified across all states.
+created: 2026-04-05
 author: ux-designer
 status: implementation
 reviewers: []

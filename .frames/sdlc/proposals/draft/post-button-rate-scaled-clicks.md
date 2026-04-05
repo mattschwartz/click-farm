@@ -1,10 +1,14 @@
 ---
 name: Post Button Rate-Scaled Clicks
 description: Scales the Post button's click value as a fraction of current engagement rate, keeping the core verb alive across all progression stages.
+created: 2026-04-05
 author: game-designer
-status: draft
+status: superseded
+superseded_by: proposals/accepted/manual-action-ladder.md
 reviewers: [architect, engineer]
 ---
+
+> **[SUPERSEDED by `proposals/accepted/manual-action-ladder.md` — 2026-04-05]** This draft is superseded per manual-action-ladder OQ7 (game-designer + architect joint resolution). The ladder's fresh-calibration-per-verb story substantively solves what rate-scaled-clicks was reaching for: every verb the player taps is individually calibrated against its own Automate throughput via the `base_event_yield × base_event_rate` split, so "my click is meaningful" becomes structural rather than bolted-on. The rate-scaled approach would have introduced ladder-rank (or engagement-rate) as a load-bearing input to `postClick()`, coupling click-time logic to global state. The ladder's per-verb calibration is zero structural cost and narrative-coherent: every verb is a live instrument, not a decaying one. Document retained in draft/ for historical context. Do not review or advance.
 
 # Proposal: Post Button Rate-Scaled Clicks
 

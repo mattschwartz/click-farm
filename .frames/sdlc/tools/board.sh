@@ -152,10 +152,16 @@ json_summary() {
     $first || proposals_json+=","
     first=false
 
+    local created="$(fm_field "$f" "created")"
+    if [[ -z "$created" ]]; then
+      echo "Warning: proposal '$(basename "$f")' is missing required 'created' field" >&2
+    fi
+
     local prop='{'
     prop+="\"name\": \"$(json_escape "$name")\""
     prop+=", \"status\": \"$status\""
     prop+=", \"author\": \"$author\""
+    prop+=", \"created\": \"${created:-unknown}\""
 
     # reviewers array
     prop+=', "reviewers": ['
@@ -231,9 +237,12 @@ json_role() {
       local has_oq=false
       has_open_questions "$f" && has_oq=true
 
+      local created="$(fm_field "$f" "created")"
+
       local prop='{'
       prop+="\"name\": \"$(json_escape "$name")\""
       prop+=", \"status\": \"$status\""
+      prop+=", \"created\": \"${created:-unknown}\""
       prop+=', "reviewers": ['
       if [[ -n "$reviewers_raw" ]]; then
         local rfirst=true
@@ -337,8 +346,10 @@ pretty_summary() {
       local reviewers="$(fm_field "$f" "reviewers")"
       local reviewers_clean="$(echo "$reviewers" | tr -d '[]' | sed 's/,  */, /g')"
 
+      local created="$(fm_field "$f" "created")"
+
       printf "  %-10s %s\n" "$status" "$name"
-      printf "             author: %s" "$author"
+      printf "             author: %s  |  created: %s" "$author" "${created:-unknown}"
       if [[ -n "$reviewers_clean" && "$reviewers_clean" != "" ]]; then
         printf "  |  reviewing: %s" "$reviewers_clean"
       fi
@@ -413,9 +424,10 @@ pretty_role() {
     if [[ "$author" == "$role" ]]; then
       found=1
       local name="$(fm_field "$f" "name")"
+      local created="$(fm_field "$f" "created")"
       local reviewers="$(fm_field "$f" "reviewers" | tr -d '[]' | sed 's/,  */, /g')"
 
-      printf "  %-10s %s\n" "$status" "$name"
+      printf "  %-10s %s  (%s)\n" "$status" "$name" "${created:-unknown}"
       if [[ -n "$reviewers" && "$reviewers" != "" ]]; then
         echo "    Awaiting review from: $reviewers"
       fi

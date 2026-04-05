@@ -159,7 +159,7 @@ Polly's other thoughts on using vague directives intentionally
 - [observation] "Stop - I need to surface something" it says as it flags a real contradiction in what it's trying to do vs what is existing (there was an existing proposal it didn't expect and it was contradictory so it stopped what it was doing and raised it to the user)
 - [principle] if an agent is misuing a tool, then the tool is not capturing the agent's needs. understand its desire and update the tool to accommodate
 - [theory] with some tweaking, this could be a tool for creating quick POCs for someone like a PM. i don't even know how the code is structured right now and it doesn't matter. i can guide it with NL
-- 
+- [observation] sometimes i wonder if the AI work well with json sure but don't _prefer_ it? like, to work with it internally it seems they don't really like it cuz i keep seeing them formatting the tool and preferring --pretty-print over the json blob. idk why though
 
 SKills from polly
   1. "Capability packages with instructions and tools, loaded on-demand." — A skill is a bundle of a prompt (instructions) + tool access, packaged together. It's not loaded into the conversation until you actually

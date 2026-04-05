@@ -1,6 +1,7 @@
 ---
 name: Generator Level Growth Curves
 description: Resolves the runaway upgrade ROI that drives engagement to Infinity by restoring cost/reward parity, imposing a generator level cap, and adding a runtime safety clamp.
+created: 2026-04-05
 author: game-designer
 status: accepted
 reviewers: []

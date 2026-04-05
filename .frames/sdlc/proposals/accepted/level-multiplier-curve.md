@@ -1,6 +1,7 @@
 ---
 name: Level Multiplier Curve
 description: Defines the shape of level_multiplier(level) used in the generator engagement rate formula.
+created: 2026-04-04
 author: game-designer
 status: accepted
 reviewers: []

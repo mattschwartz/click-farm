@@ -1,6 +1,7 @@
 ---
 name: Large Number Notation Ladder
 description: Extend the compact-number suffix ladder past Dc and define an overflow policy so late-game values never surface as raw `1.41e+151` exponential.
+created: 2026-04-05
 author: architect
 status: draft
 reviewers: [architect]

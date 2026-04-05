@@ -1,6 +1,7 @@
 ---
 name: Gigs System
 description: Reframes the "brand deal" Actions-column member as the Gigs system — one slot, one cadence, with multiple data-defined variants (Brand Deal, Livestream, Convention) that share the mechanic but carry distinct payoff shapes and unlock tiers.
+created: 2026-04-05
 author: game-designer
 status: accepted
 reviewers: []

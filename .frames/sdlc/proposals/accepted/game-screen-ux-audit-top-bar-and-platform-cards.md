@@ -1,6 +1,7 @@
 ---
 name: Game Screen UX Audit — Top Bar, Platform Cards, Post Column
 description: Fix title/number collision, eliminate raw-digit bleed-through on platform cards, restore clout/follower parity, and resolve dead space in the Post column.
+created: 2026-04-05
 author: ux-designer
 status: accepted
 reviewers: []

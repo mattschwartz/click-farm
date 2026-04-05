@@ -1,6 +1,7 @@
 ---
 name: Scandals & Follower Loss
 description: Defines the event system for follower loss — triggers, magnitude, counterplay, and scaling — as a stretch goal that bolts onto the core loop.
+created: 2026-04-04
 author: game-designer
 status: accepted
 reviewers: []

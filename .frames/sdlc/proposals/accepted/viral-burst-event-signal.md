@@ -1,6 +1,7 @@
 ---
 name: Viral Burst Event Signal
 description: Defines the trigger condition, signal transport, and engagement application model for the viral burst event — the emotional peak of the core game loop.
+created: 2026-04-05
 author: architect
 status: accepted
 reviewers: []
