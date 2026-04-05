@@ -6,6 +6,31 @@ When you enter this frame, you will be assigned a role. To understand how to wor
 2. You MUST NOT read other roles' context files, because they contain behavioral instructions that conflict with yours and will cause you to act outside your domain
 3. You MUST begin your session by checking the locations listed in your role's and state's `required-context` files if present
 
+# Cooperation & Collaborative Behavior with Your Team
+
+You MUST ALWAYS refer to the list of roles available and their `knowledge-domain`, which lists what the role is an expert in, and their `excluded-knowledge`, which lists what the role is explicitly NOT an expert in.
+
+When you are faced with a question or problem that is outside your knowledge-domain or expertise and need the aid of a teammate, you MUST seek help from your teammates. If no matching role exists, you MUST raise the question to the user. DO NOT assume the answer if you do not know it because you will incur unnecessary harm to the user by introducing bugs or bad design decisions.
+
+## Raising questions
+
+Once you identify the agent that is required, you MUST do one of the following:
+1. If you have a small question that can be answered without follow-up questions or discussions, then spawn the agent as a subagent and directly ask your question to continue working. This option is PREFERRED ONLY for small questions. If you do not have the permissions to spawn a subagent, suggest that the user grant them for subsequent sessions and for now delegate the question to the user to find out for you.
+2. For larger questions and discussions, refer to the PROPOSALS instructions.
+3. If you are unsure, ALWAYS ask the user for guidance.
+
+## Creating work for other agents
+
+You will occasionally need other agents to help complete your task. You SHOULD rely on your team when necessary to deliver the best product for customers. To create work for another agent, you MUST use `.frames/sdlc/tools/task.sh add --role <target-role>` with a JSON body on stdin.
+
+This is an **asynchronous** process: that agent will not start working on that item until it is invoked by the user.
+
+When creating tasks:
+- The task MUST be wholly self-contained — the receiving agent needs to understand completely what needs to be done
+- Include ALL relevant files and references in `related_items` with a clear purpose for each
+- Acceptance criteria MUST include actionable output
+- If there are unknowns, list them in `open_questions` with the owner who can answer them
+
 # Project Artifacts
 
 Key locations for reference material:
@@ -122,30 +147,3 @@ bash .frames/sdlc/tools/task.sh complete <id>
 If you have more tasks assigned to you, first check the task's role, state, and complexity model. If your current role, state, or complexity model do not match precisely with the task's prescribed role, state, and complexity model, you MUST STOP and flag this to the user to determine how to continue.
 
 If you have no more tasks assigned to you, politely inform the user and suggest they start a new session and pick up with the next task and role.
-
----
-
-# Cooperation & Collaborative Behavior with Your Team
-
-You MUST ALWAYS refer to the list of roles available and their `knowledge-domain`, which lists what the role is an expert in, and their `excluded-knowledge`, which lists what the role is explicitly NOT an expert in.
-
-When you are faced with a question or problem that is outside your knowledge-domain or expertise and need the aid of a teammate, you MUST seek help from your teammates. If no matching role exists, you MUST raise the question to the user. DO NOT assume the answer if you do not know it because you will incur unnecessary harm to the user by introducing bugs or bad design decisions.
-
-## Raising questions
-
-Once you identify the agent that is required, you MUST do one of the following:
-1. If you have a small question that can be answered without follow-up questions or discussions, then spawn the agent as a subagent and directly ask your question to continue working. This option is PREFERRED ONLY for small questions. If you do not have the permissions to spawn a subagent, suggest that the user grant them for subsequent sessions and for now delegate the question to the user to find out for you.
-2. For larger questions and discussions, refer to the PROPOSALS instructions.
-3. If you are unsure, ALWAYS ask the user for guidance.
-
-## Creating work for other agents
-
-You will occasionally need other agents to help complete your task. You SHOULD rely on your team when necessary to deliver the best product for customers. To create work for another agent, use `.frames/sdlc/tools/task.sh add --role <target-role>` with a JSON body on stdin.
-
-This is an **asynchronous** process: that agent will not start working on that item until it is invoked by the user.
-
-When creating tasks:
-- The task MUST be wholly self-contained — the receiving agent needs to understand completely what needs to be done
-- Include ALL relevant files and references in `related_items` with a clear purpose for each
-- Acceptance criteria MUST include actionable output
-- If there are unknowns, list them in `open_questions` with the owner who can answer them
