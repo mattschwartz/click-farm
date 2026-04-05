@@ -33,7 +33,7 @@ states:
     exit: When the coding task has been completed and all relevant new tests have been added and all tests are passing.
     input: A clearly-defined coding task.
     output: The implementation of the coding task.
-    allowed-roles: [engineer]
+    allowed-roles: [ux-designer, engineer]
 
 roles:
   - name: game-designer
