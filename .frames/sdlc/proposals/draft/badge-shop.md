@@ -1,12 +1,12 @@
 ---
-name: Badge Shop
+name: Badge Pro Shop
 description: Cosmetic badges earned through gameplay milestones and claimed from a shop for a small clout fee — prestige through achievement, not purchase.
 author: game-designer
 status: draft
 reviewers: [architect, ux-designer]
 ---
 
-# Proposal: Badge Shop
+# Proposal: Badge Pro Shop
 
 ## Problem
 
@@ -97,6 +97,6 @@ Both are valid reasons to spend clout. A player with excess clout after upgrades
 
 1. **Milestone thresholds** — exact follower counts, rebrand counts, viral counts, etc. for each badge. **Owner: game-designer** (balance pass once progression curve is defined)
 2. **Badge names and copy** — satirical names fitting the game's tone. **Owner: game-designer** (creative pass — can happen in parallel with build)
-3. **How many badges at launch?** Too few and the collection feels thin. Too many and none feel special. **Owner: architect** (scoping question — what's buildable for a first pass?)
+3. **How many badges at launch?** ~~Too few and the collection feels thin. Too many and none feel special. **Owner: architect** (scoping question — what's buildable for a first pass?)~~ **[RESOLVED — architect, 2026-04-05]** 5 badges at launch. Enough for the collection to feel real without over-committing on milestone design before the progression curve is finalized.
 4. **Shop and collection screen design** — where does the shop live in the navigation? How are locked vs. claimed badges presented? How does the shine work visually? **Owner: ux-designer**
 5. **Badge visibility on the main screen** — does the player's most recently claimed or "featured" badge appear anywhere on the core game screen? **Owner: ux-designer**

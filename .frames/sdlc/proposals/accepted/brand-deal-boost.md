@@ -2,8 +2,8 @@
 name: Brand Deal Boost
 description: Defines the appearance, activation, duration, and economy integration of brand deals — a randomly-appearing, player-triggered engagement rate boost that rewards timed activation during viral bursts.
 author: game-designer
-status: draft
-reviewers: [architect]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Brand Deal Boost
@@ -97,8 +97,8 @@ Brand deals pass. The expiry creates urgency but not guilt — you missed an opp
 
 ## Open Questions
 
-1. **Follower unlock thresholds** — at what follower counts do brand deals unlock, and does the deal frequency or magnitude increase at higher tiers? **Owner: game-designer** (resolve in balance pass once progression milestones are defined)
-2. **Deal magnitude vs. viral burst magnitude** — should brand deal boost multiplier (3×) match, exceed, or fall below the viral burst multiplier (3–5×)? Starting symmetric but worth tuning once both are implemented. **Owner: game-designer** (balance pass)
+1. **Follower unlock thresholds** — at what follower counts do brand deals unlock, and does the deal frequency or magnitude increase at higher tiers? ~~Owner: game-designer (resolve in balance pass once progression milestones are defined)~~ **[RESOLVED — game-designer, 2026-04-05]** Both frequency and magnitude increase at higher follower tiers, but on a slower ramp than other scaling curves. Brands reward sustained growth, not just crossing a single gate. Specific threshold values and per-tier multipliers remain a balance pass item once the progression curve is finalized.
+2. **Deal magnitude vs. viral burst magnitude** — should brand deal boost multiplier (3×) match, exceed, or fall below the viral burst multiplier (3–5×)? ~~Starting symmetric but worth tuning once both are implemented. Owner: game-designer (balance pass)~~ **[RESOLVED — game-designer, 2026-04-05]** Brand deal boost should fall slightly below viral burst magnitude — still impressive, but clearly the lesser of the two peak moments. The viral burst is the ceiling; the deal is the strong but achievable floor. Starting value of 3× is a placeholder — tune down (toward ~2.5×) in balance pass once both are implemented and the compound feel can be validated.
 3. **Signal and state design** — how does active brand deal state live alongside `GameState.viralBurst`? Is a parallel `brandDeal.active` state the right model, and how does the driver expose the deal offer and activation callback? ~~Owner: architect~~ **[RESOLVED — game-designer, 2026-04-05]** Three sub-questions answered:
 
    **Offer vs. active state distinction:** Both phases must be first-class game state. The offer phase is not a UX detail — it is the decision window, and that window is the mechanic. If the offer lives only in the UI, the game engine cannot reason about it (for cooldown resets, future achievements, or any mechanic that cares whether an offer is currently live). The architect should model two distinct sub-states: `offer` (visible, untapped, expiry countdown running) and `active` (tapped, boost running). These are separate states — a player who taps immediately transitions from `offer` to `active`; a player who lets it expire transitions from `offer` to null with no active state ever entered.
@@ -144,3 +144,142 @@ When deal and viral are simultaneously active, the deal-active badge pulses gold
 A full brand deal card UX spec is required before the engineer builds this — card anatomy, positioning, appearance animation, the full activation choreography, and the deal-active badge spec. I will produce that spec as a follow-up task.
 
 This proposal has enough direction for the architect to design the state model (OQ3). The card spec can follow once OQ3 is resolved.
+
+---
+# Review: architect
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+The mechanic is structurally sound and maps cleanly onto the existing engine patterns from viral burst. OQ3 is answered — the full state model and driver contracts are specified below.
+
+---
+
+## State Model
+
+`GameState` gains a `brandDeal` field:
+
+```typescript
+interface BrandDealState {
+  /**
+   * Milliseconds remaining until the next offer spawns.
+   * Ticks down only when offer is null and active is null.
+   * Reset to a new random interval (drawn from StaticData.brandDeal) each time
+   * an offer is resolved — whether tapped or expired.
+   */
+  ms_until_next_offer: number;
+
+  /** Non-null when an offer is visible and awaiting player action. */
+  offer: BrandDealOffer | null;
+
+  /** Non-null while the deal boost is running. */
+  active: ActiveBrandDeal | null;
+}
+
+interface BrandDealOffer {
+  /** Epoch ms when the offer appeared. UI uses this to compute opacity for the expiry fade. */
+  appeared_at: number;
+  /** Epoch ms when the offer expires. Tick pipeline checks this each tick. */
+  expires_at: number;
+}
+
+interface ActiveBrandDeal {
+  /** Epoch ms when the deal was activated. */
+  start_time: number;
+  /** Total duration of the boost in ms. Snapshot from StaticData at activation time. */
+  duration_ms: number;
+  /** Engagement rate multiplier. Snapshot from StaticData at activation time. */
+  boost_multiplier: number;
+}
+```
+
+`offer` and `active` are mutually exclusive states. A player who taps transitions `offer → null, active → set`. A player who lets the offer expire transitions `offer → null` with `active` never set. The two fields cannot both be non-null.
+
+---
+
+## Driver Contract
+
+`GameDriver` gains two new members:
+
+```typescript
+/**
+ * Subscribe to brand deal offer events.
+ * Fires once per offer at the moment the offer spawns — before notify().
+ * Use this to trigger offer card entrance animation.
+ */
+onBrandDealOffer(listener: (offer: BrandDealOffer) => void): Unsubscribe;
+
+/**
+ * Activate the current brand deal offer (player tap).
+ * - If no offer is live: no-op.
+ * - If offer is live: transitions offer → null, active → set. Fires notify().
+ * Safe to call from UI event handlers between ticks — JS single-threaded; tick loop cannot interrupt.
+ */
+activateBrandDeal(): void;
+```
+
+The driver detects the `null → offer` transition after `tick()` returns and fires `onBrandDealOffer` listeners synchronously before calling `notify()`, matching the pattern established for `onViralBurst`.
+
+---
+
+## Tick Pipeline Changes
+
+New steps added after the existing viral burst steps (current step 12):
+
+```
+13. Brand deal — expiry check:
+    a. If brandDeal.offer is non-null AND now >= offer.expires_at:
+       → Clear offer. Reset ms_until_next_offer to random(intervalMsMin, intervalMsMax).
+    b. Else if brandDeal.active is non-null AND now >= active.start_time + active.duration_ms:
+       → Clear active. Reset ms_until_next_offer to random(intervalMsMin, intervalMsMax).
+
+14. Brand deal — countdown and spawn:
+    a. Evaluated only if offer is null AND active is null.
+    b. Subtract deltaMs from ms_until_next_offer.
+    c. If ms_until_next_offer <= 0 AND player.followers >= current unlock threshold:
+       → Set offer = { appeared_at: now, expires_at: now + expiryMs }.
+       → (Driver detects null → non-null transition and fires onBrandDealOffer before notify().)
+
+15. Brand deal — engagement boost:
+    a. Evaluated only if brandDeal.active is non-null.
+    b. Apply boost_multiplier to this tick's engagement delta before committing.
+    c. "Engagement delta this tick" at this step = base production + any viral burst bonus already added in step 11b.
+       The deal multiplier therefore applies to the post-viral total, producing:
+       base × viralMultiplier × dealMultiplier during compound moments — no special compound detection required.
+```
+
+**Engineering note on step 15:** The viral burst currently adds its bonus as an additive `bonus_rate_per_ms * deltaMs`. The brand deal multiplier must apply to the combined total (base + viral bonus), not to base alone. The simplest path: accumulate the tick's engagement delta in a local variable through steps 2 and 11b, then multiply that variable by `boost_multiplier` in step 15 before writing to `player.engagement`. The engineer should confirm whether this refactor fits within the current tick structure or propose an alternative contract-preserving approach.
+
+---
+
+## Follower Threshold Check
+
+Brand deals are gated behind `StaticData.brandDeal.unlockFollowerThresholds`. For launch, this is a single-element array. The tick pipeline checks `player.followers >= unlockFollowerThresholds[0]` before spawning an offer. If the threshold is not yet met, `ms_until_next_offer` continues counting down — once the threshold is crossed mid-countdown, the next offer spawns on schedule (no reset needed).
+
+The architecture accommodates future tiered variants (more frequent or more lucrative at higher follower counts) without structural changes — `unlockFollowerThresholds` is an array and the active tier is the highest threshold the player has crossed.
+
+---
+
+## Save Behavior
+
+| Field | Persisted? | Notes |
+|-------|-----------|-------|
+| `ms_until_next_offer` | Yes | Timer survives reload |
+| `offer` | No | Transient; re-spawns after countdown |
+| `active` | No | 20s boost; not worth restoring across reload |
+
+Adding `brandDeal` to `GameState` requires a save version bump. The engineer should bump `CURRENT_VERSION` from 2 → 3 and implement `migrateV2toV3` injecting `{ ms_until_next_offer: 0, offer: null, active: null }` as the default for pre-brandDeal saves. On `load()`, if a deserialized state has a non-null `offer` or `active`, clear them before returning to the driver.
+
+---
+
+## Summary of Code Changes
+
+| File | Change |
+|------|--------|
+| `types.ts` | Add `BrandDealState`, `BrandDealOffer`, `ActiveBrandDeal`; extend `GameState.brandDeal`; extend `StaticData.brandDeal` (already partially defined in proposal §6) |
+| `game-loop/index.ts` | Add steps 13–15 to `tick()`; export brand deal spawn/expiry logic as testable pure helpers; refactor engagement delta accumulation to support step 15 multiplier |
+| `driver/index.ts` | Add `onBrandDealOffer` and `activateBrandDeal` to `GameDriver` interface and `createDriver` implementation; detect `null → offer` transition after `tick()` |
+| `save/index.ts` | Bump version 2 → 3; implement `migrateV2toV3`; clear transient `offer` and `active` on load |
+| `static-data/` | Add remaining `brandDeal` fields (interval, expiry, unlock thresholds) alongside the fields already specified in §6 |
