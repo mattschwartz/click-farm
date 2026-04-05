@@ -78,7 +78,46 @@ Everything else stays in the warm neutral base. The hierarchy is: base → algor
 3. Cookie Clicker (Orteil, 2013) — reference for deadpan visual restraint amplifying absurd content
 4. Linear.app — reference for clean, airy light mode in an information-dense interface (structural reference only, not aesthetic)
 
+---
+# Review: game-designer
+
+**Date**: 2026-04-05
+**Decision**: Request for Comment
+
+**Comments**
+
+**Tonal direction — Aligned.** The "design as straight man" posture is correct for the satire. The core-identity proposal names Cookie Clicker as the primary genre reference, and Cookie Clicker's visual restraint is exactly what lets its absurd content (Grandmapocalypse, Sugar Lumps, eldritch prisms) land. Click Farm's joke — "the content never mattered, the algorithm did" — is funnier on a clean corporate-wellness surface than against a moody neon dashboard. A satirical clicker should look like the thing it is satirizing (polished influencer aesthetic, editorial cleanliness) so the numbers underneath feel absurd against their frame.
+
+Answering OQ1 directly: yes, the restrained base serves the tone. It does not risk reading "too straight-faced" — the straight face *is* the joke delivery mechanism. The amused-not-cynical register the core-identity proposal commits to (see Core Game Identity §1 Tone) requires the design to be the straight man and the content to be the comedian. Dark mode would tilt toward "cynical" — gritty, edgy, self-serious. Light mode stays "affectionate" — the content is absurd *to* a straight setting, not *of a piece with* it. That's the correct relationship.
+
+One tonal note to carry into the algorithm-state palette work (which this proposal correctly defers to `algorithm-mood-visibility`): the state accents should lean "magazine editorial" not "designer tool." Short-Form Surge as "energetic coral" is right; Engagement Bait Season as "hot pink / magenta" is right. Keep them saturated enough to read as *moods*, not as brand chrome. The base restraint earns you color intensity in the accents.
+
+**Structural conflict — not aligned on shipping as written.** This is why my decision is Request for Comment rather than Aligned.
+
+The accepted `proposals/accepted/algorithm-mood-visibility.md` is built against dark mode — it specifies dark mood edge vignettes (`#c45a10` 30% opacity, `#5a2080` 28% opacity, etc.) against `#0b0d12` base with `rgba(18, 21, 28, 0.82)` panels. The engineer is mid-flight on this direction. `corporate_takeover` is explicitly designed as "cool grey, barely-there at the periphery" — a mood signature that relies on the dark base for meaning.
+
+Adopting this proposal invalidates:
+- Every per-state edge-color value in `algorithm-mood-visibility`
+- The "Corporate Takeover = darkest / most muted" design logic (on light base, that state would invert to a cool pale wash, not darker)
+- Panel opacity calibration (`--panel-bg: rgba(18, 21, 28, 0.82)` is dark-mode opacity)
+- Likely pieces of `ux/core-game-screen.md` §4.2–4.4
+
+This proposal's "What This Locks In" section does not name this conflict. That's a significant omission — adopting it as written would strand an accepted proposal and in-flight engineer work without anyone formally reopening it.
+
+**What I think should happen next:**
+
+The user and ux-designer should decide whether this is:
+- **(a) A v1 pivot** — light mode is the right bet and we're committing to it before ship. Then `algorithm-mood-visibility` needs to be reopened, its mood colors re-derived for a light base, and panel opacity rethought. The engineer's in-flight dark-mode work pauses.
+- **(b) A v2 redesign** — dark mode ships as currently built, light mode becomes a post-launch repaint. Then this proposal gets a status flag ("deferred to v2") and sits until then.
+- **(c) Rejected** — dark mode is correct and this proposal is withdrawn.
+
+I lean toward (a) on pure aesthetic merit, but that's a ux-designer/user call, not mine. The tone direction is right either way; the conflict is about *when*.
+
+This proposal should resolve the new OQ3 (added above) before moving forward. I'm staying on reviewers until that question is answered.
+
 ## Open Questions
 
 1. Does the clean, restrained visual base serve the satirical tone the game-designer has in mind, or does it risk reading as too straight-faced? **Owner: game-designer**
+   - **[RESOLVED — game-designer, 2026-04-05]** Yes, it serves the tone well. The "design as straight man" posture is exactly right for the satire — Cookie Clicker's deadpan restraint is the correct reference. Absurdity lands harder against a polished, clean surface than against visual chaos. See review for detail.
 2. Should the warm base (`#FAF8F5`) shift slightly per algorithm state, or stay fixed while only the accent layer shifts? A shifting base is more immersive but adds implementation complexity. **Owner: ux-designer + engineer**
+3. **[NEW]** This proposal reverses the dark-mode direction already shipped in `proposals/accepted/algorithm-mood-visibility.md` — is this a v1 pivot (blocks/revises in-flight work) or a v2 redesign (ships after current dark-mode build lands)? See game-designer review for full impact analysis. **Owner: user + ux-designer**
