@@ -1,5 +1,5 @@
 {
-  "next_id": 45,
+  "next_id": 49,
   "tasks": [
     {
       "id": 1,
@@ -995,7 +995,7 @@
       "id": 44,
       "role": "architect",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Viral burst event signal — engine contract + trigger",
       "requester": "engineer",
@@ -1045,6 +1045,186 @@
           "owner": "architect"
         }
       ],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 45,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Prestige: Clout Shop modal & Rebrand Ceremony",
+      "requester": "engineer",
+      "complexity": "opus",
+      "overview": "The core game screen (task #29) is live but players currently have no way to purchase Clout upgrades — the spec intentionally keeps Clout off the core screen (§5.3), so Clout lives on the prestige surface. This task implements the two prestige surfaces defined in the UX spec: (1) the persistent Clout Shop modal accessible during a run via the Upgrades affordance, and (2) the theatrical 4-phase Rebrand Ceremony (Threshold → Eulogy → Commit → Dissolution→Rebirth, 6–10s). The underlying simulation — calculateRebrand, applyRebrand, purchaseCloutUpgrade, the clout_upgrades map — is already built (task #28). This task wires the UI to it.\n\nEntry points to add to the core game screen: an 'Upgrades' button that opens the shop modal, and a Rebrand affordance that replaces the minimal corner button already in place. The shop modal must not pause the running game (core-game-screen.md §7.4 — the ticker keeps moving). Post-rebrand re-entry is silent (§1 / §6) — no welcome modal.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/prestige-rebrand-screen.md",
+          "purpose": "Full UX spec for both surfaces: Clout Shop modal + Rebrand Ceremony choreography"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§5.3 defines Clout visibility rules; the corner Rebrand affordance lives here"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Upgrade roster, costs, and effect shapes — the shop's content"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "purchaseCloutUpgrade, calculateRebrand, applyRebrand, cloutForRebrand, cloutUpgradeCost — all simulation APIs already exist and are tested"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Host screen — add the Upgrades entry point and replace the minimal rebrand corner button with the full affordance"
+        },
+        {
+          "ref": "client/src/ui/useGame.ts",
+          "purpose": "Already exposes rebrand() and buyCloutUpgrade(id) — no new driver API needed"
+        }
+      ],
+      "acceptance_criteria": [
+        "Clout Shop modal renders with the upgrade roster per ux/prestige-rebrand-screen.md §2–§4, grouped and ordered as specified",
+        "Upgrades show current level, next cost, max level, and effect delta; disabled state is perceptible when player can't afford or is at max",
+        "Purchasing an upgrade spends Clout, updates the upgrade's level, and reflects in per-upgrade state with the spec's feedback motion",
+        "Game loop continues ticking behind the modal (not paused)",
+        "Rebrand Ceremony plays the 4 phases (Threshold → Eulogy → Commit → Dissolution→Rebirth) per §5, honoring the skip rule (Eulogy skippable after first rebrand)",
+        "Commit tap is irreversible with no second confirmation (§7 / spec decision #7)",
+        "Post-rebrand: main screen returns in cleared state, no welcome modal (§6)",
+        "Core game screen's minimal corner Rebrand button is replaced by the spec's affordance, with Clout balance visible on the Upgrades button and Clout-on-rebrand preview on the Rebrand affordance (§5.3 extension)"
+      ],
+      "open_questions": [
+        {
+          "question": "Does the ceremony need sound/audio to hit the emotional arc, and should it block on audio asset availability?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 46,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Generator upgrade drawer",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "The core game screen currently exposes generator level-ups via a terse inline 'Lvl ↑' button with cost in a tooltip. The UX spec calls for a proper drawer that opens when the player taps the upgrade affordance — showing the current level, next 3 levels, per-level costs, and rate deltas. This is the surface the player uses to commit to level upgrades thoughtfully rather than reflexively. Replaces the inline Lvl ↑ affordance on generator rows.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/upgrade-curve-drawer-spec.md",
+          "purpose": "Full UX spec for the drawer — layout, content, interaction states, motion"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§6.3 gestures at this drawer; this task replaces the inline Lvl ↑ button with it"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Host component — the row currently renders the inline button that this task replaces"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "levelMultiplier formula (2^(L²/5)) — needed for computing rate deltas across next 3 levels"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "generatorUpgradeCost — needed for per-level cost display"
+        }
+      ],
+      "acceptance_criteria": [
+        "Tapping a generator row's upgrade affordance opens the drawer per ux/upgrade-curve-drawer-spec.md",
+        "Drawer shows current level, next 3 levels, per-level costs, and rate delta per level",
+        "Confirming an upgrade in the drawer spends engagement, updates the generator's level, triggers the spec's feedback motion, and keeps the drawer open for potential further upgrades",
+        "Insufficient-engagement state is shown per spec (not hidden)",
+        "Drawer dismisses on outside-tap or explicit close; game loop keeps ticking behind it"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 47,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Purchase feedback & rate visibility sharpening",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "The core game screen is functional but a specific feel gap exists: purchases feel imperceptible, rate is under-surfaced, generators don't clearly communicate 'I'm running'. The Purchase Feedback & Rate Visibility UX spec sharpens these patterns as extensions to the existing core screen — it does not replace core-game-screen.md, it intensifies it. Key decisions in the spec: promote rate to full P0 weight alongside the count, add per-generator 'running' state indicators, and give purchase moments stronger feedback (visual delta on the rate, pulse choreography, etc).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/purchase-feedback-and-rate-visibility.md",
+          "purpose": "Full UX spec"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "The surface being sharpened — this task extends §§5, 6, 8 rather than replacing them"
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "Engagement + rate display lives here; rate promotion to P0 lands here"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Per-generator 'running' state indicator + purchase-moment feedback lands here"
+        },
+        {
+          "ref": "client/src/ui/PostZone.tsx",
+          "purpose": "Click feedback; align with the sharpened feedback language"
+        }
+      ],
+      "acceptance_criteria": [
+        "Engagement rate is promoted to P0 weight per the spec — visible alongside count, not deferred as sub-label",
+        "Each owned generator row shows a 'running' state indicator per the spec",
+        "Purchase and upgrade moments carry the sharpened feedback choreography (pulse, rate-delta flash, etc) per the spec",
+        "Click-to-post feedback is consistent with the sharpened language"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 48,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Settings screen modal",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "A low-emotional-bar utility surface: Reduce Motion toggle, audio toggles, save management (export/import/reset). Reduce Motion has real accessibility weight and must propagate into the game's motion language — viral cascade, algorithm background drift, instability intensification, shift transitions, click feedback, and ceremony all respect it. Settings is a modal layered over the running game, matching the Clout Shop surface grammar.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/settings-screen.md",
+          "purpose": "Full UX spec for the modal"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§12 specifies Reduce Motion expectations on this surface"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Host screen — add the Settings entry point and propagate reduce-motion state"
+        },
+        {
+          "ref": "client/src/ui/AlgorithmBackground.tsx",
+          "purpose": "Motion surface that Reduce Motion disables/replaces"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Save module — needed for export/import/reset"
+        }
+      ],
+      "acceptance_criteria": [
+        "Settings modal opens from an entry point on the core game screen; game keeps ticking behind it",
+        "Reduce Motion toggle persists and is read by all motion surfaces: algorithm background, instability intensification, shift transitions, click/purchase feedback, viral cascade, ceremony",
+        "Audio toggles persist (even if audio pipeline is not yet wired — the toggle state persists for future use)",
+        "Save management: export save to clipboard/file, import save from clipboard/file, reset save with a clear destructive-action confirmation",
+        "Settings state is persisted in localStorage alongside the save"
+      ],
+      "open_questions": [],
       "blocked_on": []
     }
   ]
