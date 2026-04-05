@@ -11,9 +11,13 @@ const CURRENT_VERSION = 1;
 // Public API
 // ---------------------------------------------------------------------------
 
-/** Serialize game state to localStorage. Updates player.last_close_time. */
-export function save(state: GameState): void {
-  const now = Date.now();
+/**
+ * Serialize game state to localStorage. Updates player.last_close_time.
+ * `now` is injectable so the driver can stamp close time from its own clock
+ * (keeps save time consistent with driver.now() for offline calc). Defaults
+ * to Date.now().
+ */
+export function save(state: GameState, now: number = Date.now()): void {
   const stateWithClose: GameState = {
     ...state,
     player: {

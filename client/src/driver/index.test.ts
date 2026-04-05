@@ -240,6 +240,103 @@ describe('driver — persistence', () => {
     expect(driverB.getState().player.engagement).toBe(savedEngagement);
   });
 
+  it('exposes null offline result when no save exists', () => {
+    const s = makeFakeScheduler();
+    const driver = createDriver({
+      staticData: STATIC_DATA,
+      now: s.now,
+      setInterval: s.setInterval,
+      clearInterval: s.clearInterval,
+    });
+    expect(driver.getOfflineResult()).toBeNull();
+  });
+
+  it('computes offline result when loaded from save with a later openTime', () => {
+    // Session A: create state, play a bit, save at time T0.
+    let t = 1_000_000;
+    const sA = { now: () => t, setInterval: () => 0, clearInterval: () => {} };
+    const driverA = createDriver({
+      staticData: STATIC_DATA,
+      ...sA,
+    });
+    driverA.step(1);                       // unlock selfies
+    for (let i = 0; i < 30; i++) driverA.click();
+    driverA.buy('selfies');
+    // Tick once so there's a rate to persist in the snapshot.
+    t += 1000;
+    driverA.step(1000);
+    driverA.saveNow();                     // save stamps last_close_time = t
+    const closeTime = driverA.getState().player.last_close_time;
+    expect(closeTime).toBe(t);
+
+    // Session B: open 10 minutes later — should trigger offline calc.
+    t += 10 * 60 * 1000;
+    const driverB = createDriver({
+      staticData: STATIC_DATA,
+      now: () => t,
+      setInterval: () => 0,
+      clearInterval: () => {},
+    });
+    const result = driverB.getOfflineResult();
+    expect(result).not.toBeNull();
+    expect(result!.durationMs).toBe(10 * 60 * 1000);
+    expect(result!.engagementGained).toBeGreaterThan(0);
+    expect(result!.totalFollowersGained).toBeGreaterThan(0);
+    // Algorithm should have shifted at least once (base interval 5 min).
+    expect(result!.algorithmAdvances).toBeGreaterThanOrEqual(1);
+
+    // State reflects the offline application.
+    expect(driverB.getState().player.engagement).toBeGreaterThan(
+      driverA.getState().player.engagement,
+    );
+    expect(driverB.getState().player.last_close_time).toBe(t);
+  });
+
+  it('clearOfflineResult resets the stored result to null', () => {
+    let t = 1_000_000;
+    const driverA = createDriver({
+      staticData: STATIC_DATA,
+      now: () => t,
+      setInterval: () => 0,
+      clearInterval: () => {},
+    });
+    driverA.step(1);
+    for (let i = 0; i < 30; i++) driverA.click();
+    driverA.buy('selfies');
+    driverA.saveNow();
+
+    t += 60_000;
+    const driverB = createDriver({
+      staticData: STATIC_DATA,
+      now: () => t,
+      setInterval: () => 0,
+      clearInterval: () => {},
+    });
+    expect(driverB.getOfflineResult()).not.toBeNull();
+    driverB.clearOfflineResult();
+    expect(driverB.getOfflineResult()).toBeNull();
+  });
+
+  it('does not compute offline result when openTime <= closeTime', () => {
+    const t = 1_000_000;
+    const driverA = createDriver({
+      staticData: STATIC_DATA,
+      now: () => t,
+      setInterval: () => 0,
+      clearInterval: () => {},
+    });
+    driverA.click();
+    driverA.saveNow();
+    // Reopen at the same time.
+    const driverB = createDriver({
+      staticData: STATIC_DATA,
+      now: () => t,
+      setInterval: () => 0,
+      clearInterval: () => {},
+    });
+    expect(driverB.getOfflineResult()).toBeNull();
+  });
+
   it('does not write to storage when persistToStorage is false', () => {
     const s = makeFakeScheduler();
     const driver = createDriver({

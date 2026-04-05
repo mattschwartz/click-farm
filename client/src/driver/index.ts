@@ -16,6 +16,7 @@ import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
 import { buyGenerator, upgradeGenerator } from '../generator/index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { load, save } from '../save/index.ts';
+import { calculateOffline, type OfflineResult } from '../offline/index.ts';
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -65,6 +66,14 @@ export interface GameDriver {
   stop(): void;
   /** Start the tick + auto-save timers. Idempotent. */
   start(): void;
+  /**
+   * Returns the offline result computed when the driver was created, or null
+   * if the driver was not loaded from a save, this is the first session, or
+   * the result has been dismissed via clearOfflineResult.
+   */
+  getOfflineResult(): OfflineResult | null;
+  /** Clear the stored offline result (e.g. after the UI shows it). */
+  clearOfflineResult(): void;
 }
 
 // ---------------------------------------------------------------------------
@@ -94,11 +103,29 @@ export function createDriver(options: DriverOptions): GameDriver {
   } = options;
 
   // Load from storage or create initial state.
+  let offlineResult: OfflineResult | null = null;
   let state: GameState = (() => {
     if (loadFromStorage) {
       try {
         const loaded = load();
-        if (loaded) return loaded;
+        if (loaded) {
+          // Apply offline gains if the save has a last_close_time and we're
+          // opening later than that. Skip if no close time (first session
+          // of this save) or if the clock has run backwards.
+          const closeTime = loaded.player.last_close_time;
+          const openTime = now();
+          if (closeTime !== null && openTime > closeTime) {
+            const { result, newState } = calculateOffline(
+              loaded,
+              closeTime,
+              openTime,
+              staticData,
+            );
+            offlineResult = result;
+            return newState;
+          }
+          return loaded;
+        }
       } catch {
         // Fall through to initial state — corrupt save shouldn't block play.
       }
@@ -131,18 +158,24 @@ export function createDriver(options: DriverOptions): GameDriver {
   function doSave(): void {
     if (!persistToStorage) return;
     // Update last_close_state snapshot from current rates before saving so
-    // offline calc has fresh data on next open.
+    // offline calc has fresh data on next open. Also stamp last_close_time
+    // from the driver's clock so it matches what save() serialises.
+    const t = now();
     const snapshot = computeSnapshot(state, staticData);
     const withSnapshot: GameState = {
       ...state,
-      player: { ...state.player, last_close_state: snapshot },
+      player: {
+        ...state.player,
+        last_close_state: snapshot,
+        last_close_time: t,
+      },
     };
-    // Don't go through applyState here — last_close_state changes on save
-    // shouldn't re-render the UI (nothing renders it), but keep local state
+    // Don't go through applyState here — last_close_state / last_close_time
+    // changes on save shouldn't re-render the UI, but keep local state
     // consistent so the next save reflects it.
     state = withSnapshot;
     try {
-      save(state);
+      save(state, t);
     } catch {
       // Swallow storage errors silently — game remains playable in memory.
       // TODO(engineer): surface a soft warning to the UI when quota is hit.
@@ -202,6 +235,11 @@ export function createDriver(options: DriverOptions): GameDriver {
         clearIntervalImpl(saveHandle);
         saveHandle = null;
       }
+    },
+
+    getOfflineResult: () => offlineResult,
+    clearOfflineResult: () => {
+      offlineResult = null;
     },
   };
 }

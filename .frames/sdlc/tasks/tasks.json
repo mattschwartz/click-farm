@@ -1,5 +1,5 @@
 {
-  "next_id": 40,
+  "next_id": 43,
   "tasks": [
     {
       "id": 1,
@@ -431,7 +431,7 @@
       "alias": "E8",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Offline Calculation",
       "requester": "architect",
@@ -456,7 +456,8 @@
         "Tests verify offline calculation accuracy for various durations and algorithm state configurations"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 28,
@@ -762,7 +763,7 @@
       "id": 37,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Prestige / Rebrand Screen Spec",
       "requester": "ux-designer",
@@ -792,7 +793,8 @@
         "Accessibility requirements met per role standards"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 38,
@@ -849,6 +851,107 @@
       ],
       "open_questions": [],
       "blocked_on": []
+    },
+    {
+      "id": 40,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Purchase Feedback & Rate Visibility",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Every button press in the game — buying generators, purchasing upgrades — feels imperceptible. The player can't tell if anything happened.\n\nThis has been verified by directly observing the running game at localhost:5173. The economy is working correctly — one selfies generator produces ~6.8 engagement/sec passively, which is meaningful. But the UI is completely silent: no rate indicator, no button feedback, no animation on numbers, no indication that a generator is running after purchase.\n\nThe root cause is a visibility problem: the player watches a raw total accumulate with no rate surfaced, so they can never perceive that their rate changed. The numbers are fine. This is a pure UX problem.\n\nSpecific gaps observed:\n- No rate indicator (e.g. +6.8/sec) anywhere in the UI\n- No visual feedback on Buy or Post Content button press\n- Stat numbers silently increment with no tick animation\n- Generator row looks identical before and after purchase — nothing signals it is running",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Core game feel target — what the player experience is supposed to be"
+        }
+      ],
+      "acceptance_criteria": [
+        "Spec where and how the current engagement rate (+X/sec) is displayed — it must be prominent enough to read at a glance",
+        "Spec how the rate display reacts at the moment of purchase — the player must be able to see the delta without reading a number carefully (e.g. the rate jumps, flashes, or animates)",
+        "Spec button feedback on Buy and Post Content — press state, confirmation flash, or equivalent",
+        "Spec how a generator row communicates 'this is actively running' after purchase",
+        "The target feeling at purchase is: 'Something just changed. I did that. I can see it working.'"
+      ],
+      "open_questions": [
+        {
+          "question": "If the UX treatment doesn't resolve the feel problem, the numbers themselves may need tuning — game-designer should revisit the upgrade delta curve after this ships.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 41,
+      "role": "architect",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Review: Clout Upgrade Menu & Costs",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The Clout Upgrade Menu & Costs proposal is ready for architect review. It defines the full permanent meta-upgrade menu purchased with Clout — the prestige currency. Review from an architectural standpoint: data model fit, static data structure, and the post-prestige generator unlock wiring question.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/clout-upgrade-menu.md",
+          "purpose": "The proposal to review. You are listed as a reviewer in the frontmatter."
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "CloutUpgrade data model and UpgradeEffect tagged union — the contracts this proposal must fit within."
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-to-follower-scaling-curve.md",
+          "purpose": "Companion proposal — confirms divisor 10 and Clout supply curve."
+        }
+      ],
+      "acceptance_criteria": [
+        "Review the proposal per the review state behavior (states/review.md)",
+        "Confirm or raise concerns on: CloutUpgrade cost[] array shape fits the tiered costs defined; UpgradeEffect tagged union covers all upgrade types in the menu; post-prestige generator unlock_threshold: 0 wiring is correct (game-designer flagged this as needing architect confirmation)",
+        "Append your review to the proposal file and update frontmatter",
+        "Commit the updated proposal file"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 42,
+      "role": "engineer",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Review: Clout Upgrade Menu & Costs",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The Clout Upgrade Menu & Costs proposal is ready for engineer review. It defines the full permanent meta-upgrade menu purchased with Clout, including post-prestige generator stats and the upgrade cost table. Review from an implementation standpoint: are the upgrade effects implementable as defined, are the stat values well-specified, and are there any edge cases or ambiguities that would cause a silent implementation assumption.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/clout-upgrade-menu.md",
+          "purpose": "The proposal to review. You are listed as a reviewer in the frontmatter."
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "CloutUpgrade data model, UpgradeEffect tagged union, Generator data model — the contracts this proposal must implement against."
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "Defines levelMultiplier() — relevant to post-prestige generator upgrade cost scaling."
+        }
+      ],
+      "acceptance_criteria": [
+        "Review the proposal per the review state behavior (states/review.md)",
+        "Confirm all UpgradeEffect types in the menu are implementable against the existing tagged union; flag any missing effect types",
+        "Confirm post-prestige generator stats (base_engagement_rate as multiplier relative to Viral Stunts, follower_conversion_rate, trend_sensitivity) are well-specified enough to implement without ambiguity",
+        "Flag any implementation concerns on the Engagement Boost stacking model (cumulative multiplier across levels)",
+        "Append your review to the proposal file and update frontmatter",
+        "Commit the updated proposal file"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        41
+      ]
     }
   ]
 }

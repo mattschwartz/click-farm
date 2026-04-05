@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { GameState, GeneratorId } from '../types.ts';
 import { createDriver } from '../driver/index.ts';
+import type { OfflineResult } from '../offline/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 export interface UseGameResult {
@@ -14,6 +15,10 @@ export interface UseGameResult {
   buy: (id: GeneratorId) => void;
   upgrade: (id: GeneratorId) => void;
   saveNow: () => void;
+  /** Offline gains captured at driver creation, if any. */
+  offlineResult: OfflineResult | null;
+  /** Dismiss the offline-gains banner. */
+  clearOfflineResult: () => void;
 }
 
 /**
@@ -29,6 +34,11 @@ export function useGame(): UseGameResult {
   // stable per-component singleton — it runs exactly once and the driver
   // reference is safe to read during render.
   const [driver] = useState(() => createDriver({ staticData: STATIC_DATA }));
+  // Offline result is captured once at driver creation. We keep it in local
+  // React state so dismissing it causes a re-render.
+  const [offlineResult, setOfflineResult] = useState<OfflineResult | null>(
+    () => driver.getOfflineResult(),
+  );
 
   // Start/stop the timers with the component lifecycle. Also persist on page
   // hide (beforeunload fires unreliably on mobile; visibilitychange is the
@@ -66,9 +76,13 @@ export function useGame(): UseGameResult {
       buy: (id: GeneratorId) => driver.buy(id),
       upgrade: (id: GeneratorId) => driver.upgrade(id),
       saveNow: () => driver.saveNow(),
+      clearOfflineResult: () => {
+        driver.clearOfflineResult();
+        setOfflineResult(null);
+      },
     }),
     [driver],
   );
 
-  return { state, ...actions };
+  return { state, offlineResult, ...actions };
 }

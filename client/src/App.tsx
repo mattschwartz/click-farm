@@ -36,8 +36,19 @@ function fmtInt(n: number): string {
   return Math.floor(n).toLocaleString();
 }
 
+function fmtDuration(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ${s % 60}s`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ${m % 60}m`;
+  const d = Math.floor(h / 24);
+  return `${d}d ${h % 24}h`;
+}
+
 function App() {
-  const { state, click, buy, upgrade } = useGame();
+  const { state, click, buy, upgrade, offlineResult, clearOfflineResult } = useGame();
 
   return (
     <main style={{ fontFamily: 'system-ui, sans-serif', padding: 16, maxWidth: 960, margin: '0 auto' }}>
@@ -45,6 +56,30 @@ function App() {
       <p style={{ marginTop: 0, opacity: 0.7, fontSize: 12 }}>
         E7 integration harness. Not the final UI.
       </p>
+
+      {/* Offline gains banner --------------------------------------------- */}
+      {offlineResult && offlineResult.durationMs > 0 && (
+        <section style={{
+          padding: 12,
+          marginBottom: 16,
+          border: '1px solid #5aa',
+          borderRadius: 4,
+          background: '#f0ffff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+        }}>
+          <div style={{ fontSize: 14 }}>
+            <strong>Welcome back.</strong> Away for {fmtDuration(offlineResult.durationMs)}.
+            {' '}Gained <strong>{fmt(offlineResult.engagementGained)}</strong> engagement
+            {' '}and <strong>{fmtInt(offlineResult.totalFollowersGained)}</strong> followers
+            {offlineResult.algorithmAdvances > 0
+              && ` (${offlineResult.algorithmAdvances} algorithm shifts)`}.
+          </div>
+          <button onClick={clearOfflineResult} style={{ cursor: 'pointer' }}>Dismiss</button>
+        </section>
+      )}
 
       {/* Currencies ---------------------------------------------------- */}
       <section style={{ display: 'flex', gap: 24, padding: 12, border: '1px solid #ccc', borderRadius: 4, marginBottom: 16 }}>
