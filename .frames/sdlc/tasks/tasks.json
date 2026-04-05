@@ -1,5 +1,5 @@
 {
-  "next_id": 106,
+  "next_id": 111,
   "tasks": [
     {
       "id": 1,
@@ -3783,6 +3783,279 @@
       "blocked_on": [
         103,
         104
+      ]
+    },
+    {
+      "id": 106,
+      "alias": "UX1",
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Derive light-mode accent palette (gold/green/amber/red/platinum on warm-white base)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The functional accent palette (--accent-gold, --accent-green, --accent-amber, --accent-red, --accent-platinum, --accent-platinum-deep) was derived for a dark base (#0b0d12) and its current values (e.g. #5fd692 green, #ffd66b gold) will not meet WCAG AA or read as confident affordance signals on the warm near-white base (#FAF8F5) / white panels (#FFFFFF) committed in visual-identity-light-mode.\n\nNeither visual-identity-light-mode nor algorithm-mood-visibility specifies light-mode values for this palette. These are functional state signals, not decoration: gold = ready-to-buy, amber = armed/penalty, green = boost/success, red = danger, platinum = maxed tier. The semantic meaning must survive the base flip.\n\nProduce a palette addendum (either a revision section on visual-identity-light-mode.md or a small new companion spec) giving concrete hex values for each slot, with rationale and contrast compliance notes.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "the light-mode base palette and text/border values these accents must harmonize with"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "the edge-vignette accent colors per algorithm state — new accents must not collide with any of the five mood edge hues"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "current dark-mode accent token definitions (lines 17–25) and every usage site — shows what these accents are used for (rate flares, modifier chips, scandal signal, border pulses, maxed plaques)"
+        },
+        {
+          "ref": ".frames/sdlc/ux/generator-max-level-state.md",
+          "purpose": "platinum as 'tier above gold' semantic constraint — cool-temperature, never competes with warm affordance signals"
+        }
+      ],
+      "acceptance_criteria": [
+        "Hex values specified for all six slots: accent-gold, accent-green, accent-amber, accent-red, accent-platinum, accent-platinum-deep",
+        "Each value passes WCAG 2.1 AA contrast against #FFFFFF (white panel surface): 4.5:1 if used as text, 3:1 if used as UI chrome (borders/icons/chips) — note which target applies per slot",
+        "Each value has a one-line rationale connecting its hue/saturation to its functional semantic (ready / armed / boost / danger / maxed)",
+        "Palette is checked against the five algorithm-mood edge hues (#E87B3C, #4F8A7A, #D63A82, #7A4FA8, #8A95A8) — no accent should be confusable with a mood edge color at a glance",
+        "Platinum slot preserves 'cool temperature, tier above gold' constraint from generator-max-level-state.md",
+        "Output committed as either a revision section on proposals/accepted/visual-identity-light-mode.md or a new companion spec at .frames/sdlc/ux/accent-palette-light-mode.md"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 107,
+      "alias": "A1",
+      "role": "architect",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Architecture spec: light-mode theming token system and vignette layer contract",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The codebase currently uses ad-hoc CSS custom properties declared in :root inside client/src/ui/GameScreen.css (--bg-base, --panel-bg, --panel-border, --text-p0..p3, --accent-*). There is no named token system, no semantic layer, and no structural place for per-state mood-edge colors or a vignette layer binding.\n\nThe light-mode flip is the right moment to formalize this. This spec defines the token structure the engineer will implement against. It is a small architecture doc (1–2 pages), not a grand theming framework — its scope is exactly what visual-identity-light-mode and algorithm-mood-visibility require, plus the minimum structure that keeps a dark-mode v2 retrofit from being surgery.\n\nThe spec MUST answer:\n- Token taxonomy: semantic names (--surface-canvas, --surface-panel, --text-primary, --text-secondary, --text-receded, --border-default, --accent-*) vs. raw values; which tier of token GameScreen.css and components reference\n- Token location: index.css vs GameScreen.css vs a new theme module — and why\n- Mood-edge token binding: how --mood-color-edge is set per algorithm state (data attribute on root, CSS class, React style prop). Must integrate with existing AlgorithmBackground.tsx which already computes instabilityFactor and will drive viral burst state.\n- Vignette layer contract: the DOM contract for the second <div> inside AlgorithmBackground per algorithm-mood-visibility OQ1 resolution — what props it takes, what CSS it renders, how 400ms crossfade + instability opacity scaling + viral burst 3-phase state machine are distributed between React and CSS\n- Dark-mode v2 inversion points: name which tokens would swap and which would stay, so a future theme flip is a token-file swap, not a component rewrite. No implementation required — just name the seam.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "base palette hex values this token system must express"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "mood-edge color tokens, vignette layer mechanism, viral burst state machine, OQ1 resolution on second-div vs pseudo-element"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "current ad-hoc :root token definitions (lines 9–26) — what's being replaced"
+        },
+        {
+          "ref": "client/src/ui/AlgorithmBackground.tsx",
+          "purpose": "existing component that will host the vignette layer; already computes instabilityFactor"
+        },
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "ALGORITHM_MOOD record (lines 202–241) — currently carries per-state background gradients that will be replaced with moodColorEdge tokens"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "project architecture conventions and existing spec structure to match"
+        }
+      ],
+      "acceptance_criteria": [
+        "Architecture spec written to .frames/sdlc/architecture/visual-theming.md",
+        "Spec follows the architect doc structure: Scope, Data model (here: token taxonomy), Interface contracts (vignette layer DOM/prop contract), Coupling analysis (component → token dependencies and inversion points for dark-mode retrofit), Open questions, Assumptions",
+        "Token taxonomy names every token slot needed by visual-identity-light-mode + algorithm-mood-visibility, with semantic naming",
+        "Vignette layer DOM/prop contract is specific enough that the engineer can implement without further design calls",
+        "Dark-mode v2 inversion points explicitly named (which tokens swap, which stay fixed)",
+        "Open questions surfaced for any point where engineer implementation constraints might conflict"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 108,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Implement light-mode base tokens and apply across GameScreen.css",
+      "requester": "architect",
+      "complexity": "opus",
+      "overview": "Replace the dark-mode token system in GameScreen.css with the light-mode token system per the theming architecture spec (A1) and the re-derived accent palette (UX1).\n\nThis is the core visual flip. Base becomes #FAF8F5, panels become #FFFFFF, text flips from white overlays to #1A1A1A / #6B6B6B per visual-identity-light-mode §1. Every rgba(255,255,255,X) overlay and every hex literal in GameScreen.css must either (a) be routed through the new token system or (b) be verified as intentionally local.\n\nThis is ~2900 lines of CSS with ~198 color literals. Expect a full session. Do not rush the animations: rate-flare pulses, border-pulse keyframes, and count-pulse animations currently assume light-on-dark and must be re-verified frame-by-frame on the new surfaces. Hover/pressed states (currently rgba(255,255,255,0.04/0.09/0.10)) need dark-on-light equivalents that still read as feedback.\n\nOut of scope: modals (RebrandCeremonyModal, CloutShopModal, SettingsModal, OfflineGainsModal), GeneratorList.tsx inline colors, App.tsx, DebugApp.tsx — those are E3's remit. The AlgorithmBackground vignette layer is E2's remit.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/visual-theming.md",
+          "purpose": "token taxonomy and structure this task implements (created by A1)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "base palette hex values (#FAF8F5, #FFFFFF, #1A1A1A, #6B6B6B, #E8E4DF)"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "the file to refactor"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.test.ts",
+          "purpose": "may contain snapshot/style assertions that need updating"
+        }
+      ],
+      "acceptance_criteria": [
+        "CSS custom properties in :root match the token taxonomy defined in architecture/visual-theming.md",
+        "Base surface is #FAF8F5, panel surface is #FFFFFF, primary text is #1A1A1A, secondary text is #6B6B6B, borders are #E8E4DF — or whatever UX1 specifies for accents",
+        "No inline hex or rgba() color literals remain in GameScreen.css except as token values — all usage sites reference tokens",
+        "Hover, pressed, focus, and disabled states are verified to still read as state feedback on the new surfaces",
+        "All keyframe animations (rate-flare-*, count-pulse, border-pulse, gold-border-pulse, etc.) verified visually against white panels — colors updated where previous values were chosen for dark context",
+        "All existing tests pass (yarn test / vitest)",
+        "Manual visual check: GameScreen renders, all five algorithm states load without visual regression beyond the intentional base flip, no illegible text found"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        106,
+        107
+      ]
+    },
+    {
+      "id": 109,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Add edge vignette layer to AlgorithmBackground; migrate ALGORITHM_MOOD from per-state gradients to edge tokens",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the screen-edge mood vignette per algorithm-mood-visibility Phase 1. Add a second <div> layer inside client/src/ui/AlgorithmBackground.tsx (per OQ1 resolution) that renders the radial-gradient edge wash using the --mood-color-edge token corresponding to the current algorithm state.\n\nAlso: remove the per-state linear-gradient backgrounds from ALGORITHM_MOOD in display.ts (lines 205–237). Per the reconciled ux/core-game-screen.md §4.2, the base is fixed across all states (#FAF8F5, the token --surface-canvas from E1's work) — per-state backgrounds no longer exist. Each ALGORITHM_MOOD entry keeps name, cycleSeconds, tagline, and gains a moodColorEdge field (hex + opacity) per algorithm-mood-visibility's table.\n\nVignette behavior required per algorithm-mood-visibility:\n- 400ms crossfade between mood edge colors on algorithm shift (matches §4.4 background crossfade timing)\n- Instability ×1.2 opacity scaling in final 20% of shift interval (reuses existing instabilityFactor computation)\n- Viral burst override: 3-phase state machine — crossfade 300ms to platform affinity color, pulse at 2s cycle during peak, crossfade 400ms back to current mood color. viralActive prop already exists on AlgorithmBackground.\n\nThe existing ::after shimmer layer stays. The new vignette is a separate <div> sibling inside the component.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/visual-theming.md",
+          "purpose": "vignette layer DOM/prop contract (created by A1)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "edge color table, opacity values (14–22%), vignette CSS example, viral burst 3-phase state machine, OQ1 resolution on second-div approach"
+        },
+        {
+          "ref": "client/src/ui/AlgorithmBackground.tsx",
+          "purpose": "component to extend with the vignette layer"
+        },
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "ALGORITHM_MOOD record — remove background gradients, add moodColorEdge + moodEdgeOpacity tokens per state"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": ".algorithm-background styles; vignette layer CSS lives alongside these"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.test.ts",
+          "purpose": "may reference ALGORITHM_MOOD shape"
+        }
+      ],
+      "acceptance_criteria": [
+        "AlgorithmBackground.tsx renders a second <div> beneath content and above the base surface with the mood edge vignette",
+        "Vignette uses the radial-gradient pattern from algorithm-mood-visibility (transparent 40% → --mood-color-edge at 100%, ellipse 120% 100% centered)",
+        "Per-state edge colors and opacities match algorithm-mood-visibility table: short_form_surge #E87B3C/18%, authenticity_era #4F8A7A/18%, engagement_bait #D63A82/22%, nostalgia_wave #7A4FA8/18%, corporate_takeover #8A95A8/14%",
+        "ALGORITHM_MOOD record in display.ts no longer carries per-state `background` gradient strings; carries moodColorEdge instead per the updated type",
+        "Vignette crossfades between edge colors over 400ms on algorithm state shift",
+        "Vignette opacity scales by ×1.2 in the final 20% of the shift interval (reuses instabilityFactor)",
+        "Viral burst override: on viralActive=true, vignette switches to platform affinity color through the 3-phase state machine (300ms crossfade in, 2s pulse cycle, 400ms crossfade out)",
+        "All existing tests pass; any snapshot/type assertions for ALGORITHM_MOOD shape updated",
+        "Manual visual check: all five algorithm states show distinct edge vignettes at the specified opacities, shifts crossfade smoothly"
+      ],
+      "open_questions": [
+        {
+          "question": "During the viral burst 3-phase state machine, does the instability ×1.2 opacity scaling still apply, or is it suppressed while the burst owns the layer?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": [
+        107
+      ]
+    },
+    {
+      "id": 110,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Light-mode sweep of modals + non-GameScreen surfaces + WCAG AA verification",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Complete the light-mode migration by sweeping the surfaces E1 did not cover: all modal components (RebrandCeremonyModal, CloutShopModal, SettingsModal, OfflineGainsModal, CreatorKitPanel, UpgradeDrawer, PostZone, PlatformPanel, TopBar), plus non-GameScreen files with inline color literals (GeneratorList.tsx, App.tsx, DebugApp.tsx per `grep #hex` sweep).\n\nThen perform a WCAG 2.1 AA verification pass across the full screen and all five algorithm mood states:\n- All text (P0/P1/P2/P3 tiers) meets 4.5:1 contrast against its surface\n- All UI chrome (borders, icons, inactive controls, chip outlines) meets 3:1 (WCAG 1.4.11)\n- Accent color chips/indicators meet their stated target (text vs chrome) per UX1's palette addendum\n- Verify under all five mood vignette states (vignette is decorative, not a text background — but verify no surface-near-edge text drops below 4.5:1 against the vignette-tinted periphery)\n\nProduce a short verification report in the PR description listing: each token slot's contrast ratio against its intended surface, each accent's ratio against panel white, and any failures found + fixes applied.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/visual-theming.md",
+          "purpose": "token system these components must adopt"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "WCAG AA targets (§3): 4.5:1 text, 3:1 UI chrome"
+        },
+        {
+          "ref": "client/src/ui/RebrandCeremonyModal.tsx",
+          "purpose": "modal surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/CloutShopModal.tsx",
+          "purpose": "modal surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/SettingsModal.tsx",
+          "purpose": "modal surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/OfflineGainsModal.tsx",
+          "purpose": "modal surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/CreatorKitPanel.tsx",
+          "purpose": "panel surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/UpgradeDrawer.tsx",
+          "purpose": "drawer surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/PostZone.tsx",
+          "purpose": "interactive surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "card surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "chrome surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "has inline hex literals to migrate to tokens"
+        },
+        {
+          "ref": "client/src/App.tsx",
+          "purpose": "may contain dark-mode assumptions"
+        },
+        {
+          "ref": "client/src/ui/DebugApp.tsx",
+          "purpose": "has inline hex literals"
+        }
+      ],
+      "acceptance_criteria": [
+        "All listed modals and surfaces render correctly on light-mode base — no white text on white, no illegible states",
+        "No inline hex/rgba color literals remain in the listed files except where intentionally local (document any exceptions in the PR)",
+        "WCAG 2.1 AA verification report in the PR description: every text tier P0/P1/P2/P3 contrast-tested against its surface; every accent tested against panel white; every chrome element ≥3:1",
+        "Verification covered all five algorithm states (short_form_surge, authenticity_era, engagement_bait, nostalgia_wave, corporate_takeover) with the vignette active",
+        "Any contrast failures found are either fixed (with updated token values noted) or flagged as open questions for ux-designer",
+        "All existing tests pass; any modal snapshot/style tests updated"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        108,
+        109
       ]
     }
   ]
