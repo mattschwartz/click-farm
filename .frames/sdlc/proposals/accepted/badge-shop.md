@@ -79,7 +79,7 @@ Each badge costs a small, flat clout fee to claim. The fee should be:
 - Not a real decision (always yes, if you've earned it)
 - Just enough friction to make the claim feel intentional
 
-Specific values TBD in balance pass.
+**Locked by balance pass (2026-04-05): 2 clout, flat across all badges.** See §7.
 
 ---
 
@@ -112,6 +112,47 @@ Both are valid reasons to spend clout. A player with excess clout after upgrades
 
 ---
 
+### 7. Balance Pass: Thresholds & Cost (2026-04-05)
+
+Resolves OQ1 (milestone thresholds) and locks §3 (clout cost). Done after the progression curve was locked (`level-multiplier-curve.md`, `clout-to-follower-scaling-curve.md`, `generator-level-growth-curves.md`, `generator-balance-and-algorithm-states.md`).
+
+**Follower thresholds for the launch set: confirmed as authored.**
+
+| Badge | Threshold | Why this value holds |
+|---|---|---|
+| Micro-Influencer | **1,000 followers** | First badge most players see — positioned for the first ~10-20 minutes of play. At 1K followers the player has not yet rebranded → no clout → badge unlocks but **cannot be claimed yet**. This is a feature: the pulsing "Claim — 2 Clout" CTA surfaces post-first-rebrand and teaches both the collection screen and the post-rebrand spending loop in one moment. |
+| Main Character Energy | **10,000 followers** | Mid-grind affirming checkpoint. By this point the follower number has started to feel satirically large; the badge names the feeling. No change. |
+
+**Self-gating badges need no thresholds:** Going Viral (first viral burst fires), Sellout (affectionate) (first brand deal claimed), New Me, Who Dis (first rebrand completed). All three are first-occurrence triggers — the game state already knows when they fire.
+
+**Clout cost: 2 clout per badge, flat across all badges.**
+
+Rationale:
+- `cloutForRebrand = sqrt(total_followers) / 10` puts first-rebrand awards in the ~3-10 clout range and later rebrands in the ~30-100 range.
+- At 2 clout × 5 launch badges = 10 clout to claim the full set. That's one modest rebrand's worth of clout — the player accumulates badges across a couple of rebrands without ever feeling burdened.
+- Fails the "is this a real decision?" test in the correct direction: the player always says yes the moment they can afford it. Ceremonial friction, not economic friction.
+- **Flat, not tiered:** keeps the mental model trivial ("badges cost 2"). A tiered scale would imply badges have relative value, which contradicts §5 (purely cosmetic) and §6 (cosmetic ≠ functional lane). All earned badges are equally worth claiming.
+- **Why not 1 clout:** too close to free; loses the ceremonial beat. **Why not 3+:** starts bumping into cheap clout-upgrade territory and risks feeling like the player is choosing between a badge and a real upgrade, which is exactly what §1 and §6 are designed to prevent.
+
+**Higher-tier follower badges (100K, 1M): held for post-launch.**
+
+The category table in §2 lists 100K and 1M as future follower-tier milestones. Not joining the launch set. Reasons:
+- Architect's launch-scope call of 5 badges (OQ3 resolution) was made explicitly to avoid over-committing on thresholds before the progression curve felt out. The curve is locked on paper but has not been playtested end-to-end.
+- Adding 100K/1M now means tuning two more thresholds blind. Adding them post-launch once there is real play data is cheap and reversible.
+- Launch set already covers the full arc (early → mid → first-rebrand) and all milestone categories needed to test the mechanic. Padding the set now would dilute what the launch set is for: proving the claim loop works.
+
+Post-launch additions follow the voice-register rules documented in §2a.
+
+**What this locks in:**
+- 1K and 10K follower thresholds for the two follower badges in the launch set.
+- 2 clout flat per badge.
+- Launch remains at 5 badges; 100K/1M held.
+
+**What this leaves open:**
+- Post-launch badge catalog (additional follower tiers, rebrand counts, viral counts, scandal badge if scandals ship, etc.). Revisit after the mechanic has been played.
+
+---
+
 ## References
 
 1. `.frames/sdlc/proposals/accepted/core-game-identity-and-loop.md` §6 — clout economy definition; prestige currency faucet/drain model
@@ -120,7 +161,7 @@ Both are valid reasons to spend clout. A player with excess clout after upgrades
 
 ## Open Questions
 
-1. ~~**Milestone thresholds** — exact follower counts, rebrand counts, viral counts, etc. for each badge. **Owner: game-designer** (balance pass once progression curve is defined)~~ **[DEFERRED — game-designer, 2026-04-05]** Formally deferred to the balance pass. Thresholds depend on the progression curve (follower scaling, rebrand cadence, viral frequency), which is not yet locked. A follow-up game-designer task captures this forward work so it is not lost. See `tasks.json`.
+1. ~~**Milestone thresholds** — exact follower counts, rebrand counts, viral counts, etc. for each badge. **Owner: game-designer** (balance pass once progression curve is defined)~~ **[RESOLVED — game-designer, 2026-04-05, balance pass]** See §7. 1K and 10K follower thresholds confirmed; self-gating badges need no thresholds; 2 clout flat per badge; 100K/1M held for post-launch.
 2. ~~**Badge names and copy** — satirical names fitting the game's tone. **Owner: game-designer** (creative pass — can happen in parallel with build)~~ **[RESOLVED — game-designer, 2026-04-05]** Launch set of 5 badges written into §2a above, with milestone triggers, flavor copy, arc rationale, and voice-register notes for post-launch additions.
 3. **How many badges at launch?** ~~Too few and the collection feels thin. Too many and none feel special. **Owner: architect** (scoping question — what's buildable for a first pass?)~~ **[RESOLVED — architect, 2026-04-05]** 5 badges at launch. Enough for the collection to feel real without over-committing on milestone design before the progression curve is finalized.
 4. **Shop and collection screen design** — where does the shop live in the navigation? How are locked vs. claimed badges presented? How does the shine work visually? **Owner: ux-designer**

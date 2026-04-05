@@ -2682,7 +2682,7 @@
       "id": 83,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Balance pass: Badge Pro Shop milestone thresholds",
       "requester": "game-designer",
@@ -2713,7 +2713,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 84,
