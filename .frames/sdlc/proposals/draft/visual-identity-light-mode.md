@@ -3,7 +3,7 @@ name: Visual Identity — Light Mode & Color System
 description: Establishes the game's base visual mood as clean and airy light mode, with color reserved for algorithm states and peak emotional moments.
 author: ux-designer
 status: draft
-reviewers: [engineer]
+reviewers: [ux-designer]
 ---
 
 # Proposal: Visual Identity — Light Mode & Color System
@@ -133,6 +133,28 @@ Aligned. The tonal direction was already endorsed in my prior RFC review (see ab
 3. **Engineer's in-flight dark-mode build direction needs to pause** for the affected surfaces until the light-mode mood colors are derived. Engineer should be looped in by ux-designer as part of the revision task.
 
 OQ2 (does the base shift per state) remains open, owned by ux-designer + engineer. It is a tuning question that does not block the direction commitment but needs engineer input before this proposal moves to accepted. Engineer added to reviewers.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+**Color architecture — Aligned.** The base palette as CSS custom properties with an algorithm-state class or data attribute on the root element swapping an accent variable set, and peak moment overrides as a timed state layer on top, is a clean and maintainable implementation. No structural concerns. The color-as-state-signal discipline (every color appearance communicates something) is the correct posture for implementation — it means no ad hoc color values anywhere in the codebase, just variable references.
+
+**OQ2 — engineer half answered.** A fixed base with shifting accent layer is straightforward: one variable swap per state transition, predictable, easy to QA. A shifting base is technically just as cheap — one more CSS variable per state — but it adds a design burden: exact per-state base tint values must be specified and must harmonize with each accent without reading as color pollution. Recommendation: **start fixed, retrofit if needed.** The shifting base is a cheap addition post-implementation once the ux-designer has seen the accents in motion and can judge whether immersion needs it. It is not worth blocking the proposal on.
+
+**Clarification needed before build (flagging for ux-designer):** The proposal describes "a subtle background tint (low opacity wash over `#FAF8F5`)" as part of the algorithm state accent layer, while OQ2 asks whether the base itself shifts. These are not the same thing — a low-opacity tint wash and a shifted base value produce different perceptual results and are implemented differently. Before this gets built, the ux-designer should clarify which mechanism is intended. I can implement either; I cannot implement both and call it a spec.
+
+**Viral burst implementation note:** The "full-energy color takeover for 5-10 seconds, then resolves back to current algorithm state" implies a React timer pattern, not pure CSS. The CSS variable approach handles entry and exit transitions cleanly, but the timed resolution back is stateful duration logic. Not a concern — just flagging that the spec is implying a duration-aware state, not a passive style.
+
+**WCAG targets — Aligned.** 4.5:1 for normal text and 3:1 for UI components are correct WCAG 2.1 AA targets and are testable. The specified values (`#1A1A1A` on `#FFFFFF`, `#6B6B6B` on `#FFFFFF`) both pass — no issues there.
+
+**Dark-mode pause acknowledged.** In-flight work on algorithm-mood state surfaces is paused pending the algorithm-mood-visibility revision. I will not build against the dark-mode edge-color values. Waiting for ux-designer to drive that revision per the game-designer's coordination note.
+
+Adding ux-designer to reviewers to close out OQ2 (design-side call on base-shift vs. accent-only, and tint-wash vs. base-shift clarification).
 
 ## Open Questions
 
