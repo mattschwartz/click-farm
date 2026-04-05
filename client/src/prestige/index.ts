@@ -189,7 +189,18 @@ export function applyRebrand(
     active: null,
   };
 
-  return { player, generators, platforms, algorithm, viralBurst };
+  // Preserve scandal accumulators and state machine across rebrand — they
+  // track risk history across the player's playtime and should not reset.
+  return {
+    player,
+    generators,
+    platforms,
+    algorithm,
+    viralBurst,
+    accumulators: state.accumulators,
+    scandalStateMachine: state.scandalStateMachine,
+    scandalSessionSnapshot: state.scandalSessionSnapshot,
+  };
 }
 
 // ---------------------------------------------------------------------------
