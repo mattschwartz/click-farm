@@ -6,15 +6,18 @@ import type {
   GameState,
   GeneratorId,
   GeneratorState,
-  RiskAccumulator,
+  KitItemId,
+  PlatformId,
+  PlatformState,
   SaveData,
-  ScandalStateMachine,
   UpgradeId,
   ViralBurstState,
 } from '../types.ts';
+import { recomputeAllRetention } from '../audience-mood/index.ts';
+import { STATIC_DATA } from '../static-data/index.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 4;
+const CURRENT_VERSION = 8;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -45,20 +48,44 @@ export function save(state: GameState, now: number = Date.now()): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-/** Deserialize and migrate save data. Returns null on missing or corrupt save. */
-export function load(): GameState | null {
+/**
+ * Discriminated result of a load() attempt. The `corrupt` variant carries the
+ * underlying Error so the driver can fan it out to onSaveError listeners and
+ * the UI can explain why the save couldn't be restored. Task #55.
+ */
+export type LoadResult =
+  | { kind: 'none' }
+  | { kind: 'loaded'; state: GameState }
+  | { kind: 'corrupt'; error: Error };
+
+/**
+ * Deserialize and migrate save data. Returns a discriminated result:
+ *   - `{ kind: 'none' }`     — no save in localStorage (fresh slot)
+ *   - `{ kind: 'loaded' }`   — save parsed, migrated, and restored
+ *   - `{ kind: 'corrupt' }`  — save exists but failed to parse or migrate
+ *
+ * Corrupt saves are NOT wiped here — the caller decides whether to preserve
+ * the bad blob (so the player/devs can recover it) or clear it and move on.
+ */
+export function load(): LoadResult {
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw === null) return null;
+  if (raw === null) return { kind: 'none' };
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
-  } catch {
-    // Corrupt JSON — treat as no save
-    return null;
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    return { kind: 'corrupt', error };
   }
 
-  const migrated = migrate(parsed as SaveData);
+  let migrated: SaveData;
+  try {
+    migrated = migrate(parsed as SaveData);
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    return { kind: 'corrupt', error };
+  }
   const gameState = migrated.state;
 
   // Always ensure viralBurst is present — a v2 save written before the field
@@ -69,36 +96,86 @@ export function load(): GameState | null {
     active_ticks_since_last: 0,
     active: null,
   };
-  return {
+  // Audience Mood: recompute retention on every platform from the loaded
+  // pressure values (normalises any drift from hand-edited saves, and gives
+  // the UI a correct retention value to render immediately on load).
+  // Architecture/audience-mood.md §Save-Schema Migration §Load-path recomputation.
+  const stateWithViral: GameState = {
     ...gameState,
     viralBurst: { ...viralBurst, active: null },
-    // Ensure scandal fields are present. Driver sets real values on open.
-    accumulators: gameState.accumulators ?? [],
-    scandalStateMachine: {
-      state: 'normal' as const,
-      activeScandal: null,
-      suppressedNotification: null,
-      timerStartTime: null,
-      timerDuration: 13_500,
-      readBeatDuration: 1_500,
-      pendingEngagementSpend: 0,
-      lastResolution: null,
-      // Spread existing sm values over the defaults, so new fields default to
-      // null while existing fields are preserved.
-      ...(gameState.scandalStateMachine ?? {}),
-      // Always reset active state on load — in-flight scandals don't survive restarts.
-      state: 'normal' as const,
-      activeScandal: null,
-      timerStartTime: null,
-      pendingEngagementSpend: 0,
-    },
-    scandalSessionSnapshot: null, // always reset — driver repopulates on open
   };
+  const normalised = recomputeAllRetention(stateWithViral, STATIC_DATA);
+  return { kind: 'loaded', state: normalised };
 }
 
 /** Remove save data from localStorage. */
 export function clearSave(): void {
   localStorage.removeItem(STORAGE_KEY);
+}
+
+// ---------------------------------------------------------------------------
+// Export / Import (ux/settings-screen.md §5)
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the raw JSON string for the current save, or null if no save
+ * exists. The string is the same payload that `save()` wrote — a
+ * serialized `SaveData` object including `version`.
+ */
+export function exportSaveJSON(): string | null {
+  return localStorage.getItem(STORAGE_KEY);
+}
+
+export interface ImportResult {
+  ok: boolean;
+  /** On failure, a short reason the UI can surface. */
+  reason?: string;
+}
+
+/**
+ * Validate a JSON string and write it to the save slot if it looks like
+ * a SaveData payload. The next `load()` call runs it through the full
+ * migration chain, so older versions are accepted as long as they're
+ * structurally a SaveData envelope.
+ *
+ * Does NOT reload state into the driver — the caller is expected to
+ * force a page reload (or re-create the driver) to pick up the new save.
+ */
+export function importSaveJSON(json: string): ImportResult {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch (err) {
+    return {
+      ok: false,
+      reason: `Not valid JSON: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+  if (parsed === null || typeof parsed !== 'object') {
+    return { ok: false, reason: 'Save payload is not an object.' };
+  }
+  const obj = parsed as Record<string, unknown>;
+  if (typeof obj.version !== 'number') {
+    return { ok: false, reason: 'Save payload is missing a numeric version.' };
+  }
+  if (obj.version > CURRENT_VERSION) {
+    return {
+      ok: false,
+      reason: `Save version ${obj.version} is newer than this build supports (max ${CURRENT_VERSION}).`,
+    };
+  }
+  if (obj.state === undefined || obj.state === null) {
+    return { ok: false, reason: 'Save payload is missing a `state` field.' };
+  }
+  try {
+    localStorage.setItem(STORAGE_KEY, json);
+  } catch (err) {
+    return {
+      ok: false,
+      reason: `Failed to write save: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+  return { ok: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -126,36 +203,18 @@ export function migrateV1toV2(data: SaveData): SaveData {
 }
 
 /**
- * Migrate a V2 save (no scandal fields) to V3.
- * Injects empty accumulators and a default state machine. The driver will
- * populate accumulators via ensureAccumulators on the first tick.
+ * Migrate a V2 save to V3.
+ *
+ * V3 historically introduced the Scandals system (accumulators +
+ * scandalStateMachine + scandalSessionSnapshot on GameState). The Scandals
+ * system was removed in V7 — see proposals/accepted/remove-scandals-interim.md.
+ * This migration is now a structural no-op (version bump only): any scandal
+ * fields that a legacy V2 save gains here are stripped by migrateV6toV7.
  */
 export function migrateV2toV3(data: SaveData): SaveData {
-  const oldState = data.state as GameState & {
-    accumulators?: RiskAccumulator[];
-    scandalStateMachine?: ScandalStateMachine;
-  };
-  // Default state machine: normal state, no active scandal, timer config 0
-  // (driver will set real values from staticData on first open).
-  const defaultSm: ScandalStateMachine = {
-    state: 'normal',
-    activeScandal: null,
-    suppressedNotification: null,
-    timerStartTime: null,
-    timerDuration: 13_500, // readBeatMs + decisionWindowMs defaults
-    readBeatDuration: 1_500,
-    pendingEngagementSpend: 0,
-    lastResolution: null,
-  };
   return {
     ...data,
     version: 3,
-    state: {
-      ...oldState,
-      accumulators: oldState.accumulators ?? [],
-      scandalStateMachine: oldState.scandalStateMachine ?? defaultSm,
-      scandalSessionSnapshot: null, // driver always overwrites on open
-    },
   };
 }
 
@@ -222,6 +281,172 @@ export function migrateV3toV4(data: SaveData): SaveData {
   };
 }
 
+/**
+ * Migrate a V4 save to V5 — Creator Kit foundation.
+ *
+ * Task #73: `player.creator_kit` is introduced as a per-run map of
+ * KitItemId → level. Existing saves default to an empty kit. The field is
+ * wiped on rebrand (see prestige/applyRebrand), so defaulting to `{}` is
+ * always correct on load.
+ */
+export function migrateV4toV5(data: SaveData): SaveData {
+  const oldState = data.state as GameState & {
+    player: GameState['player'] & {
+      creator_kit?: Record<KitItemId, number>;
+    };
+  };
+  return {
+    ...data,
+    version: 5,
+    state: {
+      ...oldState,
+      player: {
+        ...oldState.player,
+        creator_kit:
+          oldState.player.creator_kit ?? ({} as Record<KitItemId, number>),
+      },
+    },
+  };
+}
+
+/**
+ * Migrate a V5 save to V6 — one-time data repair for the pre-clamp overflow
+ * bug (task #90 / proposals/accepted/generator-level-growth-curves.md).
+ *
+ * Before task #89 shipped runtime clamps, two bugs could corrupt saves:
+ *   1) `player.engagement` could overflow to Infinity once per-unit rate × clout
+ *      × level multiplier × tick delta produced a non-finite sum. Once Infinity
+ *      is persisted, JSON.stringify writes `null` and load fails.
+ *   2) A generator's `level` could exceed the new max_level=10 cap because
+ *      the cap didn't exist yet — at L~14 the multiplier stack overflows.
+ *
+ * Both are silent data repairs. Per game-designer final review, this is NOT
+ * earned progress — at those magnitudes floats had already rounded to even
+ * and the player was not meaningfully accumulating anything. No player-facing
+ * "your save was repaired" UI. A console.warn carries diagnostic trace for
+ * devs investigating bug reports.
+ *
+ * max_level is hardcoded to 10 here rather than read from StaticData to keep
+ * migrations decoupled from evolving static-data tuning. If the cap ever
+ * moves, a new migration ships with it.
+ */
+export function migrateV5toV6(data: SaveData): SaveData {
+  const oldState = data.state as GameState;
+  const MAX_LEVEL = 10;
+
+  // Clamp engagement — NaN / Infinity / >MAX_SAFE_INTEGER all pinned to MAX_SAFE_INTEGER.
+  // Negative / missing values fall through unchanged (runtime code handles those).
+  const rawEngagement = oldState.player.engagement;
+  let clampedEngagement = rawEngagement;
+  const needsEngagementClamp =
+    !Number.isFinite(rawEngagement) || rawEngagement > Number.MAX_SAFE_INTEGER;
+  if (needsEngagementClamp) {
+    clampedEngagement = Number.MAX_SAFE_INTEGER;
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[save migrate V5→V6] clamped player.engagement: ${String(rawEngagement)} → ${Number.MAX_SAFE_INTEGER}`,
+    );
+  }
+
+  // Clamp each generator's level to MAX_LEVEL.
+  const newGenerators: Record<GeneratorId, GeneratorState> = { ...oldState.generators };
+  for (const id of Object.keys(oldState.generators) as GeneratorId[]) {
+    const gen = oldState.generators[id];
+    if (gen.level > MAX_LEVEL) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[save migrate V5→V6] clamped generators.${id}.level: ${gen.level} → ${MAX_LEVEL}`,
+      );
+      newGenerators[id] = { ...gen, level: MAX_LEVEL };
+    }
+  }
+
+  return {
+    ...data,
+    version: 6,
+    state: {
+      ...oldState,
+      generators: newGenerators,
+      player: {
+        ...oldState.player,
+        engagement: clampedEngagement,
+      },
+    },
+  };
+}
+
+/**
+ * Migrate a V6 save to V7 — strip the Scandals system.
+ *
+ * The Scandals system was removed from the client in the interim build
+ * (proposals/accepted/remove-scandals-interim.md). Saves written under V3–V6
+ * carry `state.accumulators`, `state.scandalStateMachine`, and
+ * `state.scandalSessionSnapshot`. This migration deletes those fields so the
+ * save envelope matches the current GameState shape. Silent repair — no
+ * player-facing notice.
+ */
+export function migrateV6toV7(data: SaveData): SaveData {
+  const oldState = data.state as GameState & {
+    accumulators?: unknown;
+    scandalStateMachine?: unknown;
+    scandalSessionSnapshot?: unknown;
+  };
+  const {
+    accumulators: _a,
+    scandalStateMachine: _sm,
+    scandalSessionSnapshot: _snap,
+    ...cleanState
+  } = oldState;
+  void _a;
+  void _sm;
+  void _snap;
+  return {
+    ...data,
+    version: 7,
+    state: cleanState as GameState,
+  };
+}
+
+/**
+ * Migrate a V7 save to V8 — initialise Audience Mood fields on every
+ * platform. See .frames/sdlc/architecture/audience-mood.md §Save-Schema
+ * Migration. Defaults represent a "healthy audience": retention = 1.0 and
+ * every pressure at 0/empty.
+ *
+ * The retention field IS written here (not left undefined) so downstream
+ * code never reads `undefined * N` when applying retention. The load path
+ * runs `recomputeAllRetention` immediately after migration, which is a
+ * no-op against these healthy defaults but guards against future migrations
+ * that may seed the pressure fields non-trivially.
+ */
+export function migrateV7toV8(data: SaveData): SaveData {
+  const oldState = data.state as GameState;
+  const platformIds = Object.keys(oldState.platforms) as PlatformId[];
+  const newPlatforms: Record<PlatformId, PlatformState> = {
+    ...oldState.platforms,
+  };
+  for (const id of platformIds) {
+    const p = oldState.platforms[id] as PlatformState & {
+      retention?: number;
+      content_fatigue?: Partial<Record<GeneratorId, number>>;
+      neglect?: number;
+      algorithm_misalignment?: number;
+    };
+    newPlatforms[id] = {
+      ...p,
+      retention: p.retention ?? 1.0,
+      content_fatigue: p.content_fatigue ?? {},
+      neglect: p.neglect ?? 0,
+      algorithm_misalignment: p.algorithm_misalignment ?? 0,
+    };
+  }
+  return {
+    ...data,
+    version: 8,
+    state: { ...oldState, platforms: newPlatforms },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -235,6 +460,22 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 3) {
     current = migrateV3toV4(current);
+  }
+
+  if (current.version === 4) {
+    current = migrateV4toV5(current);
+  }
+
+  if (current.version === 5) {
+    current = migrateV5toV6(current);
+  }
+
+  if (current.version === 6) {
+    current = migrateV6toV7(current);
+  }
+
+  if (current.version === 7) {
+    current = migrateV7toV8(current);
   }
 
   if (current.version !== CURRENT_VERSION) {

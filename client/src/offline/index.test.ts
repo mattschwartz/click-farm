@@ -472,4 +472,86 @@ describe('calculateOffline — rate ordering sanity', () => {
     const id: AlgorithmStateId = 'short_form_surge';
     expect(typeof id).toBe('string');
   });
+
+  it('clamps engagement to MAX_SAFE_INTEGER (task #89)', () => {
+    // Start at the ceiling and run a long offline window with a large
+    // producing generator — the offline-side clamp (offline/index.ts:210)
+    // must pin the result.
+    const state: GameState = {
+      ...makeState({ selfiesCount: 1_000_000, selfiesLevel: 10 }),
+      player: {
+        ...makeState().player,
+        engagement: Number.MAX_SAFE_INTEGER - 1,
+      },
+    };
+    const { newState } = calculateOffline(
+      state,
+      T0,
+      T0 + 60 * 60 * 1000,
+      STATIC_DATA,
+    );
+    expect(newState.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Audience Mood — retention applied as a constant scalar offline (AC #12)
+//
+// Retention does NOT advance offline (neglect is frozen). The calculator
+// multiplies per-platform follower accrual by the platform's retention
+// value captured at closeTime, as a constant scalar over the entire window.
+// ---------------------------------------------------------------------------
+
+describe('calculateOffline — Audience Mood retention', () => {
+  it('halving retention halves per-platform follower gain over the offline window', () => {
+    const base = makeState({ selfiesCount: 10, selfiesLevel: 2 });
+    const sFull: GameState = {
+      ...base,
+      platforms: {
+        ...base.platforms,
+        chirper: { ...base.platforms.chirper, retention: 1.0 },
+      },
+    };
+    const sHalf: GameState = {
+      ...base,
+      platforms: {
+        ...base.platforms,
+        chirper: { ...base.platforms.chirper, retention: 0.5 },
+      },
+    };
+    const { result: rFull } = calculateOffline(
+      sFull, T0, T0 + 10 * 60 * 1000, STATIC_DATA,
+    );
+    const { result: rHalf } = calculateOffline(
+      sHalf, T0, T0 + 10 * 60 * 1000, STATIC_DATA,
+    );
+    expect(rFull.followersGained.chirper).toBeGreaterThan(0);
+    expect(rHalf.followersGained.chirper).toBeCloseTo(
+      rFull.followersGained.chirper * 0.5,
+      6,
+    );
+  });
+
+  it('retention does not advance offline (no neglect accumulation)', () => {
+    // Take a state with chirper.retention = 0.7 and verify that after an
+    // offline window, retention is unchanged — the calculator applies it as
+    // a constant scalar and does not mutate it.
+    const base = makeState({ selfiesCount: 10, selfiesLevel: 2 });
+    const state: GameState = {
+      ...base,
+      platforms: {
+        ...base.platforms,
+        chirper: {
+          ...base.platforms.chirper,
+          retention: 0.7,
+          neglect: 0.3,
+        },
+      },
+    };
+    const { newState } = calculateOffline(
+      state, T0, T0 + 60 * 60 * 1000, STATIC_DATA,
+    );
+    expect(newState.platforms.chirper.retention).toBe(0.7);
+    expect(newState.platforms.chirper.neglect).toBe(0.3);
+  });
 });

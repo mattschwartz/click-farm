@@ -14,14 +14,16 @@
 import type {
   GameState,
   GeneratorId,
+  KitItemId,
   StaticData,
   UpgradeId,
   ViralBurstPayload,
 } from '../types.ts';
+import { purchaseKitItem } from '../creator-kit/index.ts';
 import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
 import { buyGenerator, upgradeGenerator } from '../generator/index.ts';
 import { createInitialGameState } from '../model/index.ts';
-import { load, save } from '../save/index.ts';
+import { clearSave, load, save } from '../save/index.ts';
 import { calculateOffline, type OfflineResult } from '../offline/index.ts';
 import {
   calculateRebrand,
@@ -31,14 +33,6 @@ import {
   type RebrandResult,
 } from '../prestige/index.ts';
 import type { ScheduledShift } from '../algorithm/index.ts';
-import {
-  createScandalSessionSnapshot,
-  freezeAccumulators,
-  unfreezeAccumulators,
-  updateAccumulatorsOnPurchase,
-  createDefaultStateMachine,
-  onPlayerConfirm,
-} from '../scandal/index.ts';
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -59,7 +53,7 @@ export type StateListener = (state: GameState) => void;
 export type ViralBurstListener = (payload: ViralBurstPayload) => void;
 
 /** Which driver action was attempted when the error fired. */
-export type ActionName = 'click' | 'buy' | 'upgrade' | 'buyCloutUpgrade';
+export type ActionName = 'click' | 'buy' | 'upgrade' | 'buyCloutUpgrade' | 'buyKitItem';
 
 /**
  * Fired when a player-triggered action throws out of the model layer. The
@@ -74,6 +68,22 @@ export interface ActionError {
 }
 
 export type ActionErrorListener = (e: ActionError) => void;
+
+/**
+ * Fired when save subsystem operations fail (load-time corruption, save-time
+ * quota exceeded, etc). Kept separate from ActionError because these aren't
+ * triggered by player actions — they're storage problems the UI surfaces
+ * as a persistent warning rather than a transient action shake. Task #55.
+ */
+export type SaveErrorKind = 'load_corrupt' | 'save_quota' | 'save_unknown';
+
+export interface SaveError {
+  kind: SaveErrorKind;
+  /** Short, human-readable detail from the underlying Error (if any). */
+  details?: string;
+}
+
+export type SaveErrorListener = (e: SaveError) => void;
 
 export interface DriverOptions {
   /** Injectable clock for tests. Defaults to Date.now. */
@@ -102,6 +112,13 @@ export interface GameDriver {
   step(deltaMs?: number): void;
   /** Persist to storage now (also captures current-rate snapshot). */
   saveNow(): void;
+  /**
+   * Clear the persisted save and disable all future writes from this driver.
+   * Used by the reset-game flow: after calling resetGame(), the caller should
+   * reload the page so a fresh driver can initialise from empty storage.
+   * Idempotent. Stops tick and save timers.
+   */
+  resetGame(): void;
   /** Stop all timers. Idempotent. */
   stop(): void;
   /** Start the tick + auto-save timers. Idempotent. */
@@ -121,19 +138,10 @@ export interface GameDriver {
   rebrand(): RebrandResult;
   /** Spend Clout to level up a meta-upgrade. Throws when unaffordable. */
   buyCloutUpgrade(upgradeId: UpgradeId): void;
+  /** Spend Engagement on a Creator Kit item. Errors caught via onActionError. */
+  buyKitItem(itemId: KitItemId): void;
   /** Upcoming algorithm shifts visible via the algorithm_insight upgrade. */
   getUpcomingShifts(): ScheduledShift[];
-  /**
-   * Player confirms the PR Response with a chosen engagement spend.
-   * Transitions scandal state machine from scandal_active → resolving.
-   * The game loop applies damage on the next tick.
-   */
-  confirmPR(engagementSpent: number): void;
-  /**
-   * Dismiss the aftermath resolution display. Clears lastResolution from
-   * the state machine so the UI can stop showing the aftermath card.
-   */
-  dismissScandalResolution(): void;
   /**
    * Subscribe to viral burst events. Fires once per event, synchronously,
    * before state subscribers are notified. Returns an unsubscribe function.
@@ -147,6 +155,13 @@ export interface GameDriver {
    * for surfacing "that didn't work" feedback in the UI.
    */
   onActionError(listener: ActionErrorListener): Unsubscribe;
+  /**
+   * Subscribe to save subsystem errors — corrupt save on load, quota-exceeded
+   * on persist, etc. Listeners attached after createDriver() receive any
+   * pending load_corrupt event that fired during construction: the driver
+   * stashes the first such error and replays it on subscribe. Task #55.
+   */
+  onSaveError(listener: SaveErrorListener): Unsubscribe;
 }
 
 // ---------------------------------------------------------------------------
@@ -175,58 +190,61 @@ export function createDriver(options: DriverOptions): GameDriver {
     persistToStorage = true,
   } = options;
 
-  // Load from storage or create initial state.
+  // Load from storage or create initial state. A corrupt save is captured
+  // here and replayed to the first onSaveError listener that attaches —
+  // creation happens before any React effect can subscribe. Task #55.
   let offlineResult: OfflineResult | null = null;
+  let pendingSaveError: SaveError | null = null;
   let state: GameState = (() => {
     if (loadFromStorage) {
-      try {
-        const loaded = load();
-        if (loaded) {
-          // Apply offline gains if the save has a last_close_time and we're
-          // opening later than that. Skip if no close time (first session
-          // of this save) or if the clock has run backwards.
-          const closeTime = loaded.player.last_close_time;
-          const openTime = now();
-          if (closeTime !== null && openTime > closeTime) {
-            const { result, newState } = calculateOffline(
-              loaded,
-              closeTime,
-              openTime,
-              staticData,
-            );
-            offlineResult = result;
-            return newState;
-          }
-          return loaded;
+      const result = load();
+      if (result.kind === 'corrupt') {
+        // eslint-disable-next-line no-console
+        console.error('[driver] save is corrupt — falling back to initial state', {
+          error: result.error,
+        });
+        pendingSaveError = {
+          kind: 'load_corrupt',
+          details: result.error.message,
+        };
+      } else if (result.kind === 'loaded') {
+        const loaded = result.state;
+        // Apply offline gains if the save has a last_close_time and we're
+        // opening later than that. Skip if no close time (first session
+        // of this save) or if the clock has run backwards.
+        const closeTime = loaded.player.last_close_time;
+        const openTime = now();
+        if (closeTime !== null && openTime > closeTime) {
+          const { result: offline, newState } = calculateOffline(
+            loaded,
+            closeTime,
+            openTime,
+            staticData,
+          );
+          offlineResult = offline;
+          return newState;
         }
-      } catch {
-        // Fall through to initial state — corrupt save shouldn't block play.
+        return loaded;
       }
     }
     return createInitialGameState(staticData, now());
   })();
 
-  // Scandal: unfreeze accumulators (they were frozen on last save/close),
-  // ensure state machine exists for old saves, and take a fresh session
-  // snapshot for the magnitude floor. This runs on every open/foreground.
-  {
-    const unfrozen = unfreezeAccumulators(state.accumulators ?? []);
-    const sm = state.scandalStateMachine ?? createDefaultStateMachine(staticData);
-    const snapshot = createScandalSessionSnapshot(state, now());
-    state = {
-      ...state,
-      accumulators: unfrozen,
-      scandalStateMachine: sm,
-      scandalSessionSnapshot: snapshot,
-    };
-  }
-
   let lastTickAt = now();
   const listeners = new Set<StateListener>();
   const viralListeners = new Set<ViralBurstListener>();
   const errorListeners = new Set<ActionErrorListener>();
+  const saveErrorListeners = new Set<SaveErrorListener>();
+
+  function emitSaveError(e: SaveError): void {
+    for (const listener of saveErrorListeners) listener(e);
+  }
   let tickHandle: number | null = null;
   let saveHandle: number | null = null;
+  // Set by resetGame(). Once true, doSave() becomes a no-op so that
+  // late-firing saves (periodic timer, beforeunload, useEffect cleanup)
+  // cannot resurrect the save we just cleared.
+  let dead = false;
 
   /**
    * Wrap a player action in try/catch. If the model throws, log to console
@@ -286,6 +304,7 @@ export function createDriver(options: DriverOptions): GameDriver {
 
   function doSave(): void {
     if (!persistToStorage) return;
+    if (dead) return;
     // Update last_close_state snapshot from current rates before saving so
     // offline calc has fresh data on next open. Also stamp last_close_time
     // from the driver's clock so it matches what save() serialises.
@@ -298,8 +317,6 @@ export function createDriver(options: DriverOptions): GameDriver {
         last_close_state: snapshot,
         last_close_time: t,
       },
-      // Freeze accumulators on save so they resume correctly on next open.
-      accumulators: freezeAccumulators(state.accumulators),
     };
     // Don't go through applyState here — last_close_state / last_close_time
     // changes on save shouldn't re-render the UI, but keep local state
@@ -307,9 +324,24 @@ export function createDriver(options: DriverOptions): GameDriver {
     state = withSnapshot;
     try {
       save(state, t);
-    } catch {
-      // Swallow storage errors silently — game remains playable in memory.
-      // TODO(engineer): surface a soft warning to the UI when quota is hit.
+    } catch (err) {
+      // Distinguish quota from other storage failures so the UI can explain
+      // why the save won't stick. DOMException.name === 'QuotaExceededError'
+      // is the Standard way; legacy Firefox used code 1014 via NS_ERROR_DOM_
+      // QUOTA_REACHED. Either matches kind: 'save_quota'.
+      const isQuota =
+        err instanceof DOMException &&
+        (err.name === 'QuotaExceededError' ||
+          err.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+          err.code === 22 ||
+          err.code === 1014);
+      const details = err instanceof Error ? err.message : String(err);
+      // eslint-disable-next-line no-console
+      console.error('[driver] save failed', { kind: isQuota ? 'save_quota' : 'save_unknown', details });
+      emitSaveError({
+        kind: isQuota ? 'save_quota' : 'save_unknown',
+        details,
+      });
     }
   }
 
@@ -329,16 +361,7 @@ export function createDriver(options: DriverOptions): GameDriver {
 
     buy(generatorId) {
       runAction('buy', { generatorId }, () => {
-        const prevState = state;
-        const afterBuy = buyGenerator(prevState, generatorId, staticData);
-        // Update Trend Chasing accumulator based on the output mix shift.
-        const updatedAccumulators = updateAccumulatorsOnPurchase(
-          afterBuy.accumulators,
-          prevState,
-          afterBuy,
-          staticData,
-        );
-        applyState({ ...afterBuy, accumulators: updatedAccumulators });
+        applyState(buyGenerator(state, generatorId, staticData));
       });
     },
 
@@ -357,6 +380,24 @@ export function createDriver(options: DriverOptions): GameDriver {
 
     saveNow() {
       doSave();
+    },
+
+    resetGame() {
+      // Mark the driver dead BEFORE clearing storage so any concurrent
+      // timer callback or beforeunload handler that races with us finds
+      // the dead flag and bails out of doSave().
+      dead = true;
+      if (clearIntervalImpl) {
+        if (tickHandle !== null) {
+          clearIntervalImpl(tickHandle);
+          tickHandle = null;
+        }
+        if (saveHandle !== null) {
+          clearIntervalImpl(saveHandle);
+          saveHandle = null;
+        }
+      }
+      if (persistToStorage) clearSave();
     },
 
     start() {
@@ -403,23 +444,13 @@ export function createDriver(options: DriverOptions): GameDriver {
       });
     },
 
-    getUpcomingShifts: () => getUpcomingShifts(state, staticData),
-
-    confirmPR(engagementSpent) {
-      const sm = state.scandalStateMachine;
-      if (sm.state !== 'scandal_active') return;
-      const nextSm = onPlayerConfirm(sm, engagementSpent);
-      applyState({ ...state, scandalStateMachine: nextSm });
-    },
-
-    dismissScandalResolution() {
-      const sm = state.scandalStateMachine;
-      if (sm.lastResolution === null) return;
-      applyState({
-        ...state,
-        scandalStateMachine: { ...sm, lastResolution: null },
+    buyKitItem(itemId) {
+      runAction('buyKitItem', { itemId }, () => {
+        applyState(purchaseKitItem(state, itemId, staticData));
       });
     },
+
+    getUpcomingShifts: () => getUpcomingShifts(state, staticData),
 
     onViralBurst(listener) {
       viralListeners.add(listener);
@@ -430,6 +461,21 @@ export function createDriver(options: DriverOptions): GameDriver {
       errorListeners.add(listener);
       return () => {
         errorListeners.delete(listener);
+      };
+    },
+
+    onSaveError(listener) {
+      saveErrorListeners.add(listener);
+      // Replay the construction-time corrupt-load event to late subscribers.
+      // One-shot: consume the pending slot so a second listener doesn't see
+      // it as well (the first receiver is responsible for UI state).
+      if (pendingSaveError !== null) {
+        const pending = pendingSaveError;
+        pendingSaveError = null;
+        listener(pending);
+      }
+      return () => {
+        saveErrorListeners.delete(listener);
       };
     },
   };

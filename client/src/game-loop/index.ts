@@ -32,15 +32,13 @@ import {
   computeFollowerDistribution,
 } from '../platform/index.ts';
 import { checkGeneratorUnlocks } from '../generator/index.ts';
-import { syncTotalFollowers } from '../model/index.ts';
+import { syncTotalFollowers, clampEngagement } from '../model/index.ts';
 import {
-  updateAccumulatorsOnTick,
-  onAccumulatorFire,
-  onTimerExpire,
-  resolveScandal,
-  applyFollowerLoss,
-  createDefaultStateMachine,
-} from '../scandal/index.ts';
+  kitEngagementBonus,
+  kitFollowerConversionBonus,
+  kitViralBurstAmplifier,
+} from '../creator-kit/index.ts';
+import { advanceNeglect, applyTickPosts } from '../audience-mood/index.ts';
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -74,12 +72,17 @@ const CLICK_GENERATOR_ID: GeneratorId = 'selfies';
  *
  * This is a super-exponential curve. Level 1 ≈ 1.149×, level 8 ≈ 7,225×.
  * Per-generator, independent. Denominator `5` is the single tuning knob.
+ *
+ * Input is silently clamped to [1, 20] before Math.pow — this is belt-and-
+ * braces for corrupted saves and any future code path that forgets the
+ * max_level cap. Clamping is preferred over throwing here because this is
+ * called from tick hot-paths and a throw would freeze the game loop.
+ * NaN / ±Infinity fall back to 1 (no multiplier) rather than propagating.
  */
 export function levelMultiplier(level: number): number {
-  if (level < 1 || !Number.isFinite(level)) {
-    throw new Error(`levelMultiplier: level must be ≥ 1 and finite, got ${level}`);
-  }
-  return Math.pow(2, (level * level) / 5);
+  const safe = Number.isFinite(level) ? level : 1;
+  const clamped = Math.min(20, Math.max(1, safe));
+  return Math.pow(2, (clamped * clamped) / 5);
 }
 
 /**
@@ -160,12 +163,16 @@ export function computeGeneratorEffectiveRate(
   const rawModifier = getAlgorithmModifier(state.algorithm, generator.id);
   const algoMod = effectiveAlgorithmModifier(rawModifier, def.trend_sensitivity);
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
+  // Kit effects fold in AFTER Clout per architecture/creator-kit.md §Stacking
+  // Order (§3 clout → §4 kit). Camera is the only item in this chain today.
+  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
   return (
     generator.count *
     def.base_engagement_rate *
     levelMultiplier(generator.level) *
     algoMod *
-    clout
+    clout *
+    kit
   );
 }
 
@@ -285,9 +292,16 @@ export function evaluateViralTrigger(
     config.durationMsMin +
       random() * (config.durationMsMax - config.durationMsMin),
   );
-  const boostFactor =
+  // Roll the raw boost factor, then apply Mogging's kit amplifier per
+  // architecture/creator-kit.md §Integration Points §6. Level 0 → 1.0, no-op.
+  const boostFactorRaw =
     config.magnitudeBoostMin +
     random() * (config.magnitudeBoostMax - config.magnitudeBoostMin);
+  const kitAmplifier = kitViralBurstAmplifier(
+    state.player.creator_kit,
+    staticData,
+  );
+  const boostFactor = boostFactorRaw * kitAmplifier;
   // During the viral: effective rate = normal_rate × boostFactor
   // Bonus = normal_rate × (boostFactor - 1) per ms
   const bonus_rate_per_ms = totalRatePerMs * (boostFactor - 1);
@@ -355,41 +369,75 @@ export function tick(
   // 3. Add engagement to player.
   let player: Player = {
     ...state.player,
-    engagement: state.player.engagement + engagementEarned,
+    engagement: clampEngagement(state.player.engagement + engagementEarned),
   };
+
+  // 3a. Audience Mood pressure update (architect resolution 2026-04-05).
+  //   A "post" is a per-tick contribution from one owned generator. Advance
+  //   neglect for all unlocked platforms (tick delta, measured in ticks),
+  //   then fire one post event per owned generator → its highest-affinity
+  //   unlocked platform. This updates retention BEFORE follower
+  //   distribution, so this tick's follower gain scales by this tick's mood.
+  //   Offline catchup MUST NOT call advanceNeglect — the offline path in
+  //   offline/index.ts applies retention as a constant scalar instead.
+  const deltaTicks = deltaMs / 100; // tick cadence = 100 ms
+  let moodState: GameState = advanceNeglect(state, staticData, deltaTicks);
+  moodState = applyTickPosts(moodState, staticData);
+  const platformsWithMood = moodState.platforms;
 
   // 4. Compute follower distribution for this tick.
   const distribution = computeFollowerDistribution(
     ratesPerMs,
-    state.platforms,
+    platformsWithMood,
+    staticData,
+  );
+
+  // 4a. Wardrobe — kit follower_conversion_multiplier wraps the entire
+  // per-platform follower sum (architecture/creator-kit.md §Integration
+  // Points §3). Applied after computeFollowerDistribution so the platform
+  // module stays decoupled from kit state.
+  const kitFollowerMult = kitFollowerConversionBonus(
+    state.player.creator_kit,
     staticData,
   );
 
   // 5. Apply per-platform follower gains over deltaMs.
-  let platforms = state.platforms;
+  //    Audience Mood retention enters here — per-platform multiplier applied
+  //    AFTER content-affinity distribution and kit follower-conversion
+  //    (platform-scoped, step 6 in the stacking-order chain declared in
+  //    audience-mood/index.ts module header).
+  let platforms = platformsWithMood;
   if (distribution.totalRate > 0) {
-    const next: Record<PlatformId, PlatformState> = { ...state.platforms };
-    for (const id of Object.keys(state.platforms) as PlatformId[]) {
-      const gained = distribution.perPlatformRate[id] * deltaMs;
+    const next: Record<PlatformId, PlatformState> = { ...platformsWithMood };
+    for (const id of Object.keys(platformsWithMood) as PlatformId[]) {
+      const retention = platformsWithMood[id].retention;
+      const gained =
+        distribution.perPlatformRate[id] * kitFollowerMult * retention * deltaMs;
       if (gained > 0) {
         next[id] = {
-          ...state.platforms[id],
-          followers: state.platforms[id].followers + gained,
+          ...platformsWithMood[id],
+          followers: platformsWithMood[id].followers + gained,
         };
       }
     }
     platforms = next;
-
-    // 6. Update lifetime_followers. total_followers is derived; will be synced below.
-    const totalGained = distribution.totalRate * deltaMs;
-    player = {
-      ...player,
-      lifetime_followers: player.lifetime_followers + totalGained,
-    };
   }
 
-  // Sync derived total_followers from platforms (single source of truth).
+  // 6. Sync derived total_followers, then accumulate lifetime_followers as the
+  //    delta of the platform-sum. Deriving lifetime from the platform-sum
+  //    delta (rather than from a parallel running accumulator) keeps the
+  //    invariant `lifetime_followers ≥ Σ platform.followers` tight to
+  //    float precision — parallel accumulators diverge by ULPs over long
+  //    runs (Σ_t Σ_p vs Σ_p Σ_t under non-associative float add).
+  const oldTotal = player.total_followers;
   player = syncTotalFollowers(player, platforms);
+  if (player.total_followers > oldTotal) {
+    player = {
+      ...player,
+      lifetime_followers:
+        player.lifetime_followers + (player.total_followers - oldTotal),
+    };
+  }
 
   // 7. Check platform unlocks using the freshly-synced total.
   platforms = checkPlatformUnlocks(platforms, player.total_followers, staticData);
@@ -424,7 +472,7 @@ export function tick(
       // 11b. Viral still running — apply bonus engagement on top of normal production.
       player = {
         ...player,
-        engagement: player.engagement + viralBurst.active.bonus_rate_per_ms * deltaMs,
+        engagement: clampEngagement(player.engagement + viralBurst.active.bonus_rate_per_ms * deltaMs),
       };
     }
   } else {
@@ -442,109 +490,7 @@ export function tick(
     }
   }
 
-  // 13. Scandal accumulator updates and state machine advancement.
-  //
-  // If normal: update accumulators, check thresholds, fire scandal if any.
-  // If scandal_active: freeze accumulators, check timer expiry.
-  // If resolving: apply damage, transition to normal.
-  //
-  // The state machine ensures accumulators don't advance during an active PR
-  // Response window (no new scandals while one is in progress).
-
-  let accumulators = state.accumulators ?? [];
-  let scandalStateMachine =
-    state.scandalStateMachine ?? createDefaultStateMachine(staticData);
-  const scandalSessionSnapshot = state.scandalSessionSnapshot ?? null;
-
-  if (scandalStateMachine.state === 'normal') {
-    // Compute per-platform followers gained for Platform Neglect / Growth Scrutiny.
-    const followersGainedPerPlatform: Partial<Record<PlatformId, number>> = {};
-    for (const id of Object.keys(platforms) as PlatformId[]) {
-      const gained = platforms[id].followers - state.platforms[id].followers;
-      if (gained > 0) followersGainedPerPlatform[id] = gained;
-    }
-
-    const tickResult = updateAccumulatorsOnTick(
-      accumulators,
-      // Pass updated state so empire-scale uses fresh total_followers.
-      { player, generators, platforms, algorithm, viralBurst, accumulators, scandalStateMachine, scandalSessionSnapshot },
-      deltaMs,
-      ratesPerMs,
-      followersGainedPerPlatform,
-      now,
-      staticData,
-    );
-
-    accumulators = tickResult.accumulators;
-
-    if (tickResult.firedScandal !== null) {
-      scandalStateMachine = onAccumulatorFire(
-        scandalStateMachine,
-        tickResult.firedScandal,
-        tickResult.suppressedNotification,
-        now,
-      );
-    }
-  } else if (scandalStateMachine.state === 'scandal_active') {
-    // Accumulators frozen during PR Response window — no updates.
-    // Check timer expiry.
-    const timerStart = scandalStateMachine.timerStartTime ?? now;
-    if (now >= timerStart + scandalStateMachine.timerDuration) {
-      scandalStateMachine = onTimerExpire(scandalStateMachine);
-    }
-  } else if (scandalStateMachine.state === 'resolving') {
-    // Apply scandal damage and transition back to normal.
-    if (scandalStateMachine.activeScandal !== null) {
-      const scandal = scandalStateMachine.activeScandal;
-      const resolution = resolveScandal(
-        scandal,
-        scandalStateMachine.pendingEngagementSpend,
-        player.engagement,
-        scandalSessionSnapshot,
-        platforms,
-        staticData,
-      );
-
-      // Spend the committed engagement (if any).
-      const spent = Math.min(
-        scandalStateMachine.pendingEngagementSpend,
-        player.engagement,
-      );
-      if (spent > 0) {
-        player = { ...player, engagement: player.engagement - spent };
-      }
-
-      // Apply follower loss.
-      platforms = applyFollowerLoss(platforms, resolution.followersLost);
-      player = syncTotalFollowers(player, platforms);
-
-      // Compute total followers lost for the aftermath display.
-      const totalLost = Object.values(resolution.followersLost).reduce(
-        (sum, n) => sum + (n ?? 0), 0
-      );
-
-      // Transition back to normal, recording the resolution for UI aftermath.
-      scandalStateMachine = {
-        ...scandalStateMachine,
-        state: 'normal',
-        activeScandal: null,
-        timerStartTime: null,
-        pendingEngagementSpend: 0,
-        suppressedNotification: null, // cleared — recorded in lastResolution below
-        lastResolution: {
-          type: scandal.scandal_type,
-          platformAffected: scandal.target_platform,
-          followersLost: totalLost,
-          suppressedNotice: scandalStateMachine.suppressedNotification,
-        },
-      };
-    } else {
-      // Resolving with no active scandal — safety reset.
-      scandalStateMachine = { ...scandalStateMachine, state: 'normal' };
-    }
-  }
-
-  return { player, generators, platforms, algorithm, viralBurst, accumulators, scandalStateMachine, scandalSessionSnapshot };
+  return { player, generators, platforms, algorithm, viralBurst };
 }
 
 // ---------------------------------------------------------------------------
@@ -580,15 +526,31 @@ export function computeSnapshot(
     staticData,
   );
 
+  // Wardrobe multiplies the entire per-platform distribution (see tick).
+  const kitFollowerMult = kitFollowerConversionBonus(
+    state.player.creator_kit,
+    staticData,
+  );
+
   // distribution rates are per-ms. Convert to per-sec for the snapshot.
+  // Audience Mood retention folded in per-platform — retention does NOT
+  // advance offline (architecture/audience-mood.md §Integration — Offline),
+  // so baking it into the snapshot as a constant scalar gives the offline
+  // calculator the right multiplier for the entire window.
   const platform_rates = Object.fromEntries(
     (Object.keys(state.platforms) as PlatformId[]).map((id) => [
       id,
-      distribution.perPlatformRate[id] * 1000,
+      distribution.perPlatformRate[id] *
+        kitFollowerMult *
+        state.platforms[id].retention *
+        1000,
     ]),
   ) as Record<PlatformId, number>;
 
-  const total_follower_rate = distribution.totalRate * 1000;
+  let total_follower_rate = 0;
+  for (const id of Object.keys(state.platforms) as PlatformId[]) {
+    total_follower_rate += platform_rates[id];
+  }
 
   return {
     total_engagement_rate,
@@ -621,14 +583,15 @@ export function postClick(
     selfiesDef.trend_sensitivity,
   );
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
+  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
 
-  const earned = CLICK_BASE_ENGAGEMENT * algoMod * clout;
+  const earned = CLICK_BASE_ENGAGEMENT * algoMod * clout * kit;
 
   return {
     ...state,
     player: {
       ...state.player,
-      engagement: state.player.engagement + earned,
+      engagement: clampEngagement(state.player.engagement + earned),
     },
   };
 }

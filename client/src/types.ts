@@ -24,6 +24,9 @@ export type GeneratorId =
 
 export type PlatformId = 'chirper' | 'instasham' | 'grindset';
 
+// Audience Mood pressure families. See architecture/audience-mood.md §Data Model.
+export type PressureId = 'content_fatigue' | 'neglect' | 'algorithm_misalignment';
+
 // Algorithm state names from the spec (short_form_surge, authenticity_era,
 // engagement_bait) plus 2 provisional additions.
 export type AlgorithmStateId =
@@ -54,6 +57,48 @@ export type UpgradeEffect =
   | { type: 'generator_unlock'; generator_id: GeneratorId }
   | { type: 'algorithm_insight'; lookaheads: number[] }
   | { type: 'platform_headstart'; platform_id: PlatformId };
+
+// ---------------------------------------------------------------------------
+// Creator Kit — per-run upgrades purchased with Engagement, wiped on rebrand
+// (architecture/creator-kit.md)
+// ---------------------------------------------------------------------------
+
+export type KitItemId =
+  | 'camera'
+  | 'laptop'
+  | 'phone'
+  | 'wardrobe'
+  | 'mogging';
+
+/**
+ * KitEffect — tagged union of the five Creator Kit effect types.
+ *
+ * Per-level `values` / `lookaheads` arrays are length = `max_level`, indexed
+ * by `level - 1`, storing the CUMULATIVE effect at that level (same
+ * convention as CloutUpgradeDef).
+ *
+ * `platform_headstart_sequential` has no per-level array: the target
+ * platform is computed dynamically at purchase/run-start time by walking
+ * StaticData.platforms in declaration order and skipping platforms already
+ * head-started by Clout upgrades.
+ *
+ * See architecture/creator-kit.md §Interface Contracts.
+ */
+export type KitEffect =
+  | { type: 'engagement_multiplier'; values: number[] }
+  | { type: 'algorithm_lookahead'; lookaheads: number[] }
+  | { type: 'platform_headstart_sequential' }
+  | { type: 'follower_conversion_multiplier'; values: number[] }
+  | { type: 'viral_burst_amplifier'; values: number[] };
+
+export interface KitItemDef {
+  id: KitItemId;
+  /** Maximum purchasable level. ≥ 1. */
+  max_level: number;
+  /** Engagement cost per level, ascending. Length = max_level. */
+  cost: number[];
+  effect: KitEffect;
+}
 
 // ---------------------------------------------------------------------------
 // SnapshotState — captured on close, used by offline calculator
@@ -89,6 +134,12 @@ export interface Player {
   rebrand_count: number;
   /** Purchased permanent meta-upgrades. Values ≥ 0. Survives rebrand. */
   clout_upgrades: Record<UpgradeId, number>;
+  /**
+   * Per-run Creator Kit purchases. Keys are KitItemIds, values are current
+   * level ≥ 0 and ≤ item's max_level. **Wiped on rebrand.**
+   * See architecture/creator-kit.md.
+   */
+  creator_kit: Record<KitItemId, number>;
   /** Seed for the PRNG driving Algorithm shifts. Immutable per run. */
   algorithm_seed: number;
   /** Epoch ms when the current run began. */
@@ -123,6 +174,30 @@ export interface PlatformState {
   unlocked: boolean;
   /** Platform-specific follower count. ≥ 0. Independent of other platforms. */
   followers: number;
+  // -------------------------------------------------------------------------
+  // Audience Mood — retention multiplier + pressure accumulators.
+  // See architecture/audience-mood.md §Data Model.
+  //
+  // `retention` is a DERIVED field recomputed from the three pressures via
+  // recomputeRetention(). Persisted for save-load UI convenience; authoritative
+  // source is the pressure fields. Clamped to [retention_floor, 1.0].
+  //
+  // A "post" here is per-tick contribution from one owned generator — see
+  // architect resolution 2026-04-05. The tuning knobs in
+  // StaticData.audience_mood are scaled against that per-tick semantic.
+  // -------------------------------------------------------------------------
+  /** Derived retention multiplier. [retention_floor, 1.0]. Default 1.0. */
+  retention: number;
+  /**
+   * Per-generator fatigue on this platform. Each value ∈ [0, 1]. Partial —
+   * missing keys read as 0, matching the "map<GeneratorId, float>" spec
+   * in architecture/audience-mood.md §Data Model.
+   */
+  content_fatigue: Partial<Record<GeneratorId, number>>;
+  /** Time-since-last-post accumulator. [0, 1]. */
+  neglect: number;
+  /** Accumulates on posts misaligned with current Algorithm state. [0, 1]. */
+  algorithm_misalignment: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -173,164 +248,6 @@ export interface ViralBurstPayload {
 }
 
 // ---------------------------------------------------------------------------
-// Scandal system types
-// ---------------------------------------------------------------------------
-
-export type ScandalTypeId =
-  | 'content_burnout'
-  | 'platform_neglect'
-  | 'hot_take_backlash'
-  | 'trend_chasing'
-  | 'growth_scrutiny'
-  | 'fact_check';
-
-/** Coarse risk signal exposed to the UI layer. */
-export type RiskLevel = 'none' | 'building' | 'high';
-
-/**
- * Tracks accumulated risk for a specific scandal type, scoped to a generator,
- * platform, or the whole empire. See scandal-system.md §RiskAccumulator.
- */
-export interface RiskAccumulator {
-  scandal_type: ScandalTypeId;
-  scope_type: 'generator' | 'platform' | 'global';
-  /** The generator_id or platform_id this accumulator is scoped to. Null for global. */
-  scope_id: string | null;
-  /** Current accumulated pressure. [0, 1]. Resets to 0 after firing. */
-  value: number;
-  /** Base threshold before empire scaling. */
-  base_threshold: number;
-  /** True while the player is offline. Accumulators do not advance when frozen. */
-  frozen: boolean;
-}
-
-/**
- * A fired scandal event. Created when an accumulator crosses its threshold.
- * See scandal-system.md §ScandalEvent.
- */
-export interface ScandalEvent {
-  id: string;
-  scandal_type: ScandalTypeId;
-  target_platform: PlatformId;
-  /** Fraction of platform followers to remove (before PR Response mitigation). [0.05, 0.15] */
-  raw_magnitude: number;
-  /** Set after PR Response resolves. Null while scandal is active. */
-  final_magnitude: number | null;
-  /** Engagement spent by the player on PR Response. */
-  engagement_spent: number;
-  /** Actual followers removed after all rules applied. Set on resolution. */
-  followers_lost: number;
-  /** Epoch ms when the scandal fired. */
-  timestamp: number;
-  /** True after PR Response window closes and damage is applied. */
-  resolved: boolean;
-}
-
-/**
- * Snapshot of per-platform follower counts taken when the app is foregrounded.
- * Used to enforce the magnitude floor: no scandal can push a platform below
- * this level in the current session. Never persisted across sessions.
- *
- * See scandal-system.md §SessionSnapshot.
- */
-export interface ScandalSessionSnapshot {
-  /** Epoch ms when the snapshot was taken. */
-  timestamp: number;
-  /** Follower count per platform at snapshot time. */
-  platform_followers: Record<PlatformId, number>;
-}
-
-/**
- * State machine for the PR Response flow.
- * See scandal-system.md §PR Response State Machine.
- */
-export interface ScandalStateMachine {
-  state: 'normal' | 'scandal_active' | 'resolving';
-  activeScandal: ScandalEvent | null;
-  /** Flavor text for a suppressed scandal — shown after primary resolves. */
-  suppressedNotification: string | null;
-  /** Epoch ms when the timer started (set on scandal_active entry). */
-  timerStartTime: number | null;
-  /** Total timer duration in ms (read beat + decision window). */
-  timerDuration: number;
-  /** Duration of the comedic read beat before the slider becomes active. */
-  readBeatDuration: number;
-  /** Engagement to spend on PR Response. Set by player (task #31) or 0 on auto-resolve. */
-  pendingEngagementSpend: number;
-  /**
-   * Set after a scandal resolves so the UI can display the aftermath.
-   * Cleared by the player dismissing the aftermath display.
-   */
-  lastResolution: {
-    type: ScandalTypeId;
-    platformAffected: PlatformId;
-    followersLost: number;
-    suppressedNotice: string | null;
-  } | null;
-}
-
-// ---------------------------------------------------------------------------
-// Scandal static data types
-// ---------------------------------------------------------------------------
-
-export interface ScandalTypeDef {
-  id: ScandalTypeId;
-  scopeType: 'generator' | 'platform' | 'global';
-  /** Which generator_ids or platform_ids this applies to. ['*'] for global. */
-  applicableScopes: string[];
-  /** Base threshold before empire scaling. */
-  baseThreshold: number;
-  /** Base fraction of followers to remove. Clamped to [0.05, 0.15]. */
-  baseMagnitude: number;
-  /**
-   * Per-ms accumulator increment rate when trigger condition is fully active.
-   * Actual increment is scaled by the strength of the trigger condition.
-   */
-  incrementRate: number;
-  /** Per-ms decay rate when trigger condition is absent (accumulators drain). */
-  decayRate: number;
-  /**
-   * GeneratorId whose algorithm modifier amplifies this scandal's increment.
-   * Empty string if algorithm state does not affect this type.
-   */
-  algorithmModifierKey: string;
-}
-
-export interface ScandalStaticData {
-  types: Record<ScandalTypeId, ScandalTypeDef>;
-  empireScaleCurve: {
-    /** Denominator in empire_scale = 1 / (1 + followers / scaleConstant). */
-    scaleConstant: number;
-    /** Below this follower count, all accumulator increments are zeroed. */
-    minFollowersToEnable: number;
-  };
-  prResponse: {
-    /** Duration of read-beat (flavor text visible, slider inactive) in ms. */
-    readBeatMs: number;
-    /** Decision window in ms (after read beat, before auto-resolve). */
-    decisionWindowMs: number;
-    /** Max mitigation rate: spending max engagement reduces loss to (1 - maxMitigationRate). */
-    maxMitigationRate: number;
-  };
-  riskLevelThresholds: {
-    /** Accumulator value/threshold ratio at which risk becomes 'building'. */
-    building: number;
-    /** Accumulator value/threshold ratio at which risk becomes 'high'. */
-    high: number;
-  };
-  /**
-   * Trigger concentrations for tick-based accumulators.
-   * These are the behavioral thresholds the increment formula uses internally.
-   */
-  triggerThresholds: {
-    /** Generator output share above which Content Burnout increments. */
-    contentBurnoutShare: number;
-    /** Platform growth share above which Growth Scrutiny increments. */
-    growthScrutinyShare: number;
-  };
-}
-
-// ---------------------------------------------------------------------------
 // GameState — the complete in-memory state passed to the tick function
 // ---------------------------------------------------------------------------
 
@@ -340,15 +257,6 @@ export interface GameState {
   platforms: Record<PlatformId, PlatformState>;
   algorithm: AlgorithmState;
   viralBurst: ViralBurstState;
-  /** Risk accumulators for all scandal types. Persisted in save. */
-  accumulators: RiskAccumulator[];
-  /** PR Response state machine. Persisted in save. */
-  scandalStateMachine: ScandalStateMachine;
-  /**
-   * Follower snapshot taken on app foreground. Used for magnitude floor.
-   * Not persisted meaningfully — driver overwrites on every open.
-   */
-  scandalSessionSnapshot: ScandalSessionSnapshot | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -379,15 +287,18 @@ export interface GeneratorDef {
   buy_cost_multiplier: number;
   /**
    * Engagement cost to upgrade from level 1 → 2.
-   * Each subsequent level costs 4× the previous: base_upgrade_cost × 4^(currentLevel - 1).
-   *
-   * Note: the design proposal mentions three upgrade tracks (quality, frequency,
-   * platform optimization). The architecture spec consolidated these into a single
-   * `level` field and `levelMultiplier`. If distinct tracks are reinstated, this
-   * field will need to be replaced with per-track cost arrays.
-   * TODO(game-designer): provisional — tune during balance pass.
+   * Subsequent levels track the reward curve 1:1 via `levelMultiplier`:
+   *   cost(L→L+1) = ceil(base_upgrade_cost × levelMultiplier(L+1))
+   * See proposals/accepted/generator-level-growth-curves.md.
+   * TODO(game-designer): provisional — tune during balance pass (task #88).
    */
   base_upgrade_cost: number;
+  /**
+   * Maximum upgradable level for this generator. Hard cap — the L=10
+   * ceiling from the growth-curves proposal prevents runaway multipliers
+   * (L=14 overflows Number.MAX_SAFE_INTEGER under the full effect stack).
+   */
+  max_level: number;
 }
 
 export interface PlatformDef {
@@ -411,6 +322,45 @@ export interface CloutUpgradeDef {
   /** Maximum purchasable level. ≥ 1. */
   max_level: number;
   effect: UpgradeEffect;
+}
+
+// Audience Mood tuning knobs. See architecture/audience-mood.md §Static data.
+// A "post" is a per-tick contribution from one owned generator (architect
+// resolution 2026-04-05). Per-post values are scaled against that semantic —
+// e.g. 0.08/post at 10 Hz = 0.8/sec of same-generator fatigue from one
+// continuously-posting generator. All values below are PLACEHOLDERS —
+// game-designer tunes at build time.
+export interface AudienceMoodStaticData {
+  /** Lower bound on retention multiplier. Target [0.3, 0.5]. */
+  retention_floor: number;
+  /** Retention level below which the mood strip is shown (UI contract). */
+  degradation_threshold: number;
+  /** Fatigue accumulation on a same-generator post to a platform. */
+  content_fatigue_per_post_same_gen: number;
+  /** Fatigue decay on other generators when any generator posts. */
+  content_fatigue_decay_per_post_other_gen: number;
+  /** Neglect accumulated per tick when a platform receives no posts. */
+  neglect_per_tick: number;
+  /** Neglect removed on any post to a platform. 1.0 = full reset. */
+  neglect_reset_on_post: number;
+  /** Misalignment accumulation on a post whose generator is off-trend. */
+  misalignment_per_off_trend_post: number;
+  /** Misalignment decay on an aligned post. */
+  misalignment_decay_per_aligned_post: number;
+  /** Weight on fatigue magnitude in the retention composition formula. [0,1]. */
+  fatigue_weight: number;
+  /** Weight on neglect magnitude. [0,1]. */
+  neglect_weight: number;
+  /** Weight on misalignment magnitude. [0,1]. */
+  misalignment_weight: number;
+  /** Tie-breaker ordering for dominant-pressure display. First wins on tie. */
+  composition_priority: [PressureId, PressureId, PressureId];
+  /**
+   * Threshold on raw algorithm modifier above (or equal to) which a post is
+   * considered "aligned" (favored by the current state) — per arch spec
+   * §Event-driven §Algorithm Misalignment. state_modifiers[G] ≥ threshold.
+   */
+  alignment_threshold: number;
 }
 
 export interface ViralBurstConfig {
@@ -447,6 +397,12 @@ export interface StaticData {
     varianceMs: number;
   };
   cloutUpgrades: Record<UpgradeId, CloutUpgradeDef>;
+  /**
+   * Static definitions for Creator Kit items. Balance values (max_level,
+   * cost[], effect values) are owned by game-designer and populated in a
+   * separate task. See architecture/creator-kit.md.
+   */
+  creatorKitItems: Record<KitItemId, KitItemDef>;
   unlockThresholds: {
     /**
      * Total followers required to unlock a generator. Post-prestige
@@ -458,7 +414,11 @@ export interface StaticData {
     platforms: Record<PlatformId, number>;
   };
   viralBurst: ViralBurstConfig;
-  scandal: ScandalStaticData;
+  /**
+   * Audience Mood tuning knobs — see AudienceMoodStaticData. All values are
+   * placeholders; game-designer tunes at build time.
+   */
+  audience_mood: AudienceMoodStaticData;
 }
 
 // ---------------------------------------------------------------------------

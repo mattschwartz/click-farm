@@ -1,5 +1,12 @@
 # Scandal System Architecture
 
+> **SUPERSEDED (2026-04-05):** This document describes the retired Scandals & Follower Loss system. The mechanic has been replaced by Audience Mood (retention multiplier). See:
+> - `.frames/sdlc/architecture/audience-mood.md` — the replacement architecture spec
+> - `.frames/sdlc/proposals/accepted/audience-mood-retention.md` — the accepted design proposal
+> - `.frames/sdlc/proposals/accepted/remove-scandals-interim.md` — the interim removal authorization
+>
+> Retained as historical record. Do not build against this document.
+
 > **Scope:** Defines the data model, pipeline, state machine, and contracts for the Scandal & Follower Loss event system — risk accumulators, scandal events, the PR Response modal, and session snapshots.
 
 > **Not in scope:** Core game loop, generator/platform/economy architecture (see `.frames/sdlc/architecture/core-systems.md`), specific tuning values, visual/UX treatment.

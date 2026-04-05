@@ -106,6 +106,36 @@ Three-question test:
 
 No new engagement-line concerns beyond those already cleared in `brand-deal-boost.md` §7.
 
+### 9. Balance Pass: Unlock Thresholds & Selection Weights (2026-04-05)
+
+Resolves OQ1 (variant unlock thresholds) and OQ2 (selection weights). Done after the progression curve was locked (`clout-to-follower-scaling-curve.md`, `level-multiplier-curve.md`, `generator-level-growth-curves.md`, `generator-balance-and-algorithm-states.md`).
+
+**Unlock thresholds:**
+
+| Variant | Threshold | Progression anchor | Rationale |
+|---|---|---|---|
+| **Brand Deal** | **1,000 followers** | Micro-Influencer badge threshold; ~3 clout rebrand territory | Aligns with the "you're now a creator" moment. Micro-sponsorships are a real thing. Creates a chained onboarding: 1K unlocks Micro-Influencer badge (locked until first rebrand) → first Brand Deal fires on cadence → first tap unlocks Sellout (affectionate) badge (also locked until clout). All three light up during the pre-first-rebrand stretch and become claimable together after first rebrand. |
+| **Livestream** | **10,000 followers** | Main Character Energy badge threshold; first "good rebrand" (10 clout, one tier-1 upgrade) | Pairs with the first-rebrand reinforcement moment. The 1K–10K span gives Brand Deal alone time to teach the Gigs mechanic and its decision surface. At 10K, multiple progression signals converge ("you're leveling up") and Livestream arrives as the second variant — long-and-steady, the patience variant. |
+| **Convention** | **100,000 followers** | "Established creator" tier; ~31 clout rebrand, mid/late game | The diegetic "invited to a con" moment. Gating higher (250K or 500K) risks players never experiencing Cons — at 10% roll weight against a small unlocked pool, threshold × weight determines real exposure, and a player at 250K who has rebranded a few times may still not have seen a Con. 100K with 10% weight produces roughly one Con every ~15 minutes of continuous play for a player at or past the threshold — rare enough to feel special, frequent enough to learn the 10-second knife-edge timing. |
+
+**Starting weights: confirmed at 60 / 30 / 10 (Brand Deal / Livestream / Convention).**
+
+Reasoning:
+- At the ~90s average Gig cadence (`intervalMsMin: 60000, intervalMsMax: 120000`), 10% weight produces roughly one Convention per ~15 min of play for a player past the 100K threshold. That lands in the "rare but learnable" zone: rare enough that each "Oh, a con!" feels like a moment, frequent enough that a player develops mastery over the 10-second timing window across a session.
+- 70/25/5 was considered and rejected: at ~30 min between Conventions, most players would see only 1–2 per session and never develop the timing intuition the variant is designed around. The knife-edge 10s window is only interesting if the player has touched it enough to get good at it.
+- 60% Brand Deal keeps the baseline variant dominant — the new-player experience is anchored in the mid-range bet until they cross 10K.
+- 30% Livestream gives mid-game players a real alternative — not a novelty, a genuine strategic choice about which payoff shape fits the moment.
+
+**Tuning discipline:** weights are `StaticData` and changeable without code (per §3). If post-playtesting data shows Conventions flatten into habit or never land the emotional register, 70/25/5 or 65/30/5 become candidates — but that's a post-play tuning decision, not a pre-play one.
+
+**What this locks in:**
+- Unlock thresholds: Brand Deal 1K, Livestream 10K, Convention 100K.
+- Selection weights: 60 / 30 / 10.
+
+**What this leaves open:**
+- Post-playtesting weight adjustment. If Conventions flatten, tune rarity down; if they feel too scarce to master, tune up.
+- Whether Convention's threshold should move to 250K if the 100K placement feels too early once Gigs are running in a full progression context. Revisit in the same playtest pass.
+
 ## References
 
 1. `.frames/sdlc/proposals/accepted/brand-deal-boost.md` — core mechanic; this proposal renames and extends it
@@ -117,8 +147,8 @@ No new engagement-line concerns beyond those already cleared in `brand-deal-boos
 
 ## Open Questions
 
-1. ~~**Variant-specific follower unlock thresholds** — at what follower counts do Livestream and Convention unlock? Brand Deal threshold is already resolved to TBD in `brand-deal-boost.md`. **Owner: game-designer (balance pass, once progression curve is finalized)**~~ **[DEFERRED — game-designer, 2026-04-05]** Formally deferred to the balance pass; depends on progression-curve lock. Captured as a forward task in `tasks.json` alongside OQ2.
-2. ~~**Selection weights** — are 60/30/10 the right starting weights, or should Convention be rarer (e.g., 70/25/5)? **Owner: game-designer (balance pass, after playtesting)**~~ **[DEFERRED — game-designer, 2026-04-05]** Formally deferred to a post-playtesting balance pass. Starting weights of 60/30/10 ship; tuning follows real play data. Captured as a forward task in `tasks.json` alongside OQ1.
+1. ~~**Variant-specific follower unlock thresholds** — at what follower counts do Livestream and Convention unlock? Brand Deal threshold is already resolved to TBD in `brand-deal-boost.md`. **Owner: game-designer (balance pass, once progression curve is finalized)**~~ **[RESOLVED — game-designer, 2026-04-05, balance pass]** See §9. Brand Deal: 1K. Livestream: 10K. Convention: 100K. Anchored to the locked progression curve and to the badge milestones.
+2. ~~**Selection weights** — are 60/30/10 the right starting weights, or should Convention be rarer (e.g., 70/25/5)? **Owner: game-designer (balance pass, after playtesting)**~~ **[RESOLVED — game-designer, 2026-04-05, balance pass]** See §9. 60/30/10 confirmed for launch. Post-playtesting adjustment remains available as a `StaticData` tuning pass.
 3. **Per-variant card visual treatment** — how do Brand Deal, Livestream, and Convention cards differ visually? Iconography, color accent, copy, animation? ~~Owner: ux-designer~~ **[RESOLVED — ux-designer, 2026-04-05]** Direction committed; full asset-level spec deferred to a follow-up UX task (`ux/gig-cards.md`). Direction:
   - **Duration is the loudest element on the card.** Variant recognition at tap-time is decision-critical — Convention's 10s window leaves no room for the player to misread and hesitate. Visual hierarchy: duration > variant name > icon > body copy. This inverts the conventional card reading order and is deliberate.
   - **Rarity signals through *arrival*, not static art.** The "Oh, a con!" moment the proposal names (§3) is produced by how the card enters, not how it looks once stationary. Brand Deal enters with the baseline motion (per existing `ux/brand-deal-card.md`). Livestream enters slower / heavier, signaling uptime. Convention enters fast + punchier, with a distinct audio/visual signature. Uniform entrance with different icons kills the emotional register.

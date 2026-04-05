@@ -18,9 +18,9 @@ import type {
   CloutUpgradeDef,
   UpgradeId,
   ViralBurstConfig,
-  ScandalStaticData,
-  ScandalTypeId,
-  ScandalTypeDef,
+  KitItemDef,
+  KitItemId,
+  AudienceMoodStaticData,
 } from '../types.ts';
 
 // ---------------------------------------------------------------------------
@@ -28,13 +28,17 @@ import type {
 // Unlock thresholds create a progressive arc. Balance values are provisional.
 // ---------------------------------------------------------------------------
 
-// Generator buy/upgrade costs follow two provisional formulas:
-//   buy:     base_buy_cost × buy_cost_multiplier^count_owned   (rounds up)
-//   upgrade: base_upgrade_cost × 4^(currentLevel - 1)          (rounds up)
+// Generator buy/upgrade costs follow two formulas:
+//   buy:     base_buy_cost × buy_cost_multiplier^count_owned        (rounds up)
+//   upgrade: base_upgrade_cost × levelMultiplier(currentLevel + 1)  (rounds up)
+// The upgrade cost tracks reward 1:1 via levelMultiplier — see
+// proposals/accepted/generator-level-growth-curves.md.
 //
 // Base buy costs are set so early-game payback is ~10s at level 1, matching
 // the genre convention. Each generator tier costs ~10× the previous.
-// TODO(game-designer): all cost values are provisional — tune during balance pass.
+// Every generator caps at max_level: 10 (L=14 overflows MAX_SAFE_INTEGER).
+// TODO(game-designer): all cost values are provisional — tune during balance
+// pass (task #88).
 
 const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   selfies: {
@@ -46,6 +50,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 10,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 100,
+    max_level: 10,
   },
   memes: {
     id: 'memes',
@@ -56,6 +61,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 100,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 1_000,
+    max_level: 10,
   },
   hot_takes: {
     id: 'hot_takes',
@@ -66,6 +72,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 1_100,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 11_000,
+    max_level: 10,
   },
   tutorials: {
     id: 'tutorials',
@@ -76,6 +83,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 12_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 120_000,
+    max_level: 10,
   },
   livestreams: {
     id: 'livestreams',
@@ -86,6 +94,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 130_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 1_300_000,
+    max_level: 10,
   },
   podcasts: {
     id: 'podcasts',
@@ -96,6 +105,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 1_400_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 14_000_000,
+    max_level: 10,
   },
   viral_stunts: {
     id: 'viral_stunts',
@@ -106,6 +116,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 20_000_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 200_000_000,
+    max_level: 10,
   },
   // -------------------------------------------------------------------------
   // Post-prestige generators — unlocked only via Clout `generator_unlock`
@@ -128,6 +139,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 200_000_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 2_000_000_000,
+    max_level: 10,
   },
   deepfakes: {
     id: 'deepfakes',
@@ -138,6 +150,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 2_000_000_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 20_000_000_000,
+    max_level: 10,
   },
   algorithmic_prophecy: {
     id: 'algorithmic_prophecy',
@@ -148,6 +161,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 20_000_000_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 200_000_000_000,
+    max_level: 10,
   },
 };
 
@@ -372,104 +386,94 @@ const VIRAL_BURST_CONFIG: ViralBurstConfig = {
 };
 
 // ---------------------------------------------------------------------------
-// Scandal system static data
-// Increment rates are per-ms. Decay rates are per-ms.
-// All numeric values are provisional — tune during balance pass.
-// TODO(game-designer): review scandal thresholds and increment rates.
+// Creator Kit items — per-run upgrades purchased with Engagement
+// (architecture/creator-kit.md).
+//
+// Every numeric value below is PLACEHOLDER. Final balance is owned by
+// game-designer (open questions #3, #4, #5 in creator-kit.md). Placeholders
+// follow the guidance in task #74:
+//   - 3 levels per item
+//   - cost[] in Engagement, roughly calibrated against generator costs
+//   - value arrays produce a visible-but-not-absurd effect at each level
+//   - Phone has no value array (sequential semantics — level count IS the value)
+// BALANCE: placeholder — all five item definitions below.
 // ---------------------------------------------------------------------------
 
-const SCANDAL_TYPE_DEFS: Record<ScandalTypeId, ScandalTypeDef> = {
-  content_burnout: {
-    id: 'content_burnout',
-    scopeType: 'generator',
-    applicableScopes: ['selfies', 'memes', 'hot_takes', 'tutorials', 'livestreams', 'podcasts', 'viral_stunts'],
-    baseThreshold: 0.70,
-    baseMagnitude: 0.08,
-    // At 100% overconcentration (share - 0.70 = 0.30), fires in ~20 min at 0 followers.
-    incrementRate: 7.7e-9,  // 0.70 / (0.30 * 20 * 60_000 ms)
-    // Drains from 0.5 to 0 in ~10 min when balanced.
-    decayRate: 8.3e-10,     // 0.5 / (10 * 60_000 ms)
-    algorithmModifierKey: '',
+const CREATOR_KIT_ITEM_DEFS: Record<KitItemId, KitItemDef> = {
+  // Camera — Engagement Boost analog (per-run, multiplicative)
+  camera: {
+    id: 'camera',
+    max_level: 3, // BALANCE: placeholder
+    cost: [500, 2_500, 12_000], // BALANCE: placeholder
+    effect: {
+      type: 'engagement_multiplier',
+      values: [1.5, 2.5, 4.0], // BALANCE: placeholder — cumulative
+    },
   },
-  platform_neglect: {
-    id: 'platform_neglect',
-    scopeType: 'platform',
-    applicableScopes: ['chirper', 'instasham', 'grindset'],
-    baseThreshold: 0.80,
-    baseMagnitude: 0.07,
-    // Increments by 1/NEGLECT_WINDOW per ms. Reaches 0.80 after ~24 min.
-    incrementRate: 5.6e-7,  // 1 / (30 * 60_000 ms)  → 0.80 at 24 min
-    decayRate: 0,            // does not decay — resets to 0 on post
-    algorithmModifierKey: '',
+  // Laptop — Algorithm Insight analog (additive lookahead stacking)
+  laptop: {
+    id: 'laptop',
+    max_level: 3, // BALANCE: placeholder
+    cost: [800, 4_000, 18_000], // BALANCE: placeholder
+    effect: {
+      type: 'algorithm_lookahead',
+      lookaheads: [1, 2, 3], // BALANCE: placeholder — cumulative
+    },
   },
-  hot_take_backlash: {
-    id: 'hot_take_backlash',
-    scopeType: 'generator',
-    applicableScopes: ['hot_takes'],
-    baseThreshold: 0.60,
-    baseMagnitude: 0.09,
-    // At 50% hot_takes share with max algorithm penalty (2×), fires in ~15 min.
-    incrementRate: 1.3e-8,  // 0.60 / (0.5 * 2.0 * 15 * 60_000 ms)
-    decayRate: 5.6e-10,     // 0.5 / (15 * 60_000 ms)
-    algorithmModifierKey: 'hot_takes',
+  // Phone — Sequential platform head-start. Target is computed dynamically
+  // from player state + platform declaration order, so no value array.
+  phone: {
+    id: 'phone',
+    max_level: 3, // BALANCE: placeholder
+    cost: [1_200, 5_500, 22_000], // BALANCE: placeholder
+    effect: { type: 'platform_headstart_sequential' },
   },
-  trend_chasing: {
-    id: 'trend_chasing',
-    scopeType: 'global',
-    applicableScopes: ['*'],
-    baseThreshold: 0.75,
-    baseMagnitude: 0.07,
-    // Incremented per generator purchase. Decays slowly over time.
-    incrementRate: 0,       // purchase-driven; incrementRate unused for tick logic
-    decayRate: 2.8e-10,     // drains from 0.75 to 0 in ~45 min
-    algorithmModifierKey: '',
+  // Wardrobe — Follower conversion multiplier (new axis, no Clout analog)
+  wardrobe: {
+    id: 'wardrobe',
+    max_level: 3, // BALANCE: placeholder
+    cost: [600, 3_000, 14_000], // BALANCE: placeholder
+    effect: {
+      type: 'follower_conversion_multiplier',
+      values: [1.25, 1.75, 2.5], // BALANCE: placeholder — cumulative
+    },
   },
-  growth_scrutiny: {
-    id: 'growth_scrutiny',
-    scopeType: 'platform',
-    applicableScopes: ['chirper', 'instasham', 'grindset'],
-    baseThreshold: 0.65,
-    baseMagnitude: 0.08,
-    // At 80% platform share (0.80 - 0.60 = 0.20 overage), fires in ~25 min.
-    incrementRate: 2.2e-8,  // 0.65 / (0.20 * 25 * 60_000 ms)
-    decayRate: 5.6e-10,     // 0.5 / (15 * 60_000 ms)
-    algorithmModifierKey: '',
-  },
-  fact_check: {
-    id: 'fact_check',
-    scopeType: 'generator',
-    applicableScopes: ['podcasts', 'tutorials'],
-    baseThreshold: 0.70,
-    baseMagnitude: 0.06,
-    // At 50% combined share with 3× empire magnifier, fires in ~30 min.
-    incrementRate: 2.6e-9,  // 0.70 / (0.5 * 3.0 * 30 * 60_000 ms)
-    decayRate: 4.6e-10,
-    algorithmModifierKey: '',
+  // Mogging — Viral burst amplifier (multiplies rolled boost_factor)
+  mogging: {
+    id: 'mogging',
+    max_level: 3, // BALANCE: placeholder
+    cost: [1_000, 5_000, 20_000], // BALANCE: placeholder
+    effect: {
+      type: 'viral_burst_amplifier',
+      values: [1.2, 1.5, 2.0], // BALANCE: placeholder — cumulative
+    },
   },
 };
 
-const SCANDAL_STATIC_DATA: ScandalStaticData = {
-  types: SCANDAL_TYPE_DEFS,
-  empireScaleCurve: {
-    // empire_scale = 1 / (1 + total_followers / scaleConstant)
-    // At 50k followers: scale = 0.5 (thresholds halved → fires twice as fast).
-    scaleConstant: 50_000,
-    // Below this count, all accumulator increments are zero (new accounts are safe).
-    minFollowersToEnable: 1_000,
-  },
-  prResponse: {
-    readBeatMs: 1_500,          // 1.5s comedic beat before slider activates
-    decisionWindowMs: 12_000,   // 12s decision window
-    maxMitigationRate: 0.65,    // max spend reduces loss to 35% of raw magnitude
-  },
-  riskLevelThresholds: {
-    building: 0.4,  // value/threshold ≥ 0.4 → building
-    high: 0.75,     // value/threshold ≥ 0.75 → high
-  },
-  triggerThresholds: {
-    contentBurnoutShare: 0.70,    // one generator >70% of total output → content burnout
-    growthScrutinyShare: 0.60,    // one platform >60% of total follower gain → scrutiny
-  },
+// ---------------------------------------------------------------------------
+// Audience Mood tuning
+//
+// A "post" is a per-tick contribution from one owned generator (architect
+// resolution 2026-04-05, see architecture/audience-mood.md). At 10 Hz, one
+// continuously-posting generator fires 10 posts/second. Values below are
+// PLACEHOLDERS from the architecture spec — game-designer owns the final
+// magnitudes and will re-tune against the per-tick semantic.
+// ---------------------------------------------------------------------------
+
+const AUDIENCE_MOOD: AudienceMoodStaticData = {
+  retention_floor: 0.4,
+  degradation_threshold: 0.95,
+  content_fatigue_per_post_same_gen: 0.08,                 // BALANCE: placeholder
+  content_fatigue_decay_per_post_other_gen: 0.15,          // BALANCE: placeholder
+  neglect_per_tick: 0.001,                                 // BALANCE: placeholder — full-neglect in ~100s
+  neglect_reset_on_post: 1.0,                              // full reset on any post
+  misalignment_per_off_trend_post: 0.12,                   // BALANCE: placeholder
+  misalignment_decay_per_aligned_post: 0.20,               // BALANCE: placeholder
+  fatigue_weight: 0.5,                                     // BALANCE: placeholder
+  neglect_weight: 0.5,                                     // BALANCE: placeholder
+  misalignment_weight: 0.5,                                // BALANCE: placeholder
+  composition_priority: ['content_fatigue', 'algorithm_misalignment', 'neglect'],
+  alignment_threshold: 1.0,                                // state_modifiers[G] ≥ 1.0 is "aligned"
 };
 
 // ---------------------------------------------------------------------------
@@ -485,6 +489,7 @@ export const STATIC_DATA: StaticData = {
     varianceMs: 60 * 1_000,         // ±1 minute
   },
   cloutUpgrades: CLOUT_UPGRADE_DEFS,
+  creatorKitItems: CREATOR_KIT_ITEM_DEFS,
   unlockThresholds: {
     // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
     // intentionally absent — they are unlocked only via Clout `generator_unlock`
@@ -506,5 +511,5 @@ export const STATIC_DATA: StaticData = {
     },
   },
   viralBurst: VIRAL_BURST_CONFIG,
-  scandal: SCANDAL_STATIC_DATA,
+  audience_mood: AUDIENCE_MOOD,
 };

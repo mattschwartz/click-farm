@@ -35,9 +35,11 @@ import { PostZone } from './PostZone.tsx';
 import { GeneratorList } from './GeneratorList.tsx';
 import { PlatformPanel } from './PlatformPanel.tsx';
 import { OfflineGainsModal } from './OfflineGainsModal.tsx';
-import { ScandalModal, ScandalAftermathCard } from './ScandalModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
+import { CreatorKitPanel, isPeekSignalActive } from './CreatorKitPanel.tsx';
+import { SettingsModal } from './SettingsModal.tsx';
+import { useSettings } from './useSettings.ts';
 import { GENERATOR_DISPLAY, PLATFORM_DISPLAY } from './display.ts';
 import { fmtCompactInt } from './format.ts';
 import './GameScreen.css';
@@ -100,13 +102,22 @@ export function GameScreen() {
     offlineResult,
     clearOfflineResult,
     rebrand,
-    scandalUIState,
-    confirmPR,
-    dismissScandalResolution,
     pauseLoop,
     resumeLoop,
     buyCloutUpgrade,
+    buyKitItem,
+    saveError,
+    clearSaveError,
+    resetGame,
   } = useGame();
+
+  // Settings — persisted separately from GameState, propagates reduceMotion
+  // to <html data-reduce-motion> so CSS can mirror the OS media query.
+  const {
+    settings,
+    setReduceMotion,
+    setSound,
+  } = useSettings();
 
   // Render-time derived values --------------------------------------------
   const engagementRate = useMemo(() => {
@@ -229,6 +240,33 @@ export function GameScreen() {
   // Modal visibility state.
   const [showCeremonyModal, setShowCeremonyModal] = useState(false);
   const [showShopModal, setShowShopModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // Global Esc shortcut — opens Settings when no modal is open (§1). Each
+  // modal owns its own Esc-to-close handler; this listener bails out when
+  // any modal is visible so it doesn't double-handle.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (
+        showCeremonyModal ||
+        showShopModal ||
+        showSettingsModal ||
+        offlineResult !== null
+      ) {
+        return;
+      }
+      e.preventDefault();
+      setShowSettingsModal(true);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [
+    showCeremonyModal,
+    showShopModal,
+    showSettingsModal,
+    offlineResult,
+  ]);
 
   // Refs for returning focus to the triggering button on modal close.
   const rebrandBtnRef = useRef<HTMLButtonElement>(null);
@@ -324,7 +362,29 @@ export function GameScreen() {
           viralGold={viralPhase !== null}
           summaryBadge={summaryBadge}
           rebrandCount={state.player.rebrand_count}
+          peekSignalActive={isPeekSignalActive(state, STATIC_DATA)}
+          onOpenSettings={() => setShowSettingsModal(true)}
         />
+
+        {saveError && (
+          <div className="save-error-banner" role="alert">
+            <span className="save-error-banner-text">
+              {saveError.kind === 'load_corrupt'
+                ? 'Your save could not be read — starting a fresh run.'
+                : saveError.kind === 'save_quota'
+                  ? 'Browser storage is full — progress is in memory only.'
+                  : 'Save failed — progress is in memory only.'}
+            </span>
+            <button
+              type="button"
+              className="save-error-banner-close"
+              onClick={clearSaveError}
+              aria-label="Dismiss save error"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         <div className="game-body">
           <PostZone
@@ -332,20 +392,25 @@ export function GameScreen() {
             perClick={perClick}
             contextLabel={contextLabel}
           />
-          <GeneratorList
-            state={state}
-            staticData={STATIC_DATA}
-            onBuy={buy}
-            onUpgrade={upgrade}
-            viralGeneratorId={viralActive?.source_generator_id ?? null}
-            riskLevels={scandalUIState.riskLevels}
-            onDrawerOpenChange={setUpgradeDrawerOpen}
-          />
+          <div className="generator-column">
+            <GeneratorList
+              state={state}
+              staticData={STATIC_DATA}
+              onBuy={buy}
+              onUpgrade={upgrade}
+              viralGeneratorId={viralActive?.source_generator_id ?? null}
+              onDrawerOpenChange={setUpgradeDrawerOpen}
+            />
+            <CreatorKitPanel
+              state={state}
+              staticData={STATIC_DATA}
+              onBuy={buyKitItem}
+            />
+          </div>
           <PlatformPanel
             state={state}
             staticData={STATIC_DATA}
             viralPlatformId={viralActive?.source_platform_id ?? null}
-            riskLevels={scandalUIState.riskLevels}
             drawerDimmed={upgradeDrawerOpen}
           />
         </div>
@@ -379,22 +444,6 @@ export function GameScreen() {
             setShowOffline(false);
             clearOfflineResult();
           }}
-        />
-      )}
-
-      {/* PR Response modal — shown when a scandal is active */}
-      {scandalUIState.activeScandal && (
-        <ScandalModal
-          activeScandal={scandalUIState.activeScandal}
-          onConfirm={confirmPR}
-        />
-      )}
-
-      {/* Aftermath display — shown after a scandal resolves */}
-      {scandalUIState.lastResolution && !scandalUIState.activeScandal && (
-        <ScandalAftermathCard
-          resolution={scandalUIState.lastResolution}
-          onDismiss={dismissScandalResolution}
         />
       )}
 
@@ -446,6 +495,29 @@ export function GameScreen() {
           onCancel={handleCeremonyCancel}
           onConfirm={handleCeremonyConfirm}
           onComplete={handleCeremonyComplete}
+        />
+      )}
+
+      {/* Settings modal — game loop continues ticking. Esc closes. */}
+      {showSettingsModal && (
+        <SettingsModal
+          settings={settings}
+          onSetReduceMotion={setReduceMotion}
+          onSetSound={setSound}
+          rebrandCount={state.player.rebrand_count}
+          onClose={() => setShowSettingsModal(false)}
+          onResetRequested={() => {
+            // Clear the save and stop the driver (disables any late-firing
+            // save from timers / beforeunload / effect cleanup), then hard
+            // reload — the driver re-initialises from empty localStorage.
+            resetGame();
+            if (typeof window !== 'undefined') window.location.reload();
+          }}
+          onImportApplied={() => {
+            // Same rationale as reset — force a reload so the driver
+            // picks up the imported save.
+            if (typeof window !== 'undefined') window.location.reload();
+          }}
         />
       )}
 

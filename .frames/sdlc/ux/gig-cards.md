@@ -2,11 +2,13 @@
 
 > **Scope:** Defines the per-variant card treatment for the three launch Gig variants — Brand Deal, Livestream, and Convention. Covers visual hierarchy, card anatomy, entrance motion, color accents, iconography, flavor copy, and active-badge behavior for each variant. The expiry fade, activation stamp/snap, and compound-moment signal are carried forward from `brand-deal-card.md` with per-variant deltas called out explicitly.
 >
-> **Supersedes (in part):** `ux/brand-deal-card.md` — card anatomy and entrance motion sections are superseded by this spec. Expiry, activation, deal-active badge, compound signal, mobile layout, and accessibility sections of `brand-deal-card.md` remain authoritative and are extended here.
+> **Supersedes (in part):** `ux/brand-deal-card.md` — card anatomy, entrance motion, and color values are superseded by this spec. Dark-mode color assumptions in `brand-deal-card.md` (e.g., `rgba(42,122,59,0.25)` multiplier-pill fill, `rgba(0,0,0,0.4)` shadow) predate the light-mode visual identity pivot and are explicitly replaced here against a `#FFFFFF` card surface. Expiry, activation choreography, deal-active badge structure, compound signal, mobile layout, and accessibility sections of `brand-deal-card.md` remain authoritative and are extended here with per-variant values.
 >
-> **Implements:** `proposals/draft/gigs-system.md` — OQ3 (card visual treatment) and OQ6 (on-card label) resolved in that proposal and carried forward here.
+> **Implements:** `proposals/accepted/gigs-system.md` — OQ3 (card visual treatment) and OQ6 (on-card label) resolved in that proposal and carried forward here.
 >
-> **Against contract:** `proposals/draft/gigs-system.md` §2 (variant roster), §3 (rarity weights), architect review (GigOffer/ActiveGig state model). Card renders `GigOffer.variant_id` → variant config from `StaticData.gigs.variants[variant_id]`.
+> **Against contract:** `proposals/accepted/gigs-system.md` §2 (variant roster), §3 (rarity weights), architect review (GigOffer/ActiveGig state model). Card renders `GigOffer.variant_id` → variant config from `StaticData.gigs.variants[variant_id]`.
+>
+> **Against visual identity:** `proposals/accepted/visual-identity-light-mode.md` — card surface is `#FFFFFF`, all accent values pass WCAG 1.4.11 3:1 against white. Values in this spec supersede the dark-mode assumptions carried into `brand-deal-card.md` pre-pivot.
 >
 > **Integrates with:** `ux/brand-deal-card.md` §4 (deal-active badge), §5 (compound moment signal), `ux/core-game-screen.md` §9 (viral burst choreography)
 
@@ -53,18 +55,20 @@ All three variants use this layout. Per-variant values are specified in §§3–
 │  "SponsoredContent™ is interested."             │  ← Row 3: Flavor copy
 └─────────────────────────────────────────────────┘
   ▲
-  3px left-edge accent stripe (variant accent color at 70% opacity)
+  3px left-edge accent stripe (variant accent color at 100% opacity)
 ```
 
 **Row specifications:**
 
 | Row | Element | Size | Weight | Color | Notes |
 |-----|---------|------|--------|-------|-------|
-| 1 | Duration numeral | 28px | 700 | Variant accent, full opacity | "20s", "60s", "10s" — includes unit |
-| 1 | Multiplier | 15px | 600 | Variant accent, 80% opacity | "3×", "2×", "5×" — right-aligned, vertically centered with duration |
-| 2 | Variant name | 10px | 500 | Variant accent, 70% opacity | Uppercase. "BRAND DEAL", "LIVESTREAM", "CONVENTION" |
-| 2 | Icon | 16px glyph | — | Variant accent, 70% opacity | Right-aligned. Single glyph per §2.1 |
-| 3 | Flavor copy | 12px | 400 | Full contrast (4.5:1 min) | Italic. One line, ≤40 chars, drawn from variant pool |
+| 1 | Duration numeral | 28px | 700 | Variant accent, 100% opacity | "20s", "60s", "10s" — includes unit |
+| 1 | Multiplier | 15px | 600 | Variant accent, 100% opacity | "3×", "2×", "5×" — right-aligned, vertically centered with duration |
+| 2 | Variant name | 10px | 500 | Variant accent, 100% opacity | Uppercase. "BRAND DEAL", "LIVESTREAM", "CONVENTION" |
+| 2 | Icon | 16px glyph | — | Variant accent, 70% opacity | Right-aligned. Single glyph per §2.1. 70% opacity de-emphasizes icon vs. variant name per hierarchy rule (§1); icon only needs 3:1 UI-component contrast — at 70% on white, accent greens render ~3:1. |
+| 3 | Flavor copy | 12px | 400 | `#1A1A1A` (primary text per `visual-identity-light-mode.md`) | Italic. One line, ≤40 chars, drawn from variant pool. Contrast against `#FFFFFF`: 17.8:1 — far above 4.5:1 minimum. |
+
+**Hierarchy is carried by size and weight, not opacity.** All accent text runs at 100% opacity against the `#FFFFFF` card surface so every accent green passes WCAG 2.1 AA 4.5:1 for normal text without opacity-trap risk. The only opacity reduction is on the icon (70%), which only needs to meet 3:1 UI-component contrast.
 
 **Internal padding:**
 - Top: 10px
@@ -73,11 +77,11 @@ All three variants use this layout. Per-variant values are specified in §§3–
 - Total content height: 28 + 4 + 16 + 4 + 12 = 64px. With top 10px + bottom 4px = 78px — fits within 88px.
 
 **Card visual style (all variants):**
-- Background: panel color (dark)
-- Left-edge stripe: 3px, variant accent color at 70% opacity
-- Border: 1px solid variant accent color at 30% opacity
+- Background: `#FFFFFF` (card surface per `visual-identity-light-mode.md` §1)
+- Left-edge stripe: 3px, variant accent color at 100% opacity (it is a primary signal, not a decorative wash)
+- Border: 1px solid variant accent color at 40% opacity — measure rendered value against `#FFFFFF`; at 40% this yields ≈ 2:1 which is below 3:1. Border is a decorative element; the 3px stripe and the text in accent color carry the color-lane signal. Do not rely on the border alone to communicate variant.
 - Border-radius: 6px
-- Drop shadow: `0 2px 8px rgba(0,0,0,0.4)`
+- Drop shadow: `0 2px 6px rgba(26, 26, 26, 0.08)` — light-mode shadow, gives the card lift against the `#FAF8F5` base without reading as dark-mode elevation.
 
 ### 2.1 Icons
 
@@ -103,8 +107,11 @@ Final icon assets are selected by the engineer from the project's icon set. The 
 | Multiplier | 3× |
 | On-card label | BRAND DEAL |
 | Icon | phone/handshake |
-| Accent color | `#3aaa50` (corporate green baseline) |
-| Accent dark (stripe) | `#2a7a3b` |
+| Accent color | `#2a7a3b` (corporate green baseline) |
+
+**Contrast:** `#2a7a3b` against `#FFFFFF` card surface: **5.33:1**. Passes WCAG 1.4.11 3:1 for UI components and WCAG 2.1 AA 4.5:1 for normal text. The single accent is used for the duration numeral, multiplier, variant name, icon glyph, and left-edge stripe — one value drives the entire card's color signal.
+
+**Color character:** the canonical corporate green. Reads as "transaction," "partnership," "business." Baseline against which the other two variants are deltas.
 
 ### 3.2 Entrance animation
 
@@ -131,12 +138,11 @@ From `ux/brand-deal-card.md §2.5`. 15-line pool; selection is uniform random pe
 | Multiplier | 2× |
 | On-card label | LIVESTREAM |
 | Icon | broadcast dot / go-live badge |
-| Accent color | `#72aa28` (warm green, shifted toward yellow-green ~85°) |
-| Accent dark (stripe) | `#537a1e` |
+| Accent color | `#537a1e` (warm olive-green, hue shifted toward yellow ~75°) |
 
-**Contrast:** `#72aa28` against dark panel (~`#1a1a1a`): approximate contrast ratio 5.8:1. Passes WCAG 1.4.11 3:1 for UI components. Engineer to validate against actual rendered panel color before ship.
+**Contrast:** `#537a1e` against `#FFFFFF` card surface: **5.05:1**. Passes WCAG 1.4.11 3:1 for UI components and WCAG 2.1 AA 4.5:1 for normal text.
 
-**Color character:** shifts the corporate green baseline toward warmer, more productive yellow-green. Reads as "growth," "output," "steady yield" — distinct from the neutral corporate green but still within the same family. Does not edge into amber (risk language) or gold (viral language).
+**Color character:** shifts the corporate green baseline toward warmer, more productive olive. Reads as "growth," "output," "steady yield" — distinct from the neutral corporate green but still within the same family. Does not edge into amber (risk language) or gold (viral language).
 
 ### 4.2 Entrance animation
 
@@ -182,14 +188,13 @@ Voice direction: streaming culture, parasocial dynamic, the mundanity of being-o
 | Multiplier | 5× |
 | On-card label | CONVENTION |
 | Icon | crowd / badge-lanyard |
-| Accent color | `#28aa82` (cool green, shifted toward teal ~165°) |
-| Accent dark (stripe) | `#1e7a5e` |
+| Accent color | `#1e7a5e` (cool teal-green, hue shifted toward cyan ~160°) |
 
-**Contrast:** `#28aa82` against dark panel (~`#1a1a1a`): approximate contrast ratio 5.4:1. Passes WCAG 1.4.11 3:1. Engineer to validate against actual rendered panel color before ship.
+**Contrast:** `#1e7a5e` against `#FFFFFF` card surface: **5.25:1**. Passes WCAG 1.4.11 3:1 for UI components and WCAG 2.1 AA 4.5:1 for normal text.
 
-**Color character:** shifts the corporate green baseline toward cooler teal. Reads as "event," "crisp," "distinct" — the gig that isn't just a business transaction. Still within the corporate-green lane; does not read as viral gold or risk amber under CVD simulation. Protanopia safe: teal-green reads as a distinctly lighter, more cyan tone, separate from brand deal's warmer green. Verify in CVD simulator.
+**Color character:** shifts the corporate green baseline toward cooler teal. Reads as "event," "crisp," "distinct" — the gig that isn't just a business transaction. Still within the corporate-green lane; does not read as viral gold or risk amber under CVD simulation. Protanopia safe: teal-green reads as a distinctly cooler, more cyan tone, separate from brand deal's warmer green. Verify in CVD simulator.
 
-**On-card label:** "CONVENTION" — full word. "Con" is not permitted on the primary card label at any size or in any abbreviation. See `proposals/draft/gigs-system.md OQ6` for rationale (Scandal system semantic collision). Short forms ("con") may appear in secondary copy only (toast text, acknowledgment lines — not on the card itself).
+**On-card label:** "CONVENTION" — full word. "Con" is not permitted on the primary card label at any size or in any abbreviation. See `proposals/accepted/gigs-system.md` OQ6 for rationale (Scandal system semantic collision). Short forms ("con") may appear in secondary copy only (toast text, acknowledgment lines — not on the card itself).
 
 ### 5.2 Entrance animation
 
@@ -260,9 +265,9 @@ The rate flare on activation (`purchase-feedback-and-rate-visibility.md §5.1`) 
 
 | Variant | Rate flare color |
 |---------|-----------------|
-| Brand Deal | `#3aaa50` (corporate green) |
-| Livestream | `#72aa28` (warm yellow-green) |
-| Convention | `#28aa82` (cool teal-green) |
+| Brand Deal | `#2a7a3b` (corporate green) |
+| Livestream | `#537a1e` (warm olive-green) |
+| Convention | `#1e7a5e` (cool teal-green) |
 
 The numeral color shift signals "which gig is running" at the engagement counter — useful during Livestream's 60s window when the player will be watching the counter for a long time.
 
@@ -275,8 +280,8 @@ Extends `brand-deal-card.md §4`. The badge structure, position, and behavior ar
 | Element | Brand Deal | Livestream | Convention |
 |---------|------------|------------|------------|
 | Label text | "BRAND DEAL" | "LIVESTREAM" | "CONVENTION" |
-| Accent color | `#3aaa50` | `#72aa28` | `#28aa82` |
-| Progress bar fill | Corporate green 70% | Warm yellow-green 70% | Teal-green 70% |
+| Accent color | `#2a7a3b` | `#537a1e` | `#1e7a5e` |
+| Progress bar fill | Corporate green 100% | Warm olive-green 100% | Teal-green 100% |
 | Progress bar depletes over | 20s — moderate pace | 60s — barely moves | 10s — burns fast |
 | Bar depletion character | Steady | Patient | Urgent |
 
@@ -309,9 +314,9 @@ The compound signal is variant-agnostic by design. The badge label already tells
 | Gig offered (any variant) | Card visible at full opacity. Variant-specific entrance has played. |
 | Gig fading (final 33%) | Card at 1.0 → 0.4 opacity fade over 30s. Same for all variants. |
 | Gig expired | Card fade-out (400ms). Nothing replaces it. |
-| Gig active — Brand Deal | Badge shows "BRAND DEAL," corporate green, 20s bar. Rate numeral in `#3aaa50`. |
-| Gig active — Livestream | Badge shows "LIVESTREAM," warm green, 60s bar (slow). Rate numeral in `#72aa28`. |
-| Gig active — Convention | Badge shows "CONVENTION," teal-green, 10s bar (fast). Rate numeral in `#28aa82`. |
+| Gig active — Brand Deal | Badge shows "BRAND DEAL," corporate green, 20s bar. Rate numeral in `#2a7a3b`. |
+| Gig active — Livestream | Badge shows "LIVESTREAM," warm olive-green, 60s bar (slow). Rate numeral in `#537a1e`. |
+| Gig active — Convention | Badge shows "CONVENTION," teal-green, 10s bar (fast). Rate numeral in `#1e7a5e`. |
 | Any gig active + viral active | Badge border pulses viral gold at 1.5s cycle. |
 | Boost expired | Badge fades, rate flares penalty-direction (per `purchase-feedback §5.3`), top bar contracts. |
 
@@ -346,21 +351,21 @@ The compound signal is variant-agnostic by design. The badge label already tells
 
 | Element | Minimum required | Notes |
 |---------|-----------------|-------|
-| Duration numeral (28px 700) | 3:1 (large text) | Target 4.5:1 — primary data |
-| Multiplier (15px 600) | 4.5:1 (normal text) | At 80% opacity, measure rendered value against panel |
-| Variant name (10px 500 uppercase) | 4.5:1 | Small text; uppercase does not earn large-text exemption at this size |
-| Icon glyph (16px) | 3:1 (UI component) | |
-| Flavor copy (12px 400) | 4.5:1 | |
-| Left-edge stripe (3px) | 3:1 (UI component) | At 70% opacity; measure rendered value |
-| Card border (1px) | 3:1 (UI component) | At 30% opacity; measure rendered value |
-| Badge label (9px uppercase) | 4.5:1 | |
-| Badge progress bar fill | 3:1 (UI component) | At 70% opacity; measure against track background |
+| Duration numeral (28px 700, 100% accent) | 3:1 (large text; ≥24px or ≥18.67px bold qualifies) | Actual against `#FFFFFF`: Brand Deal 5.33, Livestream 5.05, Convention 5.25 — all exceed 4.5:1 |
+| Multiplier (15px 600, 100% accent) | 4.5:1 (normal text) | Actual same as duration — passes |
+| Variant name (10px 500 uppercase, 100% accent) | 4.5:1 | Small text; uppercase does not earn large-text exemption at this size. Actual same as duration — passes |
+| Icon glyph (16px, 70% accent) | 3:1 (UI component) | At 70% opacity on `#FFFFFF`, accent greens render ≈ 3:1. Validate with DevTools color picker before ship; if marginal, bump to 100% |
+| Flavor copy (12px 400, `#1A1A1A`) | 4.5:1 | Against `#FFFFFF`: 17.8:1 |
+| Left-edge stripe (3px, 100% accent) | 3:1 (UI component) | Same rendered value as accent text — passes |
+| Card border (1px, 40% accent) | 3:1 (UI component) | At 40% opacity on white, accent greens render ≈ 2:1. **Decorative only** — the stripe carries the 3:1 signal |
+| Badge label (9px uppercase) | 4.5:1 | Uses `#1A1A1A` text or 100% accent depending on badge background |
+| Badge progress bar fill (100% accent) | 3:1 (UI component) | Measure against track background (transparent/white wash) |
 
-**Opacity trap:** All accent colors are specified at base opacity. The 70%/30%/80% opacity values applied to stripe, border, and multiplier must be validated against actual rendered backgrounds — not estimated. Measure with the DevTools color picker against the rendered panel color.
+**Opacity trap:** Accent colors are specified at 100% opacity everywhere they carry a signal — duration numeral, multiplier, variant name, stripe, and progress bar fill all render at full accent against `#FFFFFF`. The 70% icon-opacity and 40% border-opacity values must be validated with DevTools against actual rendered backgrounds — not estimated.
 
 **CVD simulation:** Run all three variant accent colors through protanopia, deuteranopia, and tritanopia simulation before ship. Confirm:
-- Brand Deal (`#3aaa50`) and Livestream (`#72aa28`) remain distinguishable under deuteranopia (most common)
-- Convention (`#28aa82`) reads distinctly from Brand Deal under all three
+- Brand Deal (`#2a7a3b`) and Livestream (`#537a1e`) remain distinguishable under deuteranopia (most common)
+- Convention (`#1e7a5e`) reads distinctly from Brand Deal under all three
 - No variant accent reads as viral gold (`#f0a500`) under any simulation
 
 **Color independence:** Every accent color is paired with text (duration numeral, variant name, multiplier). No information is communicated by color alone. The variant name label disambiguates for players who cannot distinguish the accent colors.
@@ -380,7 +385,7 @@ The compound signal is variant-agnostic by design. The badge label already tells
 
 1. ~~**Should Convention's distinct entrance have a dedicated SFX?**~~ **[RESOLVED — ux-designer, 2026-04-05]** Yes. The "Oh, a con!" emotional register requires audio to work even when the player isn't watching the card area. The visual spring entrance alone requires the player to be looking at the right zone at the right moment. The chime-pop SFX is the minimal asset cost for a reliably-delivered emotional target. Specified in §5.2.
 
-2. **CVD simulation pass.** Convention's teal-green (`#28aa82`) and Brand Deal's corporate green (`#3aaa50`) must be confirmed distinct under deuteranopia before ship. If they collapse to indistinguishable, the Convention accent should shift further toward cyan (e.g., `#20a890`). **Owner: engineer (validate, flag to ux-designer if adjustment needed)**
+2. **CVD simulation pass.** Convention's teal-green (`#1e7a5e`) and Brand Deal's corporate green (`#2a7a3b`) must be confirmed distinct under deuteranopia before ship. If they collapse to indistinguishable, the Convention accent should shift further toward cyan (e.g., `#1a7a70`) while maintaining 3:1 against `#FFFFFF`. **Owner: engineer (validate, flag to ux-designer if adjustment needed)**
 
 3. **Icon asset availability.** Three icons are specified semantically in §2.1. Final glyph selection depends on available icon set. Engineer to choose closest match and flag to ux-designer if the available set lacks a strong match for any variant. **Owner: engineer**
 
@@ -390,10 +395,11 @@ The compound signal is variant-agnostic by design. The badge label already tells
 
 ## 14. References
 
-1. `ux/brand-deal-card.md` — baseline card spec; expiry, activation, badge, compound signal, mobile, and accessibility sections authoritative here unless explicitly overridden
-2. `proposals/draft/gigs-system.md` — variant roster (§2), OQ3 resolution (card direction), OQ6 resolution (Convention label)
-3. `proposals/accepted/brand-deal-boost.md` — core mechanic spec; ux-designer review contains original activation direction
-4. `proposals/accepted/viral-burst-event-signal.md` — viral burst mechanic; compound-moment timing partner
-5. `ux/purchase-feedback-and-rate-visibility.md` §5.1, §5.3 — rate flare on activation and boost expiry
-6. `ux/core-game-screen.md` §9 — viral burst choreography; compound moment zone
-7. `roles/ux-designer.md` — motion as communication, trust signal design, color contrast standards
+1. `ux/brand-deal-card.md` — baseline card spec; expiry, activation choreography, badge structure, compound signal, mobile, and accessibility sections authoritative here unless explicitly overridden. Color values in that spec predate light-mode pivot and are superseded.
+2. `proposals/accepted/gigs-system.md` — variant roster (§2), OQ3 resolution (card direction), OQ6 resolution (Convention label)
+3. `proposals/accepted/visual-identity-light-mode.md` — card surface color (`#FFFFFF`), text color, WCAG targets
+4. `proposals/accepted/brand-deal-boost.md` — core mechanic spec; ux-designer review contains original activation direction
+5. `proposals/accepted/viral-burst-event-signal.md` — viral burst mechanic; compound-moment timing partner
+6. `ux/purchase-feedback-and-rate-visibility.md` §5.1, §5.3 — rate flare on activation and boost expiry
+7. `ux/core-game-screen.md` §9 — viral burst choreography; compound moment zone
+8. `roles/ux-designer.md` — motion as communication, trust signal design, color contrast standards

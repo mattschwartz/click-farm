@@ -296,6 +296,24 @@ Thinking about context as a design decision, not a default. What does this agent
 ### Fix upstream, not downstream
 The worst fix is adding more instructions to compensate for a bad environment. That compounds the problem. Find where the failure originates and fix it there. One clean fix beats three patches.
 
+### Workarounds are diagnostics
+
+When an agent reaches for a workaround — piping tool output through a Python script, writing ad-hoc jq, reformatting data before it can use it — the instinct is to stop it. Write a rule. "Don't do that." That's the wrong instinct.
+
+The workaround is a signal. The agent isn't misbehaving — it has a real need the tool doesn't serve at the call site. It's completing the job with whatever's available. The clever script is telling you exactly what the tool was missing.
+
+**Rules that fight real needs are unstable.** "Don't reformat the output yourself" only holds if the tool can actually give the agent what it needs. If it can't, you've added friction without closing the gap. The agent routes around it anyway — or finds a subtler workaround you don't notice.
+
+**The right response to a workaround is to fix the tool, not add a rule.** Every workaround an agent invents is a missing flag. Agent kept filtering output to get just its own tasks? That's a `--role` flag being insufficient. Agent kept extracting a single field from a JSON blob? That's a missing `--field` option. Read the workaround as a spec.
+
+**How to apply this in practice:**
+1. When you see an agent reach for ad-hoc formatting, note what it was trying to extract
+2. Ask: does the tool support this natively? If not, that's the fix
+3. Add the flag, remove the workaround, add a rule that says "use the flag" — in that order
+4. The rule only becomes stable once the tool actually serves the need
+
+**The corollary for tool design:** when you write a tool, ask what an agent would want to filter, sort, or extract from the output before shipping it. Build those as flags. The workarounds you prevent are the ones you anticipated.
+
 ### Debugging success — the harder discipline
 
 The debugging loop above triggers on failure. That's the easy case — something broke, you noticed. The harder and more important discipline is debugging success.
@@ -343,6 +361,25 @@ Each agent knows what it needs to know for its role — nothing more. An archite
 
 ### Staying in lane
 Well-defined roles produce a natural behavior: agents flag when something belongs to another role rather than handling it themselves. That boundary-awareness is a feature of good role design, not something you have to enforce constantly.
+
+### Roles signal scope, not just ownership
+
+The value of a well-defined role isn't just that it has clear ownership — it's that it communicates what categories of work are real in this project.
+
+When an architect exists, an agent knows architecture work should exist. Not just that someone will do it — that it needs to happen. The role's presence makes the domain of concern legitimate and legible.
+
+This works in both directions:
+- A defined role signals that its domain matters. An agent working near that domain doesn't skip it — it routes to the role.
+- An absent role is not neutral. If there's no QA agent, the swarm doesn't just lack QA work — it fails to notice that QA work is missing. The category drops out of the mental model entirely.
+
+So roles do three things simultaneously:
+1. **Own work** — obvious
+2. **Signal what work should exist** — less obvious, more important
+3. **Make the absence of that work visible** — the inverse, and the one that matters most at scale
+
+At small team sizes, a human notices the gaps. At twenty agents in parallel, the only way to know a concern is uncovered is if the roster is legible enough to show the hole.
+
+**Implication for role design:** an undefined role isn't a gap you fill later. It's an active suppression of that concern across the whole swarm.
 
 ### Handoffs
 Output from one agent becomes input to another. The handoff has to be explicit — what was produced, what decision was made, what the next agent needs to know. Implicit handoffs are where coordination breaks down.

@@ -42,8 +42,9 @@ import {
   checkPlatformUnlocks,
   computeFollowerDistribution,
 } from '../platform/index.ts';
+import { kitFollowerConversionBonus } from '../creator-kit/index.ts';
 import { checkGeneratorUnlocks } from '../generator/index.ts';
-import { syncTotalFollowers } from '../model/index.ts';
+import { syncTotalFollowers, clampEngagement } from '../model/index.ts';
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -160,8 +161,22 @@ export function calculateOffline(
         state.platforms,
         staticData,
       );
+      // Wardrobe wraps the entire per-platform distribution (mirrors tick).
+      const kitFollowerMult = kitFollowerConversionBonus(
+        state.player.creator_kit,
+        staticData,
+      );
+      // Audience Mood retention is frozen offline — apply the retention
+      // value captured at closeTime as a constant scalar over the entire
+      // offline window. See architecture/audience-mood.md §Integration —
+      // Offline. No pressure advance while offline.
       for (const id of platformIds) {
-        followersGained[id] += distribution.perPlatformRate[id] * segmentDurationMs;
+        const retention = state.platforms[id].retention;
+        followersGained[id] +=
+          distribution.perPlatformRate[id] *
+          kitFollowerMult *
+          retention *
+          segmentDurationMs;
       }
     }
 
@@ -200,7 +215,7 @@ export function calculateOffline(
 
   let newPlayer = {
     ...state.player,
-    engagement: state.player.engagement + engagementGained,
+    engagement: clampEngagement(state.player.engagement + engagementGained),
     lifetime_followers: state.player.lifetime_followers + totalFollowersGained,
   };
   // syncTotalFollowers recomputes total_followers from platforms.

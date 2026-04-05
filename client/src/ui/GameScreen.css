@@ -18,6 +18,11 @@
   --accent-green: #5fd692;
   --accent-amber: #ffb347;
   --accent-red: #ff6b6b;
+  /* Reserved for maxed / completed states only (ux/generator-max-level-state.md).
+     Positioned as "the tier above gold"; cool-temperature so it never
+     competes with the warm affordance signals (gold-ready, amber-armed). */
+  --accent-platinum: #d9dee8;
+  --accent-platinum-deep: #a6b0c2;
 }
 
 /* --- Ambient background layer (Algorithm mood) -------------------------- */
@@ -86,7 +91,7 @@
 
 .top-bar {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   align-items: center;
   gap: 32px;
   padding: 0 24px;
@@ -340,6 +345,20 @@
     opacity: 0;
     transform: translate(-50%, -56px);
   }
+}
+
+/* --- Generator column (list + kit panel stack) ------------------------- */
+
+.generator-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 0;
+}
+
+.generator-column .generator-list {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* --- Generator list (UX §6) --------------------------------------------- */
@@ -1731,302 +1750,6 @@
   }
 }
 
-/* ==========================================================================
-   Scandal system — risk indicators + PR Response modal + aftermath
-   ========================================================================== */
-
-/* --- Risk indicators ------------------------------------------------------- */
-
-/* building: subtle amber warmth on the border/glow.
-   Attentive players notice; inattentive players are not punished for missing. */
-.generator-row.risk-building,
-.platform-card.risk-building {
-  box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.35), 0 0 8px rgba(255, 179, 71, 0.12);
-}
-
-/* high: amber intensifies with a slow pulse (1.5–2s cycle, ease-in-out).
-   Unmistakable on a glance; pulse rate is slow enough to avoid anxiety. */
-.generator-row.risk-high,
-.platform-card.risk-high {
-  box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.65), 0 0 14px rgba(255, 179, 71, 0.28);
-  animation: risk-pulse 1.75s ease-in-out infinite;
-}
-
-@keyframes risk-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.45), 0 0 10px rgba(255, 179, 71, 0.18);
-  }
-  50% {
-    box-shadow: 0 0 0 2px rgba(255, 179, 71, 0.85), 0 0 22px rgba(255, 179, 71, 0.42);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .generator-row.risk-high,
-  .platform-card.risk-high {
-    /* Keep the amber glow but skip the pulse animation. */
-    animation: none;
-  }
-}
-
-/* --- PR Response modal ------------------------------------------------------ */
-
-.scandal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(4px);
-}
-
-.scandal-card {
-  width: 420px;
-  max-width: calc(100vw - 32px);
-  background: rgba(22, 25, 36, 0.97);
-  border: 1px solid rgba(255, 179, 71, 0.28);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.12), 0 24px 48px rgba(0, 0, 0, 0.6);
-}
-
-/* Timer bar — drains left to right */
-.scandal-timer-track {
-  height: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  position: relative;
-}
-
-.scandal-timer-bar {
-  height: 100%;
-  background: var(--accent-amber);
-  transition: width 100ms linear;
-}
-
-.scandal-timer-bar.urgent {
-  background: var(--accent-red);
-}
-
-.scandal-card-body {
-  padding: 20px 24px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.scandal-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.scandal-name {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--accent-amber);
-  letter-spacing: 0.01em;
-}
-
-.scandal-platform {
-  font-size: 13px;
-  color: var(--text-p2);
-}
-
-.scandal-flavor {
-  font-size: 14px;
-  color: var(--text-p1);
-  line-height: 1.5;
-  margin: 0;
-  font-style: italic;
-}
-
-/* Damage section */
-.scandal-damage-section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.scandal-damage-label {
-  font-size: 13px;
-  color: var(--text-p2);
-}
-
-.scandal-damage-label strong {
-  color: var(--accent-red);
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.scandal-damage-bar-track {
-  height: 8px;
-  background: rgba(255, 107, 107, 0.15);
-  border-radius: 4px;
-  position: relative;
-  overflow: hidden;
-}
-
-.scandal-damage-max {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 107, 107, 0.2);
-}
-
-.scandal-damage-projected {
-  height: 100%;
-  background: var(--accent-red);
-  border-radius: 4px;
-  transition: width 80ms ease-out;
-}
-
-.scandal-damage-range {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--text-p3);
-}
-
-/* Spend slider section */
-.scandal-spend-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.scandal-spend-section.inactive {
-  opacity: 0.45;
-  pointer-events: none;
-}
-
-.scandal-spend-label {
-  font-size: 13px;
-  color: var(--text-p2);
-}
-
-.read-beat-hint {
-  color: var(--text-p3);
-  font-style: italic;
-}
-
-.scandal-slider {
-  width: 100%;
-  accent-color: var(--accent-amber);
-  cursor: pointer;
-}
-
-.scandal-spend-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--text-p2);
-}
-
-.spend-amount {
-  color: var(--accent-amber);
-  font-weight: 500;
-}
-
-/* Confirm button */
-.scandal-confirm-btn {
-  width: 100%;
-  padding: 11px 16px;
-  background: rgba(255, 179, 71, 0.12);
-  border: 1px solid rgba(255, 179, 71, 0.35);
-  border-radius: 8px;
-  color: var(--accent-amber);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 120ms, border-color 120ms;
-}
-
-.scandal-confirm-btn:hover:not(:disabled) {
-  background: rgba(255, 179, 71, 0.22);
-  border-color: rgba(255, 179, 71, 0.55);
-}
-
-.scandal-confirm-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-/* --- Aftermath card -------------------------------------------------------- */
-
-.scandal-aftermath {
-  position: fixed;
-  bottom: 80px;
-  right: 24px;
-  width: 300px;
-  background: rgba(22, 25, 36, 0.96);
-  border: 1px solid rgba(255, 107, 107, 0.3);
-  border-radius: 10px;
-  padding: 16px 18px;
-  z-index: 40;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  animation: aftermath-enter 200ms ease-out;
-}
-
-@keyframes aftermath-enter {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.aftermath-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.aftermath-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--accent-amber);
-}
-
-.aftermath-platform {
-  font-size: 12px;
-  color: var(--text-p2);
-}
-
-.aftermath-loss {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--accent-red);
-  letter-spacing: -0.01em;
-}
-
-.aftermath-suppressed {
-  font-size: 12px;
-  color: var(--text-p2);
-  font-style: italic;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.aftermath-dismiss {
-  align-self: flex-end;
-  padding: 6px 14px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 6px;
-  color: var(--text-p2);
-  font-size: 12px;
-  cursor: pointer;
-  transition: border-color 100ms, color 100ms;
-}
-
-.aftermath-dismiss:hover {
-  border-color: rgba(255, 255, 255, 0.36);
-  color: var(--text-p0);
-}
-
 /* --- Upgrade drawer (UX: ux/upgrade-curve-drawer-spec.md) ---------------- */
 
 /*
@@ -2269,6 +1992,267 @@
   border-color: rgba(255, 255, 255, 0.28);
 }
 
+/* --- Lvl ↑ button three-state affordance (task #69) ---------------------- *
+ * Proposal: proposals/accepted/lvl-up-button-affordance-states.md
+ * Three mutually-exclusive states so players can tell at a glance whether
+ * tapping opens a drawer with a purchasable upgrade:
+ *   dormant — no units owned; disabled placeholder
+ *   armed   — owned but can't afford; amber deficit glyph, stillness
+ *   ready   — owned and affordable; gold border + breathing halo
+ * Border-weight hierarchy (0.08 → 0.14 → full gold) keeps states
+ * distinguishable without color. */
+
+/* Dormant — matches legacy row-btn-disabled visuals. */
+.row-btn-upgrade.row-btn-lvl-dormant {
+  color: var(--text-p3);
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.row-btn-upgrade.row-btn-lvl-dormant .label {
+  color: var(--text-p3);
+}
+
+/* Maxed — cap reached. Platinum plaque, inset, unpressable-looking.
+   Spec: ux/generator-max-level-state.md §3.2. --accent-gold is reserved
+   for the ready-to-buy signal on this same button, so maxed MUST use a
+   distinct, cooler token. No animation here — arrival celebration is
+   one-shot via .lvl-maxed-arrival (see §4.2). */
+.row-btn-upgrade.row-btn-lvl-maxed {
+  cursor: default;
+  border: 1px solid var(--accent-platinum-deep);
+  background: linear-gradient(
+    to bottom,
+    rgba(217, 222, 232, 0.14) 0%,
+    rgba(217, 222, 232, 0.06) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),   /* top-edge highlight */
+    inset 0 0 0 1px rgba(11, 13, 18, 0.25);       /* inset depth */
+  color: var(--accent-platinum);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  /* Clip the shine sweep (::before) to the plaque's rounded edges.
+     Outer box-shadow halos (arrival) are not affected by overflow. */
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shine sweep — a narrow diagonal highlight that crosses the plaque
+   once every 7s. The pseudo-element waits off-screen for 94% of the
+   cycle, then sweeps across in ~420ms. All maxed plaques shine in
+   sync (per user directive). Overrides the spec's original "no
+   persistent motion" rule — see §7 decision log override (2026-04-05). */
+.row-btn-upgrade.row-btn-lvl-maxed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.0) 46%,
+    rgba(255, 255, 255, 0.65) 50%,
+    rgba(255, 255, 255, 0.0) 54%,
+    transparent 62%
+  );
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  animation: lvl-maxed-shine 7000ms linear infinite;
+  /* All plaques shine in sync per user directive — no per-row stagger. */
+}
+.row-btn-upgrade.row-btn-lvl-maxed .label {
+  color: var(--accent-platinum);
+}
+
+/* Crown glyph replaces the ↑ chevron at max. Inline in the .label span
+   before "LVL" text. Mirrors the .lvl-chevron pattern used for ready. */
+.row-btn-upgrade.row-btn-lvl-maxed .lvl-crown {
+  display: inline-block;
+  font-size: 10px;
+  margin-right: 3px;
+  color: var(--accent-platinum);
+  /* Slight vertical nudge to optically center the crown with caps. */
+  transform: translateY(-0.5px);
+}
+
+/* No hover affordance — the button is not actionable at max. Override
+   :hover to match the non-hover appearance (no scale, no glow). */
+.row-btn-upgrade.row-btn-lvl-maxed:hover {
+  background: linear-gradient(
+    to bottom,
+    rgba(217, 222, 232, 0.14) 0%,
+    rgba(217, 222, 232, 0.06) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(11, 13, 18, 0.25);
+}
+
+/* Arrival celebration — one-shot, fires on live ready→maxed transition.
+   600ms: scale 1→1.08→0.98→1, platinum halo pops and retracts. Cleared
+   by the React timer; never persists. Mount guard lives in GeneratorRow. */
+.row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
+  animation: lvl-maxed-arrival 600ms ease-out;
+}
+
+@keyframes lvl-maxed-arrival {
+  0% {
+    transform: scale(1);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+      inset 0 0 0 1px rgba(11, 13, 18, 0.25),
+      0 0 0 0 rgba(217, 222, 232, 0);
+  }
+  30% {
+    transform: scale(1.08);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
+      inset 0 0 0 1px rgba(11, 13, 18, 0.25),
+      0 0 20px 4px rgba(217, 222, 232, 0.55);
+  }
+  60% {
+    transform: scale(0.98);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+      inset 0 0 0 1px rgba(11, 13, 18, 0.25),
+      0 0 12px 2px rgba(217, 222, 232, 0.30);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+      inset 0 0 0 1px rgba(11, 13, 18, 0.25),
+      0 0 0 0 rgba(217, 222, 232, 0);
+  }
+}
+
+/* Shine sweep — waits off-screen (background-position 150%) for 94%
+   of the cycle, then slides to -150% across ~420ms. At the 7s
+   cadence, the visible sweep is ~6% of total time. */
+@keyframes lvl-maxed-shine {
+  0%, 94% {
+    background-position: 150% 0;
+  }
+  100% {
+    background-position: -150% 0;
+  }
+}
+
+/* Reduce Motion — both the arrival celebration AND the shine sweep
+   are removed. Static platinum-plaque visual still communicates state. */
+@media (prefers-reduced-motion: reduce) {
+  .row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
+    animation: none;
+  }
+  .row-btn-upgrade.row-btn-lvl-maxed::before {
+    animation: none;
+    background: none;
+  }
+}
+html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
+  animation: none;
+}
+html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
+  animation: none;
+  background: none;
+}
+
+/* Armed — stronger border than dormant, amber deficit glyph, no motion. */
+.row-btn-upgrade.row-btn-lvl-armed {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: color-mix(in srgb, var(--accent-amber) 60%, transparent);
+}
+.row-btn-upgrade.row-btn-lvl-armed .label {
+  color: var(--text-p2);
+}
+.row-btn-upgrade.row-btn-lvl-armed .lvl-deficit-glyph {
+  display: inline-block;
+  font-size: 10px;
+  margin-right: 3px;
+  color: color-mix(in srgb, var(--accent-amber) 60%, transparent);
+}
+
+/* Ready — gold border, gold cost numeral, breathing halo. */
+.row-btn-upgrade.row-btn-lvl-ready {
+  border: 1px solid var(--accent-gold);
+  background: rgba(255, 214, 107, 0.08);
+  color: var(--accent-gold);
+  font-weight: 600;
+  animation: lvl-ready-breathe 2400ms ease-in-out infinite;
+  /* Negative delay starts each row mid-cycle so rows breathe out of phase.
+     --breathe-delay is emitted inline per-row by GeneratorList (already
+     negative — see badge-owned usage). */
+  animation-delay: var(--breathe-delay, 0ms);
+}
+.row-btn-upgrade.row-btn-lvl-ready .label {
+  color: var(--text-p1);
+}
+.row-btn-upgrade.row-btn-lvl-ready .lvl-chevron {
+  display: inline-block;
+  font-size: 8px;
+  margin-right: 3px;
+  color: var(--accent-gold);
+}
+
+/* Hover on ready — locks at peak glow, breathing pauses (prevents the hovered
+   row from seeming to dim mid-hover). */
+.row-btn-upgrade.row-btn-lvl-ready:hover:not(:disabled) {
+  background: rgba(255, 214, 107, 0.14);
+  box-shadow: 0 0 12px 2px rgba(255, 214, 107, 0.55);
+  animation-play-state: paused;
+}
+
+/* Suppress breathing while the drawer is already open — the player is
+   looking at the thing being teased, keep the gold border only. */
+.row-btn-upgrade.row-btn-lvl-ready.active {
+  animation: none;
+  box-shadow: none;
+}
+
+@keyframes lvl-ready-breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 214, 107, 0);
+    border-color: var(--accent-gold);
+  }
+  50% {
+    box-shadow: 0 0 8px 1px rgba(255, 214, 107, 0.35);
+    border-color: #ffe89a;
+  }
+}
+
+/* Many-ready de-escalation — when ≥4 rows are ready, slow the cadence and
+   soften the peak so the list doesn't become a disco. Border stays full
+   strength gold; the trust signal must not weaken. */
+.generator-list.many-ready .row-btn-upgrade.row-btn-lvl-ready {
+  animation-duration: 3200ms;
+}
+@keyframes lvl-ready-breathe-soft {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 214, 107, 0);
+    border-color: var(--accent-gold);
+  }
+  50% {
+    box-shadow: 0 0 8px 1px rgba(255, 214, 107, 0.18);
+    border-color: #ffe89a;
+  }
+}
+.generator-list.many-ready .row-btn-upgrade.row-btn-lvl-ready {
+  animation-name: lvl-ready-breathe-soft;
+}
+
+/* Reduce Motion — hold at the peak glow value so the "energized" read
+   persists without motion. Static color and glyph signals stay in place. */
+@media (prefers-reduced-motion: reduce) {
+  .row-btn-upgrade.row-btn-lvl-ready {
+    animation: none;
+    box-shadow: 0 0 8px 1px rgba(255, 214, 107, 0.35);
+  }
+}
+
 /* ==========================================================================
    Post-rebrand ambient surfaces (task #66, UX §5)
    ========================================================================== */
@@ -2312,3 +2296,607 @@
     animation: none;
   }
 }
+
+/* --- Creator Kit panel (ux/creator-kit-panel.md) ------------------------ */
+/*
+ * Visual weight: deliberately quieter than generator rows. Smaller type
+ * scale, 40px rows, no left-edge stripe, no row fill. See §3.3 for the
+ * explicit visual comparison.
+ */
+
+:root {
+  --kit-accent: #6868b8;
+}
+
+.kit-panel {
+  flex: 0 0 auto;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  margin-top: -1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.kit-panel-peek::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--kit-accent);
+  opacity: 0.5;
+}
+
+.kit-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  cursor: pointer;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  user-select: none;
+}
+
+.kit-header:focus-visible {
+  outline: 2px solid var(--kit-accent);
+  outline-offset: -2px;
+}
+
+.kit-header-icon {
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+.kit-header-label {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--kit-accent);
+  opacity: 0.7;
+  flex: 1 1 auto;
+}
+
+.kit-active-count {
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--text-p2);
+  margin-right: 8px;
+}
+
+.kit-chevron {
+  font-size: 12px;
+  color: var(--kit-accent);
+  opacity: 0.7;
+  transition: transform 220ms ease-out;
+}
+
+.kit-chevron.open {
+  transform: rotate(180deg);
+}
+
+.kit-rows {
+  display: flex;
+  flex-direction: column;
+  animation: kit-rows-fade-in 140ms ease-out 80ms both;
+}
+
+@keyframes kit-rows-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.kit-row {
+  display: grid;
+  grid-template-columns: 22px 1fr 22px;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.kit-row-icon {
+  font-size: 14px;
+  opacity: 0.6;
+  text-align: center;
+}
+
+.kit-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kit-row-top {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.kit-row-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-p1);
+}
+
+.kit-row-flavor {
+  font-size: 10px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-p2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.kit-row-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kit-row-level {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-p2);
+}
+
+.kit-row-cost {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-p2);
+  margin-left: auto;
+}
+
+.kit-row-buy {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--kit-accent);
+  font-size: 12px;
+  cursor: pointer;
+  transition: opacity 120ms ease-out, background 120ms ease-out;
+}
+
+.kit-row-buy:hover:not(:disabled) {
+  background: rgba(104, 104, 184, 0.15);
+}
+
+.kit-row-buy:focus-visible {
+  outline: 2px solid var(--kit-accent);
+  outline-offset: 1px;
+}
+
+.kit-row-unaffordable .kit-row-buy,
+.kit-row-buy:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+/* Top-bar peek signal (§5.2) ------------------------------------------- */
+
+.kit-peek-signal {
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--kit-accent);
+  opacity: 0.65;
+  margin-top: 1px;
+  letter-spacing: 0.02em;
+  animation: kit-peek-fade-in 300ms ease-out;
+}
+
+@keyframes kit-peek-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 0.65; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-chevron { transition: none; }
+  .kit-rows { animation: none; }
+  .kit-peek-signal { animation: none; }
+}
+
+/* ==========================================================================
+   Settings modal (ux/settings-screen.md)
+   ==========================================================================
+   Mirrors CloutShop surface grammar: ~520×620px, 30% backdrop, game loop
+   continues running underneath. Three vertical sections, no tabs. */
+
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.30);
+  animation: fade-in 200ms ease-out;
+}
+
+.settings-modal {
+  background: rgba(18, 21, 28, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  width: 520px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 64px);
+  overflow: hidden;
+  color: var(--text-p0);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.settings-title {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.settings-close-btn {
+  font-family: inherit;
+  font-size: 20px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-p2);
+  cursor: pointer;
+  line-height: 1;
+  transition: color 120ms, border-color 120ms;
+}
+
+.settings-close-btn:hover {
+  color: var(--text-p0);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.settings-body {
+  padding: 16px 24px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-p3);
+  margin: 0;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-save-group {
+  gap: 10px;
+}
+
+/* Toggle row — label+description left, switch right. */
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+}
+
+.settings-toggle-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-toggle-label {
+  font-size: 13px;
+  color: var(--text-p1);
+  font-weight: 500;
+}
+
+.settings-toggle-desc {
+  font-size: 11px;
+  color: var(--text-p3);
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+/* Switch control — 40×22 track with 18px thumb. */
+.settings-toggle {
+  flex-shrink: 0;
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 160ms, border-color 160ms;
+}
+
+.settings-toggle-thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-p2);
+  transition: transform 160ms ease, background-color 160ms;
+}
+
+.settings-toggle-on {
+  background: rgba(104, 104, 184, 0.55);
+  border-color: rgba(104, 104, 184, 0.85);
+}
+
+.settings-toggle-on .settings-toggle-thumb {
+  transform: translateX(18px);
+  background: var(--text-p0);
+}
+
+.settings-toggle:focus-visible {
+  outline: 2px solid rgba(104, 104, 184, 0.9);
+  outline-offset: 2px;
+}
+
+/* Save-section buttons. */
+.settings-btn {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px 14px;
+  min-height: 40px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-p1);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 120ms, border-color 120ms, color 120ms;
+}
+
+.settings-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: var(--text-p0);
+}
+
+.settings-btn-danger {
+  color: rgba(255, 107, 107, 0.92);
+  border-color: rgba(255, 107, 107, 0.35);
+}
+
+.settings-btn-danger:hover {
+  background: rgba(255, 107, 107, 0.10);
+  border-color: rgba(255, 107, 107, 0.6);
+  color: rgba(255, 140, 140, 1);
+}
+
+/* Inline Reset confirmation — keeps the player in place, no extra modal. */
+.settings-reset-confirm {
+  border: 1px solid rgba(255, 107, 107, 0.35);
+  border-radius: 6px;
+  padding: 12px 14px;
+  background: rgba(255, 107, 107, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-reset-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-p0);
+}
+
+.settings-reset-body {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-p2);
+  line-height: 1.4;
+}
+
+.settings-reset-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.settings-reset-actions .settings-btn {
+  flex: 1;
+  text-align: center;
+  padding: 8px 12px;
+  min-height: 36px;
+}
+
+/* Inline status flash (success/error). */
+.settings-status {
+  margin: 4px 0 0;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  animation: fade-in 160ms ease-out;
+}
+
+.settings-status-success {
+  color: rgba(140, 220, 140, 1);
+  background: rgba(70, 160, 70, 0.10);
+  border: 1px solid rgba(70, 160, 70, 0.30);
+}
+
+.settings-status-error {
+  color: rgba(255, 140, 140, 1);
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.30);
+}
+
+/* --- Save-error banner (task #55) ---------------------------------------- */
+
+.save-error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  background: rgba(255, 107, 107, 0.12);
+  border-top: 1px solid rgba(255, 107, 107, 0.35);
+  border-bottom: 1px solid rgba(255, 107, 107, 0.35);
+  color: rgba(255, 200, 200, 1);
+  font-size: 12px;
+}
+
+.save-error-banner-text {
+  flex: 1;
+  line-height: 1.35;
+}
+
+.save-error-banner-close {
+  font-family: inherit;
+  font-size: 16px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255, 200, 200, 1);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.save-error-banner-close:hover {
+  border-color: rgba(255, 107, 107, 0.5);
+  background: rgba(255, 107, 107, 0.10);
+}
+
+/* --- Top-bar gear button -------------------------------------------------- */
+
+.settings-gear-btn {
+  font-family: inherit;
+  font-size: 16px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-p2);
+  cursor: pointer;
+  line-height: 1;
+  align-self: center;
+  transition: color 120ms, border-color 120ms, background-color 120ms;
+}
+
+.settings-gear-btn:hover {
+  color: var(--text-p0);
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.settings-gear-btn:focus-visible {
+  outline: 2px solid rgba(104, 104, 184, 0.9);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Reduce Motion — in-game mirror of @media (prefers-reduced-motion: reduce).
+   ==========================================================================
+   The in-game "Reduce Motion" toggle writes html[data-reduce-motion="true"]
+   so the player can override their OS preference (or opt in without changing
+   system settings). Each block below MUST stay in sync with the @media
+   (prefers-reduced-motion: reduce) counterpart above — search for the same
+   selectors if you're modifying motion behavior. */
+
+html[data-reduce-motion="true"] .algorithm-background,
+html[data-reduce-motion="true"] .algorithm-background::after,
+html[data-reduce-motion="true"] .algorithm-background.instability {
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .badge.badge-owned {
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .shop-row-pulsing,
+html[data-reduce-motion="true"] .shop-row-shaking {
+  animation: none;
+}
+html[data-reduce-motion="true"] .shop-row-btn:active {
+  transform: none;
+}
+
+html[data-reduce-motion="true"] .generator-row.viral-halo {
+  background: rgba(255, 214, 107, 0.1);
+  border-bottom-color: rgba(255, 214, 107, 0.4);
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .platform-card.viral-illuminate {
+  box-shadow:
+    0 0 0 2px var(--platform-accent),
+    0 0 20px 2px var(--platform-accent);
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .viral-vignette {
+  display: none;
+}
+
+html[data-reduce-motion="true"] .game-screen.viral-zoom-pulse {
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .viral-particles-overlay {
+  display: none;
+}
+
+html[data-reduce-motion="true"] .upgrade-drawer,
+html[data-reduce-motion="true"] .upgrade-drawer.upgrade-drawer-closing {
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .kit-chevron { transition: none; }
+html[data-reduce-motion="true"] .kit-rows { animation: none; }
+html[data-reduce-motion="true"] .kit-peek-signal { animation: none; }
+
+html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
+  animation: none;
+  box-shadow: 0 0 8px 1px rgba(255, 214, 107, 0.35);
+}
+

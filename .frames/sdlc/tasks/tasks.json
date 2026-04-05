@@ -1,5 +1,5 @@
 {
-  "next_id": 89,
+  "next_id": 111,
   "tasks": [
     {
       "id": 1,
@@ -1196,7 +1196,7 @@
       "id": 48,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Settings screen modal",
       "requester": "engineer",
@@ -1232,7 +1232,8 @@
         "Settings state is persisted in localStorage alongside the save"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 49,
@@ -1517,7 +1518,7 @@
       "id": 55,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Harden save/load error reporting",
       "requester": "architect",
@@ -1549,7 +1550,8 @@
         "tests cover: corrupt JSON triggers load_corrupt event; mocked quota-exceeded triggers save_quota event; normal operation emits nothing"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 56,
@@ -2117,7 +2119,7 @@
       "id": 69,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Implement three affordance states on Lvl ↑ row button",
       "requester": "ux-designer",
@@ -2171,7 +2173,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 70,
@@ -2216,7 +2219,7 @@
       "id": 71,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Wire up typography system — Space Grotesk + Fraunces via Google Fonts",
       "requester": "architect",
@@ -2262,7 +2265,8 @@
           "owner": "engineer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 72,
@@ -2313,7 +2317,7 @@
       "alias": "E1",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit foundation: state field, types, save migration, rebrand wipe",
       "requester": "architect",
@@ -2339,14 +2343,15 @@
         "Unit tests cover: save migration from previous version, applyRebrand wipes creator_kit, type-level: KitEffect discriminators compile"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 74,
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit static data: five item definitions with placeholder balance",
       "requester": "architect",
@@ -2379,16 +2384,15 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": [
-        73
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 75,
       "alias": "E3",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit purchase handler",
       "requester": "architect",
@@ -2411,17 +2415,15 @@
         "Unit tests cover: successful purchase, max-level rejection, insufficient-engagement rejection, engagement balance after purchase, level increment"
       ],
       "open_questions": [],
-      "blocked_on": [
-        73,
-        74
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 76,
       "alias": "E4",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit tick integration: Camera + Wardrobe",
       "requester": "architect",
@@ -2445,17 +2447,15 @@
         "Unit tests cover: Camera level 0/1/2 affects engagement rate correctly; Wardrobe level 0/1/2 affects follower distribution correctly; Camera × Clout engagement_multiplier stacks multiplicatively"
       ],
       "open_questions": [],
-      "blocked_on": [
-        73,
-        74
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 77,
       "alias": "E5",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit Laptop: additive algorithm lookahead stacking with Clout",
       "requester": "architect",
@@ -2477,17 +2477,15 @@
         "Unit tests cover: laptop-only lookahead, clout-only lookahead, both stacked additively, clamp when sum exceeds available states"
       ],
       "open_questions": [],
-      "blocked_on": [
-        73,
-        74
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 78,
       "alias": "E6",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit Phone: sequential platform head-start with mid-run apply",
       "requester": "architect",
@@ -2515,18 +2513,15 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": [
-        73,
-        74,
-        75
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 79,
       "alias": "E7",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit Mogging: viral burst amplifier",
       "requester": "architect",
@@ -2554,10 +2549,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": [
-        73,
-        74
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 80,
@@ -2600,7 +2593,7 @@
       "alias": "E8",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit menu UI shell (collapsible panel + purchase rows)",
       "requester": "architect",
@@ -2625,11 +2618,8 @@
         "Component tests cover: rendering, disabled-state logic, purchase dispatch, peek-signal trigger condition"
       ],
       "open_questions": [],
-      "blocked_on": [
-        73,
-        74,
-        75
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 82,
@@ -2682,7 +2672,7 @@
       "id": 83,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Balance pass: Badge Pro Shop milestone thresholds",
       "requester": "game-designer",
@@ -2713,13 +2703,14 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 84,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Balance pass: Gigs variant unlock thresholds + selection weights",
       "requester": "game-designer",
@@ -2745,7 +2736,8 @@
         "Decisions documented as a revision to gigs-system.md or as a balance-pass note attached to it"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 85,
@@ -2793,7 +2785,7 @@
       "id": 86,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "UX spec: per-variant Gig card treatments (ux/gig-cards.md)",
       "requester": "game-designer",
@@ -2827,13 +2819,14 @@
         "Cross-reference added to ux/brand-deal-card.md pointing to the new spec"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 87,
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Plan: decompose generator-level-growth-curves into engineer build tasks",
       "requester": "game-designer",
@@ -2871,7 +2864,8 @@
         "Each engineer task includes the specific file paths and line references from the proposal reviews"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 88,
@@ -2905,6 +2899,1163 @@
       ],
       "open_questions": [],
       "blocked_on": []
+    },
+    {
+      "id": 89,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Generator level growth curves: cost parity + L=10 cap + runtime clamps + MAX UI",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the single coherent correctness fix from the accepted generator-level-growth-curves proposal. Restores cost/reward parity (cost now uses levelMultiplier, not 4^(L-1)), installs a hard L=10 cap per generator, adds runtime clamps that prevent the save-breaking Infinity bug from ever re-emerging, and swaps the Lvl↑ affordance for a MAX label at cap. All changes ship together per architect review — cost parity without the cap still overflows at L~72, and the runtime clamps are permanent invariants that belong next to the formula they guard.\n\nScope of change (with file:line anchors):\n\n1. DATA CONTRACT — Add `max_level: number` to `GeneratorDef` in client/src/types.ts:358 (mirror the shape of `CloutUpgradeDef.max_level` at types.ts:412). Update the stale doc comment at types.ts:390 that still encodes the old `4^(currentLevel-1)` formula. Seed `max_level: 10` on every generator entry in client/src/static-data/index.ts (10 generators total — selfies, memes, tiktok_dances, podcasts, youtube_shorts, onlyfans, viral_stunts, ai_slop, deepfakes, algorithmic_prophecy). Also update the header comment at static-data/index.ts:33 that encodes the old cost formula.\n\n2. COST FORMULA — Swap `generatorUpgradeCost` at client/src/generator/index.ts:59 to `ceil(base_upgrade_cost × levelMultiplier(targetLevel))` where `targetLevel = currentLevel + 1`. Update the function doc comment. Add at-cap guard: throw (or return a sentinel the callers already expect) when `currentLevel >= def.max_level`. Add the same at-cap guard to `upgradeGenerator` at generator/index.ts:166.\n\n3. RUNTIME CLAMPS (permanent invariants — keep regardless of migration) —\n   a) In client/src/game-loop/index.ts:78, clamp `level` input to `levelMultiplier` to [1, 20] before the Math.pow call. Do NOT throw when level > 20 — silently clamp, because this is belt-and-braces for corrupted saves / future code paths that forget a cap.\n   b) Clamp `player.engagement` to `Number.MAX_SAFE_INTEGER` on every write site. Known sites: game-loop/index.ts:358, game-loop/index.ts:427, game-loop/index.ts:631, model/index.ts:189 (addEngagement), offline/index.ts:203. Simplest shape: a tiny `clampEngagement(value: number): number` helper in model/ that every write routes through.\n\n4. UI — `MAX` label at cap: when `g.level >= def.max_level`, the Lvl↑ affordance in client/src/ui/GeneratorList.tsx (around line 340) shows `MAX` instead of the upgrade cost, and tapping it is a no-op (or the drawer opens but the upgrade button inside UpgradeDrawer.tsx is disabled with a MAX label). Match the visual treatment of Clout upgrade MAX state if one exists in CloutShopModal.tsx — check that file for the established pattern before picking a shape.\n\nNon-goals: do NOT retune base_upgrade_cost seed values (game-designer has filed task #88 for the balance pass). Do NOT add a player-facing 'your save was repaired' notice — game-designer explicitly called for silent clamps. Do NOT raise the cap above 10 (engineer review established that L=14 overflows under the full multiplier stack).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-level-growth-curves.md",
+          "purpose": "Full proposal with architect + engineer + game-designer reviews. All three decisions and the headroom math are there."
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "GeneratorDef at line 358 gains max_level; stale doc comment at line 390; precedent CloutUpgradeDef.max_level at line 412"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Seed max_level: 10 on every generator (lines 40-150); update header comment at line 33"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "generatorUpgradeCost at line 59 swaps formula; upgradeGenerator at line 166 gains at-cap guard"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "levelMultiplier at line 78 gains [1,20] input clamp; engagement write sites at 358, 427, 631 need MAX_SAFE_INTEGER clamp"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "addEngagement at line 189 is the central write point — ideal spot for a clampEngagement helper"
+        },
+        {
+          "ref": "client/src/offline/index.ts",
+          "purpose": "Line 203 is another engagement write site that needs the clamp"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Lvl↑ affordance around line 340 needs MAX label at cap"
+        },
+        {
+          "ref": "client/src/ui/UpgradeDrawer.tsx",
+          "purpose": "Upgrade drawer needs MAX treatment / disabled upgrade button at cap"
+        },
+        {
+          "ref": "client/src/ui/CloutShopModal.tsx",
+          "purpose": "Check for established MAX visual pattern on Clout upgrades — reuse shape"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "Originally-accepted cost formula being restored"
+        }
+      ],
+      "acceptance_criteria": [
+        "GeneratorDef has a required max_level: number field; every entry in static-data/index.ts sets max_level: 10",
+        "generatorUpgradeCost returns ceil(base_upgrade_cost × levelMultiplier(currentLevel + 1)); the function and its doc comment no longer reference 4^(L-1)",
+        "Attempting to upgrade a generator at currentLevel >= max_level throws from upgradeGenerator (matches existing 'cannot afford' / 'not owned' error shapes)",
+        "levelMultiplier silently clamps its level input to [1, 20] before Math.pow; passing level=50 returns a finite value, never Infinity",
+        "Every write to player.engagement goes through a clamp to Number.MAX_SAFE_INTEGER — verified by a unit test that attempts to push engagement past MAX_SAFE_INTEGER through each write site (tick, viral, offline) and asserts the final value is exactly MAX_SAFE_INTEGER",
+        "Lvl↑ affordance in GeneratorList.tsx shows 'MAX' (no cost number) when generator.level >= max_level; tapping at MAX is either a no-op or opens a drawer whose upgrade button is disabled with MAX treatment",
+        "Stale doc comments at types.ts:390 and static-data/index.ts:33 updated to reference the levelMultiplier formula",
+        "All existing tests pass; new unit tests cover: (a) cost formula at several levels, (b) at-cap upgrade throws, (c) levelMultiplier input clamp at level > 20, (d) engagement clamp at every write site",
+        "`npm test` passes and `npm run typecheck` / `npm run lint` (whichever the project uses) passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 90,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Save migration V4→V5: silent clamp engagement + per-generator level",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Add a one-time V4→V5 save migration that repairs saves broken by the pre-fix overflow bug. The migration silently clamps `player.engagement` to Number.MAX_SAFE_INTEGER and each `generators[id].level` to max_level (10). Depends on E1 because the migration reads the new max_level field from the static-data contract E1 introduces.\n\nPer architect review: treat the runtime clamps (shipped in E1) and this schema migration as two separate mechanisms. Runtime clamps are permanent invariants in the hot path. This migration is a one-time data-repair step at a known schema-version boundary. Both stay.\n\nPer game-designer final review: silent clamp only — NO player-facing 'your save was repaired' modal. The Infinity state and over-cap levels were a bug, not earned progress; at that magnitude floats had already rounded to even. A console.warn in the migration function for diagnostic trace is desired; a UI notice is not.\n\nImplementation shape (per architect review):\n- Bump CURRENT_VERSION in client/src/save/index.ts:17 from 4 to 5\n- Add `migrateV4toV5(data: SaveData): SaveData` following the existing pattern of migrateV3toV4 at line 178\n- Append to the migrate() chain at line 225 (matches existing V1→V2→V3→V4 shape)\n- Emit console.warn when either clamp triggers, including the before-value for diagnostic trace\n- Add tests alongside existing migration tests in client/src/save/index.test.ts",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-level-growth-curves.md",
+          "purpose": "Architect review Q2 + game-designer tonal call — full spec for this migration"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "CURRENT_VERSION at line 17; existing migrations V1→V4 at lines 115-223; migrate() chain at line 225"
+        },
+        {
+          "ref": "client/src/save/index.test.ts",
+          "purpose": "Existing migration test patterns to follow"
+        }
+      ],
+      "acceptance_criteria": [
+        "CURRENT_VERSION bumped from 4 to 5 in save/index.ts",
+        "migrateV4toV5(data) clamps player.engagement to Number.MAX_SAFE_INTEGER when it exceeds that value, and clamps each generators[id].level to the generator's max_level (10)",
+        "migrate() chain calls migrateV4toV5 when current.version === 4",
+        "console.warn fires with the clamped field + before-value when either clamp actually triggers; no warn when no clamp is needed",
+        "NO player-facing UI notice — this is silent-repair per game-designer final review",
+        "Unit tests cover: (a) V4 save with engagement = Infinity migrates to engagement = MAX_SAFE_INTEGER, (b) V4 save with a generator at level=50 migrates to level=10, (c) V4 save with valid values migrates unchanged with no warn, (d) full V1→V5 chain migration still works",
+        "All existing save tests pass; `npm test` passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 91,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Platform Identity & Affinity Matrix proposal",
+      "requester": "game-designer",
+      "complexity": "opus",
+      "overview": "Platforms are declared distinct in core-game-identity-and-loop.md (3 at launch, each with its own follower count, content affinity, and unlock threshold), but no proposal defines what each platform IS as a character — what it feels like to play on it, who its audience is, which generators resonate, and why a player would lean into one over another this run. Without this, platforms risk collapsing into 'three bars instead of one.' The affinity system is also referenced in audience-mood-retention.md (Content Fatigue is per-platform-per-generator) and creator-kit-upgrades.md (Phone head-starts sequential platforms), so the platform spec is load-bearing for multiple accepted systems. Produce a proposal naming each launch platform, its satirical voice, its affinity profile (which generators boost/penalize on it), its unlock threshold, and how playing on it FEELS different from the others.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Source of the 3-platform commitment and the content-affinity concept"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/audience-mood-retention.md",
+          "purpose": "Depends on per-platform-per-generator affinity for Content Fatigue pressure"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/creator-kit-upgrades.md",
+          "purpose": "Phone head-start mechanic depends on sequential platform ordering"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Generator roster the affinity matrix must address"
+        }
+      ],
+      "acceptance_criteria": [
+        "A draft proposal in proposals/draft/ naming each of the 3 launch platforms with satirical voice, fiction, and audience character",
+        "An affinity matrix (platform × generator) with boost/neutral/penalty cells and tuning rationale",
+        "Unlock thresholds (follower counts) for each platform with design rationale — why this order, why these gates",
+        "A design note on what a player should FEEL when they switch focus to a new platform — the discovery/expression aesthetic target",
+        "Explicit interaction notes with Audience Mood, Creator Kit Phone, and Algorithm states"
+      ],
+      "open_questions": [
+        {
+          "question": "Do platforms have per-platform retention floors or do they share the global retention floor?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Should platform order be fixed or player-chosen at unlock?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 92,
+      "role": "game-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "First Five Minutes onboarding design",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "No proposal currently defines what the player does in their first 60 seconds, what they understand by minute 5, or how the game teaches its systems without explicit instructions. Skill floor is a design responsibility: clicker games live or die on whether the player feels agency within 5 minutes. Click Farm has more systems than Cookie Clicker did at launch (generators, platforms, algorithm states, gigs, creator kit, audience mood), so the teaching burden is higher. Produce a design proposal that sequences what appears on screen in what order, what the player's first meaningful decision is, when each system is introduced, and what the teaching mechanism is for each (discovery, affordance, flavor text — not tutorials).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Defines the target aesthetics (Discovery, Expression, Submission) the onboarding must deliver"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Defines generator introduction order"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/lvl-up-button-affordance-states.md",
+          "purpose": "Example of affordance-based teaching already in the game"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "Algorithm state visualization is one of the systems onboarding must introduce"
+        }
+      ],
+      "acceptance_criteria": [
+        "A draft proposal in proposals/draft/ defining a minute-by-minute sequence for the first 5 minutes of a fresh save",
+        "Named introduction order for each system (generators, platforms, algorithm, gigs, creator kit, audience mood) with design rationale",
+        "For each system, the teaching mechanism (affordance state, flavor copy, first-appearance moment) — no modal tutorials",
+        "Named first-meaningful-decision the player makes (and by when)",
+        "Explicit call-out for skill floor: what does agency feel like by minute 1, 3, 5"
+      ],
+      "open_questions": [
+        {
+          "question": "Should there be any first-run-only copy that does not reappear, or is all copy evergreen?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Is there a 'safety rail' period where Audience Mood is disabled so the player learns posting without drag?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 93,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Late-game content arc: generators 8+ and satirical voice ladder",
+      "requester": "game-designer",
+      "complexity": "opus",
+      "overview": "core-game-identity-and-loop.md promises escalating absurdity in the late game — AI Slop, Deepfakes of Yourself, Algorithmic Prophecy — unlocked via prestige. This promise is the game's narrative payoff and the single biggest differentiator from 'another clicker.' Cookie Clicker's late-game absurdity is what players remember and share. Click Farm currently has zero specced content beyond generator 7 (Viral Stunts), no voice-ladder for how satirical tone escalates with prestige count, and no design for what the game SAYS to a rebrand-#10 player that it did not say to a rebrand-#1 player. Produce a proposal for the late-game content arc: generators 8 through ~12, the satirical voice progression, and any unlock text / flavor moments that mark the player crossing into each new tier of absurdity.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Source of the escalating-absurdity promise (§1 Fantasy & Tone, §3 Generators, §7 Prestige)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Launch generator roster the late-game arc continues from"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Clout unlocks gate new generator types — this spec must define what unlocks when"
+        }
+      ],
+      "acceptance_criteria": [
+        "A draft proposal in proposals/draft/ specifying generators 8 through ~12 with names, fiction, and mechanical differentiation from earlier generators",
+        "A satirical voice-ladder: how tone, copy, and content names escalate from early-game (relatable) to late-game (absurd)",
+        "Clout unlock costs / gating for each new generator with design rationale",
+        "Named late-game narrative beats — the moments the game wants the player to laugh at or recognize",
+        "Explicit check against the engagement line: each new generator must still pass the three-question test (honest, quittable, skill-tied)"
+      ],
+      "open_questions": [
+        {
+          "question": "Are late-game generators purely stat-escalation, or do any introduce new mechanics (e.g., compounds off other generators)?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Is there a hard ceiling to the absurdity ladder, or does it continue indefinitely via procedural naming?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 94,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Rebrand cadence intent: felt pacing across the prestige ladder",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The prestige formula is specced (floor(sqrt(total_followers)/10) per clout-to-follower-scaling-curve.md) but no design artifact captures the INTENT for when rebrands should happen or how rebrand #3 should feel different from rebrand #1. Prestige loops need a felt cadence, not just a formula — players need to know roughly when their first rebrand happens, when it starts feeling routine, when it starts feeling strategic (choosing when to pull the trigger vs push further). Without this design note, balance passes (like task #88) have no target to hit. Produce a design proposal capturing the expected rebrand cadence, how the feel of prestige evolves across the ladder, and what the designer considers 'right' pacing.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-to-follower-scaling-curve.md",
+          "purpose": "The math this proposal describes intent for"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "§7 Prestige: The Rebrand — establishes rebrand narrative framing"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Clout spending menu whose pricing depends on rebrand cadence"
+        }
+      ],
+      "acceptance_criteria": [
+        "A draft proposal in proposals/draft/ naming the target time-to-first-rebrand (rough session minutes)",
+        "Named pacing intent for rebrands 1 / 3 / 5 / 10 — what each should FEEL like and how they should differ",
+        "A design note on when rebrand shifts from 'ceremonial milestone' to 'strategic timing decision'",
+        "Explicit interaction with Clout upgrade menu: roughly how many rebrands to afford key upgrades",
+        "A 'felt stakes' statement that balance tuners (game-designer on task #88 and beyond) can test against"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 95,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Tension audit: post-Audience-Mood felt stakes review",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Replacing Scandals with Audience Mood removed active follower loss — growth is now monotonically non-decreasing (retention ∈ [floor, 1.0] scales gains, never subtracts). This was the right ethical call (loss aversion 2–2.5× pain, no dark patterns), but it may have over-corrected on tension. The game currently has no moment where the player feels 'something I built is at risk.' Soft pressure (retention drag) is a slow-down, not a stake. This task audits whether the game has enough felt stakes after the Audience Mood migration, and if not, whether a consented-risk mechanic (player-initiated, reversible, offline-safe) should be introduced somewhere in the late-game or prestige layer. Output is a design decision document — not necessarily a new mechanic, but a written position on whether the current tension level is sufficient.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/audience-mood-retention.md",
+          "purpose": "The system that replaced active loss — starting point of the audit"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "The superseded system — what was removed and why"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "§8 Engagement Line — the constraints any new tension mechanic must respect"
+        }
+      ],
+      "acceptance_criteria": [
+        "A draft proposal in proposals/draft/ answering: does the game have enough felt stakes post-Audience-Mood?",
+        "Named assessment of current negative pressure (Audience Mood retention drag) — is it felt as opportunity cost or invisible?",
+        "If insufficient: a sketch of a consented-risk mechanic that respects the engagement line (player-initiated, reversible, offline-safe, passes the three-question test)",
+        "If sufficient: an explicit written position that the game is done adding negative pressure, with reasoning",
+        "Explicit check against the four Scandal-failure mechanisms (modal interrupt, symptom-not-cause, unrecoverable loss, single-signal overload) — any new mechanic must avoid all four"
+      ],
+      "open_questions": [
+        {
+          "question": "Is consented-risk even needed, or does the Gigs/Viral/Algorithm strategic layer carry the tension load adequately?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 96,
+      "role": "game-designer",
+      "state": "review",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Review: large-number notation ladder proposal",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Review draft proposal for extending the compact-number suffix ladder past Dc and defining an overflow policy. The architect committed to structure (flat data table, single overflow cutoff, ×10^n scientific fallback with unicode superscript) but deferred all player-facing naming and range decisions to you. The proposal surfaces three questions you own: (1) expected max value a player will see post-G12, which sets how far the ladder extends; (2) whether to continue standard Latin -illion (UDc → Vg) for one segment before breaking into game-voice symbols, or break immediately past Dc; (3) what the game-voice symbols actually are — candidates offered include Viral/Slop/Doom/Feed/Grid/Algo/Meme/Rot to pair with the G11/G12 satirical arc, but naming is yours.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/large-number-notation-ladder.md",
+          "purpose": "the proposal to review"
+        },
+        {
+          "ref": "client/src/ui/format.ts",
+          "purpose": "current ladder implementation, terminates at Dc"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/late-game-content-arc.md",
+          "purpose": "G11/G12 content that drives the need for larger tiers"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the proposal in full",
+        "Answer Open Questions 1, 2, and 3 (endgame range, Latin-continuation vs game-voice split, symbols)",
+        "Append a Review: game-designer block per PROPOSALS.md template with Aligned/Not Aligned/Request for Comment decision",
+        "Update reviewers list at top of the proposal per review protocol"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 97,
+      "role": "ux-designer",
+      "state": "review",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Review: large-number notation ladder proposal",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Review draft proposal for the large-number notation ladder. The architect proposes a unicode-superscript scientific fallback (1.41×10⁵⁰) when the ladder is exhausted. Your review owns two concerns: (1) maximum character budget for a compact number in the top bar and platform cards — current Dc-era values top at ~7 chars (999.99Dc); game-voice symbols may be longer (999.99Viral = 11 chars). Does the existing layout absorb that, or does it need a width cap that forces shorter symbols? (2) Is unicode superscript (×10⁵⁰) compatible with the current typography system, or does it clash with the font stack? Fallback would be ×10^50 with a caret.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/large-number-notation-ladder.md",
+          "purpose": "the proposal to review"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/typography-system.md",
+          "purpose": "current type stack for superscript compatibility check"
+        },
+        {
+          "ref": "client/src/ui/format.ts",
+          "purpose": "current formatter, shows ~7-char Dc-era output"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the proposal in full",
+        "Answer Open Questions 4 and 5 (char budget, superscript legibility)",
+        "Append a Review: ux-designer block per PROPOSALS.md template with Aligned/Not Aligned/Request for Comment decision",
+        "Update reviewers list at top of the proposal per review protocol"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 98,
+      "role": "engineer",
+      "state": "review",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Review: large-number notation ladder — precision ceiling check",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Review draft proposal for the large-number notation ladder from an engineering-constraint angle. The proposal assumes JS Number is sufficient for all in-game values. Your review owns one primary concern: JavaScript Number maxes out around 1.8×10^308. If the game-designer's expected endgame range (Open Question 1 on the proposal) pushes values past ~1e300, we need a BigInt or Decimal.js migration of game state — which is a much larger change than this formatter proposal and should block or precede it. Your job is to confirm whether current game-state numbers can realistically reach that range given existing generator growth curves, prestige multipliers, and G11/G12 content, and flag whether a precision-migration proposal is needed first.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/large-number-notation-ladder.md",
+          "purpose": "the proposal to review"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "generator growth curves that drive value scale"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "prestige multipliers that compound scale"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-level-growth-curves.md",
+          "purpose": "curve definitions that bound late-game magnitudes"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "multiplier stack that compounds growth"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the proposal in full",
+        "Answer Open Question 6 (whether values can exceed 1e300 given current curves and prestige stack)",
+        "If yes, flag that a BigInt/Decimal migration proposal must precede this one",
+        "Append a Review: engineer block per PROPOSALS.md template with Aligned/Not Aligned/Request for Comment decision",
+        "Update reviewers list at top of the proposal per review protocol"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 99,
+      "role": "architect",
+      "state": "plan",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Plan the Scandal removal: decompose into engineer build tasks",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The accepted proposal at proposals/accepted/remove-scandals-interim.md authorizes ripping the Scandals system out of the client with no replacement until Audience Mood ships. Three reviewers (architect, engineer, ux-designer) have aligned on scope, migration strategy, and UX impact — their reviews trace the exact code surface area. What remains is decomposition: break the removal into concrete, sequenced engineer build tasks with explicit done-whens. The proposal's scope is accurate but lives in prose; engineers need a list of bite-sized tasks with acceptance criteria.\n\nThe architect already traced the surface area during review (see the architect review section in the proposal) and confirmed: module + test suite deletion, types cleanup, static-data cleanup, UI file scans, save migration V5→V6 via migrateV5toV6, driver interface contract update (removes dismissScandalResolution), prestige passthrough removal, architecture doc supersede banner. The engineer estimated ~1 day / ~2450 LOC for the full removal. Your job here is to shape this into tasks that an engineer can pick up without guessing — likely 1 primary build task, possibly split if any piece is independently shippable.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/remove-scandals-interim.md",
+          "purpose": "The accepted proposal — source of truth for scope and decisions"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/audience-mood-retention.md",
+          "purpose": "The end-state replacement — defines the downstream direction, not implemented here"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/scandal-system.md",
+          "purpose": "Architecture doc that needs superseded banner, not deletion"
+        },
+        {
+          "ref": "client/src/scandal/",
+          "purpose": "Module being removed"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Migration chain — needs V5→V6 migrateV5toV6 function and load-path defaulting block deletion"
+        }
+      ],
+      "acceptance_criteria": [
+        "File one or more engineer build tasks (state: build) that together cover the full removal scope traced in the architect + engineer review sections of the proposal",
+        "Each filed task has explicit acceptance criteria an engineer can verify against (e.g. 'all scandal-related files deleted', 'V5→V6 migration tested against fixture saves', 'all tests pass')",
+        "Produce superseded-banner subtasks (or include as criteria): architecture/scandal-system.md full-doc banner, ux/scandal-system.md full-doc banner, ux/visual-identity.md §3 section banner — these can be bundled with the removal task if engineer-owned, or filed as a ux-designer follow-up per OQ7",
+        "Name the sequencing: is this one monolithic task or split (e.g. separate save-migration task from UI removal task)? Justify the choice.",
+        "Once build tasks are filed, edit tasks #88 and #94 to add the new build task ID(s) to their blocked_on arrays (per OQ3 of the proposal)"
+      ],
+      "open_questions": [
+        {
+          "question": "Should the supersede-banner work on ux/scandal-system.md and ux/visual-identity.md §3 be bundled into the engineer's removal task, or split as a ux-designer follow-up task (per OQ7 of the proposal)?",
+          "owner": "architect"
+        },
+        {
+          "question": "Should task #95 (Tension Audit) be promoted now with a blocked_on pointer to the removal task, or wait for the removal to actually land before reactivating?",
+          "owner": "architect / producer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 100,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Remove Scandals system from client + supersede historical docs",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Rip the Scandals & Follower Loss system out of the client per proposals/accepted/remove-scandals-interim.md. The game will run with no negative-pressure system until Audience Mood is implemented (separate future work). Surface area has been fully traced at the line level by the architect and engineer during proposal review — see their review sections for the exact file/line map. Work is mechanical but large (~1 day, ~2450 LOC). Ship as a single atomic change: the save migration, hydration-block removal, types deletion, and driver-interface change cannot be split without leaving the build in a typecheck-red intermediate state. This task also bundles the three superseded-banner edits on historical docs (architect-written and ux-written language already provided in the proposal reviews — no authoring decisions required).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/remove-scandals-interim.md",
+          "purpose": "Source of truth — scope, rationale, and reviews with line-level surface trace"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/scandal-system.md",
+          "purpose": "Architecture doc requiring superseded banner (architect-written language in review §4)"
+        },
+        {
+          "ref": ".frames/sdlc/ux/scandal-system.md",
+          "purpose": "UX spec requiring full-doc superseded banner (ux-designer-written guidance in OQ7)"
+        },
+        {
+          "ref": ".frames/sdlc/ux/visual-identity.md",
+          "purpose": "§3 'Scandal Visual Identity' requires section-scoped superseded banner (ux-designer-written guidance in OQ7)"
+        },
+        {
+          "ref": "client/src/scandal/",
+          "purpose": "Module to delete (index.ts 990 lines + index.test.ts 1215 lines)"
+        },
+        {
+          "ref": "client/src/ui/ScandalModal.tsx",
+          "purpose": "Component to delete (+ ScandalModal.test.ts)"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Bump CURRENT_VERSION to 6, add migrateV5toV6 that deletes accumulators/scandalStateMachine/scandalSessionSnapshot, remove load-path scandal hydration block (lines 100–121), drop scandal type imports"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Delete scandal type definitions (lines 223–379) + four scandal fields on GameState + StaticData.scandal key"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Remove dismissScandalResolution and confirmScandalSpend from Driver interface, plus scandal session-snapshot and Trend-Chasing hook wiring"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "Delete §13 scandal accumulator advancement block (lines 475–577) + return-payload fields"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "Remove scandal init in createInitialGameState (lines 147–159) and imports (lines 18–21)"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "Remove scandal-field passthrough across rebrand (lines 197–207)"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Delete SCANDAL_TYPE_DEFS + SCANDAL_STATIC_DATA + scandal: key on export (lines 21–23, 391–473, 591)"
+        },
+        {
+          "ref": "client/src/ui/useGame.ts",
+          "purpose": "Remove computeScandalUIState, scandalUIState hook output, dismissScandalResolution action"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Remove modal rendering, aftermath card, riskLevels props to generator/platform components"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Remove optional riskLevels prop + RiskLevel import + per-row rendering path"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "Remove optional riskLevels prop + RiskLevel import (parallel edit to GeneratorList)"
+        },
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "Delete SCANDAL_DISPLAY map and ScandalDisplay type"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Delete 26 scandal-scoped CSS rules (all .scandal-* prefixed, starting ~line 1749, zero selector-collision risk)"
+        },
+        {
+          "ref": "client/src/ui/SettingsModal.tsx",
+          "purpose": "Hide (delete) the 'Reduce Time Pressure' toggle row (line 205) — keep settings.reduceTimePressure schema field dormant per OQ5/OQ6 resolution"
+        },
+        {
+          "ref": "client/src/settings/index.ts",
+          "purpose": "Keep reduceTimePressure field; update line-22 comment to remove scandal reference"
+        },
+        {
+          "ref": "client/src/index.css",
+          "purpose": "Update/delete line-5 comment mentioning scandals (trivial)"
+        }
+      ],
+      "acceptance_criteria": [
+        "client/src/scandal/ directory fully deleted (index.ts + index.test.ts)",
+        "client/src/ui/ScandalModal.tsx and ScandalModal.test.ts deleted",
+        "All scandal type definitions removed from client/src/types.ts, including accumulators/scandalStateMachine/scandalSessionSnapshot fields on GameState and scandal: key on StaticData — no scandal symbol references remain anywhere in client/src/ (verified via grep for 'scandal|Scandal|accumulator|RiskLevel|RiskAccumulator|ScandalStateMachine|ScandalSessionSnapshot|ScandalTypeId|ScandalTypeDef|ScandalStaticData|ScandalEvent' returning zero matches across client/src/)",
+        "client/src/save/index.ts: CURRENT_VERSION bumped to 6, migrateV5toV6 function added that deletes the three scandal fields from state, load-path scandal hydration block (lines 100–121) removed in the same commit, scandal-type imports dropped",
+        "A new test case for migrateV5toV6 is added that loads a V5 fixture containing scandal fields and asserts they are stripped in the resulting V6 state",
+        "Driver interface no longer exposes dismissScandalResolution or confirmScandalSpend methods",
+        "game-loop/index.ts §13 scandal accumulator advancement block fully removed; return payload no longer carries scandal fields",
+        "createInitialGameState in model/index.ts no longer constructs scandal state",
+        "prestige/index.ts no longer carries scandal fields across rebrand",
+        "static-data/index.ts no longer exports SCANDAL_TYPE_DEFS, SCANDAL_STATIC_DATA, or a scandal: key",
+        "UI cleanup complete: useGame.ts, GameScreen.tsx, GeneratorList.tsx, PlatformPanel.tsx, display.ts no longer reference scandal state, RiskLevel, or risk meters",
+        "GameScreen.css scandal block (26 .scandal-* rules) deleted; .risk-building and .risk-high CSS rules and reduce-motion override deleted",
+        "SettingsModal.tsx 'Reduce Time Pressure' toggle row and its wiring deleted — the reduceTimePressure schema field in settings/index.ts is RETAINED (dormant), and its scandal-referencing comment is updated to remove the scandal reference",
+        "index.css line-5 scandal comment updated or removed",
+        ".frames/sdlc/architecture/scandal-system.md has a full-doc superseded banner inserted above the first blockquote, using the exact language given in the architect's review §4 of proposals/accepted/remove-scandals-interim.md",
+        ".frames/sdlc/ux/scandal-system.md has a full-doc superseded banner inserted at the top of the document, matching the architect's wording pattern and pointing at proposals/accepted/remove-scandals-interim.md and proposals/accepted/audience-mood-retention.md",
+        ".frames/sdlc/ux/visual-identity.md §3 'Scandal Visual Identity' has a section-scoped '> **SUPERSEDED (2026-04-05):**' banner at its top with the same pointers (other sections remain unmarked and current)",
+        "Full typecheck (tsc --noEmit or equivalent) passes with zero errors",
+        "Full test suite passes with zero failures or skips introduced by this change",
+        "Manual smoke-test verified: a new save loads, generators purchase, rebrand works, settings modal renders without the Reduce Time Pressure row and with a legitimate MOTION section containing only Reduce Motion"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 101,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Redo maxed-state visual on Lvl ↑ row button — platinum plaque + arrival celebration",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "The current maxed-state treatment on the per-row Lvl ↑ button (GameScreen.css lines 2306–2316) uses a dim-gold color that collides with the --accent-gold token reserved for the ready-to-buy affordance signal on the same button. Replace it with a platinum-plaque treatment and a one-shot arrival celebration that fires on the ready→maxed transition. No persistent animation. Full spec in the referenced UX doc — this task is purely implementation.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/generator-max-level-state.md",
+          "purpose": "The UX spec — read first. Contains exact colors, gradients, glyph, arrival keyframes, accessibility matrix, and decision log."
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Component to modify. classifyLvlBtnState() at lines 80–91 already returns 'maxed' — no logic change needed there. Button render is at ~line 421. Existing glyph pattern (lvl-chevron for ready state) at ~line 448 is the model for the new lvl-crown glyph."
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Where to redefine .row-btn-upgrade.row-btn-lvl-maxed (currently at lines 2306–2316). Keyframes go nearby. --accent-platinum tokens go in :root at line 17."
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/lvl-up-button-affordance-states.md",
+          "purpose": "Parent spec for the four-state button. Do NOT change dormant/armed/ready — only maxed."
+        }
+      ],
+      "acceptance_criteria": [
+        "Add two new tokens to :root in GameScreen.css: --accent-platinum: #d9dee8 and --accent-platinum-deep: #a6b0c2. Do not reuse these for any other UI yet — they are reserved for maxed/completed states.",
+        "Replace the existing .row-btn-upgrade.row-btn-lvl-maxed rules (lines 2306–2316) with the platinum-plaque treatment per spec §3.2: 1px solid --accent-platinum-deep border, vertical gradient background (platinum at 14% → 6%), inset top-edge highlight + inset depth box-shadow, color --accent-platinum, font-weight 600, letter-spacing 0.08em, cursor: default, no animation.",
+        "Override :hover on maxed to match the non-hover appearance (no scale, no glow, no background change) — the button is non-actionable at max and must not invite interaction.",
+        "Add a lvl-crown glyph span pattern: render <span class=\"lvl-crown\">♛</span> inside the .label span before the LVL text when lvlState === 'maxed'. Style per spec §3.2: font-size 10px, margin-right 3px, color --accent-platinum, transform: translateY(-0.5px). Mirrors the existing lvl-chevron pattern used for ready state.",
+        "Apply the disabled attribute to the button when lvlState === 'maxed' (matching dormant behavior). If the upgrade drawer contains useful owned-levels review content, flag back to ux-designer before committing to disabled — otherwise default to disabled per spec §8 OQ1.",
+        "Add a useRef<LvlBtnState | null>(null) inside GeneratorRow to track prev lvlState. When current lvlState === 'maxed' AND prev !== 'maxed' AND prev !== null (mount guard), set a local state flag that applies the .lvl-maxed-arrival class to the button for 600ms, then clears it. Use a setTimeout or rAF; keep the timer cleanup correct on unmount.",
+        "Mount guard: already-maxed rows on initial render after save load MUST NOT fire the arrival celebration. Only live ready→maxed transitions within a session trigger it. Test with a save file containing a maxed generator — no animation should play on load.",
+        "Add @keyframes lvl-maxed-arrival per spec §4.2: 600ms ease-out, scale 1→1.08→0.98→1, platinum outer halo (box-shadow 0 0 20px 4px rgba(217,222,232,0.55) at peak) that retracts to 0 by end, inset shadows preserved throughout.",
+        "Under @media (prefers-reduced-motion: reduce) AND under html[data-reduce-motion=\"true\"], the .lvl-maxed-arrival animation is disabled entirely (animation: none). The static platinum-plaque visual still communicates the state change without motion.",
+        "Verify color-independence: all four states (dormant, armed, ready, maxed) are distinguishable without color via their glyphs (none / ⊖ / ▲ / ♛), cursor (not-allowed / pointer / pointer / default), and border treatment. Maxed is the only state with inset shadow + wide letter-spacing.",
+        "No regression on the other three states — dormant, armed, ready keep their current visuals and behaviors exactly. many-ready de-escalation and .active (drawer-open) suppression on ready are unaffected.",
+        "QA the ♛ (U+265B) glyph across macOS Safari/Chrome and Windows Chrome/Firefox. If rendering is visibly inconsistent in size or baseline, swap to an inline SVG crown (10×8 viewBox, single path, fill=\"currentColor\") and update the spec file with the decision."
+      ],
+      "open_questions": [
+        {
+          "question": "Should maxed stay clickable to open the drawer (showing owned-levels review) or be fully disabled? Spec defaults to disabled — check drawer contents at max before committing.",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "Arrival audio tick — out of scope here but should be flagged for the audio pass.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 102,
+      "role": "architect",
+      "state": "plan",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Decompose Audience Mood into architecture spec + engineer build tasks",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The accepted Audience Mood proposal (proposals/accepted/audience-mood-retention.md) replaces the Scandals system with a continuous retention-multiplier mechanic. It has no architecture spec yet and no engineer build tasks filed. The architect's own review on the proposal (dated 2026-04-05) committed to writing architecture/audience-mood.md and decomposing the work once accepted. That commitment is this task.\n\nScope:\n1. Write architecture/audience-mood.md covering the data model delta (retention + per-generator content_fatigue map + neglect + algorithm_misalignment on Platform), pressure update cadences (event-driven for Content Fatigue and Algorithm Misalignment, tick-driven for Neglect), recovery formulas, the single integration point in the follower-distribution formula (core-systems.md ~line 388), save-schema migration (forward-only bump, drop scandal-era fields, initialize retention=1.0 and all accumulators to 0), and OQ#3 composition as dominant-display (multiplicative + argmax with fixed priority Content Fatigue > Algorithm Misalignment > Neglect).\n\n2. File the ux-designer follow-up task for ux/audience-mood.md (the ux-designer review flagged this as needed before build — the strip anatomy, copy pools, motion spec, and core-game-screen zone update). The ux task MUST land before the engineer build task starts.\n\n3. Decompose into engineer build tasks with explicit done-whens. Coordinate sequencing with scandal-removal task #100 per architect review OQ#4(e): 'Tear-out and rebuild MUST happen in the same engineering cycle... Deleting scandals before Audience Mood is playable leaves the game without negative pressure — a regression in design intent.' The plan needs to decide whether Audience Mood lands before, simultaneously with, or directly after #100 — and express that as explicit task ordering via blocked_on.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/audience-mood-retention.md",
+          "purpose": "the accepted proposal being decomposed; architect review at the bottom of this file already commits to the arch spec and lays out the migration plan (OQ#4)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/scandal-system.md",
+          "purpose": "superseded doc — mark as SUPERSEDED at top, do not delete; reference for the state-machine pattern being retired"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "single integration point lives here at ~line 388 (follower-distribution formula); the retention multiplier is one scalar in the existing per-platform formula"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "tick pipeline where retention multiplier applies to follower distribution; see computeFollowerDistribution call path"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "PlatformState lives here — the data model delta targets this file"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "the superseded proposal; its mechanics are being fully replaced"
+        }
+      ],
+      "acceptance_criteria": [
+        "architecture/audience-mood.md written with all sections from architect's OQ#4 migration plan (scope, data model, pressure cadences, recovery, integration point, save migration, composition rule)",
+        "architecture/scandal-system.md marked SUPERSEDED at top (full-doc banner pointing at new doc and the accepted proposal)",
+        "ux-designer task filed for ux/audience-mood.md with blocked_on set on the arch spec if sequencing demands it",
+        "Engineer build tasks filed with explicit done-whens covering: save-schema migration, PlatformState field additions, pressure update logic (event-driven + tick-driven paths), retention integration into follower distribution, mood strip UI rendering hookup (consuming the ux spec), removal sequencing with task #100",
+        "Task ordering expressed via blocked_on so the board reflects the real sequence; ux spec task must block the engineer UI task; arch spec should land before engineer work starts"
+      ],
+      "open_questions": [
+        {
+          "question": "Should Audience Mood engineer tasks block #100 (scandal removal), or should #100 complete first and Audience Mood land in a follow-up cycle? The architect's review said tear-out and rebuild MUST happen in the same cycle, but #100 is now a standalone task — does that invalidate the 'same cycle' constraint, or does it mean #100 should be re-scoped to include Audience Mood?",
+          "owner": "architect"
+        },
+        {
+          "question": "Does the dominant-display tie-breaking priority (Content Fatigue > Algorithm Misalignment > Neglect) need game-designer sign-off, or is it purely implementation detail?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 103,
+      "alias": "UX1",
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Write ux/audience-mood.md UX spec (mood strip, copy pools, motion)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Write the UX spec for Audience Mood — the diagnostic mood strip that appears on platform cards when retention drops below the degradation threshold. The ux-designer's review on proposals/accepted/audience-mood-retention.md (dated 2026-04-05) already provided the spec direction — strip anatomy, copy direction, motion notes. This task formalizes that guidance as a standalone UX spec doc that the engineer can build against, and updates ux/core-game-screen.md to reflect the new zone.\n\nThe arch spec at .frames/sdlc/architecture/audience-mood.md names the contract the UI consumes: per-platform `retention`, `dominant_pressure`, `dominant_generator`. The UX spec defines how those fields render.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/audience-mood-retention.md",
+          "purpose": "source proposal; ux-designer's review at the bottom contains the starting spec direction for strip anatomy, copy pools, and motion"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/audience-mood.md",
+          "purpose": "arch spec defining the UI contract (retention, dominant_pressure, dominant_generator) and the degradation_threshold (0.95) at which the strip appears"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "zone map must be updated to show the mood strip's position in the platform card"
+        },
+        {
+          "ref": ".frames/sdlc/ux/scandal-system.md",
+          "purpose": "superseded UX spec — reference only; do not build from it"
+        },
+        {
+          "ref": ".frames/sdlc/ux/visual-identity.md",
+          "purpose": "risk-language amber lives here; mood strip tints pull from this palette (NOT the algorithm-mood weather vocabulary)"
+        }
+      ],
+      "acceptance_criteria": [
+        "File .frames/sdlc/ux/audience-mood.md created",
+        "Strip anatomy specified: 18px height, 1px hairline divider, flavor text (10px italic left), retention number (10px weight 500 right), severity tint bands (three amber opacity steps at retention thresholds 0.95/0.8/0.5)",
+        "Vocabulary separation from algorithm-mood explicitly called out — no shared color language",
+        "Copy pools expanded from the review starter set: at least 8 lines each for Content Fatigue, Neglect, Algorithm Misalignment (rotation pool per pressure)",
+        "Motion spec: strip fade-in 150ms ease-out opacity 0→1 on retention crossing degradation_threshold downward; fade-out 150ms ease-out on recovery to 1.0; reduce-motion snaps in/out",
+        "Variable platform card height behavior documented: either a reserved 18px gutter or a 200ms ease-out reflow on strip appear/disappear (ux-designer chooses, spec names the choice)",
+        "CVD pass: flavor text + retention number convey cause and magnitude without color dependency",
+        "ux/core-game-screen.md zone map updated to place the mood strip within the platform card",
+        "Content Fatigue flavor text rendering specified: when dominant pressure is content_fatigue, the flavor line must name the specific generator type (from dominant_generator in the contract)"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 104,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Implement Audience Mood model layer (data, pressures, retention, migration)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the model-layer half of Audience Mood per .frames/sdlc/architecture/audience-mood.md. This task delivers the data model, pressure accumulators, composition rule, retention integration into follower distribution, and save-schema migration. No UI work — the mood strip UI lands in a separate follow-up task (E2) that depends on both this task and the UX spec (UX1).\n\nThis task is blocked on #100 (scandal removal) — the codebase must be scandal-free before retention fields are added to PlatformState. #100 bumps the save schema to V7 (its AC names V6 but that's already consumed — the engineer picking up #100 will bump to V7). This task then adds V7→V8.\n\nScope is model-layer only; the game will be playable after this task with retention mechanics active but no on-screen mood strip. That's an acceptable interim — the retention multiplier will quietly affect follower gains. E2 lands immediately after.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/audience-mood.md",
+          "purpose": "authoritative spec — data model, pressure update rules, composition formula, integration point, migration plan"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/audience-mood-retention.md",
+          "purpose": "source proposal for design intent and tuning philosophy"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "PlatformState (line ~168) gains four fields: retention, content_fatigue, neglect, algorithm_misalignment"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "post event handler and computeFollowerDistribution call site — both need hookup"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "add V7→V8 migration initializing retention fields"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "add audience_mood static-data group per arch spec (placeholder values)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "follower-distribution formula at ~line 388 is the integration point"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "stacking order declaration — retention registers in the platform-scoped multipliers chain"
+        }
+      ],
+      "acceptance_criteria": [
+        "PlatformState in client/src/types.ts gains fields: retention: number, content_fatigue: Record<GeneratorId, number>, neglect: number, algorithm_misalignment: number",
+        "New module client/src/audience-mood/index.ts exports applyPostToPressures, advanceNeglect, recomputeRetention, recomputeAllRetention per the interface contracts in the arch spec",
+        "audience_mood static-data group added to client/src/static-data/index.ts with all tuning knobs from the arch spec (retention_floor, degradation_threshold, content_fatigue_per_post_same_gen, content_fatigue_decay_per_post_other_gen, neglect_per_tick, neglect_reset_on_post, misalignment_per_off_trend_post, misalignment_decay_per_aligned_post, composition_priority, *_weight values) initialized with placeholder values",
+        "game-loop/index.ts calls applyPostToPressures on every post event (after the post is recorded, before follower distribution for that tick)",
+        "game-loop/index.ts calls advanceNeglect on every tick with the tick delta; offline-catchup path does NOT call advanceNeglect",
+        "computeFollowerDistribution (or its call site) multiplies per-platform follower gain by platform.retention — verified by unit test showing follower gain scales linearly with retention",
+        "retention registered in the creator-kit stacking-order chain per creator-kit.md §Stacking Order — declares its position (platform-scoped multipliers, after content-affinity weighting, before viral burst)",
+        "Save schema bumped to V8 (assuming #100 landed V7); migrateV7toV8 added that initializes retention=1.0 and all three pressure accumulators to 0/empty-map on every platform",
+        "migrateV7toV8 test case added loading a V7 fixture and asserting retention fields are present and initialized correctly in the resulting V8 state",
+        "Save load path calls recomputeAllRetention after migration so loaded retention values are normalized against pressure values",
+        "Unit tests cover: content_fatigue accumulates on same-generator post and decays on other-generator post; neglect accumulates per tick and resets on post; algorithm_misalignment accumulates on off-trend post and decays on aligned post; composition rule produces expected retention for single-pressure and multi-pressure cases; retention clamps to retention_floor; dominant_pressure tie-breaking follows composition_priority",
+        "offline calculator applies platform.retention as a constant scalar (retention value at last_close_time) over the offline follower accrual window — verified by test",
+        "Full typecheck passes with zero errors",
+        "Full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 105,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Implement Audience Mood strip UI on platform cards",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the mood strip UI on platform cards per .frames/sdlc/ux/audience-mood.md (written by UX1). Consumes the contract exposed by the model layer (E1): per-platform retention, dominant_pressure, dominant_generator. Renders the strip only when retention < degradation_threshold (0.95). Content Fatigue flavor lines use dominant_generator to name the specific content type.\n\nThis task depends on both the UX spec (for strip anatomy, copy pools, motion) and the model layer (for the data to render). When this ships, the Audience Mood system is fully visible to the player — the retention multiplier's cause and effect are on-screen.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/audience-mood.md",
+          "purpose": "UX spec — strip anatomy, copy pools, motion, CVD requirements"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/audience-mood.md",
+          "purpose": "model contract — retention, dominant_pressure, dominant_generator per platform"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "platform card zone — updated by UX1"
+        },
+        {
+          "ref": ".frames/sdlc/ux/visual-identity.md",
+          "purpose": "risk-language amber palette for strip tint bands"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "platform card rendering — mood strip is appended below the card body"
+        }
+      ],
+      "acceptance_criteria": [
+        "Mood strip renders within each platform card when that platform's retention < degradation_threshold (0.95); strip is absent when retention >= threshold",
+        "Strip layout matches ux/audience-mood.md: 18px height, 1px hairline divider, italic flavor text left-aligned, retention number (×0.7 etc) right-aligned, severity tint bands at the three opacity steps",
+        "Flavor text is drawn from a copy pool per pressure type (content_fatigue / neglect / algorithm_misalignment), with rotation across the pool per appearance",
+        "When dominant_pressure === content_fatigue, the flavor line names the specific generator (from dominant_generator) — pulls from a template that can substitute generator name",
+        "Motion: strip fades in 150ms ease-out when retention crosses degradation_threshold downward; fades out 150ms ease-out on recovery to 1.0; reduce-motion snaps in/out",
+        "Variable platform card height handled per ux spec (reserved gutter OR ease-out reflow — matches whichever UX1 chose)",
+        "CVD accessibility test: strip is readable via text + number alone, without relying on color — verified under protanopia/deuteranopia simulation",
+        "No per-post multiplier annotation on floating follower-gain numbers (per ux OQ#6) — floating numbers remain as raw gain only",
+        "Unit or component tests cover: strip visibility toggles on retention threshold, flavor text selection by dominant_pressure, generator name substitution for content_fatigue, motion is applied, reduce-motion disables motion",
+        "Full typecheck passes with zero errors",
+        "Full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        103
+      ]
+    },
+    {
+      "id": 106,
+      "alias": "UX1",
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Derive light-mode accent palette (gold/green/amber/red/platinum on warm-white base)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The functional accent palette (--accent-gold, --accent-green, --accent-amber, --accent-red, --accent-platinum, --accent-platinum-deep) was derived for a dark base (#0b0d12) and its current values (e.g. #5fd692 green, #ffd66b gold) will not meet WCAG AA or read as confident affordance signals on the warm near-white base (#FAF8F5) / white panels (#FFFFFF) committed in visual-identity-light-mode.\n\nNeither visual-identity-light-mode nor algorithm-mood-visibility specifies light-mode values for this palette. These are functional state signals, not decoration: gold = ready-to-buy, amber = armed/penalty, green = boost/success, red = danger, platinum = maxed tier. The semantic meaning must survive the base flip.\n\nProduce a palette addendum (either a revision section on visual-identity-light-mode.md or a small new companion spec) giving concrete hex values for each slot, with rationale and contrast compliance notes.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "the light-mode base palette and text/border values these accents must harmonize with"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "the edge-vignette accent colors per algorithm state — new accents must not collide with any of the five mood edge hues"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "current dark-mode accent token definitions (lines 17–25) and every usage site — shows what these accents are used for (rate flares, modifier chips, scandal signal, border pulses, maxed plaques)"
+        },
+        {
+          "ref": ".frames/sdlc/ux/generator-max-level-state.md",
+          "purpose": "platinum as 'tier above gold' semantic constraint — cool-temperature, never competes with warm affordance signals"
+        }
+      ],
+      "acceptance_criteria": [
+        "Hex values specified for all six slots: accent-gold, accent-green, accent-amber, accent-red, accent-platinum, accent-platinum-deep",
+        "Each value passes WCAG 2.1 AA contrast against #FFFFFF (white panel surface): 4.5:1 if used as text, 3:1 if used as UI chrome (borders/icons/chips) — note which target applies per slot",
+        "Each value has a one-line rationale connecting its hue/saturation to its functional semantic (ready / armed / boost / danger / maxed)",
+        "Palette is checked against the five algorithm-mood edge hues (#E87B3C, #4F8A7A, #D63A82, #7A4FA8, #8A95A8) — no accent should be confusable with a mood edge color at a glance",
+        "Platinum slot preserves 'cool temperature, tier above gold' constraint from generator-max-level-state.md",
+        "Output committed as either a revision section on proposals/accepted/visual-identity-light-mode.md or a new companion spec at .frames/sdlc/ux/accent-palette-light-mode.md"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 107,
+      "alias": "A1",
+      "role": "architect",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Architecture spec: light-mode theming token system and vignette layer contract",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The codebase currently uses ad-hoc CSS custom properties declared in :root inside client/src/ui/GameScreen.css (--bg-base, --panel-bg, --panel-border, --text-p0..p3, --accent-*). There is no named token system, no semantic layer, and no structural place for per-state mood-edge colors or a vignette layer binding.\n\nThe light-mode flip is the right moment to formalize this. This spec defines the token structure the engineer will implement against. It is a small architecture doc (1–2 pages), not a grand theming framework — its scope is exactly what visual-identity-light-mode and algorithm-mood-visibility require, plus the minimum structure that keeps a dark-mode v2 retrofit from being surgery.\n\nThe spec MUST answer:\n- Token taxonomy: semantic names (--surface-canvas, --surface-panel, --text-primary, --text-secondary, --text-receded, --border-default, --accent-*) vs. raw values; which tier of token GameScreen.css and components reference\n- Token location: index.css vs GameScreen.css vs a new theme module — and why\n- Mood-edge token binding: how --mood-color-edge is set per algorithm state (data attribute on root, CSS class, React style prop). Must integrate with existing AlgorithmBackground.tsx which already computes instabilityFactor and will drive viral burst state.\n- Vignette layer contract: the DOM contract for the second <div> inside AlgorithmBackground per algorithm-mood-visibility OQ1 resolution — what props it takes, what CSS it renders, how 400ms crossfade + instability opacity scaling + viral burst 3-phase state machine are distributed between React and CSS\n- Dark-mode v2 inversion points: name which tokens would swap and which would stay, so a future theme flip is a token-file swap, not a component rewrite. No implementation required — just name the seam.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "base palette hex values this token system must express"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "mood-edge color tokens, vignette layer mechanism, viral burst state machine, OQ1 resolution on second-div vs pseudo-element"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "current ad-hoc :root token definitions (lines 9–26) — what's being replaced"
+        },
+        {
+          "ref": "client/src/ui/AlgorithmBackground.tsx",
+          "purpose": "existing component that will host the vignette layer; already computes instabilityFactor"
+        },
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "ALGORITHM_MOOD record (lines 202–241) — currently carries per-state background gradients that will be replaced with moodColorEdge tokens"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "project architecture conventions and existing spec structure to match"
+        }
+      ],
+      "acceptance_criteria": [
+        "Architecture spec written to .frames/sdlc/architecture/visual-theming.md",
+        "Spec follows the architect doc structure: Scope, Data model (here: token taxonomy), Interface contracts (vignette layer DOM/prop contract), Coupling analysis (component → token dependencies and inversion points for dark-mode retrofit), Open questions, Assumptions",
+        "Token taxonomy names every token slot needed by visual-identity-light-mode + algorithm-mood-visibility, with semantic naming",
+        "Vignette layer DOM/prop contract is specific enough that the engineer can implement without further design calls",
+        "Dark-mode v2 inversion points explicitly named (which tokens swap, which stay fixed)",
+        "Open questions surfaced for any point where engineer implementation constraints might conflict"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 108,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Implement light-mode base tokens and apply across GameScreen.css",
+      "requester": "architect",
+      "complexity": "opus",
+      "overview": "Replace the dark-mode token system in GameScreen.css with the light-mode token system per the theming architecture spec (.frames/sdlc/architecture/visual-theming.md) and the re-derived accent palette (UX1 / #106).\n\nThis is the core visual flip. Per the arch spec, create a new file client/src/theme/tokens.css carrying the two-tier token system (Tier 1 palette values + Tier 2 semantic bindings). Import it from client/src/main.tsx (or index.css) at app boot so tokens are available before any component styles load. The ad-hoc :root block currently at lines 9-26 of GameScreen.css is DELETED and replaced by references to the semantic tokens from tokens.css.\n\nBase becomes #FAF8F5, panels become #FFFFFF, text flips from white overlays to #1A1A1A / #6B6B6B per visual-identity-light-mode §1. Every component rule in GameScreen.css is migrated from the old names (--bg-base, --panel-bg, --text-p0..p3) to the semantic names (--surface-canvas, --surface-panel, --text-primary/secondary/receded). Every rgba(255,255,255,X) overlay and every hex literal in GameScreen.css must either (a) be routed through the new token system or (b) be verified as intentionally local.\n\nThis is ~2900 lines of CSS with ~198 color literals. Expect a full session. Do not rush the animations: rate-flare pulses, border-pulse keyframes, and count-pulse animations currently assume light-on-dark and must be re-verified frame-by-frame on the new surfaces. Hover/pressed states (currently rgba(255,255,255,0.04/0.09/0.10)) need dark-on-light equivalents that still read as feedback.\n\nOut of scope: modals (RebrandCeremonyModal, CloutShopModal, SettingsModal, OfflineGainsModal), GeneratorList.tsx inline colors, App.tsx, DebugApp.tsx — those are E3's remit (#110). The AlgorithmBackground vignette layer is E2's remit (#109).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/visual-theming.md",
+          "purpose": "token taxonomy, file location decision, semantic slot definitions"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "base palette hex values the token system must express"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "current :root block at lines 9-26 to delete; component rules to migrate to semantic names"
+        },
+        {
+          "ref": "client/src/index.css",
+          "purpose": "where tokens.css import can be added, or alternative import site in main.tsx"
+        }
+      ],
+      "acceptance_criteria": [
+        "New file client/src/theme/tokens.css created with Tier 1 palette values and Tier 2 semantic bindings per architecture/visual-theming.md",
+        "tokens.css imported at app boot (main.tsx or index.css) before any component styles",
+        "Ad-hoc :root block at lines 9-26 of GameScreen.css deleted",
+        "Semantic token names per arch spec: --surface-canvas/panel/overlay, --text-primary/secondary/receded/inverse, --border-default/subtle, --accent-*",
+        "Base surface is #FAF8F5, panel surface is #FFFFFF, primary text is #1A1A1A, secondary text is #6B6B6B, borders are #E8E4DF; accent values from UX1 (#106)",
+        "All component rules in GameScreen.css reference the new semantic token names — no references to --bg-base, --panel-bg, --text-p0..p3 remain",
+        "No inline hex or rgba() color literals remain in GameScreen.css except as token values in tokens.css — all usage sites reference tokens",
+        "Hover, pressed, focus, and disabled states verified to still read as state feedback on the new surfaces",
+        "All keyframe animations (rate-flare-*, count-pulse, border-pulse, gold-border-pulse, etc.) verified visually against white panels — colors updated where previous values were chosen for dark context",
+        "All existing tests pass (yarn test / vitest)",
+        "Manual visual check: GameScreen renders, all five algorithm states load without visual regression beyond the intentional base flip, no illegible text found"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        106
+      ]
+    },
+    {
+      "id": 109,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Add edge vignette layer to AlgorithmBackground; migrate ALGORITHM_MOOD from per-state gradients to edge tokens",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the screen-edge mood vignette per algorithm-mood-visibility Phase 1 and the vignette contract defined in .frames/sdlc/architecture/visual-theming.md.\n\nChanges required:\n\n1. Add a new <AlgorithmVignette> component (or inline second <div>) rendered by client/src/ui/AlgorithmBackground.tsx per OQ1 resolution. Per arch spec, it renders the radial-gradient edge wash using var(--mood-color-edge). z-index sits above the background and below .game-screen panels.\n\n2. Wire the root data-attribute binding mechanism per arch spec: AlgorithmBackground writes document.documentElement.dataset.algorithmState = algorithm.current_state_id via useEffect when current_state_id changes. The tokens.css file (E1 / #108) carries :root[data-algorithm-state=\"...\"] blocks that bind the correct --mood-color-edge + --mood-edge-opacity per state.\n\n3. Update ALGORITHM_MOOD in client/src/ui/display.ts: remove the per-state linear-gradient `background` strings from lines 205-237. Per the reconciled ux/core-game-screen.md §4.2 and arch spec, the base is fixed across all states (#FAF8F5, the --surface-canvas token from E1). Each ALGORITHM_MOOD entry keeps name, cycleSeconds, tagline, and gains two new fields: moodEdgeColor (hex string) and moodEdgeOpacity (number 0.14-0.22). These duplicate the Tier-1 palette values from tokens.css — the MUST-match-tokens-css comment from arch spec's Coupling Analysis applies.\n\n4. Vignette behavior per algorithm-mood-visibility + arch spec's prop contract:\n- 400ms crossfade between mood edge colors on algorithm shift (matches §4.4 background crossfade timing)\n- Instability ×1.2 opacity scaling in final 20% of shift interval — effectiveOpacity = baseOpacity × (1 + 0.2 × instabilityFactor); reuses existing instabilityFactor computation\n- Viral burst override: 3-phase state machine — crossfade 300ms to platform affinity color, pulse at 2s cycle during peak, crossfade 400ms back to current mood color. The vignette is a presentation primitive: it consumes a `phase` prop but does NOT time phases itself — upstream state owns phase transitions\n\n5. The existing ::after shimmer layer on .algorithm-background stays. The new vignette is separate.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/visual-theming.md",
+          "purpose": "vignette DOM/prop contract, data-attribute binding mechanism, ALGORITHM_MOOD field additions"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "per-state edge colors + opacities, crossfade + instability + viral burst behavior"
+        },
+        {
+          "ref": "client/src/ui/AlgorithmBackground.tsx",
+          "purpose": "existing component; already computes instabilityFactor; receives viralActive prop"
+        },
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "ALGORITHM_MOOD record (lines 202-241) — remove `background` field, add moodEdgeColor + moodEdgeOpacity"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "existing .algorithm-background styling; new .algorithm-vignette CSS added here or in a new file"
+        }
+      ],
+      "acceptance_criteria": [
+        "AlgorithmBackground.tsx renders a vignette <div> layered above background and below panels via z-index",
+        "AlgorithmBackground writes document.documentElement.dataset.algorithmState = current_state_id in a useEffect",
+        "Vignette uses the radial-gradient pattern from algorithm-mood-visibility (transparent 40% → var(--mood-color-edge) at 100%, ellipse 120% 100% centered)",
+        "Per-state palette bindings in tokens.css (E1 / #108) match algorithm-mood-visibility table: short_form_surge #E87B3C/18%, authenticity_era #4F8A7A/18%, engagement_bait #D63A82/22%, nostalgia_wave #7A4FA8/18%, corporate_takeover #8A95A8/14%",
+        "ALGORITHM_MOOD record in display.ts no longer carries per-state `background` gradient strings; carries moodEdgeColor (hex) + moodEdgeOpacity (number) fields per arch spec",
+        "Vignette crossfades between edge colors over 400ms on algorithm state shift (CSS-native transition on gradient/opacity)",
+        "Vignette effective opacity scales as baseOpacity × (1 + 0.2 × instabilityFactor) in the final 20% of shift interval",
+        "Viral burst override: on viralActive=true, vignette switches to platform affinity color through the 3-phase state machine (300ms crossfade in, 2s pulse cycle during peak, 400ms crossfade out). Phase transitions owned by upstream state, not the vignette itself",
+        "All existing tests pass; any snapshot/type assertions for ALGORITHM_MOOD shape updated",
+        "Manual visual check: all five algorithm states show distinct edge vignettes at the specified opacities, shifts crossfade smoothly"
+      ],
+      "open_questions": [
+        {
+          "question": "During the viral burst 3-phase state machine, does the instability ×1.2 opacity scaling still apply, or is it suppressed while the burst owns the layer?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 110,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Light-mode sweep of modals + non-GameScreen surfaces + WCAG AA verification",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Complete the light-mode migration by sweeping the surfaces E1 did not cover: all modal components (RebrandCeremonyModal, CloutShopModal, SettingsModal, OfflineGainsModal, CreatorKitPanel, UpgradeDrawer, PostZone, PlatformPanel, TopBar), plus non-GameScreen files with inline color literals (GeneratorList.tsx, App.tsx, DebugApp.tsx per `grep #hex` sweep).\n\nThen perform a WCAG 2.1 AA verification pass across the full screen and all five algorithm mood states:\n- All text (P0/P1/P2/P3 tiers) meets 4.5:1 contrast against its surface\n- All UI chrome (borders, icons, inactive controls, chip outlines) meets 3:1 (WCAG 1.4.11)\n- Accent color chips/indicators meet their stated target (text vs chrome) per UX1's palette addendum\n- Verify under all five mood vignette states (vignette is decorative, not a text background — but verify no surface-near-edge text drops below 4.5:1 against the vignette-tinted periphery)\n\nProduce a short verification report in the PR description listing: each token slot's contrast ratio against its intended surface, each accent's ratio against panel white, and any failures found + fixes applied.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/visual-theming.md",
+          "purpose": "token system these components must adopt"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "WCAG AA targets (§3): 4.5:1 text, 3:1 UI chrome"
+        },
+        {
+          "ref": "client/src/ui/RebrandCeremonyModal.tsx",
+          "purpose": "modal surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/CloutShopModal.tsx",
+          "purpose": "modal surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/SettingsModal.tsx",
+          "purpose": "modal surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/OfflineGainsModal.tsx",
+          "purpose": "modal surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/CreatorKitPanel.tsx",
+          "purpose": "panel surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/UpgradeDrawer.tsx",
+          "purpose": "drawer surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/PostZone.tsx",
+          "purpose": "interactive surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "card surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "chrome surface to migrate"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "has inline hex literals to migrate to tokens"
+        },
+        {
+          "ref": "client/src/App.tsx",
+          "purpose": "may contain dark-mode assumptions"
+        },
+        {
+          "ref": "client/src/ui/DebugApp.tsx",
+          "purpose": "has inline hex literals"
+        }
+      ],
+      "acceptance_criteria": [
+        "All listed modals and surfaces render correctly on light-mode base — no white text on white, no illegible states",
+        "No inline hex/rgba color literals remain in the listed files except where intentionally local (document any exceptions in the PR)",
+        "WCAG 2.1 AA verification report in the PR description: every text tier P0/P1/P2/P3 contrast-tested against its surface; every accent tested against panel white; every chrome element ≥3:1",
+        "Verification covered all five algorithm states (short_form_surge, authenticity_era, engagement_bait, nostalgia_wave, corporate_takeover) with the vignette active",
+        "Any contrast failures found are either fixed (with updated token values noted) or flagged as open questions for ux-designer",
+        "All existing tests pass; any modal snapshot/style tests updated"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        108,
+        109
+      ]
     }
   ]
 }

@@ -4,11 +4,10 @@
 // the game loop.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import type { GameState, GeneratorId, UpgradeId } from '../types.ts';
-import { createDriver, type ActionError } from '../driver/index.ts';
+import type { GameState, GeneratorId, KitItemId, UpgradeId } from '../types.ts';
+import { createDriver, type ActionError, type SaveError } from '../driver/index.ts';
 import type { OfflineResult } from '../offline/index.ts';
 import type { RebrandResult } from '../prestige/index.ts';
-import { computeScandalUIState, type ScandalUIState } from '../scandal/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 export interface UseGameResult {
@@ -25,6 +24,8 @@ export interface UseGameResult {
   rebrand: () => RebrandResult;
   /** Spend Clout on a meta-upgrade. Throws when unaffordable. */
   buyCloutUpgrade: (id: UpgradeId) => void;
+  /** Spend Engagement on a Creator Kit item. */
+  buyKitItem: (id: KitItemId) => void;
   /**
    * Last action error, if any. Updates when a player action (click/buy/
    * upgrade/buyCloutUpgrade) fails a model precondition. Consumers can
@@ -33,12 +34,14 @@ export interface UseGameResult {
   lastActionError: ActionError | null;
   /** Clear the last action error (call after displaying it to the user). */
   clearActionError: () => void;
-  /** Derived scandal UI state — risk levels, active modal data, aftermath. */
-  scandalUIState: ScandalUIState;
-  /** Confirm PR Response with chosen engagement spend. */
-  confirmPR: (engagementSpent: number) => void;
-  /** Dismiss the aftermath resolution display. */
-  dismissScandalResolution: () => void;
+  /**
+   * Last save-subsystem error (corrupt load / quota exceeded / unknown storage
+   * failure). Stays set until dismissed — unlike actionError, these are
+   * persistent concerns the UI should keep visible. Task #55.
+   */
+  saveError: SaveError | null;
+  /** Dismiss the save-error notification. */
+  clearSaveError: () => void;
   /**
    * Pause the game loop (stop tick + save timers). Used by the Rebrand
    * Ceremony modal per §4.1 — production halts while the ceremony is open.
@@ -50,6 +53,8 @@ export interface UseGameResult {
    * counted as offline time.
    */
   resumeLoop: () => void;
+  /** Wipe the current save and restart the driver with a fresh GameState. */
+  resetGame: () => void;
 }
 
 /**
@@ -71,11 +76,20 @@ export function useGame(): UseGameResult {
     () => driver.getOfflineResult(),
   );
   const [lastActionError, setLastActionError] = useState<ActionError | null>(null);
+  const [saveError, setSaveError] = useState<SaveError | null>(null);
 
   // Subscribe to action errors from the driver. The listener overwrites the
   // last-error slot; consumers that need queueing can layer their own buffer.
   useEffect(() => {
     const unsub = driver.onActionError((e) => setLastActionError(e));
+    return unsub;
+  }, [driver]);
+
+  // Subscribe to save-subsystem errors. The driver replays any pending
+  // load_corrupt event from construction to the first subscriber, so this
+  // must mount early in the component lifecycle. Task #55.
+  useEffect(() => {
+    const unsub = driver.onSaveError((e) => setSaveError(e));
     return unsub;
   }, [driver]);
 
@@ -121,21 +135,15 @@ export function useGame(): UseGameResult {
       },
       rebrand: () => driver.rebrand(),
       buyCloutUpgrade: (id: UpgradeId) => driver.buyCloutUpgrade(id),
+      buyKitItem: (id: KitItemId) => driver.buyKitItem(id),
       clearActionError: () => setLastActionError(null),
-      confirmPR: (engagementSpent: number) => driver.confirmPR(engagementSpent),
-      dismissScandalResolution: () => driver.dismissScandalResolution(),
+      clearSaveError: () => setSaveError(null),
       pauseLoop: () => driver.stop(),
       resumeLoop: () => driver.start(),
+      resetGame: () => driver.resetGame(),
     }),
     [driver],
   );
 
-  // Scandal UI state — derived from current game state at render time.
-  // Computed here so all scandal-aware components share the same snapshot.
-  const scandalUIState = useMemo(
-    () => computeScandalUIState(state, Date.now(), STATIC_DATA),
-    [state],
-  );
-
-  return { state, offlineResult, lastActionError, scandalUIState, ...actions };
+  return { state, offlineResult, lastActionError, saveError, ...actions };
 }

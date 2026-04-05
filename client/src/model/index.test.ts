@@ -4,6 +4,7 @@ import {
   createGeneratorState,
   createPlatformState,
   createInitialGameState,
+  clampEngagement,
   earnEngagement,
   spendEngagement,
   canAffordEngagement,
@@ -145,6 +146,44 @@ describe('earnEngagement', () => {
     const player = createPlayer(1, 0);
     const updated = earnEngagement(player, 0);
     expect(updated.engagement).toBe(0);
+  });
+
+  it('clamps earn that would exceed MAX_SAFE_INTEGER (task #89)', () => {
+    const player = createPlayer(1, Number.MAX_SAFE_INTEGER - 10);
+    const updated = earnEngagement(player, 1e18);
+    expect(updated.engagement).toBe(Number.MAX_SAFE_INTEGER);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// clampEngagement (task #89 — save-breaking Infinity bug prevention)
+// ---------------------------------------------------------------------------
+
+describe('clampEngagement', () => {
+  it('returns value unchanged when in the valid range', () => {
+    expect(clampEngagement(0)).toBe(0);
+    expect(clampEngagement(100)).toBe(100);
+    expect(clampEngagement(Number.MAX_SAFE_INTEGER)).toBe(
+      Number.MAX_SAFE_INTEGER,
+    );
+  });
+
+  it('clamps negative values to 0', () => {
+    expect(clampEngagement(-1)).toBe(0);
+    expect(clampEngagement(-1e18)).toBe(0);
+    expect(clampEngagement(-Infinity)).toBe(0);
+  });
+
+  it('clamps values above MAX_SAFE_INTEGER to MAX_SAFE_INTEGER', () => {
+    expect(clampEngagement(Number.MAX_SAFE_INTEGER + 1)).toBe(
+      Number.MAX_SAFE_INTEGER,
+    );
+    expect(clampEngagement(1e100)).toBe(Number.MAX_SAFE_INTEGER);
+    expect(clampEngagement(Infinity)).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  it('coerces NaN to 0', () => {
+    expect(clampEngagement(NaN)).toBe(0);
   });
 });
 

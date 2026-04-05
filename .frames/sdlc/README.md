@@ -84,7 +84,7 @@ bash .frames/sdlc/tools/task.sh list --pretty-print
 bash .frames/sdlc/tools/task.sh list --role <role> --pretty-print
 ```
 
-Default output is JSON — use it for machine processing and decision-making. Use `--pretty-print` when you want to present task details to the user. Do NOT pipe JSON through Python or shell tools to reformat it — `--pretty-print` is the sanctioned alternative.
+Default output is JSON — use it for machine processing and decision-making. Use `--pretty-print` when you want to present task details to the user. Do NOT pipe JSON through Python or shell tools to reformat it — `--pretty-print` is the sanctioned alternative. If `--pretty-print` doesn't give you what you need, that's a signal the tool needs a new flag — file a task for it rather than working around it.
 
 ### Creating a task
 

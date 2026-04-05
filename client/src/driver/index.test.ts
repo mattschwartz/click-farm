@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createDriver, type ActionError } from './index.ts';
+import { createDriver, type ActionError, type SaveError } from './index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 // ---------------------------------------------------------------------------
@@ -507,5 +507,145 @@ describe('driver — persistence', () => {
     driver.click();
     driver.saveNow();
     expect(localStorage.getItem('click_farm_save')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Driver — save-subsystem error reporting (task #55)
+// ---------------------------------------------------------------------------
+
+describe('driver — onSaveError', () => {
+  it('emits load_corrupt when the stored save JSON is malformed', () => {
+    // Seed a garbage payload so load() returns kind: 'corrupt'.
+    localStorage.setItem('click_farm_save', '{not json');
+    const s = makeFakeScheduler();
+    // Silence the intentional console.error the driver fires.
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const driver = createDriver({
+      staticData: STATIC_DATA,
+      now: s.now,
+      setInterval: s.setInterval,
+      clearInterval: s.clearInterval,
+    });
+    const received: SaveError[] = [];
+    driver.onSaveError((e) => received.push(e));
+    expect(received).toHaveLength(1);
+    expect(received[0].kind).toBe('load_corrupt');
+    expect(received[0].details).toMatch(/JSON|unexpected/i);
+    // Driver still produced a playable initial state.
+    expect(driver.getState().player.engagement).toBe(0);
+    errorSpy.mockRestore();
+  });
+
+  it('emits load_corrupt when migrate() throws on an unknown version', () => {
+    localStorage.setItem(
+      'click_farm_save',
+      JSON.stringify({ version: 42, state: {} }),
+    );
+    const s = makeFakeScheduler();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const driver = createDriver({
+      staticData: STATIC_DATA,
+      now: s.now,
+      setInterval: s.setInterval,
+      clearInterval: s.clearInterval,
+    });
+    const received: SaveError[] = [];
+    driver.onSaveError((e) => received.push(e));
+    expect(received).toHaveLength(1);
+    expect(received[0].kind).toBe('load_corrupt');
+    errorSpy.mockRestore();
+  });
+
+  it('replays the pending load_corrupt event only to the first subscriber', () => {
+    localStorage.setItem('click_farm_save', 'not-json{{{{');
+    const s = makeFakeScheduler();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const driver = createDriver({
+      staticData: STATIC_DATA,
+      now: s.now,
+      setInterval: s.setInterval,
+      clearInterval: s.clearInterval,
+    });
+    const firstReceived: SaveError[] = [];
+    const secondReceived: SaveError[] = [];
+    driver.onSaveError((e) => firstReceived.push(e));
+    driver.onSaveError((e) => secondReceived.push(e));
+    expect(firstReceived).toHaveLength(1);
+    expect(secondReceived).toHaveLength(0);
+    errorSpy.mockRestore();
+  });
+
+  it('emits save_quota when localStorage.setItem throws QuotaExceededError', () => {
+    const s = makeFakeScheduler();
+    const driver = createDriver({
+      staticData: STATIC_DATA,
+      now: s.now,
+      setInterval: s.setInterval,
+      clearInterval: s.clearInterval,
+      loadFromStorage: false,
+    });
+    const received: SaveError[] = [];
+    driver.onSaveError((e) => received.push(e));
+    // Make localStorage throw a quota-style DOMException on the next setItem.
+    const original = localStorage.setItem;
+    localStorage.setItem = () => {
+      throw new DOMException('exceeded', 'QuotaExceededError');
+    };
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    driver.saveNow();
+    localStorage.setItem = original;
+    errorSpy.mockRestore();
+    expect(received).toHaveLength(1);
+    expect(received[0].kind).toBe('save_quota');
+  });
+
+  it('emits save_unknown for a generic localStorage failure', () => {
+    const s = makeFakeScheduler();
+    const driver = createDriver({
+      staticData: STATIC_DATA,
+      now: s.now,
+      setInterval: s.setInterval,
+      clearInterval: s.clearInterval,
+      loadFromStorage: false,
+    });
+    const received: SaveError[] = [];
+    driver.onSaveError((e) => received.push(e));
+    const original = localStorage.setItem;
+    localStorage.setItem = () => {
+      throw new Error('disk offline');
+    };
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    driver.saveNow();
+    localStorage.setItem = original;
+    errorSpy.mockRestore();
+    expect(received).toHaveLength(1);
+    expect(received[0].kind).toBe('save_unknown');
+    expect(received[0].details).toMatch(/disk offline/);
+  });
+
+  it('emits nothing during normal save/load operation', () => {
+    const s = makeFakeScheduler();
+    const driver = createDriver({
+      staticData: STATIC_DATA,
+      now: s.now,
+      setInterval: s.setInterval,
+      clearInterval: s.clearInterval,
+    });
+    const received: SaveError[] = [];
+    driver.onSaveError((e) => received.push(e));
+    driver.click();
+    driver.saveNow();
+    expect(received).toHaveLength(0);
+    // A fresh driver loading the just-written save also emits nothing.
+    const driver2 = createDriver({
+      staticData: STATIC_DATA,
+      now: s.now,
+      setInterval: s.setInterval,
+      clearInterval: s.clearInterval,
+    });
+    const received2: SaveError[] = [];
+    driver2.onSaveError((e) => received2.push(e));
+    expect(received2).toHaveLength(0);
   });
 });

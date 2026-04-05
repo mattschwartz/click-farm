@@ -27,6 +27,7 @@ import type {
   GameState,
   GeneratorId,
   GeneratorState,
+  KitItemId,
   PlatformId,
   PlatformState,
   Player,
@@ -36,6 +37,7 @@ import type {
 } from '../types.ts';
 import { deriveNewSeed, getShiftAtIndex, type ScheduledShift } from '../algorithm/index.ts';
 import { createAlgorithmState, spendClout } from '../model/index.ts';
+import { kitAlgorithmLookaheadBonus } from '../creator-kit/index.ts';
 
 // ---------------------------------------------------------------------------
 // Clout-from-followers formula
@@ -132,7 +134,16 @@ export function applyRebrand(
     (Object.keys(state.platforms) as PlatformId[]).map((id) => {
       const threshold = staticData.unlockThresholds.platforms[id];
       const unlocked = threshold === 0 || platformHeadstarts.has(id);
-      return [id, { id, unlocked, followers: 0 }];
+      // Audience Mood reset — rebrand wipes per-run pressure state.
+      return [id, {
+        id,
+        unlocked,
+        followers: 0,
+        retention: 1.0,
+        content_fatigue: {},
+        neglect: 0,
+        algorithm_misalignment: 0,
+      }];
     }),
   ) as Record<PlatformId, PlatformState>;
 
@@ -168,6 +179,8 @@ export function applyRebrand(
   );
 
   // Player: preserve meta, reset run state, add earned clout, bump count.
+  // creator_kit is per-run (architecture/creator-kit.md §Rebrand) — wiped
+  // here and MUST NOT appear in any preservation list.
   const player: Player = {
     ...state.player,
     engagement: 0,
@@ -177,6 +190,7 @@ export function applyRebrand(
     rebrand_count: state.player.rebrand_count + 1,
     algorithm_seed: result.newSeed,
     run_start_time: now,
+    creator_kit: {} as Record<KitItemId, number>,
     // last_close_time / last_close_state preserved — they reflect
     // serialization state, not run state.
   };
@@ -189,17 +203,12 @@ export function applyRebrand(
     active: null,
   };
 
-  // Preserve scandal accumulators and state machine across rebrand — they
-  // track risk history across the player's playtime and should not reset.
   return {
     player,
     generators,
     platforms,
     algorithm,
     viralBurst,
-    accumulators: state.accumulators,
-    scandalStateMachine: state.scandalStateMachine,
-    scandalSessionSnapshot: state.scandalSessionSnapshot,
   };
 }
 
@@ -283,11 +292,13 @@ export function purchaseCloutUpgrade(
 
 /**
  * Return up to N upcoming shifts, where N is the lookahead granted by the
- * algorithm_insight upgrade. Level 0 (unpurchased) → no lookahead → [].
+ * algorithm_insight upgrade PLUS the kit `algorithm_lookahead` contribution
+ * (Laptop). Level 0 everywhere → no lookahead → [].
  *
- * The per-level lookahead is read from `effect.lookaheads[level - 1]` (each
- * entry is the absolute number of shifts revealed at that level). Multiple
- * algorithm_insight upgrades stack additively.
+ * The per-level clout lookahead is read from `effect.lookaheads[level - 1]`
+ * (each entry is the absolute number of shifts revealed at that level).
+ * Multiple algorithm_insight upgrades stack additively, and Laptop adds to
+ * the same sum — per architecture/creator-kit.md §Stacking Order (additive).
  */
 export function getUpcomingShifts(
   state: GameState,
@@ -310,6 +321,10 @@ export function getUpcomingShifts(
       lookahead += n;
     }
   }
+
+  // Kit Laptop lookahead stacks ADDITIVELY with Clout algorithm_insight.
+  lookahead += kitAlgorithmLookaheadBonus(state.player.creator_kit, staticData);
+
   if (lookahead <= 0) return [];
 
   const shifts: ScheduledShift[] = [];

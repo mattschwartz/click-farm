@@ -1,5 +1,7 @@
 # Brand Deal Card — UX Spec
 
+> **Extended by:** `ux/gig-cards.md` — Brand Deal is one variant of the Gigs system (per `proposals/accepted/gigs-system.md`). `gig-cards.md` supersedes this spec's **card anatomy**, **entrance motion**, and **color values** with per-variant treatments and light-mode-aligned accent values. The **expiry behavior**, **activation choreography**, **deal-active badge structure**, **compound moment signal**, **mobile adaptation**, and **accessibility** sections below remain authoritative and are extended per-variant in `gig-cards.md`.
+>
 > **Scope:** Defines the deal offer card, its appearance and expiry behavior, the activation choreography, and the deal-active badge that tracks a running boost. This is the player-facing surface for the brand deal mechanic — the game's active-agency counterpart to the passive viral burst.
 >
 > **Not in scope:** Brand deal trigger frequency, boost magnitude, follower unlock thresholds (game-designer territory), game state model for `brandDeal.active` (architect territory — see `proposals/draft/brand-deal-boost.md` OQ3).

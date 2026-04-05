@@ -13,11 +13,8 @@ import type {
   AlgorithmStateId,
   StaticData,
   UpgradeId,
+  KitItemId,
 } from '../types.ts';
-import {
-  createAccumulators,
-  createDefaultStateMachine,
-} from '../scandal/index.ts';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -66,6 +63,7 @@ export function createPlayer(seed: number, now: number = Date.now()): Player {
     lifetime_followers: 0,
     rebrand_count: 0,
     clout_upgrades,
+    creator_kit: {} as Record<KitItemId, number>,
     algorithm_seed: seed,
     run_start_time: now,
     last_close_time: null,
@@ -101,6 +99,11 @@ export function createPlatformState(
     id,
     unlocked,
     followers: 0,
+    // Audience Mood — healthy defaults. See architecture/audience-mood.md.
+    retention: 1.0,
+    content_fatigue: {},
+    neglect: 0,
+    algorithm_misalignment: 0,
   };
 }
 
@@ -142,19 +145,12 @@ export function createInitialGameState(
 
   const viralBurst = { active_ticks_since_last: 0, active: null };
 
-  // Initialize scandal state.
-  const accumulators = createAccumulators(generators, platforms, staticData);
-  const scandalStateMachine = createDefaultStateMachine(staticData);
-
   return {
     player,
     generators,
     platforms,
     algorithm,
     viralBurst,
-    accumulators,
-    scandalStateMachine,
-    scandalSessionSnapshot: null, // driver sets this on open/foreground
   };
 }
 
@@ -182,11 +178,28 @@ export function createAlgorithmState(
 // All return a new Player; no mutation. Throw on constraint violations.
 // ---------------------------------------------------------------------------
 
+/**
+ * Clamp an engagement value into the finite, representable range. Every
+ * write to `player.engagement` MUST route through this helper — the clamp
+ * is a permanent invariant that prevents a save-breaking Infinity bug
+ * from ever re-emerging (see proposals/accepted/generator-level-growth-
+ * curves.md). Non-finite inputs (NaN, ±Infinity) coerce to 0 / MAX_SAFE.
+ */
+export function clampEngagement(value: number): number {
+  if (Number.isNaN(value)) return 0;
+  if (value < 0) return 0;
+  if (value > Number.MAX_SAFE_INTEGER) return Number.MAX_SAFE_INTEGER;
+  return value;
+}
+
 export function earnEngagement(player: Player, amount: number): Player {
   if (amount < 0) {
     throw new Error(`earnEngagement: amount must be ≥ 0, got ${amount}`);
   }
-  return { ...player, engagement: player.engagement + amount };
+  return {
+    ...player,
+    engagement: clampEngagement(player.engagement + amount),
+  };
 }
 
 export function spendEngagement(player: Player, amount: number): Player {

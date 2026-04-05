@@ -26,6 +26,13 @@ interface Props {
   summaryBadge?: { magnitude: number; fading: boolean } | null;
   /** Rebrand count — drives RUN N badge appearance (UX §5, task #66). */
   rebrandCount?: number;
+  /**
+   * When true, renders the "↑ kit" peek-signal below the Engagement value
+   * (ux/creator-kit-panel.md §5.2). 9px, kit accent, static.
+   */
+  peekSignalActive?: boolean;
+  /** Called when the gear icon is tapped. Opens Settings modal (§1). */
+  onOpenSettings?: () => void;
 }
 
 type TransitionPhase = 'idle' | 'exiting' | 'entering';
@@ -56,6 +63,8 @@ export function TopBar({
   viralGold,
   summaryBadge,
   rebrandCount = 0,
+  peekSignalActive = false,
+  onOpenSettings,
 }: Props) {
   // Track algorithm state transitions — when current_state_index changes,
   // we slide the old label out and the new one in (UX §4.4, 1.2s total).
@@ -158,6 +167,11 @@ export function TopBar({
             VIRAL +{fmtCompactInt(summaryBadge.magnitude)}
           </div>
         )}
+        {peekSignalActive && (
+          <div className="kit-peek-signal" aria-label="Creator Kit item affordable">
+            ↑ kit
+          </div>
+        )}
         <div className={`engagement-rate${rateFlaring ? ` rate-flare-${rateDeltaDir}` : ''}`}>
           {fmtRate(engagementRate)}
           {rateDelta !== null && (
@@ -174,6 +188,18 @@ export function TopBar({
           {fmtCompactInt(totalFollowers)}
         </div>
       </div>
+
+      {onOpenSettings && (
+        <button
+          type="button"
+          className="settings-gear-btn"
+          onClick={onOpenSettings}
+          aria-label="Open Settings"
+          title="Settings"
+        >
+          ⚙
+        </button>
+      )}
     </header>
   );
 }

@@ -83,23 +83,35 @@ export function UpgradeDrawer({
 
   const currentLevel = generatorState.level;
   const currentMulti = levelMultiplier(currentLevel);
+  const def = staticData.generators[id];
+  const atMax = currentLevel >= def.max_level;
 
-  // Compute next 3 levels.
-  const levels = [1, 2, 3].map((offset) => {
-    const level = currentLevel + offset;
-    const multi = levelMultiplier(level);
-    const cost = generatorUpgradeCost(id, level - 1, staticData);
-    return { level, multi, cost };
-  });
+  // Compute next 3 levels. When the generator is at max_level, the preview
+  // rows have nothing meaningful to show — clamp them off.
+  const levels = atMax
+    ? []
+    : [1, 2, 3]
+        .filter((offset) => currentLevel + offset <= def.max_level)
+        .map((offset) => {
+          const level = currentLevel + offset;
+          const multi = levelMultiplier(level);
+          const cost = generatorUpgradeCost(id, level - 1, staticData);
+          return { level, multi, cost };
+        });
 
   const nextLevel = levels[0];
-  const canAfford = engagement >= nextLevel.cost;
-  const shortfall = nextLevel.cost - engagement;
+  const canAfford = !atMax && nextLevel !== undefined && engagement >= nextLevel.cost;
+  const shortfall = atMax || nextLevel === undefined ? 0 : nextLevel.cost - engagement;
 
   // Button shake animation when insufficient engagement is tapped.
   const [shaking, setShaking] = useState(false);
 
   function handleUpgradeClick() {
+    if (atMax || nextLevel === undefined) {
+      // Purchasing at cap is impossible — no-op (button should be disabled
+      // but defensive guard prevents driver throws if the state races).
+      return;
+    }
     if (!canAfford) {
       setShaking(true);
       window.setTimeout(() => setShaking(false), 220);
@@ -114,18 +126,18 @@ export function UpgradeDrawer({
     //   - next level affordable → drawer stays open (preserves fast repeat loop)
     //   - next level NOT affordable → drawer closes (slide back right)
     //   - new level is max → drawer stays open in max-level state
-    //
-    // NOTE: generators currently have no max_level in GeneratorDef — the
-    // max-level branch is unreachable until/unless a cap is introduced. If
-    // a cap is added, extend this check to also stay open in that case and
-    // implement the §5.4 layout.
     const postUpgradeEngagement = engagement - nextLevel.cost;
-    const postUpgradeNextCost = levels[1].cost;
-    const canAffordAfterUpgrade = postUpgradeEngagement >= postUpgradeNextCost;
+    // If there IS no next-next row, the player hit max with this upgrade —
+    // keep the drawer open in the max-level state per §4 step 6.
+    const hitMaxThisClick = currentLevel + 1 >= def.max_level;
+    const canAffordAfterUpgrade =
+      !hitMaxThisClick &&
+      levels[1] !== undefined &&
+      postUpgradeEngagement >= levels[1].cost;
 
     onUpgrade();
 
-    if (!canAffordAfterUpgrade) {
+    if (!canAffordAfterUpgrade && !hitMaxThisClick) {
       // Close after brief delay (spec §4 step 6: t=100–250ms).
       // Re-render against new level already happens via prop update at t≈0.
       window.setTimeout(() => {
@@ -167,6 +179,21 @@ export function UpgradeDrawer({
 
         {/* Level rows */}
         <div className="upgrade-drawer-levels">
+          {atMax && (
+            <div className="upgrade-level-row action-row upgrade-level-max">
+              <span className="upgrade-level-lv">MAX</span>
+              <span className="upgrade-level-multi">×{currentMulti.toFixed(2)}</span>
+              <span className="upgrade-level-cost">no further upgrades</span>
+              <button
+                ref={primaryBtnRef}
+                className="upgrade-btn upgrade-btn-max"
+                disabled
+                aria-label={`${display.name} is at max level`}
+              >
+                MAX
+              </button>
+            </div>
+          )}
           {levels.map((row, i) => {
             const isAction = i === 0;
             return (

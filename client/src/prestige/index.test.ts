@@ -240,6 +240,15 @@ describe('applyRebrand — preservation of meta', () => {
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 5_000);
     expect(next.player.run_start_time).toBe(T0 + 5_000);
   });
+
+  it('wipes creator_kit — per-run purchases do NOT survive rebrand', () => {
+    const state = seedState({ total_followers: 1_000 });
+    // Simulate mid-run kit purchases.
+    (state.player.creator_kit as Record<string, number>).camera = 2;
+    (state.player.creator_kit as Record<string, number>).mogging = 1;
+    const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
+    expect(next.player.creator_kit).toEqual({});
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -429,6 +438,74 @@ describe('getUpcomingShifts', () => {
     // and +2 — same as tick would consume them.
     expect(shifts[0].stateId).toBeDefined();
     expect(shifts[1].stateId).toBeDefined();
+  });
+
+  it('kit Laptop level 0 contributes no lookahead', () => {
+    const s = seedState();
+    (s.player.creator_kit as Record<string, number>).laptop = 0;
+    expect(getUpcomingShifts(s, STATIC_DATA)).toEqual([]);
+  });
+
+  it('kit Laptop alone (clout=0) returns laptop.lookaheads[level-1] shifts', () => {
+    const s = seedState();
+    (s.player.creator_kit as Record<string, number>).laptop = 1;
+    const shifts = getUpcomingShifts(s, STATIC_DATA);
+    const laptopDef = STATIC_DATA.creatorKitItems.laptop;
+    const expected =
+      laptopDef.effect.type === 'algorithm_lookahead'
+        ? laptopDef.effect.lookaheads[0]
+        : 0;
+    expect(shifts.length).toBe(expected);
+  });
+
+  it('stacks Laptop + Clout algorithm_insight additively', () => {
+    const laptopDef = STATIC_DATA.creatorKitItems.laptop;
+    const cloutDef = STATIC_DATA.cloutUpgrades.algorithm_insight;
+    const laptopN =
+      laptopDef.effect.type === 'algorithm_lookahead'
+        ? laptopDef.effect.lookaheads[0]
+        : 0;
+    const cloutN =
+      cloutDef.effect.type === 'algorithm_insight'
+        ? cloutDef.effect.lookaheads[0]
+        : 0;
+
+    const sLaptop = seedState();
+    (sLaptop.player.creator_kit as Record<string, number>).laptop = 1;
+    const sClout = seedState();
+    sClout.player.clout_upgrades.algorithm_insight = 1;
+    const sBoth = seedState();
+    (sBoth.player.creator_kit as Record<string, number>).laptop = 1;
+    sBoth.player.clout_upgrades.algorithm_insight = 1;
+
+    expect(getUpcomingShifts(sLaptop, STATIC_DATA).length).toBe(laptopN);
+    expect(getUpcomingShifts(sClout, STATIC_DATA).length).toBe(cloutN);
+    expect(getUpcomingShifts(sBoth, STATIC_DATA).length).toBe(laptopN + cloutN);
+  });
+
+  it('stacks max-level Laptop + max-level Clout additively (clamp = sum)', () => {
+    const laptopDef = STATIC_DATA.creatorKitItems.laptop;
+    const cloutDef = STATIC_DATA.cloutUpgrades.algorithm_insight;
+    const laptopMaxLookahead =
+      laptopDef.effect.type === 'algorithm_lookahead'
+        ? laptopDef.effect.lookaheads[laptopDef.max_level - 1]
+        : 0;
+    const cloutMaxLookahead =
+      cloutDef.effect.type === 'algorithm_insight'
+        ? cloutDef.effect.lookaheads[cloutDef.max_level - 1]
+        : 0;
+
+    const s = seedState();
+    (s.player.creator_kit as Record<string, number>).laptop = laptopDef.max_level;
+    s.player.clout_upgrades.algorithm_insight = cloutDef.max_level;
+
+    const shifts = getUpcomingShifts(s, STATIC_DATA);
+    expect(shifts.length).toBe(laptopMaxLookahead + cloutMaxLookahead);
+    // Each shift should be a valid ScheduledShift.
+    for (const shift of shifts) {
+      expect(shift.stateId).toBeDefined();
+      expect(shift.durationMs).toBeGreaterThan(0);
+    }
   });
 
   it('advances correctly after a tick consumes a shift', () => {

@@ -15,7 +15,7 @@ The root entity. One per save file. Owns all game state.
 | Field | Type | Constraints | Where | Notes |
 |-------|------|-------------|-------|-------|
 | `id` | `string (uuid)` | unique, immutable | both | Generated on first launch |
-| `engagement` | `float` | ≥ 0 | both | Workhorse currency. Fast faucet, fast drain |
+| `engagement` | `float` | ≥ 0, ≤ `Number.MAX_SAFE_INTEGER` | both | Workhorse currency. Fast faucet, fast drain. Every write site clamps to `Number.MAX_SAFE_INTEGER` — permanent runtime invariant, not a migration concern. See `.frames/sdlc/proposals/accepted/generator-level-growth-curves.md` for rationale. |
 | `clout` | `int` | ≥ 0 | both | Prestige currency. Earned only via rebrand |
 | `total_followers` | `int` | ≥ 0, derived | both | Sum of all platform follower counts. Used for unlock checks and empire scaling |
 | `lifetime_followers` | `int` | ≥ 0 | both | Never resets. Tracks total followers ever earned across all runs. Used for Clout calculation at rebrand |
@@ -36,14 +36,17 @@ Content types that produce Engagement. Unlocked progressively by follower thresh
 |-------|------|-------------|-------|-------|
 | `id` | `string (enum)` | one of defined generator types | both | 7 at launch: `selfies`, `memes`, `hot_takes`, `tutorials`, `livestreams`, `podcasts`, `viral_stunts` |
 | `owned` | `bool` | | both | Whether the player has unlocked this generator |
-| `level` | `int` | ≥ 1 when owned | both | Upgrade level. Increases base rates |
+| `level` | `int` | 1 ≤ level ≤ `max_level` when owned | both | Upgrade level. Increases base rates. Hard-capped at `max_level` |
 | `count` | `int` | ≥ 0 | both | Number of this generator purchased (quantity) |
 | `base_engagement_rate` | `float` | > 0, from static data | client | Engagement per second per unit at level 1 |
 | `follower_conversion_rate` | `float` | (0, 1], from static data | client | Fraction of engagement that converts to followers |
 | `trend_sensitivity` | `float` | [0, 1], from static data | client | How much the Algorithm state affects output. 0 = immune, 1 = fully affected |
 | `unlock_threshold` | `int` | from static data | client | Total followers required to unlock |
+| `max_level` | `int` | ≥ 1, from static data | client | Maximum purchasable level. Uniformly 10 across all generators at launch. See `.frames/sdlc/proposals/accepted/generator-level-growth-curves.md` |
 
-**Static vs. dynamic:** `base_engagement_rate`, `follower_conversion_rate`, `trend_sensitivity`, and `unlock_threshold` come from a static data table (balance config). `owned`, `level`, and `count` are mutable player state.
+**Static vs. dynamic:** `base_engagement_rate`, `follower_conversion_rate`, `trend_sensitivity`, `unlock_threshold`, and `max_level` come from a static data table (balance config). `owned`, `level`, and `count` are mutable player state.
+
+**At-cap behaviour:** `upgradeGenerator` throws when `currentLevel >= max_level`; the UI shows `MAX` on the Lvl↑ affordance instead of a cost number. `level_multiplier` additionally silently clamps its `level` input to `[1, 20]` as a permanent belt-and-braces runtime invariant — guards against corrupted saves or future code paths that forget a cap.
 
 **Effective engagement rate formula:**
 ```
@@ -404,7 +407,8 @@ This means every generator contributes to every unlocked platform proportionally
 
 1. ~~**Clout-to-follower scaling curve for rebrand.**~~ **Resolved 2026-04-04:** `clout_awarded = floor(sqrt(total_followers) / 10)`. Uses `total_followers` (current run, resets on rebrand) — not `lifetime_followers`. Divisor `10` is the single tuning knob. First clean milestone: 10,000 followers → 10 Clout (assumes first-tier upgrade costs ~10 Clout). See `.frames/sdlc/proposals/draft/clout-to-follower-scaling-curve.md` for full rationale and value table. Note: `calculateRebrand` comment should be updated to clarify it uses `total_followers`.
 
-2. ~~**Level multiplier curve.**~~ **Resolved 2026-04-04:** Super-exponential curve — `level_multiplier(level) = 2^(level² / 5)`. Per-generator, independent. Typical run ceiling is level 7–8 (891×–7,225×); levels 9–10 are post-prestige territory (75k×–1M×). The denominator `5` is the single tuning knob. See `.frames/sdlc/proposals/draft/level-multiplier-curve.md` for full rationale and value table.
+2. ~~**Level multiplier curve.**~~ **Resolved 2026-04-04:** Super-exponential curve — `level_multiplier(level) = 2^(level² / 5)`. Per-generator, independent. The denominator `5` is the single tuning knob. See `.frames/sdlc/proposals/accepted/level-multiplier-curve.md` for full rationale and value table.
+   - **Amended 2026-04-05** (`generator-level-growth-curves.md`): hard cap `max_level = 10` on every generator, with matching cost parity — `upgrade_cost(generator, targetLevel) = ceil(base_upgrade_cost × level_multiplier(targetLevel))`. The earlier note that "levels 9–10 are post-prestige territory" is superseded: L=10 is reachable in a single run and is the permanent ceiling. Beyond L≈14 the quadratic exponent breaches `Number.MAX_SAFE_INTEGER` under the full multiplier stack — do not raise the cap without revisiting the headroom analysis in that proposal's engineer review.
 
 3. ~~**Server scope and timeline.**~~ **Resolved 2026-04-04:** Deferred at launch. Not being built. Revisit when leaderboards, cross-device cloud saves, or shared algorithm seeds become committed features.
 

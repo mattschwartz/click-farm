@@ -44,17 +44,18 @@ export function generatorBuyCost(
 /**
  * Engagement cost to upgrade a generator from its current level to level+1.
  *
- *   cost = ceil(base_upgrade_cost × 4^(currentLevel - 1))
+ *   cost = ceil(base_upgrade_cost × levelMultiplier(currentLevel + 1))
  *
- * Each upgrade level costs 4× the previous, reflecting the super-exponential
- * power gain of the level multiplier curve (2^(level²/5)).
+ * Cost tracks reward 1:1 via the level-multiplier curve (2^(level²/5)), so a
+ * tier's base seed value is what scales the whole ladder. This was the
+ * originally-accepted formula; it was temporarily replaced with 4^(L-1) and
+ * is restored here per proposals/accepted/generator-level-growth-curves.md.
  *
- * Note: the design proposal mentions three upgrade tracks (quality, frequency,
- * platform optimization). The architecture spec consolidated these into a single
- * `level` field and `levelMultiplier`. This function implements the consolidated
- * model. If distinct tracks are reinstated, this will need to become per-track.
+ * Duplicates the `levelMultiplier` formula from game-loop to avoid a
+ * circular import. If this ever drifts, the canonical source is
+ * `game-loop/index.ts::levelMultiplier`.
  *
- * TODO(game-designer): provisional formula and base values — tune during balance pass.
+ * TODO(game-designer): base seed values are provisional — tune in task #88.
  */
 export function generatorUpgradeCost(
   generatorId: GeneratorId,
@@ -67,7 +68,11 @@ export function generatorUpgradeCost(
     );
   }
   const def = staticData.generators[generatorId];
-  return Math.ceil(def.base_upgrade_cost * Math.pow(4, currentLevel - 1));
+  const targetLevel = currentLevel + 1;
+  // Mirror of levelMultiplier's clamp for belt-and-braces safety.
+  const clamped = Math.min(20, Math.max(1, targetLevel));
+  const multiplier = Math.pow(2, (clamped * clamped) / 5);
+  return Math.ceil(def.base_upgrade_cost * multiplier);
 }
 
 // ---------------------------------------------------------------------------
@@ -179,6 +184,13 @@ export function upgradeGenerator(
   if (gen.count <= 0) {
     throw new Error(
       `upgradeGenerator: generator '${generatorId}' has no units — buy at least one first`,
+    );
+  }
+
+  const def = staticData.generators[generatorId];
+  if (gen.level >= def.max_level) {
+    throw new Error(
+      `upgradeGenerator: generator '${generatorId}' is at max level (${def.max_level})`,
     );
   }
 

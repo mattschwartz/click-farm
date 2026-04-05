@@ -2,7 +2,7 @@
 name: Audience Mood (Retention) Replaces Scandals
 description: Replaces the discrete scandal event system with a continuous, diagnostic retention multiplier driven by audience mood — removing modal interruptions and active follower loss while preserving negative pressure on the core loop.
 author: game-designer
-status: accepted
+status: implementation
 reviewers: []
 ---
 

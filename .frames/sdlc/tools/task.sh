@@ -383,10 +383,14 @@ cmd_list() {
   if $pretty; then
     local count
     count="$(echo "$tasks" | jq 'length')"
-    for i in $(seq 0 $((count - 1))); do
-      pretty_print_task "$(echo "$tasks" | jq ".[$i]")"
-      echo "---"
-    done
+    if [[ "$count" -eq 0 ]]; then
+      echo "(no tasks)"
+    else
+      for i in $(seq 0 $((count - 1))); do
+        pretty_print_task "$(echo "$tasks" | jq ".[$i]")"
+        echo "---"
+      done
+    fi
   else
     echo "$tasks"
   fi

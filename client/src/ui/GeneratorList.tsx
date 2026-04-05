@@ -17,7 +17,7 @@
 // - §6.4: Count numeral pulses on additional purchases.
 
 import { useEffect, useRef, useState } from 'react';
-import type { GameState, GeneratorId, RiskLevel, StaticData } from '../types.ts';
+import type { GameState, GeneratorId, StaticData } from '../types.ts';
 import {
   generatorBuyCost,
   generatorUpgradeCost,
@@ -46,15 +46,79 @@ interface Props {
   /** When set, the matching row gets a pulsing gold halo (UX §9.2 Phase 1–2). */
   viralGeneratorId?: GeneratorId | null;
   /**
-   * Risk levels keyed by "generator:{id}". When present, rows show amber
-   * warmth (building) or pulsing amber (high) risk indicators.
-   */
-  riskLevels?: Record<string, RiskLevel>;
-  /**
    * Called when the upgrade drawer opens or closes. Parent uses this to dim
    * the platform panel while the drawer is open (per UX spec §1).
    */
   onDrawerOpenChange?: (open: boolean) => void;
+}
+
+// ---------------------------------------------------------------------------
+// Pure helpers — exported for unit tests (task #69).
+// ---------------------------------------------------------------------------
+
+/**
+ * Affordance states for the per-row Lvl ↑ button.
+ *
+ * - dormant: count===0 — the row has no units to upgrade yet. Disabled.
+ * - armed:   count>0 but engagement < upgradeCost. Clickable, but the teased
+ *            action is out of reach. Stillness communicates "not now."
+ * - ready:   count>0 and engagement >= upgradeCost. Breathes gold to pull
+ *            the eye toward the drawer.
+ * - maxed:   level >= max_level — the cap is hit, no further upgrade is
+ *            possible. Shows "MAX" in place of cost. Task #89.
+ *
+ * See proposals/accepted/lvl-up-button-affordance-states.md and
+ * proposals/accepted/generator-level-growth-curves.md.
+ */
+export type LvlBtnState = 'dormant' | 'armed' | 'ready' | 'maxed';
+
+export function classifyLvlBtnState(
+  count: number,
+  level: number,
+  maxLevel: number,
+  engagement: number,
+  upgradeCost: number,
+): LvlBtnState {
+  if (count <= 0) return 'dormant';
+  if (level >= maxLevel) return 'maxed';
+  if (engagement >= upgradeCost) return 'ready';
+  return 'armed';
+}
+
+/** Minimum number of simultaneously-ready rows to trigger de-escalation. */
+export const MANY_READY_THRESHOLD = 4;
+
+/**
+ * Decide whether the one-shot maxed arrival celebration should fire on the
+ * current render.
+ *
+ * Fires only on a live, in-session transition INTO 'maxed'. Specifically:
+ *   - current state must be 'maxed'
+ *   - prev state must be non-null (null = first render; mount guard — we
+ *     do NOT celebrate generators that loaded from save already at max)
+ *   - prev state must be something other than 'maxed'
+ *
+ * See ux/generator-max-level-state.md §4.1. Task #101.
+ */
+export function shouldFireMaxedArrival(
+  current: LvlBtnState,
+  prev: LvlBtnState | null,
+): boolean {
+  if (current !== 'maxed') return false;
+  if (prev === null) return false;       // mount guard
+  if (prev === 'maxed') return false;    // already maxed, no re-fire
+  return true;
+}
+
+/** Duration of the arrival celebration, in ms (matches CSS keyframes). */
+export const LVL_MAXED_ARRIVAL_MS = 600;
+
+/**
+ * Returns true when the generator-list should de-escalate ready-state
+ * breathing because too many rows would flash at once. Threshold from spec.
+ */
+export function shouldApplyManyReady(readyCount: number): boolean {
+  return readyCount >= MANY_READY_THRESHOLD;
 }
 
 const BADGE_SHAPE: Record<GeneratorCategory, string> = {
@@ -70,7 +134,7 @@ const BADGE_SHAPE: Record<GeneratorCategory, string> = {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGeneratorId, riskLevels, onDrawerOpenChange }: Props) {
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGeneratorId, onDrawerOpenChange }: Props) {
   // Track modifier pulses — when the algorithm state index changes, each
   // affected row pulses once (UX §4.4).
   const [pulseKey, setPulseKey] = useState(0);
@@ -117,8 +181,26 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGenera
     byCategory.get(display.category)?.push(id);
   }
 
+  // Count rows currently in the 'ready' state so the list can de-escalate
+  // breathing intensity when 4+ rows would pulse simultaneously (spec §"Many
+  // ready at once"). Iterates the same set the list renders — post-prestige
+  // generators and locked rows are excluded.
+  let readyCount = 0;
+  for (const [cat, ids] of byCategory) {
+    void cat;
+    for (const id of ids) {
+      const g = state.generators[id];
+      if (!g?.owned || g.count <= 0) continue;
+      const def = staticData.generators[id];
+      if (g.level >= def.max_level) continue;
+      const cost = generatorUpgradeCost(id, g.level, staticData);
+      if (state.player.engagement >= cost) readyCount += 1;
+    }
+  }
+  const manyReady = shouldApplyManyReady(readyCount);
+
   return (
-    <section className="generator-list">
+    <section className={`generator-list${manyReady ? ' many-ready' : ''}`}>
       {CATEGORY_ORDER.map((cat) => {
         const ids = byCategory.get(cat) ?? [];
         if (ids.length === 0) return null;
@@ -135,7 +217,6 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGenera
                 onUpgrade={onUpgrade}
                 pulseKey={pulseKey}
                 viralHalo={viralGeneratorId === id}
-                riskLevel={riskLevels?.[`generator:${id}`] ?? 'none'}
                 isDrawerOpen={openDrawerId === id}
                 onOpenDrawer={handleOpenDrawer}
               />
@@ -172,8 +253,6 @@ interface RowProps {
   pulseKey: number;
   /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
   viralHalo?: boolean;
-  /** Scandal risk level for this generator. 'none' = normal rendering. */
-  riskLevel?: RiskLevel;
   /** True while this generator's upgrade drawer is open. */
   isDrawerOpen?: boolean;
   /**
@@ -191,7 +270,6 @@ function GeneratorRow({
   onUpgrade: _onUpgrade, // kept in RowProps for GeneratorList to wire to drawer; not called directly by row
   pulseKey,
   viralHalo,
-  riskLevel = 'none',
   isDrawerOpen,
   onOpenDrawer,
 }: RowProps) {
@@ -236,7 +314,7 @@ function GeneratorRow({
   useEffect(() => {
     if (g.owned && g.count > prevCount.current) {
       setCountPulsing(true);
-      const t = window.setTimeout(() => setCountPulsing(false), 400);
+      window.setTimeout(() => setCountPulsing(false), 400);
     }
     prevCount.current = g.count;
   }, [g.owned, g.count]);
@@ -247,6 +325,39 @@ function GeneratorRow({
   const breatheDelayMs = generatorIndex >= 0
     ? -Math.round((generatorIndex / BREATHE_TOTAL) * BREATHE_CYCLE_MS)
     : 0;
+
+  // Lvl ↑ affordance state computed UNCONDITIONALLY so the hooks below can
+  // depend on it without skipping on unowned/locked renders. classifyLvlBtnState
+  // returns 'dormant' when count===0, which is correct for pre-owned rows.
+  const upgradeCostUnconditional = generatorUpgradeCost(id, g.level, staticData);
+  const lvlStateUnconditional = classifyLvlBtnState(
+    g.count,
+    g.level,
+    def.max_level,
+    state.player.engagement,
+    upgradeCostUnconditional,
+  );
+
+  // Maxed arrival celebration — one-shot (600ms) on the live ready→maxed
+  // transition within a session. Mount guard: prevLvlState is null on the
+  // first render, so generators loaded from save already at max do NOT fire.
+  // Spec: ux/generator-max-level-state.md §4.
+  //
+  // IMPORTANT: these hooks MUST be declared before any early returns below,
+  // so hook order stays stable across locked→discovered and unowned→owned
+  // transitions. Rules of Hooks.
+  const prevLvlState = useRef<LvlBtnState | null>(null);
+  const [maxedArrival, setMaxedArrival] = useState(false);
+  useEffect(() => {
+    const prev = prevLvlState.current;
+    if (shouldFireMaxedArrival(lvlStateUnconditional, prev)) {
+      setMaxedArrival(true);
+      const t = window.setTimeout(() => setMaxedArrival(false), LVL_MAXED_ARRIVAL_MS);
+      prevLvlState.current = lvlStateUnconditional;
+      return () => window.clearTimeout(t);
+    }
+    prevLvlState.current = lvlStateUnconditional;
+  }, [lvlStateUnconditional]);
 
   if (!isDiscovered) {
     return (
@@ -281,11 +392,19 @@ function GeneratorRow({
   }
 
   const buyCost = generatorBuyCost(id, g.count, staticData);
-  const upgradeCost = generatorUpgradeCost(id, g.level, staticData);
+  const upgradeCost = upgradeCostUnconditional;
   const canBuy = state.player.engagement >= buyCost;
   // Upgrading requires at least one unit. This can be 0 post-rebrand when a
   // generator_unlock head-start grants owned=true without any units.
   const canOpenDrawer = g.count > 0;
+
+  // Lvl ↑ button affordance state — spec tracks distinct visuals
+  // (dormant / armed / ready / maxed) so players can tell at a glance
+  // whether tapping the button opens a drawer they can act on.
+  // Tasks #69 (three states) + #89 (MAX cap). Computed above early returns
+  // so hook order stays stable.
+  const lvlState = lvlStateUnconditional;
+  const lvlDeficit = Math.max(0, upgradeCost - state.player.engagement);
 
   const openDrawer = () => {
     if (!canOpenDrawer) return;
@@ -294,12 +413,11 @@ function GeneratorRow({
     onOpenDrawer(id, rect?.top ?? 100);
   };
 
-  const riskClass = riskLevel !== 'none' ? ` risk-${riskLevel}` : '';
   const drawerOpenClass = isDrawerOpen ? ' drawer-open' : '';
   return (
     <div
       ref={rowRef}
-      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}${viralHalo ? ' viral-halo' : ''}${riskClass}${drawerOpenClass}`}
+      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}${viralHalo ? ' viral-halo' : ''}${drawerOpenClass}`}
       style={style}
       onClick={openDrawer}
       role={canOpenDrawer ? 'button' : undefined}
@@ -336,25 +454,46 @@ function GeneratorRow({
           canBuy={canBuy}
           onBuy={() => onBuy(id)}
         />
-        {/* ⬆ affordance — opens the upgrade drawer. */}
+        {/* ⬆ affordance — opens the upgrade drawer.
+            Three states per task #69 / lvl-up-button-affordance-states:
+              dormant (count===0): disabled placeholder
+              armed   (owned, can't afford): still, amber deficit glyph
+              ready   (owned, affordable): gold breathing halo pulling eye
+                                           toward the drawer */}
         <button
-          className={`row-btn row-btn-upgrade${!canOpenDrawer ? ' row-btn-disabled' : ''}${isDrawerOpen ? ' active' : ''}`}
+          className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${isDrawerOpen ? ' active' : ''}${maxedArrival ? ' lvl-maxed-arrival' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             if (!canOpenDrawer || !onOpenDrawer) return;
             const rect = rowRef.current?.getBoundingClientRect();
             onOpenDrawer(id, rect?.top ?? 100);
           }}
-          disabled={!canOpenDrawer}
+          disabled={lvlState === 'dormant' || lvlState === 'maxed'}
+          style={{ '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties}
           title={
-            g.count <= 0
+            lvlState === 'dormant'
               ? `Buy at least one ${display.name} before upgrading`
-              : `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)})`
+              : lvlState === 'maxed'
+                ? `${display.name} is at max level (L${g.level})`
+                : lvlState === 'armed'
+                  ? `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ${fmtCompact(lvlDeficit)} more engagement`
+                  : `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ready`
           }
           aria-label={`Open upgrade drawer for ${display.name}`}
         >
-          <span className="label">Lvl ↑</span>
-          {fmtCompact(upgradeCost)}
+          <span className="label">
+            {lvlState === 'ready' && (
+              <span className="lvl-chevron" aria-hidden>▲</span>
+            )}
+            {lvlState === 'maxed' && (
+              <span className="lvl-crown" aria-hidden>♛</span>
+            )}
+            Lvl ↑
+          </span>
+          {lvlState === 'armed' && (
+            <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
+          )}
+          {lvlState === 'maxed' ? 'MAX' : fmtCompact(upgradeCost)}
         </button>
       </div>
     </div>

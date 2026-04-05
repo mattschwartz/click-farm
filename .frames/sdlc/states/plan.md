@@ -2,7 +2,7 @@
 
 ## Overview
 
-Decompose an accepted design into concrete, assignable work items. The output is a set of tasks written to disk with explicit done-whens, assigned to specific roles. Use this behavior when a large or ambiguous piece of work needs to be broken into bite-sized items that other roles can pick up and execute without guessing.
+Decompose an accepted design into concrete, assignable work items. The output is a set of tasks written to disk with explicit done-whens, assigned to specific roles. Tasks may be of any state — design, review, plan, or build — whatever the work actually requires. Use this behavior when a large or ambiguous piece of work needs to be broken into discrete items that other roles can pick up without guessing.
 
 ## Parameters
 
@@ -30,15 +30,36 @@ Read and understand the design that needs to be decomposed.
 
 ### 2. Identify Work Items
 
-Break the work into discrete, independent tasks. Each task should be completable in a single session by a single role.
+Break the work into discrete, independent tasks. Each task must be owned by exactly one role in exactly one state — if a task would require switching roles or states to complete, it is two tasks, not one.
+
+Not all tasks are implementation. A plan may produce tasks in any state — `design`, `review`, `plan`, or `build`. Use the right state for the work:
+
+- If a sub-system needs its own design deliberation before anyone can build it, create a `design` task for the appropriate role. Implementation tasks that depend on it must block on it.
+- If a proposal needs a specialist's review before it can be accepted, create a `review` task.
+- If a large design area needs its own planning pass, create a `plan` task for the architect or producer.
+- If the work is well-defined and ready to implement, create a `build` task for the engineer.
+
+The planner's job is to make the path to implementation clear — not to skip steps that aren't ready yet.
+
+**Sizing by complexity:**
+
+Use the `complexity` field to signal scope. These are not model recommendations — they are scope constraints:
+
+- `haiku` — a tightly scoped change with a clear, narrow target. One function, one component, one file. An engineer can orient, implement, and verify in under an hour. Example: *"Add input validation to the deposit form field — reject non-numeric input, show inline error."*
+- `sonnet` — a self-contained feature or system with a defined boundary. Multiple files, a clear interface, testable output. Expect a full session. Example: *"Implement the badge unlock flow — check condition on action, write badge to state, trigger unlock animation."*
+- `opus` — a complex piece of work that requires significant design judgment within a well-defined scope. If it requires architecture decisions, it should be split: one architect task (design), one engineer task (build). Example: *"Implement the mood engine — scoring function, decay curve, event hook integration, full test coverage."*
+
+If a task feels like `opus` but the architecture isn't settled, that is a missing architect task, not an oversized engineer task.
 
 **Constraints:**
 - You MUST make each task independently completable — a task that requires another task to be half-done first is not independent, it has a dependency that needs to be explicit
 - You MUST assign each task to a specific role, because unassigned tasks are tasks nobody picks up
+- You MUST assign a complexity level to every task — if you are unsure, size down, not up
 - You MUST identify dependencies between tasks — which tasks block which other tasks
 - You SHOULD order tasks so that blocking work comes first in the sequence
-- You MUST NOT create tasks that are too large to complete in a single session, because oversized tasks stall and create unclear progress. If a task feels too big, split it.
-- You MUST NOT create tasks that are too small to be meaningful — "rename a variable" is not a task, it's a line item inside a task
+- You MUST NOT create tasks that span more than one role or one state — split them
+- You MUST NOT create tasks that are too large for their complexity level — if an `opus` task still feels too big, it needs an architect pass first
+- You MUST NOT create tasks that are too small to be meaningful — a task should represent a complete, verifiable unit of work, not a line item inside a larger change. "Rename a variable" is not a task. "Add validation to the deposit input and write a test for it" is a task.
 
 ### 3. Define Done-Whens
 
@@ -101,17 +122,27 @@ Write your plan as a JSON array to a temp file, then submit it via the task tool
 
 The tool validates that all aliases resolve, assigns real integer IDs, and writes all tasks atomically. If any alias in `blocked_on` doesn't match a task in the plan, the entire batch is rejected.
 
-### 5. Commit the Plan
+### 5. Update Proposal Status
 
-Commit `tasks.json` so the new tasks are in version history.
+Update the source proposal's `status` field to `implementation` so that other agents know tasks have already been created for it and do not plan against it again.
+
+**Constraints:**
+- You MUST update the `status` field in the proposal's frontmatter from `accepted` to `implementation`
+- You MUST do this for every proposal that was used as source material in this planning session
+- If the source was a conversation rather than a proposal file, skip this step
+
+### 6. Commit the Plan
+
+Commit `tasks.json` and any updated proposal files so the new tasks and status change are in version history together.
 
 **Constraints:**
 - You MUST stage `tasks/tasks.json` explicitly — do not use `git add -A` or `git add .`
+- You MUST also stage any proposal files you updated in step 5
 - You MUST verify with `git status` before committing
 - You MUST write a commit message following the project commit format (see `context/COMMITS.md`)
 - If you created any architecture specs in this session, stage and commit those files in the same commit
 
-### 6. Update Architecture (if needed)
+### 7. Update Architecture (if needed)
 
 If planning reveals the need for architecture specs, create them.
 
