@@ -1,5 +1,17 @@
 # Scandal System — UX Spec
 
+> ⚠️ **SUPERSEDED — do not implement from this document.**
+>
+> The Scandals system was removed from the client in the interim build
+> per `proposals/accepted/remove-scandals-interim.md`. This UX spec is
+> preserved for historical reference only. Any future loss/pressure
+> feature (e.g. audience-mood, task #102) will author its own UX spec;
+> do not port language or patterns from here without reconfirming
+> design intent with the game-designer.
+
+---
+
+
 > **Scope:** Defines the visual language, interaction patterns, and motion briefs for the Scandal system — risk indicators on affected generators/platforms, the PR Response modal, the aftermath display, and stacking suppression feedback. Specifies how scandal visuals integrate with the core game screen without disrupting the primary loop.
 >
 > **Not in scope:** Core game screen layout (see `ux/core-game-screen.md`), scandal triggers and magnitudes (game design), accumulator and state machine implementation (architecture).
