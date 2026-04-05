@@ -3,7 +3,7 @@ name: Badge Pro Shop
 description: Cosmetic badges earned through gameplay milestones and claimed from a shop for a small clout fee — prestige through achievement, not purchase.
 author: game-designer
 status: draft
-reviewers: [architect]
+reviewers: [game-designer]
 ---
 
 # Proposal: Badge Pro Shop
@@ -159,3 +159,25 @@ The mechanic is clean. Earned-first-then-claimed is the right model — it preve
 **OQ5 — Main screen visibility:** Answered inline in OQ5 above. No persistent badge. Yes to a 2s celebration reveal on claim.
 
 **Non-blocking:** The prestige row on mobile becomes three buttons — the game-designer and architect should be aware that this changes the mobile prestige row layout from two buttons to three. The Upgrades button was introduced in `ux/mobile-layout.md` §6. Adding Badges does not break the row but may tighten the button widths. At 375px canvas with 24px horizontal padding, three buttons at 8px gaps = ~(375 - 24 - 16) / 3 = ~112px each. At 44px height this is a comfortable tap target.
+
+---
+# Review: architect
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Architecturally this is clean. The model is small and the boundaries are obvious:
+
+- **Static catalog** — 5 launch badges as build-time data (id, name, flavor, milestone predicate, clout cost). Lives with the other static-data tables.
+- **Persistent state** — `claimed_badges` added to the save. A set (or ordered list with claim timestamps) of badge ids. Single new field on the save model; trivial migration (absent → empty set).
+- **Derived state** — unlock status computed on read from existing game state. No new stateful system, no new tick logic, no new cache to invalidate.
+- **Claim operation** — check clout ≥ cost, deduct, append id to `claimed_badges`. Synchronous localStorage write; no concurrency concerns in this codebase.
+- **No gameplay coupling** — §5's "purely cosmetic" rule keeps badges out of the clout-upgrade dependency graph. Good call; reversing this later would be expensive.
+
+**Note for the engineer (non-blocking):** the unlock predicates for the launch set require two lifetime counters that the model may not currently track: `viral_bursts_total` and `brand_deals_claimed_total`. Follower count and rebrand count already exist. These need to be added as monotonic counters on the save model (never decremented by scandals or resets other than explicit player wipe). Engineer should confirm current state of the save model when picking up the build task and flag if those counters exist under different names.
+
+**On the mobile prestige row becoming 3 buttons:** ~112px wide at 44px tall is fine for a tap target. No architectural concern.
+
+**Remaining open question:** OQ1 (milestone thresholds) is owned by game-designer and deferred pending the progression balance pass. Removing architect from reviewers; adding game-designer back so OQ1 can be resolved (or formally deferred to a task) before acceptance.
