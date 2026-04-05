@@ -1,5 +1,5 @@
 {
-  "next_id": 87,
+  "next_id": 89,
   "tasks": [
     {
       "id": 1,
@@ -2825,6 +2825,83 @@
         "Per-variant iconography finalized (phone/handshake, broadcast/go-live, crowd/lanyard)",
         "On-card copy confirmed: 'Convention' full word on primary label; short forms allowed only in secondary copy",
         "Cross-reference added to ux/brand-deal-card.md pointing to the new spec"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 87,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Plan: decompose generator-level-growth-curves into engineer build tasks",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The generator-level-growth-curves proposal is now accepted. It fixes a save-breaking Infinity bug caused by divergence between the reward curve (2^(L²/5)) and the cost curve (4^(L-1)), and installs a hard L=10 cap plus runtime clamps. Needs to be decomposed into discrete engineer build tasks with clear done-whens. Architect review on the proposal already specified the shape of every change required, so this is decomposition and sequencing, not fresh design.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-level-growth-curves.md",
+          "purpose": "The accepted proposal to decompose — includes architect and engineer reviews with specific implementation guidance"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "The reward curve and originally-accepted cost formula that this work restores"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "Current (buggy) generatorUpgradeCost at line 59 — the 4^(L-1) formula that needs to be swapped for levelMultiplier(targetLevel)"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "levelMultiplier implementation at line 78 — needs input clamp to [1, 20]"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Existing migration chain (V1→V4) — new migrateV4toV5 appends here, bump CURRENT_VERSION to 5"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "GeneratorDef at line 358 gains max_level: number field (precedent: CloutUpgradeDef.max_level at line 412); doc comment on base_upgrade_cost at line 390 still encodes the old formula and needs updating"
+        }
+      ],
+      "acceptance_criteria": [
+        "Engineer build task(s) filed that together cover: (1) swap cost formula to ceil(base_upgrade_cost × levelMultiplier(targetLevel)), (2) add max_level: 10 to GeneratorDef and enforce at-cap guard in generatorUpgradeCost/upgradeGenerator, (3) Lvl↑ affordance shows MAX label at cap, (4) runtime clamp in levelMultiplier input to [1,20], (5) player.engagement clamped to Number.MAX_SAFE_INTEGER on every tick write, (6) V4→V5 save migration that silently clamps engagement and per-generator levels with console.warn for diagnostics, (7) update stale doc comment at types.ts:390",
+        "Tasks are granular enough that each is 1 role + 1 state, and they sequence correctly (data-contract changes before tick integration, migration after schema changes land)",
+        "Each engineer task includes the specific file paths and line references from the proposal reviews"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 88,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Balance pass: base_upgrade_cost seed values after cost/reward parity fix",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Deferred follow-up to the accepted generator-level-growth-curves proposal (Open Question 4). With cost now tracking reward 1:1 via levelMultiplier(targetLevel), the provisional base_upgrade_cost seed values from generator-balance-and-algorithm-states.md (selfies 100, memes 1,000, …, viral_stunts 200M, plus the post-prestige generators ai_slop/deepfakes/algorithmic_prophecy) may produce runs that feel too long or too short. The proposal locks the SHAPE of the curve; this task retunes the SEED values after the fixed economy can be felt end-to-end in playtest. Not a blocker for implementation — this only makes sense to do once the correctness fix has shipped and there's real play data to respond to.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-level-growth-curves.md",
+          "purpose": "Parent proposal — Q4 explicitly defers this rebalance"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Provisional base_upgrade_cost values that may need retuning"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "The ten named phases — retuned seed costs should still produce that felt progression"
+        }
+      ],
+      "acceptance_criteria": [
+        "Playtest the fixed economy end-to-end (at minimum: reach L=10 on 2-3 early generators, one rebrand cycle)",
+        "Identify which generators feel too cheap or too expensive at their current base_upgrade_cost values",
+        "Propose revised seed values (or confirm current values hold) in a short design note or amendment to generator-balance-and-algorithm-states.md",
+        "Validate that the ten named phases from level-multiplier-curve.md still map onto the felt pacing"
       ],
       "open_questions": [],
       "blocked_on": []
