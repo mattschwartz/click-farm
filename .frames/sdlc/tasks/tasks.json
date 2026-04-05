@@ -1,5 +1,5 @@
 {
-  "next_id": 89,
+  "next_id": 91,
   "tasks": [
     {
       "id": 1,
@@ -2833,7 +2833,7 @@
       "id": 87,
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Plan: decompose generator-level-growth-curves into engineer build tasks",
       "requester": "game-designer",
@@ -2871,7 +2871,8 @@
         "Each engineer task includes the specific file paths and line references from the proposal reviews"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 88,
@@ -2905,6 +2906,116 @@
       ],
       "open_questions": [],
       "blocked_on": []
+    },
+    {
+      "id": 89,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Generator level growth curves: cost parity + L=10 cap + runtime clamps + MAX UI",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the single coherent correctness fix from the accepted generator-level-growth-curves proposal. Restores cost/reward parity (cost now uses levelMultiplier, not 4^(L-1)), installs a hard L=10 cap per generator, adds runtime clamps that prevent the save-breaking Infinity bug from ever re-emerging, and swaps the Lvl↑ affordance for a MAX label at cap. All changes ship together per architect review — cost parity without the cap still overflows at L~72, and the runtime clamps are permanent invariants that belong next to the formula they guard.\n\nScope of change (with file:line anchors):\n\n1. DATA CONTRACT — Add `max_level: number` to `GeneratorDef` in client/src/types.ts:358 (mirror the shape of `CloutUpgradeDef.max_level` at types.ts:412). Update the stale doc comment at types.ts:390 that still encodes the old `4^(currentLevel-1)` formula. Seed `max_level: 10` on every generator entry in client/src/static-data/index.ts (10 generators total — selfies, memes, tiktok_dances, podcasts, youtube_shorts, onlyfans, viral_stunts, ai_slop, deepfakes, algorithmic_prophecy). Also update the header comment at static-data/index.ts:33 that encodes the old cost formula.\n\n2. COST FORMULA — Swap `generatorUpgradeCost` at client/src/generator/index.ts:59 to `ceil(base_upgrade_cost × levelMultiplier(targetLevel))` where `targetLevel = currentLevel + 1`. Update the function doc comment. Add at-cap guard: throw (or return a sentinel the callers already expect) when `currentLevel >= def.max_level`. Add the same at-cap guard to `upgradeGenerator` at generator/index.ts:166.\n\n3. RUNTIME CLAMPS (permanent invariants — keep regardless of migration) —\n   a) In client/src/game-loop/index.ts:78, clamp `level` input to `levelMultiplier` to [1, 20] before the Math.pow call. Do NOT throw when level > 20 — silently clamp, because this is belt-and-braces for corrupted saves / future code paths that forget a cap.\n   b) Clamp `player.engagement` to `Number.MAX_SAFE_INTEGER` on every write site. Known sites: game-loop/index.ts:358, game-loop/index.ts:427, game-loop/index.ts:631, model/index.ts:189 (addEngagement), offline/index.ts:203. Simplest shape: a tiny `clampEngagement(value: number): number` helper in model/ that every write routes through.\n\n4. UI — `MAX` label at cap: when `g.level >= def.max_level`, the Lvl↑ affordance in client/src/ui/GeneratorList.tsx (around line 340) shows `MAX` instead of the upgrade cost, and tapping it is a no-op (or the drawer opens but the upgrade button inside UpgradeDrawer.tsx is disabled with a MAX label). Match the visual treatment of Clout upgrade MAX state if one exists in CloutShopModal.tsx — check that file for the established pattern before picking a shape.\n\nNon-goals: do NOT retune base_upgrade_cost seed values (game-designer has filed task #88 for the balance pass). Do NOT add a player-facing 'your save was repaired' notice — game-designer explicitly called for silent clamps. Do NOT raise the cap above 10 (engineer review established that L=14 overflows under the full multiplier stack).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-level-growth-curves.md",
+          "purpose": "Full proposal with architect + engineer + game-designer reviews. All three decisions and the headroom math are there."
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "GeneratorDef at line 358 gains max_level; stale doc comment at line 390; precedent CloutUpgradeDef.max_level at line 412"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Seed max_level: 10 on every generator (lines 40-150); update header comment at line 33"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "generatorUpgradeCost at line 59 swaps formula; upgradeGenerator at line 166 gains at-cap guard"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "levelMultiplier at line 78 gains [1,20] input clamp; engagement write sites at 358, 427, 631 need MAX_SAFE_INTEGER clamp"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "addEngagement at line 189 is the central write point — ideal spot for a clampEngagement helper"
+        },
+        {
+          "ref": "client/src/offline/index.ts",
+          "purpose": "Line 203 is another engagement write site that needs the clamp"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Lvl↑ affordance around line 340 needs MAX label at cap"
+        },
+        {
+          "ref": "client/src/ui/UpgradeDrawer.tsx",
+          "purpose": "Upgrade drawer needs MAX treatment / disabled upgrade button at cap"
+        },
+        {
+          "ref": "client/src/ui/CloutShopModal.tsx",
+          "purpose": "Check for established MAX visual pattern on Clout upgrades — reuse shape"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "Originally-accepted cost formula being restored"
+        }
+      ],
+      "acceptance_criteria": [
+        "GeneratorDef has a required max_level: number field; every entry in static-data/index.ts sets max_level: 10",
+        "generatorUpgradeCost returns ceil(base_upgrade_cost × levelMultiplier(currentLevel + 1)); the function and its doc comment no longer reference 4^(L-1)",
+        "Attempting to upgrade a generator at currentLevel >= max_level throws from upgradeGenerator (matches existing 'cannot afford' / 'not owned' error shapes)",
+        "levelMultiplier silently clamps its level input to [1, 20] before Math.pow; passing level=50 returns a finite value, never Infinity",
+        "Every write to player.engagement goes through a clamp to Number.MAX_SAFE_INTEGER — verified by a unit test that attempts to push engagement past MAX_SAFE_INTEGER through each write site (tick, viral, offline) and asserts the final value is exactly MAX_SAFE_INTEGER",
+        "Lvl↑ affordance in GeneratorList.tsx shows 'MAX' (no cost number) when generator.level >= max_level; tapping at MAX is either a no-op or opens a drawer whose upgrade button is disabled with MAX treatment",
+        "Stale doc comments at types.ts:390 and static-data/index.ts:33 updated to reference the levelMultiplier formula",
+        "All existing tests pass; new unit tests cover: (a) cost formula at several levels, (b) at-cap upgrade throws, (c) levelMultiplier input clamp at level > 20, (d) engagement clamp at every write site",
+        "`npm test` passes and `npm run typecheck` / `npm run lint` (whichever the project uses) passes"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 90,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Save migration V4→V5: silent clamp engagement + per-generator level",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Add a one-time V4→V5 save migration that repairs saves broken by the pre-fix overflow bug. The migration silently clamps `player.engagement` to Number.MAX_SAFE_INTEGER and each `generators[id].level` to max_level (10). Depends on E1 because the migration reads the new max_level field from the static-data contract E1 introduces.\n\nPer architect review: treat the runtime clamps (shipped in E1) and this schema migration as two separate mechanisms. Runtime clamps are permanent invariants in the hot path. This migration is a one-time data-repair step at a known schema-version boundary. Both stay.\n\nPer game-designer final review: silent clamp only — NO player-facing 'your save was repaired' modal. The Infinity state and over-cap levels were a bug, not earned progress; at that magnitude floats had already rounded to even. A console.warn in the migration function for diagnostic trace is desired; a UI notice is not.\n\nImplementation shape (per architect review):\n- Bump CURRENT_VERSION in client/src/save/index.ts:17 from 4 to 5\n- Add `migrateV4toV5(data: SaveData): SaveData` following the existing pattern of migrateV3toV4 at line 178\n- Append to the migrate() chain at line 225 (matches existing V1→V2→V3→V4 shape)\n- Emit console.warn when either clamp triggers, including the before-value for diagnostic trace\n- Add tests alongside existing migration tests in client/src/save/index.test.ts",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-level-growth-curves.md",
+          "purpose": "Architect review Q2 + game-designer tonal call — full spec for this migration"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "CURRENT_VERSION at line 17; existing migrations V1→V4 at lines 115-223; migrate() chain at line 225"
+        },
+        {
+          "ref": "client/src/save/index.test.ts",
+          "purpose": "Existing migration test patterns to follow"
+        }
+      ],
+      "acceptance_criteria": [
+        "CURRENT_VERSION bumped from 4 to 5 in save/index.ts",
+        "migrateV4toV5(data) clamps player.engagement to Number.MAX_SAFE_INTEGER when it exceeds that value, and clamps each generators[id].level to the generator's max_level (10)",
+        "migrate() chain calls migrateV4toV5 when current.version === 4",
+        "console.warn fires with the clamped field + before-value when either clamp actually triggers; no warn when no clamp is needed",
+        "NO player-facing UI notice — this is silent-repair per game-designer final review",
+        "Unit tests cover: (a) V4 save with engagement = Infinity migrates to engagement = MAX_SAFE_INTEGER, (b) V4 save with a generator at level=50 migrates to level=10, (c) V4 save with valid values migrates unchanged with no warn, (d) full V1→V5 chain migration still works",
+        "All existing save tests pass; `npm test` passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        89
+      ]
     }
   ]
 }
