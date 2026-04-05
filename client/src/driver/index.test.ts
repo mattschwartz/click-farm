@@ -380,9 +380,11 @@ describe('driver — persistence', () => {
     expect(driver.getState().player.rebrand_count).toBe(beforeRebrandCount + 1);
     expect(driver.getState().player.engagement).toBe(0);
     expect(driver.getState().player.total_followers).toBe(0);
-    // All generators reset.
-    expect(driver.getState().generators.selfies.owned).toBe(false);
+    // All generators reset: selfies stays owned post-rebrand because its
+    // threshold is 0 (matches fresh-start behavior).
+    expect(driver.getState().generators.selfies.owned).toBe(true);
     expect(driver.getState().generators.selfies.count).toBe(0);
+    expect(driver.getState().generators.selfies.level).toBe(1);
   });
 
   it('buyCloutUpgrade throws when player has no clout', () => {

@@ -47,7 +47,8 @@ describe('save and load', () => {
     save(state);
     const loaded = load();
 
-    expect(loaded!.generators.selfies.owned).toBe(false);
+    // selfies (threshold=0) starts owned per fresh-state rules.
+    expect(loaded!.generators.selfies.owned).toBe(true);
     expect(loaded!.generators.selfies.count).toBe(0);
   });
 

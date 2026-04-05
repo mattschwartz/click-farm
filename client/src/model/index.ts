@@ -66,10 +66,13 @@ export function createPlayer(seed: number, now: number = Date.now()): Player {
 // Generator factory
 // ---------------------------------------------------------------------------
 
-export function createGeneratorState(id: GeneratorId): GeneratorState {
+export function createGeneratorState(
+  id: GeneratorId,
+  owned: boolean = false,
+): GeneratorState {
   return {
     id,
-    owned: false,
+    owned,
     level: 1,
     count: 0,
   };
@@ -103,8 +106,15 @@ export function createInitialGameState(
   const seed = Math.floor(Math.random() * 2 ** 32);
   const player = createPlayer(seed, now);
 
+  // Mark generators owned if their threshold is 0 — mirrors the platform
+  // logic below and prevents a fresh-start race where the UI offers a buy
+  // button for a threshold-met generator before the first tick can flip
+  // owned=true via checkGeneratorUnlocks.
   const generators = Object.fromEntries(
-    ALL_GENERATOR_IDS.map((id) => [id, createGeneratorState(id)])
+    ALL_GENERATOR_IDS.map((id) => {
+      const threshold = staticData.unlockThresholds.generators[id];
+      return [id, createGeneratorState(id, threshold === 0)];
+    })
   ) as Record<GeneratorId, GeneratorState>;
 
   // Unlock platforms whose threshold is 0 at game start

@@ -136,18 +136,23 @@ export function applyRebrand(
     }),
   ) as Record<PlatformId, PlatformState>;
 
-  // Reset generators: unowned + count=0 + level=1, except generator_unlock
-  // upgrades which grant owned=true at level 1.
+  // Reset generators: unowned + count=0 + level=1, except:
+  // - generator_unlock upgrades which grant owned=true at level 1
+  // - generators whose threshold is 0 (mirrors createInitialGameState and
+  //   the platform reset above, preventing a post-rebrand buy-click race)
   const generators: Record<GeneratorId, GeneratorState> = Object.fromEntries(
-    (Object.keys(state.generators) as GeneratorId[]).map((id) => [
-      id,
-      {
+    (Object.keys(state.generators) as GeneratorId[]).map((id) => {
+      const threshold = staticData.unlockThresholds.generators[id];
+      return [
         id,
-        owned: generatorUnlocks.has(id),
-        level: 1,
-        count: 0,
-      },
-    ]),
+        {
+          id,
+          owned: generatorUnlocks.has(id) || threshold === 0,
+          level: 1,
+          count: 0,
+        },
+      ];
+    }),
   ) as Record<GeneratorId, GeneratorState>;
 
   // Fresh algorithm state from the new seed. Start at index 0, first state

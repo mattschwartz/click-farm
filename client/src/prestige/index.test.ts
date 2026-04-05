@@ -142,11 +142,12 @@ describe('applyRebrand — reset completeness', () => {
     expect(next.platforms.grindset.followers).toBe(0);
   });
 
-  it('resets all generators to unowned, count=0, level=1', () => {
+  it('resets generators: count=0, level=1, and owned only for threshold=0 (mirrors fresh start)', () => {
     const state = setupMidRun();
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
     for (const id of Object.keys(next.generators) as Array<keyof typeof next.generators>) {
-      expect(next.generators[id].owned).toBe(false);
+      const threshold = STATIC_DATA.unlockThresholds.generators[id];
+      expect(next.generators[id].owned).toBe(threshold === 0);
       expect(next.generators[id].count).toBe(0);
       expect(next.generators[id].level).toBe(1);
     }
