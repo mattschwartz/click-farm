@@ -2327,6 +2327,38 @@
   color: var(--accent-platinum);
   font-weight: 600;
   letter-spacing: 0.08em;
+  /* Clip the shine sweep (::before) to the plaque's rounded edges.
+     Outer box-shadow halos (arrival) are not affected by overflow. */
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shine sweep — a narrow diagonal highlight that crosses the plaque
+   once every 7s. The pseudo-element waits off-screen for 94% of the
+   cycle, then sweeps across in ~420ms. All maxed plaques shine in
+   sync (per user directive). Overrides the spec's original "no
+   persistent motion" rule — see §7 decision log override (2026-04-05). */
+.row-btn-upgrade.row-btn-lvl-maxed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.0) 46%,
+    rgba(255, 255, 255, 0.65) 50%,
+    rgba(255, 255, 255, 0.0) 54%,
+    transparent 62%
+  );
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  animation: lvl-maxed-shine 7000ms linear infinite;
+  /* All plaques shine in sync per user directive — no per-row stagger. */
 }
 .row-btn-upgrade.row-btn-lvl-maxed .label {
   color: var(--accent-platinum);
@@ -2394,15 +2426,35 @@
   }
 }
 
-/* Reduce Motion — arrival celebration is removed entirely. The static
-   platinum-plaque visual still communicates the state change. */
+/* Shine sweep — waits off-screen (background-position 150%) for 94%
+   of the cycle, then slides to -150% across ~420ms. At the 7s
+   cadence, the visible sweep is ~6% of total time. */
+@keyframes lvl-maxed-shine {
+  0%, 94% {
+    background-position: 150% 0;
+  }
+  100% {
+    background-position: -150% 0;
+  }
+}
+
+/* Reduce Motion — both the arrival celebration AND the shine sweep
+   are removed. Static platinum-plaque visual still communicates state. */
 @media (prefers-reduced-motion: reduce) {
   .row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
     animation: none;
   }
+  .row-btn-upgrade.row-btn-lvl-maxed::before {
+    animation: none;
+    background: none;
+  }
 }
 html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
   animation: none;
+}
+html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
+  animation: none;
+  background: none;
 }
 
 /* Armed — stronger border than dormant, amber deficit glyph, no motion. */

@@ -227,6 +227,11 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arr
 
 **Persistent shimmer vs one-shot (resolved — one-shot only).** Game-designer verdict: persistent looping gold sweep would compete with the ready-state breathing halo — the single most important live signal on screen. "Players will look where motion is, and motion on a dead button teaches the wrong lesson." The "YAY" lives in the arrival moment; after that, the plaque is quiet.
 
+**OVERRIDE — low-frequency shine sweep added (2026-04-05, task #101 follow-up).**
+Per explicit user directive, the "no persistent motion" rule above is overridden for maxed plaques. Implementation: `@keyframes lvl-maxed-shine` — 7s cycle, ~420ms sweep window (≈6% duty cycle), all maxed plaques shine in sync (per user directive). Rendered as a `::before` pseudo-element: narrow 105° diagonal white highlight (peak alpha 0.65) that translates across the plaque via `background-position`. Plaque itself does not move or scale. Inset shadows and the base plaque gradient are preserved throughout. Fully disabled under reduced-motion (pseudo-element background cleared and animation halted).
+
+The game-designer's original concern stands and is unresolved: low-frequency motion on a non-actionable button still pulls the eye toward dead rows, and may compete with ready-state breathing when the player has many maxed generators alongside ready ones. Monitor player feedback; game-designer may re-evaluate and tighten the cadence, lower the intensity, or remove entirely in a follow-up task.
+
 **Maxed-as-collection reading (resolved — yes, with restraint).** Game-designer confirms maxed generators should read as visible proof of mastery. A completed row implicitly asks "what's the next one?" — this pulls the eye forward toward the next generator. The visual treatment honors the endowment effect without demanding attention.
 
 ---
