@@ -3063,7 +3063,7 @@
       "id": 92,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "First Five Minutes onboarding design",
       "requester": "game-designer",
@@ -3104,7 +3104,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 93,
@@ -3230,7 +3231,7 @@
       "id": 96,
       "role": "game-designer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Review: large-number notation ladder proposal",
       "requester": "architect",
@@ -3257,7 +3258,8 @@
         "Update reviewers list at top of the proposal per review protocol"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 97,
