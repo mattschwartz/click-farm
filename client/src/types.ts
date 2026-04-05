@@ -427,15 +427,18 @@ export interface GeneratorDef {
   buy_cost_multiplier: number;
   /**
    * Engagement cost to upgrade from level 1 → 2.
-   * Each subsequent level costs 4× the previous: base_upgrade_cost × 4^(currentLevel - 1).
-   *
-   * Note: the design proposal mentions three upgrade tracks (quality, frequency,
-   * platform optimization). The architecture spec consolidated these into a single
-   * `level` field and `levelMultiplier`. If distinct tracks are reinstated, this
-   * field will need to be replaced with per-track cost arrays.
-   * TODO(game-designer): provisional — tune during balance pass.
+   * Subsequent levels track the reward curve 1:1 via `levelMultiplier`:
+   *   cost(L→L+1) = ceil(base_upgrade_cost × levelMultiplier(L+1))
+   * See proposals/accepted/generator-level-growth-curves.md.
+   * TODO(game-designer): provisional — tune during balance pass (task #88).
    */
   base_upgrade_cost: number;
+  /**
+   * Maximum upgradable level for this generator. Hard cap — the L=10
+   * ceiling from the growth-curves proposal prevents runaway multipliers
+   * (L=14 overflows Number.MAX_SAFE_INTEGER under the full effect stack).
+   */
+  max_level: number;
 }
 
 export interface PlatformDef {

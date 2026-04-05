@@ -30,13 +30,17 @@ import type {
 // Unlock thresholds create a progressive arc. Balance values are provisional.
 // ---------------------------------------------------------------------------
 
-// Generator buy/upgrade costs follow two provisional formulas:
-//   buy:     base_buy_cost × buy_cost_multiplier^count_owned   (rounds up)
-//   upgrade: base_upgrade_cost × 4^(currentLevel - 1)          (rounds up)
+// Generator buy/upgrade costs follow two formulas:
+//   buy:     base_buy_cost × buy_cost_multiplier^count_owned        (rounds up)
+//   upgrade: base_upgrade_cost × levelMultiplier(currentLevel + 1)  (rounds up)
+// The upgrade cost tracks reward 1:1 via levelMultiplier — see
+// proposals/accepted/generator-level-growth-curves.md.
 //
 // Base buy costs are set so early-game payback is ~10s at level 1, matching
 // the genre convention. Each generator tier costs ~10× the previous.
-// TODO(game-designer): all cost values are provisional — tune during balance pass.
+// Every generator caps at max_level: 10 (L=14 overflows MAX_SAFE_INTEGER).
+// TODO(game-designer): all cost values are provisional — tune during balance
+// pass (task #88).
 
 const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   selfies: {
@@ -48,6 +52,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 10,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 100,
+    max_level: 10,
   },
   memes: {
     id: 'memes',
@@ -58,6 +63,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 100,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 1_000,
+    max_level: 10,
   },
   hot_takes: {
     id: 'hot_takes',
@@ -68,6 +74,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 1_100,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 11_000,
+    max_level: 10,
   },
   tutorials: {
     id: 'tutorials',
@@ -78,6 +85,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 12_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 120_000,
+    max_level: 10,
   },
   livestreams: {
     id: 'livestreams',
@@ -88,6 +96,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 130_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 1_300_000,
+    max_level: 10,
   },
   podcasts: {
     id: 'podcasts',
@@ -98,6 +107,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 1_400_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 14_000_000,
+    max_level: 10,
   },
   viral_stunts: {
     id: 'viral_stunts',
@@ -108,6 +118,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 20_000_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 200_000_000,
+    max_level: 10,
   },
   // -------------------------------------------------------------------------
   // Post-prestige generators — unlocked only via Clout `generator_unlock`
@@ -130,6 +141,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 200_000_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 2_000_000_000,
+    max_level: 10,
   },
   deepfakes: {
     id: 'deepfakes',
@@ -140,6 +152,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 2_000_000_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 20_000_000_000,
+    max_level: 10,
   },
   algorithmic_prophecy: {
     id: 'algorithmic_prophecy',
@@ -150,6 +163,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_buy_cost: 20_000_000_000,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 200_000_000_000,
+    max_level: 10,
   },
 };
 

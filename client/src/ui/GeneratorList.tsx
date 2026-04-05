@@ -62,24 +62,30 @@ interface Props {
 // ---------------------------------------------------------------------------
 
 /**
- * Three affordance states for the per-row Lvl ↑ button.
+ * Affordance states for the per-row Lvl ↑ button.
  *
  * - dormant: count===0 — the row has no units to upgrade yet. Disabled.
  * - armed:   count>0 but engagement < upgradeCost. Clickable, but the teased
  *            action is out of reach. Stillness communicates "not now."
  * - ready:   count>0 and engagement >= upgradeCost. Breathes gold to pull
  *            the eye toward the drawer.
+ * - maxed:   level >= max_level — the cap is hit, no further upgrade is
+ *            possible. Shows "MAX" in place of cost. Task #89.
  *
- * See proposals/accepted/lvl-up-button-affordance-states.md.
+ * See proposals/accepted/lvl-up-button-affordance-states.md and
+ * proposals/accepted/generator-level-growth-curves.md.
  */
-export type LvlBtnState = 'dormant' | 'armed' | 'ready';
+export type LvlBtnState = 'dormant' | 'armed' | 'ready' | 'maxed';
 
 export function classifyLvlBtnState(
   count: number,
+  level: number,
+  maxLevel: number,
   engagement: number,
   upgradeCost: number,
 ): LvlBtnState {
   if (count <= 0) return 'dormant';
+  if (level >= maxLevel) return 'maxed';
   if (engagement >= upgradeCost) return 'ready';
   return 'armed';
 }
@@ -165,6 +171,8 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGenera
     for (const id of ids) {
       const g = state.generators[id];
       if (!g?.owned || g.count <= 0) continue;
+      const def = staticData.generators[id];
+      if (g.level >= def.max_level) continue;
       const cost = generatorUpgradeCost(id, g.level, staticData);
       if (state.player.engagement >= cost) readyCount += 1;
     }
@@ -341,11 +349,14 @@ function GeneratorRow({
   // generator_unlock head-start grants owned=true without any units.
   const canOpenDrawer = g.count > 0;
 
-  // Lvl ↑ button affordance state — spec tracks three distinct visuals
-  // (dormant / armed / ready) so players can tell at a glance whether
-  // tapping the button opens a drawer they can act on. Task #69.
+  // Lvl ↑ button affordance state — spec tracks distinct visuals
+  // (dormant / armed / ready / maxed) so players can tell at a glance
+  // whether tapping the button opens a drawer they can act on.
+  // Tasks #69 (three states) + #89 (MAX cap).
   const lvlState = classifyLvlBtnState(
     g.count,
+    g.level,
+    def.max_level,
     state.player.engagement,
     upgradeCost,
   );
@@ -419,9 +430,11 @@ function GeneratorRow({
           title={
             lvlState === 'dormant'
               ? `Buy at least one ${display.name} before upgrading`
-              : lvlState === 'armed'
-                ? `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ${fmtCompact(lvlDeficit)} more engagement`
-                : `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ready`
+              : lvlState === 'maxed'
+                ? `${display.name} is at max level (L${g.level})`
+                : lvlState === 'armed'
+                  ? `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ${fmtCompact(lvlDeficit)} more engagement`
+                  : `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ready`
           }
           aria-label={`Open upgrade drawer for ${display.name}`}
         >
@@ -434,7 +447,7 @@ function GeneratorRow({
           {lvlState === 'armed' && (
             <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
           )}
-          {fmtCompact(upgradeCost)}
+          {lvlState === 'maxed' ? 'MAX' : fmtCompact(upgradeCost)}
         </button>
       </div>
     </div>

@@ -44,7 +44,7 @@ import {
 } from '../platform/index.ts';
 import { kitFollowerConversionBonus } from '../creator-kit/index.ts';
 import { checkGeneratorUnlocks } from '../generator/index.ts';
-import { syncTotalFollowers } from '../model/index.ts';
+import { syncTotalFollowers, clampEngagement } from '../model/index.ts';
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -207,7 +207,7 @@ export function calculateOffline(
 
   let newPlayer = {
     ...state.player,
-    engagement: state.player.engagement + engagementGained,
+    engagement: clampEngagement(state.player.engagement + engagementGained),
     lifetime_followers: state.player.lifetime_followers + totalFollowersGained,
   };
   // syncTotalFollowers recomputes total_followers from platforms.

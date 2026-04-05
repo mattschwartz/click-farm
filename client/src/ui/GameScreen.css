@@ -2303,6 +2303,18 @@
   color: var(--text-p3);
 }
 
+/* Maxed — cap reached, no further upgrade. Static gold-dim treatment
+   mirrors Clout shop MAX state. Task #89. */
+.row-btn-upgrade.row-btn-lvl-maxed {
+  color: color-mix(in srgb, var(--accent-gold) 70%, transparent);
+  border-color: color-mix(in srgb, var(--accent-gold) 40%, transparent);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+.row-btn-upgrade.row-btn-lvl-maxed .label {
+  color: var(--text-p2);
+}
+
 /* Armed — stronger border than dormant, amber deficit glyph, no motion. */
 .row-btn-upgrade.row-btn-lvl-armed {
   border-color: rgba(255, 255, 255, 0.14);

@@ -1,5 +1,5 @@
 {
-  "next_id": 96,
+  "next_id": 99,
   "tasks": [
     {
       "id": 1,
@@ -2905,7 +2905,7 @@
       "alias": "E1",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Generator level growth curves: cost parity + L=10 cap + runtime clamps + MAX UI",
       "requester": "architect",
@@ -2969,7 +2969,8 @@
         "`npm test` passes and `npm run typecheck` / `npm run lint` (whichever the project uses) passes"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 90,
@@ -3006,9 +3007,7 @@
         "All existing save tests pass; `npm test` passes"
       ],
       "open_questions": [],
-      "blocked_on": [
-        89
-      ]
+      "blocked_on": []
     },
     {
       "id": 91,
@@ -3218,6 +3217,114 @@
           "owner": "game-designer"
         }
       ],
+      "blocked_on": []
+    },
+    {
+      "id": 96,
+      "role": "game-designer",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Review: large-number notation ladder proposal",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Review draft proposal for extending the compact-number suffix ladder past Dc and defining an overflow policy. The architect committed to structure (flat data table, single overflow cutoff, ×10^n scientific fallback with unicode superscript) but deferred all player-facing naming and range decisions to you. The proposal surfaces three questions you own: (1) expected max value a player will see post-G12, which sets how far the ladder extends; (2) whether to continue standard Latin -illion (UDc → Vg) for one segment before breaking into game-voice symbols, or break immediately past Dc; (3) what the game-voice symbols actually are — candidates offered include Viral/Slop/Doom/Feed/Grid/Algo/Meme/Rot to pair with the G11/G12 satirical arc, but naming is yours.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/large-number-notation-ladder.md",
+          "purpose": "the proposal to review"
+        },
+        {
+          "ref": "client/src/ui/format.ts",
+          "purpose": "current ladder implementation, terminates at Dc"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/late-game-content-arc.md",
+          "purpose": "G11/G12 content that drives the need for larger tiers"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the proposal in full",
+        "Answer Open Questions 1, 2, and 3 (endgame range, Latin-continuation vs game-voice split, symbols)",
+        "Append a Review: game-designer block per PROPOSALS.md template with Aligned/Not Aligned/Request for Comment decision",
+        "Update reviewers list at top of the proposal per review protocol"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 97,
+      "role": "ux-designer",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Review: large-number notation ladder proposal",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Review draft proposal for the large-number notation ladder. The architect proposes a unicode-superscript scientific fallback (1.41×10⁵⁰) when the ladder is exhausted. Your review owns two concerns: (1) maximum character budget for a compact number in the top bar and platform cards — current Dc-era values top at ~7 chars (999.99Dc); game-voice symbols may be longer (999.99Viral = 11 chars). Does the existing layout absorb that, or does it need a width cap that forces shorter symbols? (2) Is unicode superscript (×10⁵⁰) compatible with the current typography system, or does it clash with the font stack? Fallback would be ×10^50 with a caret.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/large-number-notation-ladder.md",
+          "purpose": "the proposal to review"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/typography-system.md",
+          "purpose": "current type stack for superscript compatibility check"
+        },
+        {
+          "ref": "client/src/ui/format.ts",
+          "purpose": "current formatter, shows ~7-char Dc-era output"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the proposal in full",
+        "Answer Open Questions 4 and 5 (char budget, superscript legibility)",
+        "Append a Review: ux-designer block per PROPOSALS.md template with Aligned/Not Aligned/Request for Comment decision",
+        "Update reviewers list at top of the proposal per review protocol"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 98,
+      "role": "engineer",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Review: large-number notation ladder — precision ceiling check",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Review draft proposal for the large-number notation ladder from an engineering-constraint angle. The proposal assumes JS Number is sufficient for all in-game values. Your review owns one primary concern: JavaScript Number maxes out around 1.8×10^308. If the game-designer's expected endgame range (Open Question 1 on the proposal) pushes values past ~1e300, we need a BigInt or Decimal.js migration of game state — which is a much larger change than this formatter proposal and should block or precede it. Your job is to confirm whether current game-state numbers can realistically reach that range given existing generator growth curves, prestige multipliers, and G11/G12 content, and flag whether a precision-migration proposal is needed first.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/large-number-notation-ladder.md",
+          "purpose": "the proposal to review"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "generator growth curves that drive value scale"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "prestige multipliers that compound scale"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-level-growth-curves.md",
+          "purpose": "curve definitions that bound late-game magnitudes"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "multiplier stack that compounds growth"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the proposal in full",
+        "Answer Open Question 6 (whether values can exceed 1e300 given current curves and prestige stack)",
+        "If yes, flag that a BigInt/Decimal migration proposal must precede this one",
+        "Append a Review: engineer block per PROPOSALS.md template with Aligned/Not Aligned/Request for Comment decision",
+        "Update reviewers list at top of the proposal per review protocol"
+      ],
+      "open_questions": [],
       "blocked_on": []
     }
   ]

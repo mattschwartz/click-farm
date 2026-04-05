@@ -68,14 +68,56 @@ describe('levelMultiplier', () => {
     }
   });
 
-  it('rejects levels below 1', () => {
-    expect(() => levelMultiplier(0)).toThrow();
-    expect(() => levelMultiplier(-1)).toThrow();
+  it('silently clamps levels below 1 to the level-1 value (task #89)', () => {
+    // Clamping, not throwing — upstream call sites may temporarily feed 0
+    // during save migration or between validation passes.
+    const l1 = levelMultiplier(1);
+    expect(levelMultiplier(0)).toBe(l1);
+    expect(levelMultiplier(-1)).toBe(l1);
   });
 
-  it('rejects non-finite input', () => {
-    expect(() => levelMultiplier(Infinity)).toThrow();
-    expect(() => levelMultiplier(NaN)).toThrow();
+  it('silently clamps levels above 20 to the level-20 ceiling (task #89)', () => {
+    // Protects game-loop rate math from runaway exponents if the level ever
+    // exceeds the curve's designed range (max_level is currently 10).
+    const l20 = levelMultiplier(20);
+    expect(levelMultiplier(21)).toBe(l20);
+    expect(levelMultiplier(100)).toBe(l20);
+    expect(Number.isFinite(levelMultiplier(1e6))).toBe(true);
+  });
+
+  it('coerces non-finite input to the level-1 value', () => {
+    const l1 = levelMultiplier(1);
+    expect(levelMultiplier(Infinity)).toBe(l1);
+    expect(levelMultiplier(NaN)).toBe(l1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// engagement clamp — integration with tick / postClick (task #89 AC #5)
+// ---------------------------------------------------------------------------
+
+describe('engagement clamp — write-site integration', () => {
+  it('tick never pushes engagement above Number.MAX_SAFE_INTEGER', () => {
+    // Build a state at the ceiling with a producing generator. The tick's
+    // engagement accumulation would overflow MAX_SAFE_INTEGER but the clamp
+    // at the write site (game-loop/index.ts:379) pins it.
+    const state = stateWithGenerator('viral_stunts', 1_000_000, 10);
+    const pinned: GameState = {
+      ...state,
+      player: { ...state.player, engagement: Number.MAX_SAFE_INTEGER - 1 },
+    };
+    const next = tick(pinned, T0 + 1000, 1000, STATIC_DATA);
+    expect(next.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  it('postClick never pushes engagement above Number.MAX_SAFE_INTEGER', () => {
+    const state = stateWithGenerator('selfies', 1, 1);
+    const pinned: GameState = {
+      ...state,
+      player: { ...state.player, engagement: Number.MAX_SAFE_INTEGER },
+    };
+    const next = postClick(pinned, STATIC_DATA);
+    expect(next.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
 });
 

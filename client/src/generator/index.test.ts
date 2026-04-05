@@ -93,17 +93,34 @@ describe('generatorBuyCost', () => {
 // ---------------------------------------------------------------------------
 
 describe('generatorUpgradeCost', () => {
-  it('returns the base upgrade cost at level 1', () => {
-    const cost = generatorUpgradeCost('selfies', 1, STATIC_DATA);
-    expect(cost).toBe(Math.ceil(STATIC_DATA.generators.selfies.base_upgrade_cost));
+  // Formula (per proposals/accepted/generator-level-growth-curves.md):
+  //   cost(currentLevel) = ceil(base × levelMultiplier(currentLevel + 1))
+  //   levelMultiplier(L) = 2^(L² / 5)
+  it('matches the levelMultiplier formula at level 1 (cost to reach L2)', () => {
+    const base = STATIC_DATA.generators.selfies.base_upgrade_cost;
+    const expected = Math.ceil(base * Math.pow(2, (2 * 2) / 5));
+    expect(generatorUpgradeCost('selfies', 1, STATIC_DATA)).toBe(expected);
   });
 
-  it('quadruples with each level (4× per level)', () => {
-    const level1 = generatorUpgradeCost('selfies', 1, STATIC_DATA);
-    const level2 = generatorUpgradeCost('selfies', 2, STATIC_DATA);
-    const level3 = generatorUpgradeCost('selfies', 3, STATIC_DATA);
-    expect(level2).toBe(Math.ceil(level1 * 4));
-    expect(level3).toBe(Math.ceil(level1 * 16));
+  it('matches the super-exponential curve at several levels', () => {
+    const base = STATIC_DATA.generators.selfies.base_upgrade_cost;
+    for (const currentLevel of [1, 2, 3, 5, 9]) {
+      const target = currentLevel + 1;
+      const expected = Math.ceil(base * Math.pow(2, (target * target) / 5));
+      expect(generatorUpgradeCost('selfies', currentLevel, STATIC_DATA)).toBe(
+        expected,
+      );
+    }
+  });
+
+  it('doubles from cost(L) to cost(L+1) at the formula ratio', () => {
+    // cost(L+1)/cost(L) = 2^(((L+2)² - (L+1)²)/5) = 2^((2L+3)/5)
+    // For L=1 → 2^1 = 2; for L=2 → 2^(7/5) ≈ 2.639; for L=3 → 2^(9/5) ≈ 3.482
+    const c1 = generatorUpgradeCost('selfies', 1, STATIC_DATA);
+    const c2 = generatorUpgradeCost('selfies', 2, STATIC_DATA);
+    // Tolerance: ceil rounding can introduce up to 1 unit of drift. At these
+    // magnitudes the relative error is << 1%.
+    expect(c2 / c1).toBeCloseTo(2, 1);
   });
 
   it('increases monotonically with level', () => {
@@ -340,10 +357,12 @@ describe('upgradeGenerator', () => {
     expect(next.player.engagement).toBeCloseTo(999, 6);
   });
 
-  it('higher levels cost 4× the previous level upgrade', () => {
+  it('cost(L+1) is ~2× cost(L) at the low end of the curve', () => {
+    // From the super-exponential formula 2^(L²/5):
+    //   ratio(1→2) = 2^((9-4)/5) = 2^1 = 2
     const level1Cost = generatorUpgradeCost('selfies', 1, STATIC_DATA);
     const level2Cost = generatorUpgradeCost('selfies', 2, STATIC_DATA);
-    expect(level2Cost).toBe(Math.ceil(level1Cost * 4));
+    expect(level2Cost / level1Cost).toBeCloseTo(2, 1);
   });
 
   it('higher level increases effective engagement rate', () => {
@@ -400,6 +419,22 @@ describe('upgradeGenerator', () => {
     );
   });
 
+  it('throws when generator is already at max_level (task #89)', () => {
+    const maxLvl = STATIC_DATA.generators.selfies.max_level;
+    const state = stateWithOwnedGenerator('selfies', 1, maxLvl, 1e18);
+    expect(() => upgradeGenerator(state, 'selfies', STATIC_DATA)).toThrow(
+      /max level/,
+    );
+  });
+
+  it('throws when generator level exceeds max_level (defensive)', () => {
+    const maxLvl = STATIC_DATA.generators.selfies.max_level;
+    const state = stateWithOwnedGenerator('selfies', 1, maxLvl + 5, 1e18);
+    expect(() => upgradeGenerator(state, 'selfies', STATIC_DATA)).toThrow(
+      /max level/,
+    );
+  });
+
   it('does not mutate the input state', () => {
     const cost = generatorUpgradeCost('selfies', 1, STATIC_DATA);
     const state = stateWithOwnedGenerator('selfies', 1, 1, cost);
@@ -417,9 +452,11 @@ describe('upgradeGenerator', () => {
   });
 
   it('chaining multiple upgrades compounds the level multiplier', () => {
-    const baseCost = generatorUpgradeCost('selfies', 1, STATIC_DATA);
-    // Fund enough for 3 upgrades (level 1→2→3→4): costs are 4^0 + 4^1 + 4^2 = 1 + 4 + 16 = 21× base
-    const totalCost = baseCost * (1 + 4 + 16) + 1;
+    // Fund the player with the exact sum of L1→L2, L2→L3, L3→L4 costs.
+    const cost12 = generatorUpgradeCost('selfies', 1, STATIC_DATA);
+    const cost23 = generatorUpgradeCost('selfies', 2, STATIC_DATA);
+    const cost34 = generatorUpgradeCost('selfies', 3, STATIC_DATA);
+    const totalCost = cost12 + cost23 + cost34 + 1;
     let state = stateWithOwnedGenerator('selfies', 1, 1, totalCost);
     state = upgradeGenerator(state, 'selfies', STATIC_DATA);
     state = upgradeGenerator(state, 'selfies', STATIC_DATA);

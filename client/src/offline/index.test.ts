@@ -472,4 +472,24 @@ describe('calculateOffline — rate ordering sanity', () => {
     const id: AlgorithmStateId = 'short_form_surge';
     expect(typeof id).toBe('string');
   });
+
+  it('clamps engagement to MAX_SAFE_INTEGER (task #89)', () => {
+    // Start at the ceiling and run a long offline window with a large
+    // producing generator — the offline-side clamp (offline/index.ts:210)
+    // must pin the result.
+    const state: GameState = {
+      ...makeState({ selfiesCount: 1_000_000, selfiesLevel: 10 }),
+      player: {
+        ...makeState().player,
+        engagement: Number.MAX_SAFE_INTEGER - 1,
+      },
+    };
+    const { newState } = calculateOffline(
+      state,
+      T0,
+      T0 + 60 * 60 * 1000,
+      STATIC_DATA,
+    );
+    expect(newState.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
+  });
 });

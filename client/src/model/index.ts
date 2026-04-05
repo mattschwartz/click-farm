@@ -184,11 +184,28 @@ export function createAlgorithmState(
 // All return a new Player; no mutation. Throw on constraint violations.
 // ---------------------------------------------------------------------------
 
+/**
+ * Clamp an engagement value into the finite, representable range. Every
+ * write to `player.engagement` MUST route through this helper — the clamp
+ * is a permanent invariant that prevents a save-breaking Infinity bug
+ * from ever re-emerging (see proposals/accepted/generator-level-growth-
+ * curves.md). Non-finite inputs (NaN, ±Infinity) coerce to 0 / MAX_SAFE.
+ */
+export function clampEngagement(value: number): number {
+  if (Number.isNaN(value)) return 0;
+  if (value < 0) return 0;
+  if (value > Number.MAX_SAFE_INTEGER) return Number.MAX_SAFE_INTEGER;
+  return value;
+}
+
 export function earnEngagement(player: Player, amount: number): Player {
   if (amount < 0) {
     throw new Error(`earnEngagement: amount must be ≥ 0, got ${amount}`);
   }
-  return { ...player, engagement: player.engagement + amount };
+  return {
+    ...player,
+    engagement: clampEngagement(player.engagement + amount),
+  };
 }
 
 export function spendEngagement(player: Player, amount: number): Player {

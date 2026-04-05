@@ -32,7 +32,7 @@ import {
   computeFollowerDistribution,
 } from '../platform/index.ts';
 import { checkGeneratorUnlocks } from '../generator/index.ts';
-import { syncTotalFollowers } from '../model/index.ts';
+import { syncTotalFollowers, clampEngagement } from '../model/index.ts';
 import {
   updateAccumulatorsOnTick,
   onAccumulatorFire,
@@ -79,12 +79,17 @@ const CLICK_GENERATOR_ID: GeneratorId = 'selfies';
  *
  * This is a super-exponential curve. Level 1 ≈ 1.149×, level 8 ≈ 7,225×.
  * Per-generator, independent. Denominator `5` is the single tuning knob.
+ *
+ * Input is silently clamped to [1, 20] before Math.pow — this is belt-and-
+ * braces for corrupted saves and any future code path that forgets the
+ * max_level cap. Clamping is preferred over throwing here because this is
+ * called from tick hot-paths and a throw would freeze the game loop.
+ * NaN / ±Infinity fall back to 1 (no multiplier) rather than propagating.
  */
 export function levelMultiplier(level: number): number {
-  if (level < 1 || !Number.isFinite(level)) {
-    throw new Error(`levelMultiplier: level must be ≥ 1 and finite, got ${level}`);
-  }
-  return Math.pow(2, (level * level) / 5);
+  const safe = Number.isFinite(level) ? level : 1;
+  const clamped = Math.min(20, Math.max(1, safe));
+  return Math.pow(2, (clamped * clamped) / 5);
 }
 
 /**
@@ -371,7 +376,7 @@ export function tick(
   // 3. Add engagement to player.
   let player: Player = {
     ...state.player,
-    engagement: state.player.engagement + engagementEarned,
+    engagement: clampEngagement(state.player.engagement + engagementEarned),
   };
 
   // 4. Compute follower distribution for this tick.
@@ -449,7 +454,7 @@ export function tick(
       // 11b. Viral still running — apply bonus engagement on top of normal production.
       player = {
         ...player,
-        engagement: player.engagement + viralBurst.active.bonus_rate_per_ms * deltaMs,
+        engagement: clampEngagement(player.engagement + viralBurst.active.bonus_rate_per_ms * deltaMs),
       };
     }
   } else {
@@ -536,7 +541,7 @@ export function tick(
         player.engagement,
       );
       if (spent > 0) {
-        player = { ...player, engagement: player.engagement - spent };
+        player = { ...player, engagement: clampEngagement(player.engagement - spent) };
       }
 
       // Apply follower loss.
@@ -660,7 +665,7 @@ export function postClick(
     ...state,
     player: {
       ...state.player,
-      engagement: state.player.engagement + earned,
+      engagement: clampEngagement(state.player.engagement + earned),
     },
   };
 }
