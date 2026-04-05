@@ -1320,7 +1320,7 @@
       "id": 51,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Viral burst visual choreography",
       "requester": "ux-designer",
@@ -1366,7 +1366,8 @@
         "All effects clean up correctly if the component unmounts mid-event"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 52,
@@ -1472,7 +1473,7 @@
       "id": 54,
       "role": "architect",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Sync core-systems.md with implementation reality",
       "requester": "architect",
@@ -1507,7 +1508,8 @@
         "Three TODO/NOTE annotations in the source code removed after the doc is updated (types.ts:8, game-loop/index.ts:295, offline/index.ts:18) — architect verifies they are resolved before closing"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 55,

@@ -1,5 +1,5 @@
 // Core game screen — the main surface the player interacts with during a
-// normal session. Implements UX spec §§2–8 and §11.
+// normal session. Implements UX spec §§2–8, §9, and §11.
 //
 // Zones (per UX §2):
 //   - Top bar (80px): Algorithm state + Engagement + Followers
@@ -7,9 +7,12 @@
 //   - Generators (center, flex): ledger with category dividers
 //   - Platforms (right, 280px): 3 cards with follower counts
 //
+// Viral burst choreography (UX §9): phase is derived from
+// GameState.viralBurst.active at render time — no duplicate state. Visual
+// effects (gold counter, generator halo, platform illumination, particle
+// drift, vignette pulse, zoom) are driven by CSS classes.
+//
 // Not yet wired:
-//   - Viral burst visual choreography (UX §9) — blocked on task #44;
-//     the engine emits no viral signal. A hook is ready for when it does.
 //   - Sound design (click cue, shift swell, viral signature) — no audio
 //     pipeline exists yet.
 //   - Upgrade drawer with 3-level preview (UX §6.3) — follow-up UX task.
@@ -25,7 +28,7 @@ import {
 } from '../game-loop/index.ts';
 import { getAlgorithmModifier } from '../algorithm/index.ts';
 import { cloutForRebrand } from '../prestige/index.ts';
-import type { GeneratorId } from '../types.ts';
+import type { ActiveViralEvent, GeneratorId } from '../types.ts';
 import { AlgorithmBackground } from './AlgorithmBackground.tsx';
 import { TopBar } from './TopBar.tsx';
 import { PostZone } from './PostZone.tsx';
@@ -35,6 +38,47 @@ import { OfflineGainsModal } from './OfflineGainsModal.tsx';
 import { GENERATOR_DISPLAY, PLATFORM_DISPLAY } from './display.ts';
 import { fmtCompactInt } from './format.ts';
 import './GameScreen.css';
+
+// ---------------------------------------------------------------------------
+// Viral burst phase helpers (UX §9.2)
+// ---------------------------------------------------------------------------
+
+/** Visual phases for the viral burst event. */
+type ViralPhase = 'build' | 'peak' | 'decay' | null;
+
+/**
+ * Derives the current viral phase from the active event. Called at render
+ * time — game ticks at 10Hz ensure phase transitions resolve within 100ms.
+ *
+ * Phase boundaries:
+ *   Build:  0–1500ms
+ *   Peak:   1500ms – (duration_ms − 1000ms)
+ *   Decay:  last 1000ms
+ */
+function getViralPhase(active: ActiveViralEvent | null): ViralPhase {
+  if (!active) return null;
+  const elapsed = Date.now() - active.start_time;
+  const decayStart = active.duration_ms - 1000;
+  if (elapsed < 1500) return 'build';
+  if (elapsed < decayStart) return 'peak';
+  return 'decay';
+}
+
+// Pre-computed particle layout — deterministic positions so we don't call
+// Math.random() inside a component body. Particles start in the generator
+// zone (~35–52% from left on a 1280px canvas) and drift rightward toward
+// the platform panel. Vary vertically to fill the screen height.
+const VIRAL_PARTICLES = Array.from({ length: 18 }, (_, i) => ({
+  id: i,
+  x: 35 + (i % 5) * 4,          // 35, 39, 43, 47, 51 (generator zone)
+  y: 15 + Math.round((i * 37) % 64), // 15–79% vertically
+  delay: Math.round((i * 13) % 150) / 100,  // 0–1.49s stagger
+  duration: 85 + (i % 4) * 20,  // 85–145 (÷100 = 0.85–1.45s)
+}));
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 
 export function GameScreen() {
   const {
@@ -83,6 +127,57 @@ export function GameScreen() {
     return anyActive ? `${label}  ·  + auto` : label;
   }, [state.generators, state.platforms]);
 
+  // ---------------------------------------------------------------------------
+  // Viral burst orchestration (UX §9)
+  // ---------------------------------------------------------------------------
+
+  const viralActive = state.viralBurst.active;
+  // Phase is derived at render time — no extra state needed.
+  const viralPhase = getViralPhase(viralActive);
+
+  // Summary badge: capture magnitude when the event ends (active → null).
+  // This is UI-only state — the magnitude is no longer accessible from the
+  // engine state once active is cleared.
+  const prevViralRef = useRef<ActiveViralEvent | null>(null);
+  const [summaryBadge, setSummaryBadge] = useState<{
+    magnitude: number;
+    fading: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    const prev = prevViralRef.current;
+    const curr = viralActive;
+    prevViralRef.current = curr;
+    if (prev !== null && curr === null) {
+      // Burst just ended — show the summary badge.
+      setSummaryBadge({ magnitude: prev.magnitude, fading: false });
+      const t1 = window.setTimeout(
+        () => setSummaryBadge((b) => (b ? { ...b, fading: true } : null)),
+        1500,
+      );
+      const t2 = window.setTimeout(() => setSummaryBadge(null), 1900);
+      return () => {
+        window.clearTimeout(t1);
+        window.clearTimeout(t2);
+      };
+    }
+  }, [viralActive]);
+
+  // Effective engagement rate: base generator rate + viral bonus.
+  // This drives the tick-rate drama — useInterpolatedValue in TopBar sees the
+  // full rate and extrapolates at 60fps, producing the counter acceleration
+  // described in UX §9.3.
+  const viralBonusRatePerSec = viralActive
+    ? viralActive.bonus_rate_per_ms * 1000
+    : 0;
+  const effectiveEngagementRate = engagementRate + viralBonusRatePerSec;
+
+  // Vignette color for the edge glow during viral (UX §9.2 Phase 2).
+  const vignetteColor = viralActive
+    ? PLATFORM_DISPLAY[viralActive.source_platform_id].accent
+    : null;
+
+  // ---------------------------------------------------------------------------
   // Modal visibility — only show if meaningful time elapsed (> 60s per §11).
   const [showOffline, setShowOffline] = useState(
     () => offlineResult !== null && offlineResult.durationMs > 60_000,
@@ -125,14 +220,28 @@ export function GameScreen() {
         algorithm={state.algorithm}
         now={now}
         intervalMs={intervalMs}
+        viralActive={viralPhase !== null}
       />
 
-      <main className="game-screen">
+      {/* Viral edge vignette — platform-affinity color, pulses at 2s during
+          Peak. Shares a single CSS layer with the future algorithm-mood
+          vignette (proposals/draft/algorithm-mood-visibility.md). */}
+      {viralPhase !== null && vignetteColor && (
+        <div
+          className={`viral-vignette viral-vignette-${viralPhase}`}
+          style={{ '--vignette-color': vignetteColor } as React.CSSProperties}
+          aria-hidden
+        />
+      )}
+
+      <main className={`game-screen${viralPhase === 'peak' ? ' viral-zoom-pulse' : ''}`}>
         <TopBar
           algorithm={state.algorithm}
           engagement={state.player.engagement}
-          engagementRate={engagementRate}
+          engagementRate={effectiveEngagementRate}
           totalFollowers={state.player.total_followers}
+          viralGold={viralPhase !== null}
+          summaryBadge={summaryBadge}
         />
 
         <div className="game-body">
@@ -146,10 +255,36 @@ export function GameScreen() {
             staticData={STATIC_DATA}
             onBuy={buy}
             onUpgrade={upgrade}
+            viralGeneratorId={viralActive?.source_generator_id ?? null}
           />
-          <PlatformPanel state={state} staticData={STATIC_DATA} />
+          <PlatformPanel
+            state={state}
+            staticData={STATIC_DATA}
+            viralPlatformId={viralActive?.source_platform_id ?? null}
+          />
         </div>
       </main>
+
+      {/* Viral particle burst — Phase 2 (Peak) only. Particles drift from the
+          generator zone (~35–52% left) toward the platform panel (~75%+).
+          Disabled under prefers-reduced-motion and the in-game Reduce Motion
+          toggle when settings (#48) ships. */}
+      {viralPhase === 'peak' && (
+        <div className="viral-particles-overlay" aria-hidden>
+          {VIRAL_PARTICLES.map((p) => (
+            <div
+              key={p.id}
+              className="viral-particle"
+              style={{
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                '--pd': `${p.delay}s`,
+                '--pdur': `${(p.duration / 100).toFixed(2)}s`,
+              } as React.CSSProperties}
+            />
+          ))}
+        </div>
+      )}
 
       {showOffline && offlineResult && (
         <OfflineGainsModal

@@ -32,6 +32,7 @@ import type {
   Player,
   StaticData,
   UpgradeId,
+  ViralBurstState,
 } from '../types.ts';
 import { deriveNewSeed, getShiftAtIndex, type ScheduledShift } from '../algorithm/index.ts';
 import { createAlgorithmState, spendClout } from '../model/index.ts';
@@ -175,7 +176,15 @@ export function applyRebrand(
     // serialization state, not run state.
   };
 
-  return { player, generators, platforms, algorithm };
+  // Reset viralBurst — any in-progress burst belongs to the previous run and
+  // cannot be meaningfully resumed. Omitting this field leaves viralBurst
+  // undefined on the returned state, which crashes doTick on the next tick.
+  const viralBurst: ViralBurstState = {
+    active_ticks_since_last: 0,
+    active: null,
+  };
+
+  return { player, generators, platforms, algorithm, viralBurst };
 }
 
 // ---------------------------------------------------------------------------

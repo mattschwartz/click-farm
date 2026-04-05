@@ -41,6 +41,8 @@ interface Props {
   staticData: StaticData;
   onBuy: (id: GeneratorId) => void;
   onUpgrade: (id: GeneratorId) => void;
+  /** When set, the matching row gets a pulsing gold halo (UX §9.2 Phase 1–2). */
+  viralGeneratorId?: GeneratorId | null;
 }
 
 const BADGE_SHAPE: Record<GeneratorCategory, string> = {
@@ -56,7 +58,7 @@ const BADGE_SHAPE: Record<GeneratorCategory, string> = {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade }: Props) {
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGeneratorId }: Props) {
   // Track modifier pulses — when the algorithm state index changes, each
   // affected row pulses once (UX §4.4).
   const [pulseKey, setPulseKey] = useState(0);
@@ -93,6 +95,7 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade }: Props) {
                 onBuy={onBuy}
                 onUpgrade={onUpgrade}
                 pulseKey={pulseKey}
+                viralHalo={viralGeneratorId === id}
               />
             ))}
           </div>
@@ -111,6 +114,8 @@ interface RowProps {
   onBuy: (id: GeneratorId) => void;
   onUpgrade: (id: GeneratorId) => void;
   pulseKey: number;
+  /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
+  viralHalo?: boolean;
 }
 
 function GeneratorRow({
@@ -120,6 +125,7 @@ function GeneratorRow({
   onBuy,
   onUpgrade,
   pulseKey,
+  viralHalo,
 }: RowProps) {
   const g = state.generators[id];
   const def = staticData.generators[id];
@@ -210,7 +216,7 @@ function GeneratorRow({
 
   return (
     <div
-      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}`}
+      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}${viralHalo ? ' viral-halo' : ''}`}
       style={style}
     >
       <div

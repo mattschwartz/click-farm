@@ -20,6 +20,10 @@ interface Props {
   engagement: number;
   engagementRate: number;
   totalFollowers: number;
+  /** When true, counter numerals crossfade to viral gold (UX §9.2 Phase 1). */
+  viralGold?: boolean;
+  /** Summary badge shown after burst ends: "VIRAL +N" (UX §9.2 Phase 3). */
+  summaryBadge?: { magnitude: number; fading: boolean } | null;
 }
 
 type TransitionPhase = 'idle' | 'exiting' | 'entering';
@@ -32,6 +36,8 @@ export function TopBar({
   engagement,
   engagementRate,
   totalFollowers,
+  viralGold,
+  summaryBadge,
 }: Props) {
   // Track algorithm state transitions — when current_state_index changes,
   // we slide the old label out and the new one in (UX §4.4, 1.2s total).
@@ -115,7 +121,14 @@ export function TopBar({
       </div>
 
       <div className="engagement-slot">
-        <div className="engagement-value">{fmtCompact(displayedEngagement)}</div>
+        <div className={`engagement-value${viralGold ? ' viral-gold' : ''}`}>
+          {fmtCompact(displayedEngagement)}
+        </div>
+        {summaryBadge && (
+          <div className={`viral-summary-badge${summaryBadge.fading ? ' fading' : ''}`}>
+            VIRAL +{fmtCompactInt(summaryBadge.magnitude)}
+          </div>
+        )}
         <div className={`engagement-rate${rateFlaring ? ` rate-flare-${rateDeltaDir}` : ''}`}>
           {fmtRate(engagementRate)}
           {rateDelta !== null && (

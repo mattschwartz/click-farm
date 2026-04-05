@@ -23,9 +23,11 @@ interface Props {
    * how close we are to the next shift.
    */
   intervalMs: number;
+  /** When true, bumps background saturation +20% for viral burst Phase 1/2. */
+  viralActive?: boolean;
 }
 
-export function AlgorithmBackground({ algorithm, now, intervalMs }: Props) {
+export function AlgorithmBackground({ algorithm, now, intervalMs, viralActive }: Props) {
   const mood = ALGORITHM_MOOD[algorithm.current_state_id];
   // Defensive: unknown state → flat neutral background.
   if (!mood) {
@@ -48,9 +50,11 @@ export function AlgorithmBackground({ algorithm, now, intervalMs }: Props) {
   const speedMultiplier = 1 + (INSTABILITY_SPEED_MAX - 1) * instabilityFactor;
   const currentCycle = mood.cycleSeconds / speedMultiplier;
 
+  const viralClass = viralActive ? ' viral-saturation' : '';
+
   return (
     <div
-      className={`algorithm-background${unstable ? ' instability' : ''}`}
+      className={`algorithm-background${unstable ? ' instability' : ''}${viralClass}`}
       style={
         {
           backgroundImage: mood.background,

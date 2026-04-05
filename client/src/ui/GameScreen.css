@@ -139,6 +139,7 @@
   flex-direction: column;
   align-items: flex-end;
   line-height: 1;
+  position: relative; /* anchor for viral-summary-badge absolute positioning */
 }
 
 .engagement-value {
@@ -869,4 +870,231 @@
 .rebrand-corner .rebrand-tooltip {
   font-size: 10px;
   color: var(--text-p3);
+}
+
+/* ==========================================================================
+   Viral burst visual choreography (UX §9.2)
+   Three phases: Build (0–1500ms) → Peak (variable) → Decay (last 1000ms).
+   ========================================================================== */
+
+/* --- Algorithm background saturation bump (Phase 1 / Phase 2) ------------ */
+
+.algorithm-background.viral-saturation {
+  filter: saturate(1.2) brightness(1.05);
+}
+
+/* Combined: instability + viral */
+.algorithm-background.instability.viral-saturation {
+  filter: saturate(1.3) brightness(1.1);
+}
+
+/* --- Engagement counter gold color (Phase 1 onset → Phase 3 end) --------- */
+
+/* Transition on base rule handles both directions:
+ *   300ms  when .viral-gold is ADDED   (higher specificity wins → 300ms in)
+ *   400ms  when .viral-gold is REMOVED (base rule applies → 400ms out)
+ */
+.engagement-value {
+  transition: color 400ms ease-in-out;
+}
+
+.engagement-value.viral-gold {
+  color: var(--accent-gold);
+  transition: color 300ms ease-in-out;
+}
+
+/* --- Summary badge: "VIRAL +N" (Phase 3, 1.5s visible → 400ms fade) ------ */
+
+.viral-summary-badge {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-gold);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  animation: viral-badge-in 200ms ease-out;
+  pointer-events: none;
+}
+
+.viral-summary-badge.fading {
+  animation: viral-badge-out 400ms ease-out forwards;
+}
+
+@keyframes viral-badge-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes viral-badge-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-4px); }
+}
+
+/* --- Generator row halo (Phase 1 / Phase 2) --------------------------------
+ * Uses background + border-bottom pulse instead of box-shadow to avoid
+ * clipping by the generator list's overflow-y: auto container.
+ */
+
+.generator-row.viral-halo {
+  background: rgba(255, 214, 107, 0.07);
+  border-bottom-color: rgba(255, 214, 107, 0.3);
+  animation: viral-row-halo 1s ease-in-out infinite;
+}
+
+@keyframes viral-row-halo {
+  0%, 100% {
+    background: rgba(255, 214, 107, 0.05);
+    border-bottom-color: rgba(255, 214, 107, 0.2);
+  }
+  50% {
+    background: rgba(255, 214, 107, 0.13);
+    border-bottom-color: rgba(255, 214, 107, 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .generator-row.viral-halo {
+    background: rgba(255, 214, 107, 0.1);
+    border-bottom-color: rgba(255, 214, 107, 0.4);
+    animation: none;
+  }
+}
+
+/* --- Platform card edge illumination (Phase 1 / Phase 2) ----------------- */
+
+.platform-card.viral-illuminate {
+  box-shadow:
+    0 0 0 1px var(--platform-accent),
+    0 0 18px 0 var(--platform-accent);
+  animation: viral-card-illuminate 1s ease-in-out infinite;
+}
+
+@keyframes viral-card-illuminate {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px var(--platform-accent),
+      0 0 12px 0 var(--platform-accent);
+    opacity: 0.85;
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px var(--platform-accent),
+      0 0 28px 4px var(--platform-accent);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-card.viral-illuminate {
+    box-shadow:
+      0 0 0 2px var(--platform-accent),
+      0 0 20px 2px var(--platform-accent);
+    animation: none;
+  }
+}
+
+/* --- Screen edge vignette (Phase 1: fade in, Phase 2: pulse, Phase 3: out) */
+
+.viral-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  /* inset box-shadow creates the edge glow; div opacity drives timing */
+  box-shadow: inset 0 0 140px 40px var(--vignette-color, #4a9dd6);
+  opacity: 0;
+  transition: opacity 300ms ease-in-out;
+}
+
+.viral-vignette-build {
+  opacity: 0.35;
+  transition: opacity 300ms ease-in-out;
+}
+
+.viral-vignette-peak {
+  animation: vignette-pulse 2s ease-in-out infinite;
+}
+
+.viral-vignette-decay {
+  opacity: 0;
+  transition: opacity 400ms ease-in-out;
+}
+
+@keyframes vignette-pulse {
+  0%, 100% { opacity: 0.28; }
+  50%       { opacity: 0.50; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viral-vignette {
+    display: none;
+  }
+}
+
+/* --- Camera-style zoom pulse (Phase 2 only) --------------------------------
+ * ±1% scale on the game-screen. Fixed-position siblings (vignette, particles,
+ * rebrand corner) are unaffected since they live outside this transform.
+ *
+ * Disabled under prefers-reduced-motion — decorative, not informational.
+ */
+
+.game-screen.viral-zoom-pulse {
+  animation: viral-zoom 2s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+@keyframes viral-zoom {
+  0%, 100% { transform: scale(1);    }
+  50%       { transform: scale(1.01); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-screen.viral-zoom-pulse {
+    animation: none;
+  }
+}
+
+/* --- Particle burst overlay (Phase 2 only) ---------------------------------
+ * Particles drift from the generator zone (~35–52% left) rightward toward
+ * the platform panel. Fixed overlay so they aren't clipped by any container.
+ *
+ * --pd  = animation-delay   (set per-particle in JSX)
+ * --pdur = animation-duration (set per-particle in JSX)
+ *
+ * Disabled under prefers-reduced-motion — replaced by the static illumination
+ * on the platform card and the generator row halo.
+ */
+
+.viral-particles-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+  overflow: hidden;
+}
+
+.viral-particle {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  opacity: 0;
+  animation: viral-particle-drift var(--pdur, 1s) ease-out infinite;
+  animation-delay: var(--pd, 0s);
+}
+
+@keyframes viral-particle-drift {
+  0%   { opacity: 0;   transform: translate(0, 0) scale(1); }
+  12%  { opacity: 0.9; }
+  75%  { opacity: 0.4; transform: translate(28vw, -18px) scale(0.55); }
+  100% { opacity: 0;   transform: translate(38vw, -30px) scale(0.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viral-particles-overlay {
+    display: none;
+  }
 }

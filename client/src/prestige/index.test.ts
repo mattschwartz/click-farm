@@ -160,6 +160,29 @@ describe('applyRebrand — reset completeness', () => {
     expect(next.platforms.grindset.unlocked).toBe(false);  // threshold = 500
   });
 
+  it('resets viralBurst to a clean default (prevents doTick crash on next tick)', () => {
+    const state = setupMidRun();
+    // Simulate an in-progress viral burst at the moment of rebrand.
+    const withActive = {
+      ...state,
+      viralBurst: {
+        active_ticks_since_last: 42,
+        active: {
+          source_generator_id: 'selfies' as const,
+          source_platform_id: 'chirper' as const,
+          start_time: T0,
+          duration_ms: 5000,
+          magnitude: 10,
+          bonus_rate_per_ms: 1,
+        },
+      },
+    };
+    const next = applyRebrand(withActive, calculateRebrand(withActive), STATIC_DATA, T0 + 1000);
+    expect(next.viralBurst).toBeDefined();
+    expect(next.viralBurst.active).toBeNull();
+    expect(next.viralBurst.active_ticks_since_last).toBe(0);
+  });
+
   it('resets algorithm to a fresh schedule (index 0, new seed, new shift_time)', () => {
     const state = setupMidRun();
     const rebrandResult = calculateRebrand(state);

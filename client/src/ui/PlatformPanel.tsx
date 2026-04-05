@@ -24,9 +24,11 @@ import { fmtCompactInt } from './format.ts';
 interface Props {
   state: GameState;
   staticData: StaticData;
+  /** When set, this platform's card edges illuminate (UX §9.2 Phase 1–2). */
+  viralPlatformId?: PlatformId | null;
 }
 
-export function PlatformPanel({ state, staticData }: Props) {
+export function PlatformPanel({ state, staticData, viralPlatformId }: Props) {
   // Compute follower rates per platform for the rate indicators (UX §7.1).
   const engagementRates = computeAllGeneratorEffectiveRates(state, staticData);
   const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
@@ -64,6 +66,7 @@ export function PlatformPanel({ state, staticData }: Props) {
             unlockThreshold={threshold}
             staticData={staticData}
             heaviestGenerator={heaviestByPlatform[id]}
+            viralIlluminate={id === viralPlatformId}
           />
         );
       })}
@@ -81,6 +84,8 @@ interface CardProps {
   unlockThreshold: number;
   staticData: StaticData;
   heaviestGenerator: GeneratorId | null;
+  /** True while this card is the viral burst destination (UX §9.2 Phase 1–2). */
+  viralIlluminate?: boolean;
 }
 
 function PlatformCard({
@@ -91,6 +96,7 @@ function PlatformCard({
   unlockThreshold,
   staticData,
   heaviestGenerator,
+  viralIlluminate,
 }: CardProps) {
   const display = PLATFORM_DISPLAY[id];
   const def = staticData.platforms[id];
@@ -118,7 +124,7 @@ function PlatformCard({
   }
 
   return (
-    <div className="platform-card" style={style}>
+    <div className={`platform-card${viralIlluminate ? ' viral-illuminate' : ''}`} style={style}>
       <div className="platform-header">
         <span className="platform-icon">{display.icon}</span>
         <span className="platform-name">{display.name}</span>
