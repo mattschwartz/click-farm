@@ -1,5 +1,5 @@
 {
-  "next_id": 43,
+  "next_id": 44,
   "tasks": [
     {
       "id": 1,
@@ -566,9 +566,7 @@
         "Tests cover: each trigger type, empire scaling, magnitude bounds, offline freeze/resume, stacking suppression"
       ],
       "open_questions": [],
-      "blocked_on": [
-        17
-      ]
+      "blocked_on": []
     },
     {
       "id": 31,
@@ -952,6 +950,39 @@
         "Flag any implementation concerns on the Engagement Boost stacking model (cumulative multiplier across levels)",
         "Append your review to the proposal file and update frontmatter",
         "Commit the updated proposal file"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 43,
+      "role": "engineer",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Review: Generator Balance & Algorithm States",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The game designer has formalised the provisional generator balance values and algorithm state definitions. The engineer needs to review this proposal and flag anything that doesn't match actual runtime behaviour or that would be impractical to implement as specified.\n\nKey things to verify:\n- Generator rates, trend sensitivities, and costs match what's currently in static-data/index.ts (or flag discrepancies)\n- The clout upgrade open question is noted: once clout-upgrade-menu.md is accepted, static-data must be updated to match that proposal's values (replacing the current placeholders)\n- Algorithm state characters match how they feel in practice\n- Nothing in the proposal contradicts a contract defined in core-systems.md",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/generator-balance-and-algorithm-states.md",
+          "purpose": "The proposal to review"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Current provisional values — compare against proposal"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Data contracts the proposal must be consistent with"
+        }
+      ],
+      "acceptance_criteria": [
+        "Proposal reviewed and a review section added per PROPOSALS.md format",
+        "Any discrepancies between proposal values and current code flagged as open questions in the proposal",
+        "Clout upgrade discrepancy acknowledged — noted as a follow-up action when clout-upgrade-menu.md is accepted",
+        "Decision: Aligned or Not Aligned stated with rationale"
       ],
       "open_questions": [],
       "blocked_on": []
