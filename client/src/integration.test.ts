@@ -58,9 +58,16 @@ describe('integration — end-to-end play loop', () => {
     // Need enough to unlock instasham (100 followers). Buy many selfies
     // by repeatedly clicking + buying. At level 1 this is slow, so fast-forward.
     for (let i = 0; i < 200; i++) driver.click();
-    while (driver.getState().player.engagement >= 10) {
-      try { driver.buy('selfies'); } catch { break; }
+    // Buy until a purchase fails (driver surfaces failure via onActionError
+    // rather than throwing). Count-not-changing is a fallback guard.
+    let failed = false;
+    const unsub = driver.onActionError(() => { failed = true; });
+    while (!failed && driver.getState().player.engagement >= 10) {
+      const before = driver.getState().generators.selfies.count;
+      driver.buy('selfies');
+      if (driver.getState().generators.selfies.count === before) break;
     }
+    unsub();
 
     // Advance several ticks.
     for (let step = 0; step < 100; step++) {
@@ -180,9 +187,15 @@ describe('integration — end-to-end play loop', () => {
     });
     driver.step(1);
     for (let i = 0; i < 200; i++) driver.click();
-    while (driver.getState().player.engagement >= 10) {
-      try { driver.buy('selfies'); } catch { break; }
+    // Buy until a purchase fails (see comment in upstream integration test).
+    let failed2 = false;
+    const unsub2 = driver.onActionError(() => { failed2 = true; });
+    while (!failed2 && driver.getState().player.engagement >= 10) {
+      const before = driver.getState().generators.selfies.count;
+      driver.buy('selfies');
+      if (driver.getState().generators.selfies.count === before) break;
     }
+    unsub2();
     // 200 seconds of ticking.
     for (let step = 0; step < 200; step++) {
       t += 1000;

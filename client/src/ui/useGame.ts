@@ -5,7 +5,7 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { GameState, GeneratorId, UpgradeId } from '../types.ts';
-import { createDriver } from '../driver/index.ts';
+import { createDriver, type ActionError } from '../driver/index.ts';
 import type { OfflineResult } from '../offline/index.ts';
 import type { RebrandResult } from '../prestige/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -24,6 +24,14 @@ export interface UseGameResult {
   rebrand: () => RebrandResult;
   /** Spend Clout on a meta-upgrade. Throws when unaffordable. */
   buyCloutUpgrade: (id: UpgradeId) => void;
+  /**
+   * Last action error, if any. Updates when a player action (click/buy/
+   * upgrade/buyCloutUpgrade) fails a model precondition. Consumers can
+   * render a transient toast/shake when this changes.
+   */
+  lastActionError: ActionError | null;
+  /** Clear the last action error (call after displaying it to the user). */
+  clearActionError: () => void;
 }
 
 /**
@@ -44,6 +52,14 @@ export function useGame(): UseGameResult {
   const [offlineResult, setOfflineResult] = useState<OfflineResult | null>(
     () => driver.getOfflineResult(),
   );
+  const [lastActionError, setLastActionError] = useState<ActionError | null>(null);
+
+  // Subscribe to action errors from the driver. The listener overwrites the
+  // last-error slot; consumers that need queueing can layer their own buffer.
+  useEffect(() => {
+    const unsub = driver.onActionError((e) => setLastActionError(e));
+    return unsub;
+  }, [driver]);
 
   // Start/stop the timers with the component lifecycle. Also persist on page
   // hide (beforeunload fires unreliably on mobile; visibilitychange is the
@@ -87,9 +103,10 @@ export function useGame(): UseGameResult {
       },
       rebrand: () => driver.rebrand(),
       buyCloutUpgrade: (id: UpgradeId) => driver.buyCloutUpgrade(id),
+      clearActionError: () => setLastActionError(null),
     }),
     [driver],
   );
 
-  return { state, offlineResult, ...actions };
+  return { state, offlineResult, lastActionError, ...actions };
 }

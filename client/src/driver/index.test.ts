@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createDriver } from './index.ts';
+import { createDriver, type ActionError } from './index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 // ---------------------------------------------------------------------------
@@ -124,7 +124,7 @@ describe('driver — lifecycle & actions', () => {
     expect(count).toBe(1);
   });
 
-  it('buy and upgrade throw when unaffordable', () => {
+  it('buy emits an ActionError when unaffordable instead of throwing', () => {
     const s = makeFakeScheduler();
     const driver = createDriver({
       staticData: STATIC_DATA,
@@ -132,13 +132,44 @@ describe('driver — lifecycle & actions', () => {
       setInterval: s.setInterval,
       clearInterval: s.clearInterval,
     });
-    // selfies unlocks at 0 followers so it's always owned.
-    // But initial state has generators all owned=false — they start owned
-    // only after follower thresholds are crossed. selfies threshold is 0,
-    // so on the first tick it should unlock. Force that here.
-    driver.step(1);
-    // selfies is now owned. Try to buy without engagement.
-    expect(() => driver.buy('selfies')).toThrow();
+    // selfies threshold is 0 → starts owned. Try to buy without engagement.
+    const errors: ActionError[] = [];
+    driver.onActionError((e) => errors.push(e));
+    // Suppress the default console.error for the expected failure.
+    const origError = console.error;
+    console.error = () => {};
+    try {
+      expect(() => driver.buy('selfies')).not.toThrow();
+    } finally {
+      console.error = origError;
+    }
+    expect(errors).toHaveLength(1);
+    expect(errors[0].action).toBe('buy');
+    expect(errors[0].context).toEqual({ generatorId: 'selfies' });
+    expect(errors[0].error.message).toMatch(/cannot afford/);
+  });
+
+  it('onActionError listeners can be unsubscribed', () => {
+    const s = makeFakeScheduler();
+    const driver = createDriver({
+      staticData: STATIC_DATA,
+      now: s.now,
+      setInterval: s.setInterval,
+      clearInterval: s.clearInterval,
+    });
+    const errors: ActionError[] = [];
+    const unsub = driver.onActionError((e) => errors.push(e));
+    const origError = console.error;
+    console.error = () => {};
+    try {
+      driver.buy('selfies'); // unaffordable → fires listener
+      expect(errors).toHaveLength(1);
+      unsub();
+      driver.buy('selfies'); // unaffordable again → listener is gone
+      expect(errors).toHaveLength(1);
+    } finally {
+      console.error = origError;
+    }
   });
 });
 
@@ -387,7 +418,7 @@ describe('driver — persistence', () => {
     expect(driver.getState().generators.selfies.level).toBe(1);
   });
 
-  it('buyCloutUpgrade throws when player has no clout', () => {
+  it('buyCloutUpgrade emits an ActionError when player has no clout', () => {
     const t = 1_000_000;
     const driver = createDriver({
       staticData: STATIC_DATA,
@@ -397,7 +428,18 @@ describe('driver — persistence', () => {
       loadFromStorage: false,
       persistToStorage: false,
     });
-    expect(() => driver.buyCloutUpgrade('faster_engagement')).toThrow();
+    const errors: ActionError[] = [];
+    driver.onActionError((e) => errors.push(e));
+    const origError = console.error;
+    console.error = () => {};
+    try {
+      expect(() => driver.buyCloutUpgrade('faster_engagement')).not.toThrow();
+    } finally {
+      console.error = origError;
+    }
+    expect(errors).toHaveLength(1);
+    expect(errors[0].action).toBe('buyCloutUpgrade');
+    expect(errors[0].context).toEqual({ upgradeId: 'faster_engagement' });
   });
 
   it('buyCloutUpgrade deducts clout and notifies subscribers on success', () => {
