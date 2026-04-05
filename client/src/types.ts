@@ -8,13 +8,19 @@
 // ---------------------------------------------------------------------------
 
 export type GeneratorId =
+  // 7 base generators (unlocked progressively via follower thresholds)
   | 'selfies'
   | 'memes'
   | 'hot_takes'
   | 'tutorials'
   | 'livestreams'
   | 'podcasts'
-  | 'viral_stunts';
+  | 'viral_stunts'
+  // 3 post-prestige generators (unlocked only via Clout `generator_unlock`
+  // upgrades; no entry in unlockThresholds.generators).
+  | 'ai_slop'
+  | 'deepfakes'
+  | 'algorithmic_prophecy';
 
 export type PlatformId = 'chirper' | 'instasham' | 'grindset';
 
@@ -28,20 +34,25 @@ export type AlgorithmStateId =
   | 'corporate_takeover';
 
 export type UpgradeId =
-  | 'faster_engagement'
+  | 'engagement_boost'
   | 'algorithm_insight'
-  | 'platform_headstart_chirper'
   | 'platform_headstart_instasham'
-  | 'platform_headstart_grindset';
+  | 'platform_headstart_grindset'
+  | 'ai_slop_unlock'
+  | 'deepfakes_unlock'
+  | 'algorithmic_prophecy_unlock';
 
 // ---------------------------------------------------------------------------
 // UpgradeEffect — tagged union (architecture spec §CloutUpgrade)
+// Per-level arrays for effects whose magnitude varies by level; the array is
+// indexed by `level - 1`. Single-level effects (generator_unlock,
+// platform_headstart) take the target id directly.
 // ---------------------------------------------------------------------------
 
 export type UpgradeEffect =
-  | { type: 'engagement_multiplier'; value: number }
+  | { type: 'engagement_multiplier'; values: number[] }
   | { type: 'generator_unlock'; generator_id: GeneratorId }
-  | { type: 'algorithm_insight'; lookahead: number }
+  | { type: 'algorithm_insight'; lookaheads: number[] }
   | { type: 'platform_headstart'; platform_id: PlatformId };
 
 // ---------------------------------------------------------------------------
@@ -437,7 +448,13 @@ export interface StaticData {
   };
   cloutUpgrades: Record<UpgradeId, CloutUpgradeDef>;
   unlockThresholds: {
-    generators: Record<GeneratorId, number>;
+    /**
+     * Total followers required to unlock a generator. Post-prestige
+     * generators (unlocked only via `generator_unlock` Clout upgrades) are
+     * absent from this map by design — a missing entry means "never
+     * follower-unlocked". See architecture/core-systems.md §CloutUpgrade.
+     */
+    generators: Partial<Record<GeneratorId, number>>;
     platforms: Record<PlatformId, number>;
   };
   viralBurst: ViralBurstConfig;

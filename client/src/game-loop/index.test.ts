@@ -105,38 +105,47 @@ describe('effectiveAlgorithmModifier', () => {
 // ---------------------------------------------------------------------------
 
 describe('cloutBonus', () => {
+  const zeroUpgrades = {
+    engagement_boost: 0,
+    algorithm_insight: 0,
+    platform_headstart_instasham: 0,
+    platform_headstart_grindset: 0,
+    ai_slop_unlock: 0,
+    deepfakes_unlock: 0,
+    algorithmic_prophecy_unlock: 0,
+  };
+
   it('is 1.0 when no upgrades are purchased', () => {
-    const upgrades = {
-      faster_engagement: 0,
-      algorithm_insight: 0,
-      platform_headstart_chirper: 0,
-      platform_headstart_instasham: 0,
-      platform_headstart_grindset: 0,
-    };
-    expect(cloutBonus(upgrades, STATIC_DATA)).toBe(1.0);
+    expect(cloutBonus(zeroUpgrades, STATIC_DATA)).toBe(1.0);
   });
 
-  it('raises the faster_engagement multiplier to the purchased level', () => {
-    // faster_engagement value: 1.25
-    const upgrades = {
-      faster_engagement: 3,
-      algorithm_insight: 0,
-      platform_headstart_chirper: 0,
-      platform_headstart_instasham: 0,
-      platform_headstart_grindset: 0,
-    };
-    expect(cloutBonus(upgrades, STATIC_DATA)).toBeCloseTo(Math.pow(1.25, 3), 10);
+  it('reads engagement_boost cumulative multiplier from values[level-1]', () => {
+    // engagement_boost values: [1.5, 2.5, 5.0]
+    expect(
+      cloutBonus({ ...zeroUpgrades, engagement_boost: 1 }, STATIC_DATA),
+    ).toBeCloseTo(1.5, 10);
+    expect(
+      cloutBonus({ ...zeroUpgrades, engagement_boost: 2 }, STATIC_DATA),
+    ).toBeCloseTo(2.5, 10);
+    expect(
+      cloutBonus({ ...zeroUpgrades, engagement_boost: 3 }, STATIC_DATA),
+    ).toBeCloseTo(5.0, 10);
   });
 
   it('ignores non-engagement upgrade types', () => {
     const upgrades = {
-      faster_engagement: 0,
+      ...zeroUpgrades,
       algorithm_insight: 2, // not an engagement_multiplier
-      platform_headstart_chirper: 1,
-      platform_headstart_instasham: 0,
-      platform_headstart_grindset: 0,
+      platform_headstart_instasham: 1,
     };
     expect(cloutBonus(upgrades, STATIC_DATA)).toBe(1.0);
+  });
+
+  it('throws when the level exceeds the values array length', () => {
+    // engagement_boost max_level is 3; level 4 has no values[3].
+    expect(() =>
+      cloutBonus({ ...zeroUpgrades, engagement_boost: 4 }, STATIC_DATA),
+    ).toThrow(/values\[3\]/);
   });
 });
 
@@ -485,20 +494,21 @@ describe('postClick', () => {
     );
   });
 
-  it('applies clout_bonus (faster_engagement) to click output', () => {
+  it('applies clout_bonus (engagement_boost) to click output', () => {
     const base = createInitialGameState(STATIC_DATA, T0);
     const state: GameState = {
       ...base,
       player: {
         ...base.player,
-        clout_upgrades: { ...base.player.clout_upgrades, faster_engagement: 2 },
+        clout_upgrades: { ...base.player.clout_upgrades, engagement_boost: 2 },
       },
     };
     const boosted = postClick(state, STATIC_DATA);
     const baseline = postClick(base, STATIC_DATA);
     const boostedGain = boosted.player.engagement - state.player.engagement;
     const baselineGain = baseline.player.engagement - base.player.engagement;
-    expect(boostedGain).toBeCloseTo(baselineGain * Math.pow(1.25, 2), 10);
+    // engagement_boost level 2 → values[1] = 2.5
+    expect(boostedGain).toBeCloseTo(baselineGain * 2.5, 10);
   });
 
   it('does not mutate the input state', () => {

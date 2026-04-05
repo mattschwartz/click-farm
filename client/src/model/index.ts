@@ -31,6 +31,11 @@ const ALL_GENERATOR_IDS: GeneratorId[] = [
   'livestreams',
   'podcasts',
   'viral_stunts',
+  // Post-prestige — present in state but owned=false until a Clout
+  // `generator_unlock` upgrade is purchased.
+  'ai_slop',
+  'deepfakes',
+  'algorithmic_prophecy',
 ];
 
 const ALL_PLATFORM_IDS: PlatformId[] = ['chirper', 'instasham', 'grindset'];
@@ -41,11 +46,13 @@ const ALL_PLATFORM_IDS: PlatformId[] = ['chirper', 'instasham', 'grindset'];
 
 export function createPlayer(seed: number, now: number = Date.now()): Player {
   const allUpgradeIds: UpgradeId[] = [
-    'faster_engagement',
+    'engagement_boost',
     'algorithm_insight',
-    'platform_headstart_chirper',
     'platform_headstart_instasham',
     'platform_headstart_grindset',
+    'ai_slop_unlock',
+    'deepfakes_unlock',
+    'algorithmic_prophecy_unlock',
   ];
   const clout_upgrades = Object.fromEntries(
     allUpgradeIds.map((id) => [id, 0])

@@ -215,10 +215,10 @@ describe('applyRebrand — preservation of meta', () => {
 
   it('preserves clout_upgrades across rebrand', () => {
     const state = seedState({ total_followers: 1_000 });
-    state.player.clout_upgrades.faster_engagement = 2;
+    state.player.clout_upgrades.engagement_boost = 2;
     state.player.clout_upgrades.algorithm_insight = 1;
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
-    expect(next.player.clout_upgrades.faster_engagement).toBe(2);
+    expect(next.player.clout_upgrades.engagement_boost).toBe(2);
     expect(next.player.clout_upgrades.algorithm_insight).toBe(1);
   });
 
@@ -271,9 +271,9 @@ describe('applyRebrand — meta-upgrade effects', () => {
       ...STATIC_DATA,
       cloutUpgrades: {
         ...STATIC_DATA.cloutUpgrades,
-        faster_engagement: {
-          // Hijack faster_engagement as a generator_unlock stub for this test.
-          id: 'faster_engagement',
+        engagement_boost: {
+          // Hijack engagement_boost as a generator_unlock stub for this test.
+          id: 'engagement_boost',
           cost: [1],
           max_level: 1,
           effect: { type: 'generator_unlock', generator_id: 'memes' },
@@ -281,7 +281,7 @@ describe('applyRebrand — meta-upgrade effects', () => {
       },
     };
     const state = seedState({ total_followers: 1_000 });
-    state.player.clout_upgrades.faster_engagement = 1;
+    state.player.clout_upgrades.engagement_boost = 1;
     const next = applyRebrand(
       state,
       calculateRebrand(state),
@@ -293,14 +293,26 @@ describe('applyRebrand — meta-upgrade effects', () => {
     expect(next.generators.memes.count).toBe(0);
   });
 
+  it('ai_slop_unlock grants owned=true on ai_slop after rebrand (real upgrade)', () => {
+    const state = seedState({ total_followers: 1_000 });
+    state.player.clout_upgrades.ai_slop_unlock = 1;
+    const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
+    expect(next.generators.ai_slop.owned).toBe(true);
+    expect(next.generators.ai_slop.level).toBe(1);
+    expect(next.generators.ai_slop.count).toBe(0);
+    // Un-purchased post-prestige generators remain locked.
+    expect(next.generators.deepfakes.owned).toBe(false);
+    expect(next.generators.algorithmic_prophecy.owned).toBe(false);
+  });
+
   it('engagement_multiplier continues to apply to rates after rebrand', () => {
     // This is already tested in game-loop, but verify end-to-end: buy the
     // upgrade, rebrand, observe the bonus.
     const state = seedState({ total_followers: 1_000 });
-    state.player.clout_upgrades.faster_engagement = 2;
+    state.player.clout_upgrades.engagement_boost = 2;
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
-    // engagement_multiplier 1.25 ^ 2 = 1.5625
-    expect(cloutBonus(next.player.clout_upgrades, STATIC_DATA)).toBeCloseTo(1.5625, 6);
+    // engagement_boost level 2 → values[1] = 2.5
+    expect(cloutBonus(next.player.clout_upgrades, STATIC_DATA)).toBeCloseTo(2.5, 6);
   });
 });
 
@@ -310,72 +322,72 @@ describe('applyRebrand — meta-upgrade effects', () => {
 
 describe('cloutUpgradeCost + purchaseCloutUpgrade', () => {
   it('returns cost[0] for first level (going 0 → 1)', () => {
-    const cost = cloutUpgradeCost(0, 'faster_engagement', STATIC_DATA);
-    expect(cost).toBe(STATIC_DATA.cloutUpgrades.faster_engagement.cost[0]);
+    const cost = cloutUpgradeCost(0, 'engagement_boost', STATIC_DATA);
+    expect(cost).toBe(STATIC_DATA.cloutUpgrades.engagement_boost.cost[0]);
   });
 
   it('returns cost[1] for second level', () => {
-    const cost = cloutUpgradeCost(1, 'faster_engagement', STATIC_DATA);
-    expect(cost).toBe(STATIC_DATA.cloutUpgrades.faster_engagement.cost[1]);
+    const cost = cloutUpgradeCost(1, 'engagement_boost', STATIC_DATA);
+    expect(cost).toBe(STATIC_DATA.cloutUpgrades.engagement_boost.cost[1]);
   });
 
   it('returns null at max level', () => {
-    const max = STATIC_DATA.cloutUpgrades.faster_engagement.max_level;
-    expect(cloutUpgradeCost(max, 'faster_engagement', STATIC_DATA)).toBeNull();
+    const max = STATIC_DATA.cloutUpgrades.engagement_boost.max_level;
+    expect(cloutUpgradeCost(max, 'engagement_boost', STATIC_DATA)).toBeNull();
   });
 
   it('canPurchaseCloutUpgrade true when player has enough clout', () => {
     const s = seedState({ clout: 100 });
-    expect(canPurchaseCloutUpgrade(s, 'faster_engagement', STATIC_DATA)).toBe(true);
+    expect(canPurchaseCloutUpgrade(s, 'engagement_boost', STATIC_DATA)).toBe(true);
   });
 
   it('canPurchaseCloutUpgrade false when player lacks clout', () => {
     const s = seedState({ clout: 0 });
-    expect(canPurchaseCloutUpgrade(s, 'faster_engagement', STATIC_DATA)).toBe(false);
+    expect(canPurchaseCloutUpgrade(s, 'engagement_boost', STATIC_DATA)).toBe(false);
   });
 
   it('canPurchaseCloutUpgrade false at max level', () => {
     const s = seedState({ clout: 9_999 });
-    s.player.clout_upgrades.faster_engagement =
-      STATIC_DATA.cloutUpgrades.faster_engagement.max_level;
-    expect(canPurchaseCloutUpgrade(s, 'faster_engagement', STATIC_DATA)).toBe(false);
+    s.player.clout_upgrades.engagement_boost =
+      STATIC_DATA.cloutUpgrades.engagement_boost.max_level;
+    expect(canPurchaseCloutUpgrade(s, 'engagement_boost', STATIC_DATA)).toBe(false);
   });
 
   it('purchaseCloutUpgrade deducts cost and increments level', () => {
     const s = seedState({ clout: 100 });
-    const cost = cloutUpgradeCost(0, 'faster_engagement', STATIC_DATA)!;
-    const next = purchaseCloutUpgrade(s, 'faster_engagement', STATIC_DATA);
+    const cost = cloutUpgradeCost(0, 'engagement_boost', STATIC_DATA)!;
+    const next = purchaseCloutUpgrade(s, 'engagement_boost', STATIC_DATA);
     expect(next.player.clout).toBe(100 - cost);
-    expect(next.player.clout_upgrades.faster_engagement).toBe(1);
+    expect(next.player.clout_upgrades.engagement_boost).toBe(1);
   });
 
   it('throws when clout insufficient', () => {
     const s = seedState({ clout: 0 });
     expect(() =>
-      purchaseCloutUpgrade(s, 'faster_engagement', STATIC_DATA),
+      purchaseCloutUpgrade(s, 'engagement_boost', STATIC_DATA),
     ).toThrow(/need .* clout/);
   });
 
   it('throws at max level', () => {
     const s = seedState({ clout: 9_999 });
-    s.player.clout_upgrades.faster_engagement =
-      STATIC_DATA.cloutUpgrades.faster_engagement.max_level;
+    s.player.clout_upgrades.engagement_boost =
+      STATIC_DATA.cloutUpgrades.engagement_boost.max_level;
     expect(() =>
-      purchaseCloutUpgrade(s, 'faster_engagement', STATIC_DATA),
+      purchaseCloutUpgrade(s, 'engagement_boost', STATIC_DATA),
     ).toThrow(/max level/);
   });
 
   it('successive purchases walk the cost table', () => {
     let s = seedState({ clout: 1_000 });
-    const max = STATIC_DATA.cloutUpgrades.faster_engagement.max_level;
+    const max = STATIC_DATA.cloutUpgrades.engagement_boost.max_level;
     for (let level = 0; level < max; level++) {
-      const cost = cloutUpgradeCost(level, 'faster_engagement', STATIC_DATA)!;
+      const cost = cloutUpgradeCost(level, 'engagement_boost', STATIC_DATA)!;
       const before = s.player.clout;
-      s = purchaseCloutUpgrade(s, 'faster_engagement', STATIC_DATA);
-      expect(s.player.clout_upgrades.faster_engagement).toBe(level + 1);
+      s = purchaseCloutUpgrade(s, 'engagement_boost', STATIC_DATA);
+      expect(s.player.clout_upgrades.engagement_boost).toBe(level + 1);
       expect(s.player.clout).toBe(before - cost);
     }
-    expect(canPurchaseCloutUpgrade(s, 'faster_engagement', STATIC_DATA)).toBe(false);
+    expect(canPurchaseCloutUpgrade(s, 'engagement_boost', STATIC_DATA)).toBe(false);
   });
 });
 
@@ -398,11 +410,15 @@ describe('getUpcomingShifts', () => {
     expect(shifts[0].durationMs).toBeGreaterThan(0);
   });
 
-  it('scales lookahead with level', () => {
+  it('scales lookahead with per-level array (level 2 → lookaheads[1])', () => {
     const s = seedState();
     s.player.clout_upgrades.algorithm_insight = 2;
     const shifts = getUpcomingShifts(s, STATIC_DATA);
-    expect(shifts.length).toBe(2);
+    const expected = STATIC_DATA.cloutUpgrades.algorithm_insight.effect.type
+      === 'algorithm_insight'
+      ? STATIC_DATA.cloutUpgrades.algorithm_insight.effect.lookaheads[1]
+      : 0;
+    expect(shifts.length).toBe(expected);
   });
 
   it('upcoming shifts match deterministic schedule from next index', () => {
@@ -448,9 +464,9 @@ describe('end-to-end rebrand flow', () => {
     const afterR1 = applyRebrand(run1, r1, STATIC_DATA, T0 + 1000);
     expect(afterR1.player.clout).toBe(10);
 
-    // Buy faster_engagement level 1 (cost 1 in current static data).
-    const upgraded = purchaseCloutUpgrade(afterR1, 'faster_engagement', STATIC_DATA);
-    expect(upgraded.player.clout_upgrades.faster_engagement).toBe(1);
+    // Buy engagement_boost level 1 (cost 1 in current static data).
+    const upgraded = purchaseCloutUpgrade(afterR1, 'engagement_boost', STATIC_DATA);
+    expect(upgraded.player.clout_upgrades.engagement_boost).toBe(1);
 
     // Run 2: generate 40_000 followers, rebrand for 20 Clout.
     const run2: GameState = {
@@ -471,10 +487,10 @@ describe('end-to-end rebrand flow', () => {
     // Previous clout balance (after purchase) + newly earned.
     expect(afterR2.player.clout).toBe(upgraded.player.clout + 20);
     expect(afterR2.player.rebrand_count).toBe(upgraded.player.rebrand_count + 1);
-    expect(afterR2.player.clout_upgrades.faster_engagement).toBe(1);
+    expect(afterR2.player.clout_upgrades.engagement_boost).toBe(1);
   });
 });
 
 // Silence unused import warning — UpgradeId is referenced via clout_upgrades keys.
-const _u: UpgradeId = 'faster_engagement';
+const _u: UpgradeId = 'engagement_boost';
 void _u;

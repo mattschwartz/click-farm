@@ -4,14 +4,17 @@
 
 import type {
   GameState,
+  GeneratorId,
+  GeneratorState,
   RiskAccumulator,
   SaveData,
   ScandalStateMachine,
+  UpgradeId,
   ViralBurstState,
 } from '../types.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 3;
+const CURRENT_VERSION = 4;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -156,6 +159,69 @@ export function migrateV2toV3(data: SaveData): SaveData {
   };
 }
 
+/**
+ * Migrate a V3 save to V4 — CloutUpgrade schema migration.
+ *
+ * Task #63: the CloutUpgrade menu changed shape:
+ *   - `faster_engagement` → renamed to `engagement_boost` (level preserved)
+ *   - `platform_headstart_chirper` → removed (chirper is starter platform;
+ *     its threshold is 0 so a head-start is meaningless)
+ *   - New `generator_unlock` upgrades introduced: `ai_slop_unlock`,
+ *     `deepfakes_unlock`, `algorithmic_prophecy_unlock` (all default to 0)
+ *   - New post-prestige generators in the GeneratorState map:
+ *     `ai_slop`, `deepfakes`, `algorithmic_prophecy` (all owned=false)
+ *
+ * The stored level from `faster_engagement` is preserved on `engagement_boost`
+ * even though the effect semantics changed (pow(1.25, L) → values[L-1]).
+ * Players with level > 3 will be clamped to max_level (3) by the consumer.
+ */
+export function migrateV3toV4(data: SaveData): SaveData {
+  const oldState = data.state as GameState & {
+    player: GameState['player'] & {
+      clout_upgrades: Record<string, number>;
+    };
+    generators: Record<string, GeneratorState>;
+  };
+
+  // 1) Migrate clout_upgrades: rename + remove + add new at 0.
+  const oldUpgrades = oldState.player.clout_upgrades ?? {};
+  const engagementBoostLevel = Math.min(
+    oldUpgrades.faster_engagement ?? 0,
+    3, // new max_level for engagement_boost
+  );
+  const newUpgrades: Record<UpgradeId, number> = {
+    engagement_boost: engagementBoostLevel,
+    algorithm_insight: oldUpgrades.algorithm_insight ?? 0,
+    platform_headstart_instasham: oldUpgrades.platform_headstart_instasham ?? 0,
+    platform_headstart_grindset: oldUpgrades.platform_headstart_grindset ?? 0,
+    ai_slop_unlock: 0,
+    deepfakes_unlock: 0,
+    algorithmic_prophecy_unlock: 0,
+  };
+
+  // 2) Ensure post-prestige GeneratorState entries exist.
+  const postPrestige: GeneratorId[] = ['ai_slop', 'deepfakes', 'algorithmic_prophecy'];
+  const generators = { ...oldState.generators } as Record<GeneratorId, GeneratorState>;
+  for (const id of postPrestige) {
+    if (generators[id] === undefined) {
+      generators[id] = { id, owned: false, level: 1, count: 0 };
+    }
+  }
+
+  return {
+    ...data,
+    version: 4,
+    state: {
+      ...oldState,
+      generators,
+      player: {
+        ...oldState.player,
+        clout_upgrades: newUpgrades,
+      },
+    },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -165,6 +231,10 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 2) {
     current = migrateV2toV3(current);
+  }
+
+  if (current.version === 3) {
+    current = migrateV3toV4(current);
   }
 
   if (current.version !== CURRENT_VERSION) {

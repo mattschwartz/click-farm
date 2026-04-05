@@ -85,6 +85,28 @@ export const GENERATOR_DISPLAY: Record<GeneratorId, GeneratorDisplay> = {
     color: '#e8b84a',
     tagline: 'Massive spikes, cooldown period.',
   },
+  // Post-prestige generators — unlocked only via Clout upgrades.
+  ai_slop: {
+    name: 'AI Slop',
+    icon: '🤖',
+    category: 'late',
+    color: '#8a8ae8',
+    tagline: 'Infinite content, zero soul.',
+  },
+  deepfakes: {
+    name: 'Deepfakes',
+    icon: '🎭',
+    category: 'late',
+    color: '#c265c2',
+    tagline: 'Fake celebrities, real engagement.',
+  },
+  algorithmic_prophecy: {
+    name: 'Algorithmic Prophecy',
+    icon: '🔮',
+    category: 'late',
+    color: '#d4af37',
+    tagline: 'Tell people what they already thought.',
+  },
 };
 
 /**
@@ -99,6 +121,9 @@ export const GENERATOR_ORDER: readonly GeneratorId[] = [
   'livestreams',
   'podcasts',
   'viral_stunts',
+  'ai_slop',
+  'deepfakes',
+  'algorithmic_prophecy',
 ];
 
 export const CATEGORY_ORDER: readonly GeneratorCategory[] = [

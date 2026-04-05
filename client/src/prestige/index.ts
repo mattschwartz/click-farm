@@ -274,8 +274,9 @@ export function purchaseCloutUpgrade(
  * Return up to N upcoming shifts, where N is the lookahead granted by the
  * algorithm_insight upgrade. Level 0 (unpurchased) → no lookahead → [].
  *
- * The lookahead for level L is L × effect.lookahead, so a 2-level upgrade
- * with effect.lookahead=1 reveals the next 2 shifts.
+ * The per-level lookahead is read from `effect.lookaheads[level - 1]` (each
+ * entry is the absolute number of shifts revealed at that level). Multiple
+ * algorithm_insight upgrades stack additively.
  */
 export function getUpcomingShifts(
   state: GameState,
@@ -288,7 +289,14 @@ export function getUpcomingShifts(
     if (level <= 0) continue;
     const def = staticData.cloutUpgrades[upgradeId];
     if (def.effect.type === 'algorithm_insight') {
-      lookahead += def.effect.lookahead * level;
+      const n = def.effect.lookaheads[level - 1];
+      if (n === undefined) {
+        throw new Error(
+          `getUpcomingShifts: upgrade '${upgradeId}' has no lookaheads[${level - 1}] ` +
+            `for level ${level} (max_level ${def.max_level})`,
+        );
+      }
+      lookahead += n;
     }
   }
   if (lookahead <= 0) return [];

@@ -433,13 +433,13 @@ describe('driver — persistence', () => {
     const origError = console.error;
     console.error = () => {};
     try {
-      expect(() => driver.buyCloutUpgrade('faster_engagement')).not.toThrow();
+      expect(() => driver.buyCloutUpgrade('engagement_boost')).not.toThrow();
     } finally {
       console.error = origError;
     }
     expect(errors).toHaveLength(1);
     expect(errors[0].action).toBe('buyCloutUpgrade');
-    expect(errors[0].context).toEqual({ upgradeId: 'faster_engagement' });
+    expect(errors[0].context).toEqual({ upgradeId: 'engagement_boost' });
   });
 
   it('buyCloutUpgrade deducts clout and notifies subscribers on success', () => {
@@ -474,10 +474,10 @@ describe('driver — persistence', () => {
 
     let notified = 0;
     driver.subscribe(() => { notified++; });
-    const cost = STATIC_DATA.cloutUpgrades.faster_engagement.cost[0];
-    driver.buyCloutUpgrade('faster_engagement');
+    const cost = STATIC_DATA.cloutUpgrades.engagement_boost.cost[0];
+    driver.buyCloutUpgrade('engagement_boost');
     expect(driver.getState().player.clout).toBe(100 - cost);
-    expect(driver.getState().player.clout_upgrades.faster_engagement).toBe(1);
+    expect(driver.getState().player.clout_upgrades.engagement_boost).toBe(1);
     expect(notified).toBe(1);
   });
 

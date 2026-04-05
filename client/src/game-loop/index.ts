@@ -84,11 +84,14 @@ export function levelMultiplier(level: number): number {
 
 /**
  * Clout bonus multiplier applied to all engagement rates.
- * Reads the `faster_engagement` upgrade level from `clout_upgrades` and raises
- * its effect value to that power. Other upgrade types (algorithm_insight,
- * platform_headstart, generator_unlock) do not affect engagement rate.
  *
- * Returns 1.0 (no bonus) if the upgrade is not purchased.
+ * Reads every `engagement_multiplier` clout-upgrade's per-level `values` array
+ * and takes `values[level - 1]` as the cumulative multiplier at that level.
+ * Multiple engagement-multiplier upgrades stack multiplicatively. Other
+ * upgrade types (algorithm_insight, platform_headstart, generator_unlock) do
+ * not affect engagement rate.
+ *
+ * Returns 1.0 (no bonus) if no engagement_multiplier upgrade is purchased.
  */
 export function cloutBonus(
   cloutUpgrades: Record<UpgradeId, number>,
@@ -100,7 +103,14 @@ export function cloutBonus(
     if (level <= 0) continue;
     const def = staticData.cloutUpgrades[upgradeId];
     if (def.effect.type === 'engagement_multiplier') {
-      multiplier *= Math.pow(def.effect.value, level);
+      const value = def.effect.values[level - 1];
+      if (value === undefined) {
+        throw new Error(
+          `cloutBonus: upgrade '${upgradeId}' has no values[${level - 1}] ` +
+            `for level ${level} (max_level ${def.max_level})`,
+        );
+      }
+      multiplier *= value;
     }
   }
   return multiplier;

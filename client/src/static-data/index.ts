@@ -107,6 +107,48 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 200_000_000,
   },
+  // -------------------------------------------------------------------------
+  // Post-prestige generators — unlocked only via Clout `generator_unlock`
+  // upgrades. NO entry in unlockThresholds.generators (never follower-unlocked).
+  // unlock_threshold here is set to Infinity for documentary clarity — the
+  // checkGeneratorUnlocks pathway reads from unlockThresholds, not this field.
+  //
+  // Stats per clout-upgrade-menu.md (base_engagement_rate relative to
+  // viral_stunts: 8× / 15× / 40×). Buy/upgrade costs continue the ~10× per-
+  // tier ramp from the base generators.
+  // TODO(game-designer): buy/upgrade costs are provisional — tune during
+  // post-prestige balance pass.
+  // -------------------------------------------------------------------------
+  ai_slop: {
+    id: 'ai_slop',
+    base_engagement_rate: 4_000.0,   // 8× viral_stunts
+    follower_conversion_rate: 0.6,
+    trend_sensitivity: 0.1,           // nearly algorithm-immune — volume wins
+    unlock_threshold: Infinity,
+    base_buy_cost: 200_000_000,
+    buy_cost_multiplier: 1.15,
+    base_upgrade_cost: 2_000_000_000,
+  },
+  deepfakes: {
+    id: 'deepfakes',
+    base_engagement_rate: 7_500.0,   // 15× viral_stunts
+    follower_conversion_rate: 0.3,
+    trend_sensitivity: 0.95,          // highest — volatile, algorithm-dependent
+    unlock_threshold: Infinity,
+    base_buy_cost: 2_000_000_000,
+    buy_cost_multiplier: 1.15,
+    base_upgrade_cost: 20_000_000_000,
+  },
+  algorithmic_prophecy: {
+    id: 'algorithmic_prophecy',
+    base_engagement_rate: 20_000.0,  // 40× viral_stunts
+    follower_conversion_rate: 0.5,
+    trend_sensitivity: 0.5,
+    unlock_threshold: Infinity,
+    base_buy_cost: 20_000_000_000,
+    buy_cost_multiplier: 1.15,
+    base_upgrade_cost: 200_000_000_000,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -127,6 +169,11 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       livestreams: 1.2,
       podcasts: 0.6,
       viral_stunts: 1.5,
+      // Post-prestige generators — neutral affinity across all platforms.
+      // TODO(game-designer): tune during post-prestige balance pass.
+      ai_slop: 1.0,
+      deepfakes: 1.0,
+      algorithmic_prophecy: 1.0,
     },
     unlock_threshold: 0,
   },
@@ -140,6 +187,9 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       livestreams: 1.5,
       podcasts: 0.7,
       viral_stunts: 1.8,
+      ai_slop: 1.0,
+      deepfakes: 1.0,
+      algorithmic_prophecy: 1.0,
     },
     unlock_threshold: 100,
   },
@@ -153,6 +203,9 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       livestreams: 1.0,
       podcasts: 1.8,
       viral_stunts: 0.6,
+      ai_slop: 1.0,
+      deepfakes: 1.0,
+      algorithmic_prophecy: 1.0,
     },
     unlock_threshold: 500,
   },
@@ -164,6 +217,11 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
 // ---------------------------------------------------------------------------
 
 const ALGORITHM_STATE_DEFS: Record<AlgorithmStateId, AlgorithmStateDef> = {
+  // Post-prestige generators get a neutral 1.0 modifier in every state by
+  // default. Their behavior comes from trend_sensitivity (ai_slop 0.1 →
+  // nearly immune; deepfakes 0.95 → highly volatile; algorithmic_prophecy
+  // 0.5 → moderate) applied against this base modifier.
+  // TODO(game-designer): tune during post-prestige balance pass.
   short_form_surge: {
     id: 'short_form_surge',
     state_modifiers: {
@@ -174,6 +232,9 @@ const ALGORITHM_STATE_DEFS: Record<AlgorithmStateId, AlgorithmStateDef> = {
       livestreams: 1.3,
       podcasts: 0.5,
       viral_stunts: 1.4,
+      ai_slop: 1.0,
+      deepfakes: 1.0,
+      algorithmic_prophecy: 1.0,
     },
   },
   authenticity_era: {
@@ -186,6 +247,9 @@ const ALGORITHM_STATE_DEFS: Record<AlgorithmStateId, AlgorithmStateDef> = {
       livestreams: 2.0,
       podcasts: 1.5,
       viral_stunts: 0.6,
+      ai_slop: 1.0,
+      deepfakes: 1.0,
+      algorithmic_prophecy: 1.0,
     },
   },
   engagement_bait: {
@@ -198,6 +262,9 @@ const ALGORITHM_STATE_DEFS: Record<AlgorithmStateId, AlgorithmStateDef> = {
       livestreams: 1.2,
       podcasts: 0.6,
       viral_stunts: 1.8,
+      ai_slop: 1.0,
+      deepfakes: 1.0,
+      algorithmic_prophecy: 1.0,
     },
   },
   nostalgia_wave: {
@@ -210,6 +277,9 @@ const ALGORITHM_STATE_DEFS: Record<AlgorithmStateId, AlgorithmStateDef> = {
       livestreams: 0.9,
       podcasts: 1.4,
       viral_stunts: 0.7,
+      ai_slop: 1.0,
+      deepfakes: 1.0,
+      algorithmic_prophecy: 1.0,
     },
   },
   corporate_takeover: {
@@ -222,6 +292,9 @@ const ALGORITHM_STATE_DEFS: Record<AlgorithmStateId, AlgorithmStateDef> = {
       livestreams: 1.0,
       podcasts: 2.0,
       viral_stunts: 0.5,
+      ai_slop: 1.0,
+      deepfakes: 1.0,
+      algorithmic_prophecy: 1.0,
     },
   },
 };
@@ -230,36 +303,51 @@ const ALGORITHM_STATE_DEFS: Record<AlgorithmStateId, AlgorithmStateDef> = {
 // Clout upgrades (permanent meta-upgrades that survive rebrand)
 // ---------------------------------------------------------------------------
 
+// Values per the accepted Clout Upgrade Menu proposal
+// (.frames/sdlc/proposals/accepted/clout-upgrade-menu.md).
+// `values` and `lookaheads` are cumulative — entry N is the effect AT level N+1.
 const CLOUT_UPGRADE_DEFS: Record<UpgradeId, CloutUpgradeDef> = {
-  faster_engagement: {
-    id: 'faster_engagement',
-    cost: [1, 3, 8, 20, 50],
-    max_level: 5,
-    effect: { type: 'engagement_multiplier', value: 1.25 },
+  engagement_boost: {
+    id: 'engagement_boost',
+    cost: [10, 30, 75],
+    max_level: 3,
+    effect: { type: 'engagement_multiplier', values: [1.5, 2.5, 5.0] },
   },
   algorithm_insight: {
     id: 'algorithm_insight',
-    cost: [2, 6],
+    cost: [15, 40],
     max_level: 2,
-    effect: { type: 'algorithm_insight', lookahead: 1 },
-  },
-  platform_headstart_chirper: {
-    id: 'platform_headstart_chirper',
-    cost: [5],
-    max_level: 1,
-    effect: { type: 'platform_headstart', platform_id: 'chirper' },
+    effect: { type: 'algorithm_insight', lookaheads: [1, 2] },
   },
   platform_headstart_instasham: {
     id: 'platform_headstart_instasham',
-    cost: [5],
+    cost: [20],
     max_level: 1,
     effect: { type: 'platform_headstart', platform_id: 'instasham' },
   },
   platform_headstart_grindset: {
     id: 'platform_headstart_grindset',
-    cost: [5],
+    cost: [50],
     max_level: 1,
     effect: { type: 'platform_headstart', platform_id: 'grindset' },
+  },
+  ai_slop_unlock: {
+    id: 'ai_slop_unlock',
+    cost: [25],
+    max_level: 1,
+    effect: { type: 'generator_unlock', generator_id: 'ai_slop' },
+  },
+  deepfakes_unlock: {
+    id: 'deepfakes_unlock',
+    cost: [60],
+    max_level: 1,
+    effect: { type: 'generator_unlock', generator_id: 'deepfakes' },
+  },
+  algorithmic_prophecy_unlock: {
+    id: 'algorithmic_prophecy_unlock',
+    cost: [100],
+    max_level: 1,
+    effect: { type: 'generator_unlock', generator_id: 'algorithmic_prophecy' },
   },
 };
 
@@ -398,6 +486,10 @@ export const STATIC_DATA: StaticData = {
   },
   cloutUpgrades: CLOUT_UPGRADE_DEFS,
   unlockThresholds: {
+    // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
+    // intentionally absent — they are unlocked only via Clout `generator_unlock`
+    // upgrades in applyRebrand, never by follower threshold. See
+    // architecture/core-systems.md §CloutUpgrade.
     generators: {
       selfies: GENERATOR_DEFS.selfies.unlock_threshold,
       memes: GENERATOR_DEFS.memes.unlock_threshold,

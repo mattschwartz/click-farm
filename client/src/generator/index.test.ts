@@ -154,14 +154,14 @@ describe('checkGeneratorUnlocks', () => {
 
   it('unlocks memes when total_followers meets its threshold', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
-    const threshold = STATIC_DATA.unlockThresholds.generators.memes; // 50
+    const threshold = STATIC_DATA.unlockThresholds.generators.memes!; // 50
     const result = checkGeneratorUnlocks(state.generators, threshold, STATIC_DATA);
     expect(result.memes.owned).toBe(true);
   });
 
   it('does not unlock memes when one follower short of threshold', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
-    const threshold = STATIC_DATA.unlockThresholds.generators.memes;
+    const threshold = STATIC_DATA.unlockThresholds.generators.memes!;
     const result = checkGeneratorUnlocks(
       state.generators,
       threshold - 1,
@@ -475,7 +475,7 @@ describe('tick — generator unlocks', () => {
     };
     const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
     expect(next.player.total_followers).toBeGreaterThan(
-      STATIC_DATA.unlockThresholds.generators.memes,
+      STATIC_DATA.unlockThresholds.generators.memes!,
     );
     expect(next.generators.memes.owned).toBe(true);
   });
