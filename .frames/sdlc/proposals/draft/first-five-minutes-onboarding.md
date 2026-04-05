@@ -3,7 +3,7 @@ name: First Five Minutes — Onboarding Through Progressive Reveal
 description: Defines the teaching philosophy, sequence, and safety rails for the player's first five minutes — progressive affordance-driven reveal with a single anchoring voice moment, no modal tutorials, and Algorithm + Audience Mood held back until they can do design work.
 author: game-designer
 status: draft
-reviewers: [ux-designer, engineer]
+reviewers: [ux-designer]
 ---
 
 # Proposal: First Five Minutes — Onboarding Through Progressive Reveal
@@ -166,6 +166,28 @@ Four small accommodations to the opening that respect existing specs:
 
 1. **Is the anchoring voice copy one static line for all first-runs, or does it rotate from a small pool?** A rotating pool gives repeat-account players variety; a single line gives a stronger identity moment. Leaning: single line for v1, revisit if playtesting shows it getting stale. **Owner: game-designer**
 2. **Should the second-platform unlock affordance look different from the generator-unlock affordance, or share the same visual language?** Affordance consistency vs. moment-differentiation. **Owner: ux-designer**
-3. **Does "5 minutes of cumulative play time" for the Audience Mood safety rail use wall-clock, in-game tick time, or session time?** Engineer-level distinction that affects save-file semantics. **Owner: engineer**
+3. **[RESOLVED] Does "5 minutes of cumulative play time" for the Audience Mood safety rail use wall-clock, in-game tick time, or session time?** Engineer-level distinction that affects save-file semantics. **Owner: engineer**
+  - Answer (engineer): **Tick-time (cumulative active-tick ms).** Wall-clock (`Date.now() - run_start_time`) would count *offline* time — player walks away for 6 minutes, mood drag activates when they return without them having experienced anything, breaking the teaching intent. Session time resets on tab close/reopen, making the rail non-deterministic across sessions. Tick-time accurately tracks "foreground engaged time" — doesn't count offline, doesn't reset on close, persists with the save, matches the natural-language meaning of "has been playing for 5 minutes." **Cost:** one new field on `Player` (or `GameState`), e.g. `active_playtime_ms: number`, incremented by the `dtMs` the tick loop already dispatches. One line in `doTick`. Save-schema bump (V6→V7 migration initializes existing saves to 0, which correctly leaves the rail gating them for whatever remaining play time they owe). The field is independently useful for other future features (achievement timers, cooldowns) and is the correct primitive to have in the save.
 4. **What is the player-visible surface, if any, for the Audience Mood safety rail?** Option A: entirely silent — mood strips simply don't appear until the rail lifts. Option B: a very subtle "learning your audience" flavor moment when the rail lifts. Leaning A (silent), but flagging. **Owner: game-designer + ux-designer**
-5. **Is the first-shift tightened variance (±30s) implementation-cheap, or does it require a special first-run branch in the seed logic?** Implementation cost may push this to "just accept ±1min and let the seed roll." **Owner: engineer**
+5. **[RESOLVED] Is the first-shift tightened variance (±30s) implementation-cheap, or does it require a special first-run branch in the seed logic?** Implementation cost may push this to "just accept ±1min and let the seed roll." **Owner: engineer**
+  - Answer (engineer): **Cheap. ~10–15 lines, no save-schema change, determinism preserved.** `getShiftAtIndex` in `client/src/algorithm/index.ts:61` computes duration as `baseIntervalMs + (durationRng.value * 2 - 1) * varianceMs`. Thread an `isFirstRun` flag (derived at the call site from `player.rebrand_count === 0`) into `getShiftAtIndex`, and when `shiftIndex === 1 && isFirstRun`, override `varianceMs` with a new `firstRunVarianceMs: 30_000` field on `algorithmSchedule`. The PRNG walk is unchanged — still 2 values consumed per shift, same seed-derivation — only the duration-mapping denominator changes. Callers (`advanceAlgorithm`, `getUpcomingShifts`) already have game state in scope. `algorithmSchedule` gains one optional field — additive, no migration. The `rebrand_count === 0` gate is exactly "first run of the save" per the proposal's intent; post-rebrand runs roll normal variance. No reason to fall back to the "just accept ±1min" option — ship the tightened variance.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Both engineer-owned questions resolved inline at Open Questions 3 and 5. Summary below, plus two non-blocking scope notes surfaced during the code inspection.
+
+**Q3 (play-time semantics).** Tick-time (`active_playtime_ms` incremented per `dtMs` in `doTick`). Rationale and cost written inline. This is the only option of the three that survives the offline/close/reopen cases honestly — wall-clock counts offline time as play, session time is non-deterministic across closures.
+
+**Q5 (first-shift ±30s variance).** Cheap. One new optional field on `algorithmSchedule`, a `rebrand_count === 0` gate threaded through two call sites. Determinism preserved; no save-schema change. Ship the tightened variance.
+
+**Scope note 1 — §5.2 starter state pin is not already implemented.** The proposal says "fresh saves begin with Algorithm state = `short_form_surge`." Current code in `createInitialGameState` picks the first entry of `staticData.algorithmStates` (via `Object.keys(...)[0]`), which is whichever state happens to be listed first in static-data. If `short_form_surge` is already first in that list, this is a no-op; if not, it's a ~2-line fix (hardcode the starter state id OR reorder the list and add a test that asserts first-entry identity). This is a distinct implementation task from Q5's variance tightening — worth filing alongside, both are trivial, both sit in the same module. Flagging so the task decomposition doesn't miss it.
+
+**Scope note 2 — Entry conditions (§4) need first-class save-state representation for several systems.** The table at §4 specifies entry conditions like "first time Lvl↑ becomes affordable" (Creator Kit menu reveal) and "player completes first Lvl↑ action." These are one-shot latches — once revealed, stays revealed. Each needs a persisted boolean (or a revealed-set) on save state so the condition doesn't re-evaluate on every load. Concretely: `ui_reveals: { creator_kit: boolean; algorithm_ui: boolean; ... }` on `GameState`, set-once in doTick or the relevant action handler, persisted across sessions. Saves initialize with all false; first time each condition trips, the flag flips and the UI reveals. Not architecturally controversial, but it's new state that doesn't exist today — flagging so build planning sizes it. A few of these might collapse into existing conditions already encoded in game state (e.g. "completed first Lvl↑ action" is equivalent to `any generator.level > 1`, which is already present — no new flag needed). I'd want to walk through the §4 table with game-designer during planning to identify which entry conditions are derivable from existing state and which need new latches.
+
+**Removing engineer from reviewers.** ux-designer still owns Open Questions 2 and 4.
