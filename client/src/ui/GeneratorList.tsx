@@ -57,6 +57,44 @@ interface Props {
   onDrawerOpenChange?: (open: boolean) => void;
 }
 
+// ---------------------------------------------------------------------------
+// Pure helpers — exported for unit tests (task #69).
+// ---------------------------------------------------------------------------
+
+/**
+ * Three affordance states for the per-row Lvl ↑ button.
+ *
+ * - dormant: count===0 — the row has no units to upgrade yet. Disabled.
+ * - armed:   count>0 but engagement < upgradeCost. Clickable, but the teased
+ *            action is out of reach. Stillness communicates "not now."
+ * - ready:   count>0 and engagement >= upgradeCost. Breathes gold to pull
+ *            the eye toward the drawer.
+ *
+ * See proposals/accepted/lvl-up-button-affordance-states.md.
+ */
+export type LvlBtnState = 'dormant' | 'armed' | 'ready';
+
+export function classifyLvlBtnState(
+  count: number,
+  engagement: number,
+  upgradeCost: number,
+): LvlBtnState {
+  if (count <= 0) return 'dormant';
+  if (engagement >= upgradeCost) return 'ready';
+  return 'armed';
+}
+
+/** Minimum number of simultaneously-ready rows to trigger de-escalation. */
+export const MANY_READY_THRESHOLD = 4;
+
+/**
+ * Returns true when the generator-list should de-escalate ready-state
+ * breathing because too many rows would flash at once. Threshold from spec.
+ */
+export function shouldApplyManyReady(readyCount: number): boolean {
+  return readyCount >= MANY_READY_THRESHOLD;
+}
+
 const BADGE_SHAPE: Record<GeneratorCategory, string> = {
   starter: 'shape-circle',
   mid: 'shape-hexagon',
@@ -117,8 +155,24 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGenera
     byCategory.get(display.category)?.push(id);
   }
 
+  // Count rows currently in the 'ready' state so the list can de-escalate
+  // breathing intensity when 4+ rows would pulse simultaneously (spec §"Many
+  // ready at once"). Iterates the same set the list renders — post-prestige
+  // generators and locked rows are excluded.
+  let readyCount = 0;
+  for (const [cat, ids] of byCategory) {
+    void cat;
+    for (const id of ids) {
+      const g = state.generators[id];
+      if (!g?.owned || g.count <= 0) continue;
+      const cost = generatorUpgradeCost(id, g.level, staticData);
+      if (state.player.engagement >= cost) readyCount += 1;
+    }
+  }
+  const manyReady = shouldApplyManyReady(readyCount);
+
   return (
-    <section className="generator-list">
+    <section className={`generator-list${manyReady ? ' many-ready' : ''}`}>
       {CATEGORY_ORDER.map((cat) => {
         const ids = byCategory.get(cat) ?? [];
         if (ids.length === 0) return null;
@@ -287,6 +341,16 @@ function GeneratorRow({
   // generator_unlock head-start grants owned=true without any units.
   const canOpenDrawer = g.count > 0;
 
+  // Lvl ↑ button affordance state — spec tracks three distinct visuals
+  // (dormant / armed / ready) so players can tell at a glance whether
+  // tapping the button opens a drawer they can act on. Task #69.
+  const lvlState = classifyLvlBtnState(
+    g.count,
+    state.player.engagement,
+    upgradeCost,
+  );
+  const lvlDeficit = Math.max(0, upgradeCost - state.player.engagement);
+
   const openDrawer = () => {
     if (!canOpenDrawer) return;
     if (!onOpenDrawer) return;
@@ -336,24 +400,40 @@ function GeneratorRow({
           canBuy={canBuy}
           onBuy={() => onBuy(id)}
         />
-        {/* ⬆ affordance — opens the upgrade drawer. */}
+        {/* ⬆ affordance — opens the upgrade drawer.
+            Three states per task #69 / lvl-up-button-affordance-states:
+              dormant (count===0): disabled placeholder
+              armed   (owned, can't afford): still, amber deficit glyph
+              ready   (owned, affordable): gold breathing halo pulling eye
+                                           toward the drawer */}
         <button
-          className={`row-btn row-btn-upgrade${!canOpenDrawer ? ' row-btn-disabled' : ''}${isDrawerOpen ? ' active' : ''}`}
+          className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${isDrawerOpen ? ' active' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             if (!canOpenDrawer || !onOpenDrawer) return;
             const rect = rowRef.current?.getBoundingClientRect();
             onOpenDrawer(id, rect?.top ?? 100);
           }}
-          disabled={!canOpenDrawer}
+          disabled={lvlState === 'dormant'}
+          style={{ '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties}
           title={
-            g.count <= 0
+            lvlState === 'dormant'
               ? `Buy at least one ${display.name} before upgrading`
-              : `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)})`
+              : lvlState === 'armed'
+                ? `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ${fmtCompact(lvlDeficit)} more engagement`
+                : `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ready`
           }
           aria-label={`Open upgrade drawer for ${display.name}`}
         >
-          <span className="label">Lvl ↑</span>
+          <span className="label">
+            {lvlState === 'ready' && (
+              <span className="lvl-chevron" aria-hidden>▲</span>
+            )}
+            Lvl ↑
+          </span>
+          {lvlState === 'armed' && (
+            <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
+          )}
           {fmtCompact(upgradeCost)}
         </button>
       </div>

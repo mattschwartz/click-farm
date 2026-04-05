@@ -2283,6 +2283,118 @@
   border-color: rgba(255, 255, 255, 0.28);
 }
 
+/* --- Lvl ↑ button three-state affordance (task #69) ---------------------- *
+ * Proposal: proposals/accepted/lvl-up-button-affordance-states.md
+ * Three mutually-exclusive states so players can tell at a glance whether
+ * tapping opens a drawer with a purchasable upgrade:
+ *   dormant — no units owned; disabled placeholder
+ *   armed   — owned but can't afford; amber deficit glyph, stillness
+ *   ready   — owned and affordable; gold border + breathing halo
+ * Border-weight hierarchy (0.08 → 0.14 → full gold) keeps states
+ * distinguishable without color. */
+
+/* Dormant — matches legacy row-btn-disabled visuals. */
+.row-btn-upgrade.row-btn-lvl-dormant {
+  color: var(--text-p3);
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.row-btn-upgrade.row-btn-lvl-dormant .label {
+  color: var(--text-p3);
+}
+
+/* Armed — stronger border than dormant, amber deficit glyph, no motion. */
+.row-btn-upgrade.row-btn-lvl-armed {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: color-mix(in srgb, var(--accent-amber) 60%, transparent);
+}
+.row-btn-upgrade.row-btn-lvl-armed .label {
+  color: var(--text-p2);
+}
+.row-btn-upgrade.row-btn-lvl-armed .lvl-deficit-glyph {
+  display: inline-block;
+  font-size: 10px;
+  margin-right: 3px;
+  color: color-mix(in srgb, var(--accent-amber) 60%, transparent);
+}
+
+/* Ready — gold border, gold cost numeral, breathing halo. */
+.row-btn-upgrade.row-btn-lvl-ready {
+  border: 1px solid var(--accent-gold);
+  background: rgba(255, 214, 107, 0.08);
+  color: var(--accent-gold);
+  font-weight: 600;
+  animation: lvl-ready-breathe 2400ms ease-in-out infinite;
+  /* Negative delay starts each row mid-cycle so rows breathe out of phase.
+     --breathe-delay is emitted inline per-row by GeneratorList (already
+     negative — see badge-owned usage). */
+  animation-delay: var(--breathe-delay, 0ms);
+}
+.row-btn-upgrade.row-btn-lvl-ready .label {
+  color: var(--text-p1);
+}
+.row-btn-upgrade.row-btn-lvl-ready .lvl-chevron {
+  display: inline-block;
+  font-size: 8px;
+  margin-right: 3px;
+  color: var(--accent-gold);
+}
+
+/* Hover on ready — locks at peak glow, breathing pauses (prevents the hovered
+   row from seeming to dim mid-hover). */
+.row-btn-upgrade.row-btn-lvl-ready:hover:not(:disabled) {
+  background: rgba(255, 214, 107, 0.14);
+  box-shadow: 0 0 12px 2px rgba(255, 214, 107, 0.55);
+  animation-play-state: paused;
+}
+
+/* Suppress breathing while the drawer is already open — the player is
+   looking at the thing being teased, keep the gold border only. */
+.row-btn-upgrade.row-btn-lvl-ready.active {
+  animation: none;
+  box-shadow: none;
+}
+
+@keyframes lvl-ready-breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 214, 107, 0);
+    border-color: var(--accent-gold);
+  }
+  50% {
+    box-shadow: 0 0 8px 1px rgba(255, 214, 107, 0.35);
+    border-color: #ffe89a;
+  }
+}
+
+/* Many-ready de-escalation — when ≥4 rows are ready, slow the cadence and
+   soften the peak so the list doesn't become a disco. Border stays full
+   strength gold; the trust signal must not weaken. */
+.generator-list.many-ready .row-btn-upgrade.row-btn-lvl-ready {
+  animation-duration: 3200ms;
+}
+@keyframes lvl-ready-breathe-soft {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 214, 107, 0);
+    border-color: var(--accent-gold);
+  }
+  50% {
+    box-shadow: 0 0 8px 1px rgba(255, 214, 107, 0.18);
+    border-color: #ffe89a;
+  }
+}
+.generator-list.many-ready .row-btn-upgrade.row-btn-lvl-ready {
+  animation-name: lvl-ready-breathe-soft;
+}
+
+/* Reduce Motion — hold at the peak glow value so the "energized" read
+   persists without motion. Static color and glyph signals stay in place. */
+@media (prefers-reduced-motion: reduce) {
+  .row-btn-upgrade.row-btn-lvl-ready {
+    animation: none;
+    box-shadow: 0 0 8px 1px rgba(255, 214, 107, 0.35);
+  }
+}
+
 /* ==========================================================================
    Post-rebrand ambient surfaces (task #66, UX §5)
    ========================================================================== */
@@ -2929,4 +3041,9 @@ html[data-reduce-motion="true"] .upgrade-drawer.upgrade-drawer-closing {
 html[data-reduce-motion="true"] .kit-chevron { transition: none; }
 html[data-reduce-motion="true"] .kit-rows { animation: none; }
 html[data-reduce-motion="true"] .kit-peek-signal { animation: none; }
+
+html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
+  animation: none;
+  box-shadow: 0 0 8px 1px rgba(255, 214, 107, 0.35);
+}
 

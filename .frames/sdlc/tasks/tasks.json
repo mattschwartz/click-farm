@@ -2119,7 +2119,7 @@
       "id": 69,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Implement three affordance states on Lvl ↑ row button",
       "requester": "ux-designer",
@@ -2173,7 +2173,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 70,
