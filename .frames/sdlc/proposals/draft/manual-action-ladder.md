@@ -3,7 +3,7 @@ name: Manual Action Ladder
 description: Replaces the single Post button with a ladder of content verbs (Chirp, Selfie, Livestream, …) where each verb follows a three-step lifecycle — unlock, upgrade, automate — and every verb stays permanently manual-clickable. Automators are parallel actors that press each verb on their own cooldowns, not replacements for the player's hand.
 author: game-designer
 status: draft
-reviewers: [engineer]
+reviewers: [engineer, game-designer, architect]
 ---
 
 # Proposal: Manual Action Ladder
@@ -345,3 +345,59 @@ As laid out under OQ3, the aesthetic survives because hierarchy comes from motio
 3. OQ4 (verb-to-platform coupling) has visual consequences for per-verb iconography once platforms are locked in, but this is downstream of game-designer's OQ4 resolution and fits into the follow-up ladder UX spec. Not blocking here.
 
 Removing myself from reviewers. Engineer review remains.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-05
+**Decision**: Request for Comment
+
+**Comments**
+
+Reviewed from an implementation-feasibility, refactor-scope, and migration-concerns perspective, per task #113. The architectural skeleton laid down by the architect is sound and the refactor is small; I'm aligned on everything except one boundary-condition gap that needs resolving before I can build without guessing.
+
+**Overall feasibility — confirmed.** Under consolidation + yield/rate split, the engine changes are tightly scoped and backward-compatible by construction. No tick-pipeline reordering. No offline-snapshot rework. Save migration is one field.
+
+**Refactor-scope estimate under both OQ11 options** (per AC):
+
+*Option (b) — Consolidation [architect's resolution].* ~1 session, sonnet-complexity engine work:
+- `client/src/types.ts` — add `last_manual_click_at: Record<GeneratorId, number>` to `Player`; split `GeneratorDef.base_engagement_rate` into `base_event_yield` + `base_event_rate` (optionally keep `base_engagement_rate` as a computed getter for grep-ability during a deprecation window).
+- `client/src/game-loop/index.ts` — delete `CLICK_BASE_ENGAGEMENT` (L55) and `CLICK_GENERATOR_ID` (L62); update `computeGeneratorEffectiveRate` (L156–177) multiplication to `count × base_event_rate × base_event_yield × level_multiplier × algoMod × clout × kit` (mathematically identical for seeded existing generators); refactor `postClick(state, staticData, verbId)` per architect's 5-step spec with the cooldown gate.
+- `client/src/driver/index.ts` — `click()` → `click(verbId: GeneratorId)`; the runAction wrapper is unchanged.
+- `client/src/save/index.ts` — add `migrateV8toV9` seeding `player.last_manual_click_at = {}` on every existing save; bump `CURRENT_VERSION = 9`; add to the chain.
+- `client/src/static-data/index.ts` — split the 7 generator defs' `base_engagement_rate` into `base_event_yield=1.0` + `base_event_rate=<current value>`.
+- `client/src/game-loop/index.test.ts` — update `postClick` call sites to pass a verbId; add cooldown-gate tests; update the `CLICK_BASE_ENGAGEMENT` assertion at L524/L532 to express the new per-verb formula.
+- UI wiring for per-verb Actions buttons — separate follow-up task, depends on the UX ladder spec ux-designer already committed to authoring.
+
+*Option (a) — Parallel.* ~2–3 sessions, effectively opus-complexity: new `VerbDef`/`VerbState` types, parallel tick contribution summing into `player.engagement`, new 3×N platform-affinity matrix authoring, new algorithm-modifier wiring for every verb × every algorithm state, new balance-cell authoring for `trend_sensitivity` and `state_modifiers` per verb, new offline-snapshot handling, plus all the same UI. On top of this: two engagement economies sharing `player.engagement` is exactly the implicit-coupling / shared-state-in-two-places antipattern the architect called out. Maintenance cost compounds with every future engagement-touching feature (viral burst, content fatigue, algorithm states all have to decide whether they apply to generators, verbs, or both).
+
+Consolidation wins decisively. Nothing in the codebase resists it.
+
+**Non-obvious migration concerns (flagging all three per AC):**
+
+1. **Save version bump is required, and the scope is tiny.** One v8→v9 migration that seeds `player.last_manual_click_at = {}`. `GeneratorDef` shape changes do NOT need a save migration because GeneratorDef lives in `static-data/index.ts` (code, not save root). The existing migration chain pattern (L450–485) handles this cleanly.
+2. **Tick pipeline — no reordering, no contract changes.** Verified: `computeGeneratorEffectiveRate` preserves mathematical output for existing generators under the yield/rate split; `applyTickPosts` in `audience-mood/index.ts` iterates owned generators and auto-includes ladder verbs for content-fatigue with zero new wiring; `computeSnapshot` / offline calculation is transparent to the split; `evaluateViralTrigger` picks top-rate generator and verbs-as-generators are eligible without change.
+3. **Driver contract change is the only externally-visible API break.** `click()` → `click(verbId)` affects every Actions-column tap handler. Predictable, typed (`GeneratorId` is a string-literal union), and the TypeScript compiler will surface every call site.
+
+**One blocking semantic gap I need resolved before building — surfaced as proposed OQ16:**
+
+The architect's derived-cooldown contract is `cooldown = 1 / (count × base_event_rate)`. That formula is undefined at `count === 0`, which is precisely the state a verb sits in after **Unlock** but before any **Automate** level is bought (designer §2: Unlock makes the verb clickable, Automate buys count ≥ 1). Division by zero → Infinity cooldown → the player can never manually click a freshly-unlocked verb. This directly contradicts §3 ("Chirp — short starting cooldown e.g. 0.3–0.5s"), which assumes a live cooldown the moment the verb becomes clickable.
+
+Three resolution paths, each cheap, with different semantics:
+
+- **(i) Unlock seeds `count = 1` implicitly.** The player's own hand is the "first automator," and Automate purchases start at count = 2. Simplest from the formula's point of view, but contradicts designer §2 wording ("An automator *begins* pressing this verb" at Automate — implies none exists pre-Automate) and conflates Unlock with Automate's mechanical footprint.
+- **(ii) Phantom-hand floor: `cooldown = 1 / (max(1, count) × base_event_rate)`.** A one-line formula change. No count is seeded; the automator is absent pre-Automate as designer intended, but the player's hand runs on the base rate alone. First Automate purchase (count=1) halves the cooldown immediately, which matches §4's "Automate upgrade is felt in the player's hand" framing.
+- **(iii) Separate `base_manual_cooldown` field** used pre-Automate, switching to the derived formula once count ≥ 1. Most flexible but adds a data field and a formula mode-switch — violates the architect's "cooldown is a derived view" principle.
+
+**My recommendation: (ii).** Cheapest, preserves the architect's derived-view model exactly, and satisfies the designer's "every verb stays a live instrument from unlock onward." But this is a game-designer + architect call, not mine to make silently.
+
+**Adding game-designer and architect back to reviewers for OQ16 resolution.** Once OQ16 is resolved, my Aligned decision is essentially pre-cleared — I have no other blocking concerns.
+
+**Non-blocking flags for the record:**
+
+1. **`postClick` + platform affinity ambiguity.** Architect's step-4 earned-formula ends with `… × platform_affinity_if_applicable`. Today's `postClick` does *not* apply platform affinity — manual clicks add flat engagement, and platform affinity enters only at the follower-distribution stage (see `platform/index.ts` + `computeFollowerDistribution`). If manual verb clicks now apply platform affinity at click time, that's a behavior change requiring a binding spec (which platform? max-affinity? player's focused platform?). Unless told otherwise, I'll implement `postClick(verbId)` *without* platform affinity at click time, preserving today's engagement→distribution split. Flag for architect confirmation.
+2. **`last_manual_click_at` missing-key semantics.** `now - undefined = NaN`; `NaN < anything = false`, so a missing key (e.g. verb unlocked post-migration) passes the cooldown gate on first click. That's correct behavior ("never clicked" → not on cooldown), but I'll add an explicit `?? 0` or a guard comment at the gate site so the intent is legible.
+3. **Test-surface expansion.** The existing `postClick` test suite (`game-loop/index.test.ts` L517+) needs updating to cover: verb dispatch by id, cooldown-gate accept/reject paths, yield/rate formula equivalence across existing generators (regression check that the split produces identical output to pre-split), and `last_manual_click_at` write-back. ~5-8 new assertions; in scope for the build task.
+4. **Deprecation of `base_engagement_rate` on GeneratorDef.** Keeping it as a computed getter (`get base_engagement_rate() { return this.base_event_yield * this.base_event_rate; }`) would preserve grep-ability for any downstream code I miss during the refactor sweep. Not strictly necessary under a TypeScript rename — compiler catches everything — but cheap insurance. Engineer's call at build time.
+
+Leaving myself in reviewers pending OQ16 resolution.
