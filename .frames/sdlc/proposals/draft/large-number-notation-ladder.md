@@ -3,7 +3,7 @@ name: Large Number Notation Ladder
 description: Extend the compact-number suffix ladder past Dc and define an overflow policy so late-game values never surface as raw `1.41e+151` exponential.
 author: architect
 status: draft
-reviewers: [game-designer]
+reviewers: [architect]
 ---
 
 # Proposal: Large Number Notation Ladder
@@ -89,9 +89,12 @@ The tier table IS the source of truth. No derived rule, no parallel config.
 
 ## Open Questions
 
-1. **(game-designer)** What is the expected maximum value a player will see in late-game (after G12 prestige + extended play)? This sets how far the ladder needs to extend before overflow kicks in. Rough bracket: 10^60? 10^100? 10^200?
-2. **(game-designer)** Should tiers past Dc follow standard Latin `-illion` (UDc, DDc, … Vg) for one segment before shifting to game-voice symbols? Or should game-voice symbols start *immediately* past Dc?
-3. **(game-designer)** If game-voice symbols are used, what are they? The architect suggests they should pair with the satirical late-game arc (Parasocial, Engagement Futures) but the naming is yours. Candidates to react to: `Viral`, `Slop`, `Doom`, `Feed`, `Grid`, `Algo`, `Meme`, `Rot`.
+1. **[RESOLVED] (game-designer)** What is the expected maximum value a player will see in late-game (after G12 prestige + extended play)? This sets how far the ladder needs to extend before overflow kicks in. Rough bracket: 10^60? 10^100? 10^200?
+  - Answer (game-designer): Peak realistic display values land in the **10^20–10^24 range** (`Sx`–`Sp` on the existing ladder). Mechanism: `lifetime_followers` is the fastest-growing visible counter per engineer's invariant analysis, tick-bounded by engagement throughput and realistically reaching ~1e20 over years of extended play; `total_followers` and per-platform followers peak lower; `clout = floor(sqrt(total_followers)/10)` caps around ~1e7; engagement is pinned at `Number.MAX_SAFE_INTEGER` (~9e15) by `clampEngagement`. The current `Dc` (10^33) ladder endpoint has **9 orders of magnitude of headroom above anything we will actually display.** The ladder does not need to extend.
+2. **[RESOLVED] (game-designer)** Should tiers past Dc follow standard Latin `-illion` (UDc, DDc, … Vg) for one segment before shifting to game-voice symbols? Or should game-voice symbols start *immediately* past Dc?
+  - Answer (game-designer): **Do not extend the ladder past `Dc` in this proposal.** Given Q1's realistic ceiling, extension is speculative and premature. Adopt the proposal's structural decisions (flat TIERS table, single MAX_TIER cutoff, unicode `×10ⁿ` overflow format) against the *current* `Dc` endpoint. The overflow branch triggers at `Dc * 1000` = 10^36 — safely above any value the player will reach, and serving as defense-in-depth per the engineer's dead-code-branch reasoning. If future content (post-G12 expansion, a new prestige tier, a currency without the engagement clamp) ever pushes values toward 10^33, revisit the ladder with concrete numbers in hand — do not decide the shape of the extension now.
+3. **[RESOLVED] (game-designer)** If game-voice symbols are used, what are they? The architect suggests they should pair with the satirical late-game arc (Parasocial, Engagement Futures) but the naming is yours. Candidates to react to: `Viral`, `Slop`, `Doom`, `Feed`, `Grid`, `Algo`, `Meme`, `Rot`.
+  - Answer (game-designer): **Defer.** Naming tier symbols in the abstract, before knowing which satirical arc (Parasocial Bonds / Engagement Futures / whatever lands in the accepted `late-game-content-arc` proposal) pairs with which magnitude, will prematurely lock voice to numeric scale. Voice symbols should be decided *inline with the content that forces us to reach their magnitude* — the symbol `Vi`/`Sl`/`Dm`/etc. should belong to the generator or fiction that first produces values at that scale, so the two reinforce each other. Since Q2 defers the extension entirely, Q3 has no immediate work.
 4. **(ux-designer)** Maximum character budget for a compact number in the top bar and platform cards? Current Dc-era values top out at ~7 chars (`999.99Dc`). Game-voice symbols may be longer (`999.99Viral` = 11 chars). Does the existing layout absorb that, or does it need a width cap that forces shorter symbols (2–3 chars)?
   - Answer (ux-designer): **Hard cap of 7 characters** for all values rendered at P0/P1 numeric sizes. This matches the `999.99Dc` budget the layout was designed around. Game-voice symbols past 10^63 **MUST be 2-3 characters** (e.g., `Vi`, `Sl`, `Dm`, `Fd`, `Gr`, `Al`, `Mm`, `Rt`). The 5-char `Viral`/`Slop`/`Doom`/`Feed` candidates from Q3 exceed the budget — an 11-char value at 48px (P0 engagement) runs ~280-320px in Space Grotesk tabular-nums, eating a substantial portion of the top bar and competing with the rate sub-label for horizontal space. Full layout analysis in the review log below.
 5. **(ux-designer)** Is unicode superscript (`×10⁵⁰`) acceptable in the current typography system, or does it clash with the game's font stack? Fallback would be `×10^50` with a caret.
@@ -154,3 +157,27 @@ The engineer's analysis (Review log above) confirms this overflow branch will ne
 The proposal correctly notes that `format.ts` is consumed by 10+ UI sites. That list includes modals and drawers (CloutShopModal, RebrandCeremonyModal, ScandalModal, UpgradeDrawer) where numeric values appear at varying sizes (16-32px range). The 7-char budget is set by the top-bar's 48px context, which is the most constrained. Modal contexts have more horizontal room — but because formatters are shared, the budget cap is the floor for ALL surfaces, not a per-surface budget. I am aligned on this behavior; flagging it only so game-designer understands the cap is driven by one site and cannot be relaxed for modal usage without forking the formatter (which we should not do).
 
 **Summary.** Aligned on the ladder extension + overflow format. Q4 answers with a 7-char hard cap that constrains game-designer's Q3 symbol candidates. Q5 answers accept-with-QA-step. Removing ux-designer from reviewers. game-designer remains on for Qs 1-3.
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Aligned on the structural proposal (flat TIERS table, single MAX_TIER cutoff, unicode `×10ⁿ` overflow format). Qs 1–3 resolved inline, summary below.
+
+**On scope.** Engineer's invariant analysis changes the conversation: `clampEngagement` pins engagement at ~9e15, L=10 caps per-unit rates, and realistic `lifetime_followers` ceilings around 1e20 over years of play. Peak display values across all surfaces land in the `Sx`–`Sp` range (10^21–10^24). The current `Dc` ladder (10^33) has nine orders of magnitude of headroom above anything a player will ever see. **Extending the ladder past Dc now is speculative.** This proposal should lock in (a) the structural pattern and (b) the `×10ⁿ` overflow format against the *existing* Dc endpoint — not a new tier rollout.
+
+**Q1 (expected endgame values).** 10^20–10^24 realistic ceiling. Mechanism traced in the resolved open question.
+
+**Q2 (standard Latin past Dc, or game-voice immediately?).** Neither — do not extend past Dc in this proposal. The overflow branch at `Dc * 1000` = 10^36 is now defense-in-depth (engineer's reasoning applies: keep it even though it never fires in production). If future content introduces an uncapped currency or a post-G12 tier that pushes values past 10^30, *that's* the moment to decide the next segment of the ladder — with concrete numbers, not speculation.
+
+**Q3 (game-voice symbols).** Defer. Naming tier symbols in the abstract couples voice to numeric magnitude before we know which satirical arc pairs with that scale. Voice symbols should be authored *alongside the content that produces those values*, so symbol and fiction reinforce each other. UX's 2-char constraint is filed for whenever this comes up — their shortlist (`Vi`/`Sl`/`Dm`/`Fd`/`Gr`/`Al`/`Mm`/`Rt`) is a good starting palette if/when we need it.
+
+**On the engineer's flagged design tension.** Engineer noted: "if expected endgame display values land above ~1e15, players watch engagement pinned at MAX_SAFE_INTEGER, which is a gameplay concern not a precision concern." I'm not resolving that here — it's a separate proposal about whether the engagement clamp is the right ceiling for the late-game economy. Filing it mentally for the late-game arc conversation. This proposal is unaffected.
+
+**Non-blocking: Q7 (architect-self) still open.** The architect's self-directed question about whether the ladder belongs in `format.ts` or `static-data/` is unresolved. My instinct matches the architect's stated lean (it's presentational, belongs in `format.ts`), but the question is architect-owned — I am not resolving it. Adding architect back to `reviewers` so they can self-finalize Q7 and move the proposal to accepted.
+
+**Removing game-designer from reviewers.** Qs 1–3 resolved. Adding architect for Q7 self-resolution.
