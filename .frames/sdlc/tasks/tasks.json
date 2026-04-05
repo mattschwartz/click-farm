@@ -1,5 +1,5 @@
 {
-  "next_id": 54,
+  "next_id": 57,
   "tasks": [
     {
       "id": 1,
@@ -1467,6 +1467,119 @@
       ],
       "blocked_on": [],
       "date_completed": "2026-04-05"
+    },
+    {
+      "id": 54,
+      "role": "architect",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Sync core-systems.md with implementation reality",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "The architecture doc at .frames/sdlc/architecture/core-systems.md has drifted from the code in three documented ways. The engineer annotated each drift in the source. Update the doc to match reality — this is architect-owned hygiene and does not require proposal-stage deliberation.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "the doc to update"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "annotation at line 8 — 6 generators vs 7"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "annotation at line 295 — tick signature extended with `now`"
+        },
+        {
+          "ref": "client/src/offline/index.ts",
+          "purpose": "annotation at line 18 — calculateOffline takes full GameState, not just snapshot"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/core-systems-architecture-review.md",
+          "purpose": "proposal that surfaced this finding (item #4)"
+        }
+      ],
+      "acceptance_criteria": [
+        "core-systems.md generator list updated to 7 members matching the accepted design proposal (selfies, memes, hot_takes, tutorials, livestreams, podcasts, viral_stunts)",
+        "core-systems.md tick() contract updated to tick(state, now, deltaMs, staticData) with a one-line rationale: absolute `now` required for algorithm shift advancement",
+        "core-systems.md calculateOffline() contract updated to take full GameState rather than SnapshotState, with a rationale explaining per-segment rate recomputation needs per-generator trend_sensitivity",
+        "Three TODO/NOTE annotations in the source code removed after the doc is updated (types.ts:8, game-loop/index.ts:295, offline/index.ts:18) — architect verifies they are resolved before closing"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 55,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Harden save/load error reporting",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The driver currently swallows two error classes silently: corrupt save on load (driver:158) and quota-exceeded on save (driver:222). A transient JSON parse bug wipes the save with no trace. Add a typed error channel on the driver so the UI can surface these to the player, and distinguish 'no save exists' from 'save exists but failed to load'. Blocked on acceptance of the core-systems-architecture-review proposal (finding #3).",
+      "related_items": [
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "catch blocks at lines 158 and 222-226"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "load() currently returns null for both 'no save' and 'corrupt save'"
+        },
+        {
+          "ref": "client/src/ui/useGame.ts",
+          "purpose": "hook that needs to expose the error stream to React state"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/core-systems-architecture-review.md",
+          "purpose": "proposal finding #3 — resolution details the driver channel shape"
+        }
+      ],
+      "acceptance_criteria": [
+        "load() returns a discriminated result — { kind: 'none' } | { kind: 'loaded', state } | { kind: 'corrupt', error } — rather than null-overloading both cases",
+        "driver exposes onSaveError(listener) channel emitting { kind: 'load_corrupt' | 'save_quota' | 'save_unknown', details?: string }",
+        "driver no longer contains bare catch {} blocks — every caught error either emits an event or logs with context",
+        "useGame hook subscribes to the error channel and exposes a saveError state field that UI components can render",
+        "tests cover: corrupt JSON triggers load_corrupt event; mocked quota-exceeded triggers save_quota event; normal operation emits nothing"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 56,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Consolidate total_followers to a purely derived field",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Player.total_followers is labelled 'derived field' but is written via two paths inside the same tick: an incremental update at game-loop/index.ts:371 and an immediate syncTotalFollowers() call at line 377. The incremental write is redundant and creates drift risk for future follower-earning code paths. Make total_followers purely derived — single source of truth is syncTotalFollowers. Blocked on acceptance of the core-systems-architecture-review proposal (finding #5).",
+      "related_items": [
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "tick() lines 365-377 — both write paths"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "syncTotalFollowers() + earnFollowers() also does dual-write"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/core-systems-architecture-review.md",
+          "purpose": "proposal finding #5"
+        }
+      ],
+      "acceptance_criteria": [
+        "Remove the incremental total_followers update in tick() — rely on syncTotalFollowers as the single source of truth",
+        "Either remove earnFollowers() or change it to no longer write total_followers directly (since it's derived)",
+        "Add a JSDoc comment to the Player.total_followers field in types.ts: 'DERIVED — never write directly, use syncTotalFollowers'",
+        "lifetime_followers stays incremental (it has no derivation source since it survives rebrand) — do not change its write path",
+        "Existing tick tests still pass; add a unit test that asserts total_followers always equals the sum of platform followers after a tick"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }
