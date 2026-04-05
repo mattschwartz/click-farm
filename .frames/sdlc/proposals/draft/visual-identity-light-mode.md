@@ -3,7 +3,7 @@ name: Visual Identity — Light Mode & Color System
 description: Establishes the game's base visual mood as clean and airy light mode, with color reserved for algorithm states and peak emotional moments.
 author: ux-designer
 status: draft
-reviewers: [game-designer]
+reviewers: [engineer]
 ---
 
 # Proposal: Visual Identity — Light Mode & Color System
@@ -115,9 +115,28 @@ I lean toward (a) on pure aesthetic merit, but that's a ux-designer/user call, n
 
 This proposal should resolve the new OQ3 (added above) before moving forward. I'm staying on reviewers until that question is answered.
 
+---
+# Review: game-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+OQ3 resolved by user: v1 pivot. Light mode is the launch commitment.
+
+Aligned. The tonal direction was already endorsed in my prior RFC review (see above). With the sequencing question answered, my concern is resolved — I'm removing myself from reviewers.
+
+**Downstream work this triggers (not this proposal's burden, but flagging for coordination):**
+1. **`proposals/accepted/algorithm-mood-visibility.md` must be reopened and revised.** Every per-state edge-color value, the Corporate Takeover "darkest" logic, and the panel opacity calibration were derived against a dark base and are no longer authoritative. I'm filing a task for ux-designer to drive this revision.
+2. **`ux/core-game-screen.md` §4.2–4.4 likely needs revision too** — mood library, instability motion, shift transitions were all written assuming dark panels. ux-designer to confirm scope during the algorithm-mood-visibility revision.
+3. **Engineer's in-flight dark-mode build direction needs to pause** for the affected surfaces until the light-mode mood colors are derived. Engineer should be looped in by ux-designer as part of the revision task.
+
+OQ2 (does the base shift per state) remains open, owned by ux-designer + engineer. It is a tuning question that does not block the direction commitment but needs engineer input before this proposal moves to accepted. Engineer added to reviewers.
+
 ## Open Questions
 
 1. Does the clean, restrained visual base serve the satirical tone the game-designer has in mind, or does it risk reading as too straight-faced? **Owner: game-designer**
    - **[RESOLVED — game-designer, 2026-04-05]** Yes, it serves the tone well. The "design as straight man" posture is exactly right for the satire — Cookie Clicker's deadpan restraint is the correct reference. Absurdity lands harder against a polished, clean surface than against visual chaos. See review for detail.
 2. Should the warm base (`#FAF8F5`) shift slightly per algorithm state, or stay fixed while only the accent layer shifts? A shifting base is more immersive but adds implementation complexity. **Owner: ux-designer + engineer**
-3. **[NEW]** This proposal reverses the dark-mode direction already shipped in `proposals/accepted/algorithm-mood-visibility.md` — is this a v1 pivot (blocks/revises in-flight work) or a v2 redesign (ships after current dark-mode build lands)? See game-designer review for full impact analysis. **Owner: user + ux-designer**
+3. ~~**[NEW]** This proposal reverses the dark-mode direction already shipped in `proposals/accepted/algorithm-mood-visibility.md` — is this a v1 pivot (blocks/revises in-flight work) or a v2 redesign (ships after current dark-mode build lands)? See game-designer review for full impact analysis. **Owner: user + ux-designer**~~ **[RESOLVED — user, 2026-04-05]** (a) v1 pivot. Light mode is the commitment for launch. `algorithm-mood-visibility` is to be reopened and re-derived against the warm near-white base; dark-mode edge colors are no longer authoritative. A follow-up task is filed for ux-designer to revise that proposal.

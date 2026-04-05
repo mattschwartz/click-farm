@@ -1,5 +1,5 @@
 {
-  "next_id": 57,
+  "next_id": 58,
   "tasks": [
     {
       "id": 1,
@@ -1579,6 +1579,50 @@
         "Existing tick tests still pass; add a unit test that asserts total_followers always equals the sum of platform followers after a tick"
       ],
       "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 57,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Revise algorithm-mood-visibility for light-mode base",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The user has committed to light mode as the v1 visual identity (see proposals/draft/visual-identity-light-mode.md OQ3 resolution). This invalidates the currently-accepted algorithm-mood-visibility proposal, which was built against a dark base (#0b0d12 with rgba(18,21,28,0.82) panels). Every per-state edge-color value, the Corporate Takeover 'darkest' design logic, and the panel opacity calibration need to be re-derived against the warm near-white base (#FAF8F5) and white surface panels (#FFFFFF). This is your proposal originally — you own the revision.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "the proposal to revise — currently dark-mode, needs light-mode derivation"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/visual-identity-light-mode.md",
+          "purpose": "the light-mode commitment driving this revision; see §1 base palette and game-designer review"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§4.2-4.4 (mood library, instability motion, shift transitions) likely need revision in the same pass — scope during this task"
+        }
+      ],
+      "acceptance_criteria": [
+        "Reopen algorithm-mood-visibility proposal (move back to draft or write a superseding revision — your call)",
+        "Re-derive all five mood edge colors against the warm near-white base — saturations and opacities may need to invert since we're tinting a light surface, not a dark one",
+        "Rethink the Corporate Takeover signature — on a light base, it cannot be 'the darkest' state; decide what its cool/muted identity becomes (cool pale grey wash? low-saturation neutral?)",
+        "Recalibrate panel opacity for white surfaces (the 82% dark opacity token is no longer authoritative)",
+        "Confirm whether core-game-screen.md §4.2-4.4 also needs revision and flag to the team if so",
+        "Loop in engineer for implementation impact (they are mid-flight on dark-mode builds for the affected surfaces)"
+      ],
+      "open_questions": [
+        {
+          "question": "Does the base #FAF8F5 shift slightly per algorithm state, or stay fixed while only the accent layer shifts? (This is OQ2 on visual-identity-light-mode — resolve here as part of the revision.)",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "Should Corporate Takeover be reframed entirely on a light base (e.g., cool pale grey wash to read 'corporate sterility')?",
+          "owner": "ux-designer"
+        }
+      ],
       "blocked_on": []
     }
   ]
