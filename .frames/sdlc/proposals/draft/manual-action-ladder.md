@@ -23,9 +23,13 @@ Meanwhile, the Actions Column (`proposals/accepted/actions-column.md`) has alrea
 
 ### 1. The Ladder Structure
 
-The first rung of the ladder is **Chirp** — the in-fiction equivalent of a tweet on the platform Chirper. Chirp replaces Post as the starting verb and inherits Post's diegetic-anchor role in the Actions Column. Subsequent rungs are content formats like **Selfie**, **Livestream**, and additional formats to be named. Each rung introduces a new manual click verb with its own yield, cooldown, and feel.
+The ladder is **5 verbs** representing content MEDIUMS the player personally performs:
 
-The ladder's full length and the exact sequence are not locked in this proposal — only the *shape* of the ladder is.
+**Chirp → Selfie → Livestream → Podcast → Viral Stunt**
+
+Each rung is a distinct physical act — text, photo, video, audio, event. Chirp is unlocked from the start and inherits Post's diegetic-anchor role in the Actions column. Each subsequent rung unlocks behind an engagement or follower threshold.
+
+The remaining generators in the roster (`memes`, `hot_takes`, `tutorials`) are **passive-only** — they do not appear in the Actions column and are not manually clickable. Narratively, they are content the player's team/audience produces *about* them; mechanically, they sit in the Upgrades column as pure passive generators, same as today. This split — "what I personally perform" (manual-clickable) vs. "what my team farms" (passive-only) — gives the player's hand a focused, teachable 5-rung ladder while preserving the economic depth of the 8-generator roster.
 
 ### 2. Per-Verb Lifecycle: Unlock → Upgrade → Automate
 
@@ -43,10 +47,11 @@ Upgrade and Automate are purchased in the Upgrades middle column, alongside exis
 
 Each verb has distinct mechanical properties so that every moment the player is deciding *which verb(s) to tap*:
 
-- **Chirp** — short starting cooldown (e.g. 0.3–0.5s), low-yield per click. The rapid-fire baseline.
-- **Selfie** — medium starting cooldown (e.g. 2–3s), higher-yield per click. Requires attention.
-- **Livestream** — long starting cooldown (e.g. 8–12s), highest-yield per click. A big-moment verb.
-- **Further rungs** — TBD.
+- **Chirp** — short starting cooldown (e.g. 0.3–0.5s), low-yield per click. The rapid-fire baseline. Text medium.
+- **Selfie** — medium starting cooldown (e.g. 2–3s), higher-yield per click. Requires attention. Photo medium.
+- **Livestream** — long starting cooldown (e.g. 8–12s), higher-yield. A big-moment verb. Video medium.
+- **Podcast** — longer-form starting cooldown (e.g. ~30s+), higher-yield still. Audio medium; commits the player to a longer-form beat.
+- **Viral Stunt** — capstone cooldown (e.g. minutes), highest-yield per click. Rare event-verb; the player taps when they're "ready for a big moment."
 
 Every verb has *some* starting cooldown so that every verb's Automate track has dual payoff (automator firing rate AND player manual rate). Cooldowns can be reduced via the verb's Automate upgrades down to the ~0.01s floor.
 
@@ -138,6 +143,10 @@ No concerns.
 ### 12. What This Locks In
 
 - The Actions Column starts with Chirp, not Post.
+- **The ladder is 5 verbs: `chirps → selfies → livestreams → podcasts → viral_stunts`** (OQ14 resolved). Content mediums the player personally performs. Chirp is unlocked at 0.
+- **3 generators are passive-only and do not appear in the Actions column:** `memes`, `hot_takes`, `tutorials`. They remain purchased in the Upgrades column as pure passive generators, unchanged from today.
+- **`GeneratorDef.manual_clickable: boolean` flag** distinguishes ladder verbs (true: 5 entries) from passive-only generators (false: 3 entries). The Actions column view filters to `manual_clickable: true`. `postClick(verbId)` only accepts verbIds where the generator is manual_clickable.
+- **Full roster grows from 7 to 8 generators** by adding `chirps` at position 0. Existing 7 retain identities, unlock thresholds, balance tuning, and platform affinities unchanged. Only chirps needs net-new balance + affinity cells.
 - Manual verbs follow a three-state lifecycle: unlock, upgrade, automate.
 - **Ladder verbs ARE generators** (OQ11 resolved). The Actions column is a view onto the existing Generator entity; no new entity class.
 - **`base_engagement_rate` splits into `base_event_yield × base_event_rate`** (OQ12 resolved). Upgrade scales yield via `level_multiplier(level)`; Automate scales rate via `count`. Backward-compatible for existing generators (seed `base_event_yield=1.0`).
@@ -153,11 +162,14 @@ No concerns.
 
 ### 13. What This Leaves Open
 
-- The verb-to-generator roster mapping: which existing generators become manual-clickable, and where Chirp maps (OQ14).
-- The unlock-threshold formula for new verbs (engagement milestones vs. follower thresholds vs. prior-verb prerequisites, OQ5).
-- Per-verb automation-level tuning curve (OQ2).
+All remaining questions are **balance-pass tuning**, not structural decisions:
+
+- Per-verb automation-level tuning curve (OQ2) — the rate-reduction steps each Automate level buys.
+- The unlock-threshold formula for the 4 unlockable verbs (engagement vs. follower milestones vs. prior-verb prerequisites, OQ5).
 - `base_event_yield` tuning so manual taps stay "meaningfully supplementary" at late-game Automate levels (OQ15).
-- Per-verb platform affinity under the 3-platform matrix (OQ4).
+- Net-new balance cells for `chirps` (yield, rate, algorithm-state modifiers, platform affinity row, trend_sensitivity).
+
+These are all game-designer-owned and belong to a dedicated balance pass after acceptance.
 
 ## Supersession Notes
 
@@ -186,7 +198,7 @@ This proposal modifies or extends several accepted decisions. On acceptance, the
 
 3. ~~**Does the Actions Column soft cap (4 members) need to change?**~~ **[RESOLVED — ux-designer, 2026-04-05]** Soft cap of 4 stands; internal scroll at 5+. Auto-compacting automated verbs rejected (contradicts §3's interleaved-tapping intent; 40px violates 44px iOS minimum + 80px floor from `actions-column.md` OQ4). Refinement added: **spotlight slot (sticky top)** pins the most-recently-unlocked verb to the top of the scroll region (desktop) / bottom-anchor position (mobile), carrying the progression signal. Instrument-panel aesthetic holds at 5+ tap targets because hierarchy comes from motion/recency/touch, not equal-weight scanning. See ux-designer's review.
 
-4. **Are verbs coupled to platforms, or platform-agnostic?** Chirp reads as Chirper-native — but the platform proposal names the Twitter-analog platform **Skroll**, not Chirper. Is Chirp a Skroll-native verb, a new platform's verb, or platform-agnostic? Similar question for Selfie (Instasham?) and Livestream (which platform?). Under consolidation (OQ11-b), verbs inherit the platform-affinity matrix already defined — see `platform-identity-and-affinity-matrix.md` §4 for the 3×7 matrix. Under parallel (OQ11-a), verbs would need their own matrix. **Owner: game-designer** (name the couplings once OQ11 resolves).
+4. ~~**Are verbs coupled to platforms, or platform-agnostic?**~~ **[RESOLVED — game-designer, 2026-04-05]** Verbs inherit platform affinity from the existing content-affinity matrix (`platform-identity-and-affinity-matrix.md`). Selfies/Livestreams/Podcasts/Viral Stunts already have affinity cells authored under today's roster — those cells carry over unchanged. **Only `chirps` needs net-new affinity cells:** high on Skroll (✓×1.5 — tweet-native), neutral on Instasham (–×1.0), low on Grindset (✗×0.6 — short-form text plays poorly on long-form platform). The affinity matrix remains the single source of truth for platform routing and applies at `computeFollowerDistribution` only, not at `postClick` tap time (per OQ17). **Note:** the naming mismatch "Chirp-on-Chirper vs. Chirp-on-Skroll" is resolved in-fiction by letting Chirper *be* Skroll's in-game name — or by making Skroll the platform and Chirp just the verb-name for the text medium on it. Final platform-name alignment is deferred to the platform-proposal's acceptance pass.
 
 5. **What unlock-threshold formula scales across the full ladder?** The user's example was "10 engagement to unlock Selfie." For a ladder of 5+ verbs, is the threshold an escalating engagement amount, a follower milestone, a prior-verb-upgrade prerequisite, or a combination? **Owner: game-designer** (economy tuning).
 
@@ -206,13 +218,30 @@ This proposal modifies or extends several accepted decisions. On acceptance, the
 
 13. ~~**Per-verb algorithm-modifier binding.**~~ **[RESOLVED — architect, 2026-04-05]** `postClick()` takes `verbId: GeneratorId` as a parameter. Delete the `CLICK_GENERATOR_ID` and `CLICK_BASE_ENGAGEMENT` constants; look up the verb's generator def for yield, trend_sensitivity, and state_modifiers. Add a per-verb cooldown gate: reject if `now - state.player.last_manual_click_at[verbId] < 1 / (genState.count × def.base_event_rate)`. Under consolidation, every verb-as-generator already has trend_sensitivity and state_modifiers — no new balance cells for algorithm binding. See architect's review for the 5-step refactor spec.
 
-14. **Verb-to-generator roster mapping.** Under consolidation, ladder verbs ARE entries in the existing generator roster (selfies, memes, hot_takes, tutorials, livestreams, podcasts, viral_stunts). Two sub-questions: (a) which existing generators become manual-clickable (all 7, or a subset)?; (b) does Chirp map to an existing generator (rename `selfies` → `chirps`?), become a new generator at threshold 0 that precedes selfies, or fold into the roster some other way? The architect notes: "the existing 7-generator roster can absorb the ladder's verbs by renaming/reusing entries." **Owner: game-designer** (determines which generators are manual-clickable and authors the Chirp mapping).
+14. ~~**Verb-to-generator roster mapping.**~~ **[RESOLVED — game-designer, 2026-04-05]** **5-verb ladder, 3 passive-only generators.** The Actions column exposes a focused ladder of 5 content-medium verbs representing what the player personally performs; the remaining generators stay passive-only behind the scenes.
+
+    **Ladder (manual-clickable): `chirps → selfies → livestreams → podcasts → viral_stunts`** — content mediums (text, photo, video, audio, event) the player physically performs. Each goes through Unlock → Upgrade → Automate. Each appears in the Actions column.
+
+    **Passive-only (not in Actions column): `memes`, `hot_takes`, `tutorials`** — content styles (remix, opinion, how-to) the player's team/audience produces. Narratively: content the audience makes *about* the player, or that the player's team farms. Mechanically: purchased in Upgrades column as pure passive generators, same as today. Unchanged balance tuning.
+
+    **Chirps is net-new.** Added at position 0 of the roster, unlocked at engagement 0. Freshly calibrated per §3 (short cooldown 0.3–0.5s, low per-tap yield). Platform affinity: high on Skroll (Twitter analog), low on Instasham/Grindset.
+
+    **Full roster (8 generators): `chirps, selfies, memes, hot_takes, tutorials, livestreams, podcasts, viral_stunts`.** The existing 7 keep their identities, unlock thresholds, balance tuning, and platform affinities unchanged. The roster grows by one entry (chirps). Selfies' role shifts from "first generator" to "first unlockable ladder rung after Chirp."
+
+    **Implementation implication:** new `manual_clickable: boolean` field on `GeneratorDef`. Actions column view filters to `manual_clickable: true`. `postClick(verbId)` only accepts verbIds where the generator is manual_clickable; passive-only generators are not valid verb dispatch targets. No other architecture changes. See §12 for the locked-in spec.
+
+    **Rationale:** (a) 5 ladder rungs is teachable — each verb has room to feel distinct before the next arrives; 8 would crowd intermediate verbs. (b) "What I personally perform" vs. "what my team produces for me" is a clean narrative split honest to the social-media-fame fiction. (c) Actions column stays within soft-cap-4 range most of the session (5 live-verb slots + 1 ghost kicks internal scroll only at ladder-complete). (d) Late-game depth comes from Podcasts/Viral Stunts' long automation curves, not from more new-verb unlocks.
 
 15. **`base_event_yield` tuning to preserve "meaningfully supplementary" feel.** At the 0.01s cooldown floor, manual contribution is bounded at ~10% of automator throughput. For the "I feel my hand matters" target (§10) to hold at late-game levels, the per-tap yield (`base_event_yield × level_multiplier × algo_mod × …`) must be tuned so that 10% of a verb's automated output is still a visible number jump per tap. Balance-pass concern. **Owner: game-designer** (post-implementation tuning, in collaboration with UX's click-feedback spec).
 
 16. ~~**Cooldown is undefined at `count === 0` (pre-Automate).**~~ **[RESOLVED — game-designer, 2026-04-05, pending architect sign-off]** The derived formula `cooldown = 1 / (count × base_event_rate)` is undefined for a freshly-unlocked verb that has not yet been Automated (count = 0 → Infinity cooldown → verb is uncliсkable), which contradicts §3's "short starting cooldown" requirement. **Resolution: phantom-hand floor — `cooldown = 1 / (max(1, count) × base_event_rate)`** (engineer's option ii). Pre-Automate, the player's own hand *is* the single actor firing the verb, so the formula correctly models "one actor's worth" of firing rate. Post-Automate, each purchased `count` adds a parallel automator and cooldown divides proportionally — first Automate level halves the cooldown, exactly matching §4's "you feel the Automate upgrade in your own hand" dual-payoff. Preserves the architect's derived-view principle (one-line formula change, no new fields, no mode-switch). Rejected alternatives: (i) seeding count=1 at Unlock conflates the Unlock and Automate lifecycle steps and breaks the teaching clarity that "Automate is when the first non-player actor shows up"; (iii) a separate `base_manual_cooldown` field violates "cooldown is a derived view." **Architect: please sign off on the formula change.**
 
 17. **Does `postClick` apply platform affinity at click time?** Engineer's non-blocking flag #1 from the implementation review: today's `postClick` adds flat engagement, and platform affinity enters only at the follower-distribution stage (`computeFollowerDistribution` in `platform/index.ts`). Architect's earned-formula includes `× platform_affinity_if_applicable`, which is ambiguous for manual clicks. **Game-designer resolution: no platform affinity at click time.** Manual taps add flat engagement per verb; platform routing happens downstream at the existing engagement→distribution split. Reasoning: (a) the player is tapping a content *verb*, not targeting a *platform* — the verb's yield is its own identity, independent of which platform harvests the followers; (b) introducing per-platform multipliers at tap time would force the player to mentally optimize "which verb is Skroll-hot right now" during every tap, which pulls focus from the rhythm-based "conductor" fantasy (§10); (c) preserving today's engagement→distribution split keeps the ladder orthogonal to the platform matrix (no coupling cost). **Owner: architect** (confirm this preserves the intent of the earned-formula).
+
+---
+## Revision: 2026-04-05 — game-designer (OQ14 + OQ4 resolution)
+
+Locked the ladder roster at 5 verbs: `chirps → selfies → livestreams → podcasts → viral_stunts`. `memes`/`hot_takes`/`tutorials` become passive-only generators (still in the roster, not in the Actions column). Narrative framing: "what I personally perform" (manual-clickable) vs. "what my team produces for me" (passive-only). Keeps the ladder teachable at 5 rungs and keeps the Actions column within the soft-cap-4 + spotlight-slot visual discipline through most of the session. §1 rewritten to name the 5-verb ladder explicitly and describe the split. §3 extended with Podcast + Viral Stunt differentiation. §12 locked in: new `GeneratorDef.manual_clickable: boolean` flag, roster grows 7→8 (chirps at position 0, existing 7 unchanged). OQ14 resolved with full rationale. OQ4 resolved: existing affinity cells carry over for the 4 existing ladder verbs; chirps gets net-new cells (✓Skroll, –Instasham, ✗Grindset). §13 trimmed — only balance-pass tuning remains open (OQ2, OQ5, OQ15, chirps balance cells). All structural decisions are now locked.
 
 ---
 ## Revision: 2026-04-05 — game-designer (post-architect-re-review)
