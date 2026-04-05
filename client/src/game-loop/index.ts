@@ -41,6 +41,10 @@ import {
   applyFollowerLoss,
   createDefaultStateMachine,
 } from '../scandal/index.ts';
+import {
+  kitEngagementBonus,
+  kitFollowerConversionBonus,
+} from '../creator-kit/index.ts';
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -160,12 +164,16 @@ export function computeGeneratorEffectiveRate(
   const rawModifier = getAlgorithmModifier(state.algorithm, generator.id);
   const algoMod = effectiveAlgorithmModifier(rawModifier, def.trend_sensitivity);
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
+  // Kit effects fold in AFTER Clout per architecture/creator-kit.md §Stacking
+  // Order (§3 clout → §4 kit). Camera is the only item in this chain today.
+  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
   return (
     generator.count *
     def.base_engagement_rate *
     levelMultiplier(generator.level) *
     algoMod *
-    clout
+    clout *
+    kit
   );
 }
 
@@ -365,12 +373,21 @@ export function tick(
     staticData,
   );
 
+  // 4a. Wardrobe — kit follower_conversion_multiplier wraps the entire
+  // per-platform follower sum (architecture/creator-kit.md §Integration
+  // Points §3). Applied after computeFollowerDistribution so the platform
+  // module stays decoupled from kit state.
+  const kitFollowerMult = kitFollowerConversionBonus(
+    state.player.creator_kit,
+    staticData,
+  );
+
   // 5. Apply per-platform follower gains over deltaMs.
   let platforms = state.platforms;
   if (distribution.totalRate > 0) {
     const next: Record<PlatformId, PlatformState> = { ...state.platforms };
     for (const id of Object.keys(state.platforms) as PlatformId[]) {
-      const gained = distribution.perPlatformRate[id] * deltaMs;
+      const gained = distribution.perPlatformRate[id] * kitFollowerMult * deltaMs;
       if (gained > 0) {
         next[id] = {
           ...state.platforms[id],
@@ -381,7 +398,7 @@ export function tick(
     platforms = next;
 
     // 6. Update lifetime_followers. total_followers is derived; will be synced below.
-    const totalGained = distribution.totalRate * deltaMs;
+    const totalGained = distribution.totalRate * kitFollowerMult * deltaMs;
     player = {
       ...player,
       lifetime_followers: player.lifetime_followers + totalGained,
@@ -580,15 +597,21 @@ export function computeSnapshot(
     staticData,
   );
 
+  // Wardrobe multiplies the entire per-platform distribution (see tick).
+  const kitFollowerMult = kitFollowerConversionBonus(
+    state.player.creator_kit,
+    staticData,
+  );
+
   // distribution rates are per-ms. Convert to per-sec for the snapshot.
   const platform_rates = Object.fromEntries(
     (Object.keys(state.platforms) as PlatformId[]).map((id) => [
       id,
-      distribution.perPlatformRate[id] * 1000,
+      distribution.perPlatformRate[id] * kitFollowerMult * 1000,
     ]),
   ) as Record<PlatformId, number>;
 
-  const total_follower_rate = distribution.totalRate * 1000;
+  const total_follower_rate = distribution.totalRate * kitFollowerMult * 1000;
 
   return {
     total_engagement_rate,
@@ -621,8 +644,9 @@ export function postClick(
     selfiesDef.trend_sensitivity,
   );
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
+  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
 
-  const earned = CLICK_BASE_ENGAGEMENT * algoMod * clout;
+  const earned = CLICK_BASE_ENGAGEMENT * algoMod * clout * kit;
 
   return {
     ...state,

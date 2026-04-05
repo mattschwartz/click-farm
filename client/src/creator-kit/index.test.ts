@@ -3,6 +3,8 @@ import {
   kitItemCost,
   canPurchaseKitItem,
   purchaseKitItem,
+  kitEngagementBonus,
+  kitFollowerConversionBonus,
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -242,5 +244,88 @@ describe('purchaseKitItem — afterPurchase hook', () => {
       // expected
     }
     expect(called).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Effect bonus helpers — kitEngagementBonus / kitFollowerConversionBonus
+// ---------------------------------------------------------------------------
+
+describe('kitEngagementBonus', () => {
+  it('returns 1.0 for an empty kit', () => {
+    expect(
+      kitEngagementBonus({} as Record<KitItemId, number>, STATIC_DATA),
+    ).toBe(1.0);
+  });
+
+  it('returns 1.0 when camera is at level 0', () => {
+    expect(
+      kitEngagementBonus(
+        { camera: 0 } as Record<KitItemId, number>,
+        STATIC_DATA,
+      ),
+    ).toBe(1.0);
+  });
+
+  it('returns camera.values[level-1] at each level', () => {
+    const def = STATIC_DATA.creatorKitItems.camera;
+    if (def.effect.type !== 'engagement_multiplier') throw new Error('bad def');
+    for (let level = 1; level <= def.max_level; level++) {
+      expect(
+        kitEngagementBonus(
+          { camera: level } as Record<KitItemId, number>,
+          STATIC_DATA,
+        ),
+      ).toBeCloseTo(def.effect.values[level - 1], 10);
+    }
+  });
+
+  it('ignores items whose effect is not engagement_multiplier', () => {
+    // Mogging, Wardrobe, Laptop, Phone — all non-engagement effects.
+    expect(
+      kitEngagementBonus(
+        { mogging: 2, wardrobe: 2, laptop: 2, phone: 2 } as Record<KitItemId, number>,
+        STATIC_DATA,
+      ),
+    ).toBe(1.0);
+  });
+});
+
+describe('kitFollowerConversionBonus', () => {
+  it('returns 1.0 for an empty kit', () => {
+    expect(
+      kitFollowerConversionBonus({} as Record<KitItemId, number>, STATIC_DATA),
+    ).toBe(1.0);
+  });
+
+  it('returns 1.0 when wardrobe is at level 0', () => {
+    expect(
+      kitFollowerConversionBonus(
+        { wardrobe: 0 } as Record<KitItemId, number>,
+        STATIC_DATA,
+      ),
+    ).toBe(1.0);
+  });
+
+  it('returns wardrobe.values[level-1] at each level', () => {
+    const def = STATIC_DATA.creatorKitItems.wardrobe;
+    if (def.effect.type !== 'follower_conversion_multiplier') throw new Error('bad def');
+    for (let level = 1; level <= def.max_level; level++) {
+      expect(
+        kitFollowerConversionBonus(
+          { wardrobe: level } as Record<KitItemId, number>,
+          STATIC_DATA,
+        ),
+      ).toBeCloseTo(def.effect.values[level - 1], 10);
+    }
+  });
+
+  it('ignores items whose effect is not follower_conversion_multiplier', () => {
+    expect(
+      kitFollowerConversionBonus(
+        { camera: 2, mogging: 2, laptop: 2, phone: 2 } as Record<KitItemId, number>,
+        STATIC_DATA,
+      ),
+    ).toBe(1.0);
   });
 });

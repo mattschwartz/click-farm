@@ -2419,7 +2419,7 @@
       "alias": "E4",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit tick integration: Camera + Wardrobe",
       "requester": "architect",
@@ -2443,7 +2443,8 @@
         "Unit tests cover: Camera level 0/1/2 affects engagement rate correctly; Wardrobe level 0/1/2 affects follower distribution correctly; Camera × Clout engagement_multiplier stacks multiplicatively"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 77,

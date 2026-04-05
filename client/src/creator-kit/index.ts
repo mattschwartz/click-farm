@@ -18,6 +18,82 @@ import type { GameState, KitItemId, StaticData } from '../types.ts';
 import { spendEngagement } from '../model/index.ts';
 
 // ---------------------------------------------------------------------------
+// Effect bonuses — read kit levels, return cumulative multipliers for the
+// tick pipeline. Parallels cloutBonus in game-loop/index.ts.
+//
+// Level-0 (unpurchased) items contribute nothing — the multiplier is 1.0.
+// Values come from KitItemDef.effect.values[level - 1] (cumulative).
+// ---------------------------------------------------------------------------
+
+/**
+ * Cumulative kit-level engagement multiplier. Reads every kit item with an
+ * `engagement_multiplier` effect (currently just `camera`) and multiplies
+ * their level-indexed values together.
+ *
+ * Folds in after Clout effects in the multiplicative chain per the
+ * architecture's Stacking Order convention
+ * (architecture/creator-kit.md §Stacking Order).
+ *
+ * Returns 1.0 when no relevant kit item is owned.
+ */
+export function kitEngagementBonus(
+  creatorKit: Record<KitItemId, number>,
+  staticData: StaticData,
+): number {
+  let multiplier = 1.0;
+  for (const itemId of Object.keys(creatorKit) as KitItemId[]) {
+    const level = creatorKit[itemId];
+    if (!level || level <= 0) continue;
+    const def = staticData.creatorKitItems[itemId];
+    if (def === undefined) continue;
+    if (def.effect.type === 'engagement_multiplier') {
+      const value = def.effect.values[level - 1];
+      if (value === undefined) {
+        throw new Error(
+          `kitEngagementBonus: item '${itemId}' has no values[${level - 1}] ` +
+            `for level ${level} (max_level ${def.max_level})`,
+        );
+      }
+      multiplier *= value;
+    }
+  }
+  return multiplier;
+}
+
+/**
+ * Cumulative kit-level follower-conversion multiplier. Reads every kit item
+ * with a `follower_conversion_multiplier` effect (currently just `wardrobe`).
+ *
+ * Applied to the entire per-platform follower distribution sum per
+ * architecture/creator-kit.md §Integration Points §3.
+ *
+ * Returns 1.0 when no relevant kit item is owned.
+ */
+export function kitFollowerConversionBonus(
+  creatorKit: Record<KitItemId, number>,
+  staticData: StaticData,
+): number {
+  let multiplier = 1.0;
+  for (const itemId of Object.keys(creatorKit) as KitItemId[]) {
+    const level = creatorKit[itemId];
+    if (!level || level <= 0) continue;
+    const def = staticData.creatorKitItems[itemId];
+    if (def === undefined) continue;
+    if (def.effect.type === 'follower_conversion_multiplier') {
+      const value = def.effect.values[level - 1];
+      if (value === undefined) {
+        throw new Error(
+          `kitFollowerConversionBonus: item '${itemId}' has no values[${level - 1}] ` +
+            `for level ${level} (max_level ${def.max_level})`,
+        );
+      }
+      multiplier *= value;
+    }
+  }
+  return multiplier;
+}
+
+// ---------------------------------------------------------------------------
 // Cost lookup
 // ---------------------------------------------------------------------------
 

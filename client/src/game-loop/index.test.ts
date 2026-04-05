@@ -786,3 +786,259 @@ describe('evaluateViralTrigger', () => {
     expect(next.viralBurst.active).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Creator Kit — Camera (engagement_multiplier) + Wardrobe
+// (follower_conversion_multiplier) tick integration (task #76)
+// ---------------------------------------------------------------------------
+
+describe('Creator Kit — Camera engagement_multiplier', () => {
+  function withKit(
+    state: GameState,
+    kit: Partial<Record<'camera' | 'laptop' | 'phone' | 'wardrobe' | 'mogging', number>>,
+  ): GameState {
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        creator_kit: kit as GameState['player']['creator_kit'],
+      },
+    };
+  }
+
+  it('level 0 is a 1.0 no-op on per-generator effective rate', () => {
+    const base = stateWithGenerator('selfies', 5, 1);
+    const rateBase = computeGeneratorEffectiveRate(
+      base.generators.selfies,
+      base,
+      STATIC_DATA,
+    );
+    const rateWithZero = computeGeneratorEffectiveRate(
+      base.generators.selfies,
+      withKit(base, { camera: 0 }),
+      STATIC_DATA,
+    );
+    expect(rateWithZero).toBe(rateBase);
+  });
+
+  it('level 1 multiplies the generator effective rate by values[0]', () => {
+    const base = stateWithGenerator('selfies', 5, 1);
+    const expectedFactor = STATIC_DATA.creatorKitItems.camera.effect.type ===
+      'engagement_multiplier'
+      ? STATIC_DATA.creatorKitItems.camera.effect.values[0]
+      : 1;
+    const baseRate = computeGeneratorEffectiveRate(
+      base.generators.selfies,
+      base,
+      STATIC_DATA,
+    );
+    const withCamera1 = computeGeneratorEffectiveRate(
+      base.generators.selfies,
+      withKit(base, { camera: 1 }),
+      STATIC_DATA,
+    );
+    expect(withCamera1).toBeCloseTo(baseRate * expectedFactor, 10);
+  });
+
+  it('level 2 multiplies by values[1] (cumulative)', () => {
+    const base = stateWithGenerator('selfies', 5, 1);
+    const expectedFactor = STATIC_DATA.creatorKitItems.camera.effect.type ===
+      'engagement_multiplier'
+      ? STATIC_DATA.creatorKitItems.camera.effect.values[1]
+      : 1;
+    const baseRate = computeGeneratorEffectiveRate(
+      base.generators.selfies,
+      base,
+      STATIC_DATA,
+    );
+    const withCamera2 = computeGeneratorEffectiveRate(
+      base.generators.selfies,
+      withKit(base, { camera: 2 }),
+      STATIC_DATA,
+    );
+    expect(withCamera2).toBeCloseTo(baseRate * expectedFactor, 10);
+  });
+
+  it('stacks multiplicatively with Clout engagement_multiplier', () => {
+    const base = stateWithGenerator('selfies', 5, 1);
+    const cameraFactor = STATIC_DATA.creatorKitItems.camera.effect.type ===
+      'engagement_multiplier'
+      ? STATIC_DATA.creatorKitItems.camera.effect.values[0]
+      : 1;
+    const cloutFactor = STATIC_DATA.cloutUpgrades.engagement_boost.effect.type ===
+      'engagement_multiplier'
+      ? STATIC_DATA.cloutUpgrades.engagement_boost.effect.values[0]
+      : 1;
+
+    // Apply both: Clout level 1 + Camera level 1
+    const withBoth: GameState = {
+      ...withKit(base, { camera: 1 }),
+      player: {
+        ...base.player,
+        creator_kit: { camera: 1 } as GameState['player']['creator_kit'],
+        clout_upgrades: { ...base.player.clout_upgrades, engagement_boost: 1 },
+      },
+    };
+    const baseRate = computeGeneratorEffectiveRate(
+      base.generators.selfies,
+      base,
+      STATIC_DATA,
+    );
+    const bothRate = computeGeneratorEffectiveRate(
+      withBoth.generators.selfies,
+      withBoth,
+      STATIC_DATA,
+    );
+    expect(bothRate).toBeCloseTo(baseRate * cloutFactor * cameraFactor, 10);
+  });
+
+  it('order-independent: applying camera then clout == clout then camera', () => {
+    const base = stateWithGenerator('memes', 10, 1);
+    const s1: GameState = {
+      ...base,
+      player: {
+        ...base.player,
+        creator_kit: { camera: 2 } as GameState['player']['creator_kit'],
+        clout_upgrades: { ...base.player.clout_upgrades, engagement_boost: 1 },
+      },
+    };
+    const s2: GameState = {
+      ...base,
+      player: {
+        ...base.player,
+        clout_upgrades: { ...base.player.clout_upgrades, engagement_boost: 1 },
+        creator_kit: { camera: 2 } as GameState['player']['creator_kit'],
+      },
+    };
+    expect(
+      computeGeneratorEffectiveRate(s1.generators.memes, s1, STATIC_DATA),
+    ).toBeCloseTo(
+      computeGeneratorEffectiveRate(s2.generators.memes, s2, STATIC_DATA),
+      10,
+    );
+  });
+
+  it('postClick applies Camera multiplier', () => {
+    const base = stateWithGenerator('selfies', 1, 1);
+    const cameraFactor = STATIC_DATA.creatorKitItems.camera.effect.type ===
+      'engagement_multiplier'
+      ? STATIC_DATA.creatorKitItems.camera.effect.values[0]
+      : 1;
+    const baseEarned = postClick(base, STATIC_DATA).player.engagement;
+    const camEarned = postClick(
+      withKit(base, { camera: 1 }),
+      STATIC_DATA,
+    ).player.engagement;
+    expect(camEarned).toBeCloseTo(baseEarned * cameraFactor, 10);
+  });
+});
+
+describe('Creator Kit — Wardrobe follower_conversion_multiplier', () => {
+  // Use a generator with a non-zero rate so distribution produces a number.
+  function stateWithProduction(): GameState {
+    const base = stateWithGenerator('selfies', 10, 1);
+    // Ensure chirper is unlocked (it is — threshold 0 — but be explicit).
+    return base;
+  }
+
+  it('level 0 is a 1.0 no-op on follower accrual over a tick', () => {
+    const state = stateWithProduction();
+    const zero = tick(state, T0 + 100, 100, STATIC_DATA);
+    const zeroKit = tick(
+      { ...state, player: { ...state.player, creator_kit: { wardrobe: 0 } as GameState['player']['creator_kit'] } },
+      T0 + 100,
+      100,
+      STATIC_DATA,
+    );
+    expect(zeroKit.player.total_followers).toBe(zero.player.total_followers);
+  });
+
+  it('level 1 scales follower accrual by values[0] vs level 0', () => {
+    const state = stateWithProduction();
+    const wardrobeFactor = STATIC_DATA.creatorKitItems.wardrobe.effect.type ===
+      'follower_conversion_multiplier'
+      ? STATIC_DATA.creatorKitItems.wardrobe.effect.values[0]
+      : 1;
+    const baseline = tick(state, T0 + 100, 100, STATIC_DATA);
+    const withWardrobe = tick(
+      { ...state, player: { ...state.player, creator_kit: { wardrobe: 1 } as GameState['player']['creator_kit'] } },
+      T0 + 100,
+      100,
+      STATIC_DATA,
+    );
+    expect(withWardrobe.player.total_followers).toBeCloseTo(
+      baseline.player.total_followers * wardrobeFactor,
+      6,
+    );
+  });
+
+  it('level 2 scales follower accrual by values[1]', () => {
+    const state = stateWithProduction();
+    const wardrobeFactor = STATIC_DATA.creatorKitItems.wardrobe.effect.type ===
+      'follower_conversion_multiplier'
+      ? STATIC_DATA.creatorKitItems.wardrobe.effect.values[1]
+      : 1;
+    const baseline = tick(state, T0 + 100, 100, STATIC_DATA);
+    const withWardrobe2 = tick(
+      { ...state, player: { ...state.player, creator_kit: { wardrobe: 2 } as GameState['player']['creator_kit'] } },
+      T0 + 100,
+      100,
+      STATIC_DATA,
+    );
+    expect(withWardrobe2.player.total_followers).toBeCloseTo(
+      baseline.player.total_followers * wardrobeFactor,
+      6,
+    );
+  });
+
+  it('Wardrobe does not affect engagement earned', () => {
+    const state = stateWithProduction();
+    const baseline = tick(state, T0 + 100, 100, STATIC_DATA);
+    const withWardrobe = tick(
+      { ...state, player: { ...state.player, creator_kit: { wardrobe: 2 } as GameState['player']['creator_kit'] } },
+      T0 + 100,
+      100,
+      STATIC_DATA,
+    );
+    expect(withWardrobe.player.engagement).toBeCloseTo(
+      baseline.player.engagement,
+      10,
+    );
+  });
+
+  it('lifetime_followers also scales by Wardrobe (follower gain is scaled at source)', () => {
+    const state = stateWithProduction();
+    const wardrobeFactor = STATIC_DATA.creatorKitItems.wardrobe.effect.type ===
+      'follower_conversion_multiplier'
+      ? STATIC_DATA.creatorKitItems.wardrobe.effect.values[0]
+      : 1;
+    const baseline = tick(state, T0 + 100, 100, STATIC_DATA);
+    const withWardrobe = tick(
+      { ...state, player: { ...state.player, creator_kit: { wardrobe: 1 } as GameState['player']['creator_kit'] } },
+      T0 + 100,
+      100,
+      STATIC_DATA,
+    );
+    expect(withWardrobe.player.lifetime_followers).toBeCloseTo(
+      baseline.player.lifetime_followers * wardrobeFactor,
+      6,
+    );
+  });
+
+  it('computeSnapshot reflects Wardrobe in total_follower_rate', () => {
+    const state = stateWithProduction();
+    const wardrobeFactor = STATIC_DATA.creatorKitItems.wardrobe.effect.type ===
+      'follower_conversion_multiplier'
+      ? STATIC_DATA.creatorKitItems.wardrobe.effect.values[0]
+      : 1;
+    const baseSnap = computeSnapshot(state, STATIC_DATA);
+    const withWardrobeSnap = computeSnapshot(
+      { ...state, player: { ...state.player, creator_kit: { wardrobe: 1 } as GameState['player']['creator_kit'] } },
+      STATIC_DATA,
+    );
+    expect(withWardrobeSnap.total_follower_rate).toBeCloseTo(
+      baseSnap.total_follower_rate * wardrobeFactor,
+      6,
+    );
+  });
+});

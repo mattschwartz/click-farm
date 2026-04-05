@@ -42,6 +42,7 @@ import {
   checkPlatformUnlocks,
   computeFollowerDistribution,
 } from '../platform/index.ts';
+import { kitFollowerConversionBonus } from '../creator-kit/index.ts';
 import { checkGeneratorUnlocks } from '../generator/index.ts';
 import { syncTotalFollowers } from '../model/index.ts';
 
@@ -160,8 +161,14 @@ export function calculateOffline(
         state.platforms,
         staticData,
       );
+      // Wardrobe wraps the entire per-platform distribution (mirrors tick).
+      const kitFollowerMult = kitFollowerConversionBonus(
+        state.player.creator_kit,
+        staticData,
+      );
       for (const id of platformIds) {
-        followersGained[id] += distribution.perPlatformRate[id] * segmentDurationMs;
+        followersGained[id] +=
+          distribution.perPlatformRate[id] * kitFollowerMult * segmentDurationMs;
       }
     }
 
