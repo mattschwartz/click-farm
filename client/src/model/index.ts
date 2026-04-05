@@ -15,10 +15,6 @@ import type {
   UpgradeId,
   KitItemId,
 } from '../types.ts';
-import {
-  createAccumulators,
-  createDefaultStateMachine,
-} from '../scandal/index.ts';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -144,19 +140,12 @@ export function createInitialGameState(
 
   const viralBurst = { active_ticks_since_last: 0, active: null };
 
-  // Initialize scandal state.
-  const accumulators = createAccumulators(generators, platforms, staticData);
-  const scandalStateMachine = createDefaultStateMachine(staticData);
-
   return {
     player,
     generators,
     platforms,
     algorithm,
     viralBurst,
-    accumulators,
-    scandalStateMachine,
-    scandalSessionSnapshot: null, // driver sets this on open/foreground
   };
 }
 

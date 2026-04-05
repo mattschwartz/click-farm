@@ -7,15 +7,13 @@ import type {
   GeneratorId,
   GeneratorState,
   KitItemId,
-  RiskAccumulator,
   SaveData,
-  ScandalStateMachine,
   UpgradeId,
   ViralBurstState,
 } from '../types.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 6;
+const CURRENT_VERSION = 7;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -97,27 +95,6 @@ export function load(): LoadResult {
   return { kind: 'loaded', state: {
     ...gameState,
     viralBurst: { ...viralBurst, active: null },
-    // Ensure scandal fields are present. Driver sets real values on open.
-    accumulators: gameState.accumulators ?? [],
-    scandalStateMachine: {
-      state: 'normal' as const,
-      activeScandal: null,
-      suppressedNotification: null,
-      timerStartTime: null,
-      timerDuration: 13_500,
-      readBeatDuration: 1_500,
-      pendingEngagementSpend: 0,
-      lastResolution: null,
-      // Spread existing sm values over the defaults, so new fields default to
-      // null while existing fields are preserved.
-      ...(gameState.scandalStateMachine ?? {}),
-      // Always reset active state on load — in-flight scandals don't survive restarts.
-      state: 'normal' as const,
-      activeScandal: null,
-      timerStartTime: null,
-      pendingEngagementSpend: 0,
-    },
-    scandalSessionSnapshot: null, // always reset — driver repopulates on open
   } };
 }
 
@@ -216,36 +193,18 @@ export function migrateV1toV2(data: SaveData): SaveData {
 }
 
 /**
- * Migrate a V2 save (no scandal fields) to V3.
- * Injects empty accumulators and a default state machine. The driver will
- * populate accumulators via ensureAccumulators on the first tick.
+ * Migrate a V2 save to V3.
+ *
+ * V3 historically introduced the Scandals system (accumulators +
+ * scandalStateMachine + scandalSessionSnapshot on GameState). The Scandals
+ * system was removed in V7 — see proposals/accepted/remove-scandals-interim.md.
+ * This migration is now a structural no-op (version bump only): any scandal
+ * fields that a legacy V2 save gains here are stripped by migrateV6toV7.
  */
 export function migrateV2toV3(data: SaveData): SaveData {
-  const oldState = data.state as GameState & {
-    accumulators?: RiskAccumulator[];
-    scandalStateMachine?: ScandalStateMachine;
-  };
-  // Default state machine: normal state, no active scandal, timer config 0
-  // (driver will set real values from staticData on first open).
-  const defaultSm: ScandalStateMachine = {
-    state: 'normal',
-    activeScandal: null,
-    suppressedNotification: null,
-    timerStartTime: null,
-    timerDuration: 13_500, // readBeatMs + decisionWindowMs defaults
-    readBeatDuration: 1_500,
-    pendingEngagementSpend: 0,
-    lastResolution: null,
-  };
   return {
     ...data,
     version: 3,
-    state: {
-      ...oldState,
-      accumulators: oldState.accumulators ?? [],
-      scandalStateMachine: oldState.scandalStateMachine ?? defaultSm,
-      scandalSessionSnapshot: null, // driver always overwrites on open
-    },
   };
 }
 
@@ -406,6 +365,38 @@ export function migrateV5toV6(data: SaveData): SaveData {
   };
 }
 
+/**
+ * Migrate a V6 save to V7 — strip the Scandals system.
+ *
+ * The Scandals system was removed from the client in the interim build
+ * (proposals/accepted/remove-scandals-interim.md). Saves written under V3–V6
+ * carry `state.accumulators`, `state.scandalStateMachine`, and
+ * `state.scandalSessionSnapshot`. This migration deletes those fields so the
+ * save envelope matches the current GameState shape. Silent repair — no
+ * player-facing notice.
+ */
+export function migrateV6toV7(data: SaveData): SaveData {
+  const oldState = data.state as GameState & {
+    accumulators?: unknown;
+    scandalStateMachine?: unknown;
+    scandalSessionSnapshot?: unknown;
+  };
+  const {
+    accumulators: _a,
+    scandalStateMachine: _sm,
+    scandalSessionSnapshot: _snap,
+    ...cleanState
+  } = oldState;
+  void _a;
+  void _sm;
+  void _snap;
+  return {
+    ...data,
+    version: 7,
+    state: cleanState as GameState,
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -427,6 +418,10 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 5) {
     current = migrateV5toV6(current);
+  }
+
+  if (current.version === 6) {
+    current = migrateV6toV7(current);
   }
 
   if (current.version !== CURRENT_VERSION) {

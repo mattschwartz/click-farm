@@ -35,7 +35,6 @@ import { PostZone } from './PostZone.tsx';
 import { GeneratorList } from './GeneratorList.tsx';
 import { PlatformPanel } from './PlatformPanel.tsx';
 import { OfflineGainsModal } from './OfflineGainsModal.tsx';
-import { ScandalModal, ScandalAftermathCard } from './ScandalModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
 import { CreatorKitPanel, isPeekSignalActive } from './CreatorKitPanel.tsx';
@@ -103,9 +102,6 @@ export function GameScreen() {
     offlineResult,
     clearOfflineResult,
     rebrand,
-    scandalUIState,
-    confirmPR,
-    dismissScandalResolution,
     pauseLoop,
     resumeLoop,
     buyCloutUpgrade,
@@ -118,7 +114,6 @@ export function GameScreen() {
   // to <html data-reduce-motion> so CSS can mirror the OS media query.
   const {
     settings,
-    setReduceTimePressure,
     setReduceMotion,
     setSound,
   } = useSettings();
@@ -256,7 +251,6 @@ export function GameScreen() {
         showCeremonyModal ||
         showShopModal ||
         showSettingsModal ||
-        scandalUIState.activeScandal ||
         offlineResult !== null
       ) {
         return;
@@ -270,7 +264,6 @@ export function GameScreen() {
     showCeremonyModal,
     showShopModal,
     showSettingsModal,
-    scandalUIState.activeScandal,
     offlineResult,
   ]);
 
@@ -405,7 +398,6 @@ export function GameScreen() {
               onBuy={buy}
               onUpgrade={upgrade}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
-              riskLevels={scandalUIState.riskLevels}
               onDrawerOpenChange={setUpgradeDrawerOpen}
             />
             <CreatorKitPanel
@@ -418,7 +410,6 @@ export function GameScreen() {
             state={state}
             staticData={STATIC_DATA}
             viralPlatformId={viralActive?.source_platform_id ?? null}
-            riskLevels={scandalUIState.riskLevels}
             drawerDimmed={upgradeDrawerOpen}
           />
         </div>
@@ -452,22 +443,6 @@ export function GameScreen() {
             setShowOffline(false);
             clearOfflineResult();
           }}
-        />
-      )}
-
-      {/* PR Response modal — shown when a scandal is active */}
-      {scandalUIState.activeScandal && (
-        <ScandalModal
-          activeScandal={scandalUIState.activeScandal}
-          onConfirm={confirmPR}
-        />
-      )}
-
-      {/* Aftermath display — shown after a scandal resolves */}
-      {scandalUIState.lastResolution && !scandalUIState.activeScandal && (
-        <ScandalAftermathCard
-          resolution={scandalUIState.lastResolution}
-          onDismiss={dismissScandalResolution}
         />
       )}
 
@@ -526,7 +501,6 @@ export function GameScreen() {
       {showSettingsModal && (
         <SettingsModal
           settings={settings}
-          onSetReduceTimePressure={setReduceTimePressure}
           onSetReduceMotion={setReduceMotion}
           onSetSound={setSound}
           rebrandCount={state.player.rebrand_count}

@@ -19,7 +19,11 @@ const CURRENT_VERSION = 1;
 // ---------------------------------------------------------------------------
 
 export interface Settings {
-  /** Doubles scandal decision window per ux/settings-screen.md §3.1. */
+  /**
+   * Dormant — previously doubled the scandal decision window. Retained as
+   * a schema field (no UI toggle) until a future feature wires it back in.
+   * See proposals/accepted/remove-scandals-interim.md AC #13.
+   */
   reduceTimePressure: boolean;
   /**
    * Replaces decorative motion with static alternatives per §3.3. This

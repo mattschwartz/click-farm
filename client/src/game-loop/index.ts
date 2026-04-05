@@ -34,14 +34,6 @@ import {
 import { checkGeneratorUnlocks } from '../generator/index.ts';
 import { syncTotalFollowers, clampEngagement } from '../model/index.ts';
 import {
-  updateAccumulatorsOnTick,
-  onAccumulatorFire,
-  onTimerExpire,
-  resolveScandal,
-  applyFollowerLoss,
-  createDefaultStateMachine,
-} from '../scandal/index.ts';
-import {
   kitEngagementBonus,
   kitFollowerConversionBonus,
   kitViralBurstAmplifier,
@@ -472,109 +464,7 @@ export function tick(
     }
   }
 
-  // 13. Scandal accumulator updates and state machine advancement.
-  //
-  // If normal: update accumulators, check thresholds, fire scandal if any.
-  // If scandal_active: freeze accumulators, check timer expiry.
-  // If resolving: apply damage, transition to normal.
-  //
-  // The state machine ensures accumulators don't advance during an active PR
-  // Response window (no new scandals while one is in progress).
-
-  let accumulators = state.accumulators ?? [];
-  let scandalStateMachine =
-    state.scandalStateMachine ?? createDefaultStateMachine(staticData);
-  const scandalSessionSnapshot = state.scandalSessionSnapshot ?? null;
-
-  if (scandalStateMachine.state === 'normal') {
-    // Compute per-platform followers gained for Platform Neglect / Growth Scrutiny.
-    const followersGainedPerPlatform: Partial<Record<PlatformId, number>> = {};
-    for (const id of Object.keys(platforms) as PlatformId[]) {
-      const gained = platforms[id].followers - state.platforms[id].followers;
-      if (gained > 0) followersGainedPerPlatform[id] = gained;
-    }
-
-    const tickResult = updateAccumulatorsOnTick(
-      accumulators,
-      // Pass updated state so empire-scale uses fresh total_followers.
-      { player, generators, platforms, algorithm, viralBurst, accumulators, scandalStateMachine, scandalSessionSnapshot },
-      deltaMs,
-      ratesPerMs,
-      followersGainedPerPlatform,
-      now,
-      staticData,
-    );
-
-    accumulators = tickResult.accumulators;
-
-    if (tickResult.firedScandal !== null) {
-      scandalStateMachine = onAccumulatorFire(
-        scandalStateMachine,
-        tickResult.firedScandal,
-        tickResult.suppressedNotification,
-        now,
-      );
-    }
-  } else if (scandalStateMachine.state === 'scandal_active') {
-    // Accumulators frozen during PR Response window — no updates.
-    // Check timer expiry.
-    const timerStart = scandalStateMachine.timerStartTime ?? now;
-    if (now >= timerStart + scandalStateMachine.timerDuration) {
-      scandalStateMachine = onTimerExpire(scandalStateMachine);
-    }
-  } else if (scandalStateMachine.state === 'resolving') {
-    // Apply scandal damage and transition back to normal.
-    if (scandalStateMachine.activeScandal !== null) {
-      const scandal = scandalStateMachine.activeScandal;
-      const resolution = resolveScandal(
-        scandal,
-        scandalStateMachine.pendingEngagementSpend,
-        player.engagement,
-        scandalSessionSnapshot,
-        platforms,
-        staticData,
-      );
-
-      // Spend the committed engagement (if any).
-      const spent = Math.min(
-        scandalStateMachine.pendingEngagementSpend,
-        player.engagement,
-      );
-      if (spent > 0) {
-        player = { ...player, engagement: clampEngagement(player.engagement - spent) };
-      }
-
-      // Apply follower loss.
-      platforms = applyFollowerLoss(platforms, resolution.followersLost);
-      player = syncTotalFollowers(player, platforms);
-
-      // Compute total followers lost for the aftermath display.
-      const totalLost = Object.values(resolution.followersLost).reduce(
-        (sum, n) => sum + (n ?? 0), 0
-      );
-
-      // Transition back to normal, recording the resolution for UI aftermath.
-      scandalStateMachine = {
-        ...scandalStateMachine,
-        state: 'normal',
-        activeScandal: null,
-        timerStartTime: null,
-        pendingEngagementSpend: 0,
-        suppressedNotification: null, // cleared — recorded in lastResolution below
-        lastResolution: {
-          type: scandal.scandal_type,
-          platformAffected: scandal.target_platform,
-          followersLost: totalLost,
-          suppressedNotice: scandalStateMachine.suppressedNotification,
-        },
-      };
-    } else {
-      // Resolving with no active scandal — safety reset.
-      scandalStateMachine = { ...scandalStateMachine, state: 'normal' };
-    }
-  }
-
-  return { player, generators, platforms, algorithm, viralBurst, accumulators, scandalStateMachine, scandalSessionSnapshot };
+  return { player, generators, platforms, algorithm, viralBurst };
 }
 
 // ---------------------------------------------------------------------------

@@ -33,14 +33,6 @@ import {
   type RebrandResult,
 } from '../prestige/index.ts';
 import type { ScheduledShift } from '../algorithm/index.ts';
-import {
-  createScandalSessionSnapshot,
-  freezeAccumulators,
-  unfreezeAccumulators,
-  updateAccumulatorsOnPurchase,
-  createDefaultStateMachine,
-  onPlayerConfirm,
-} from '../scandal/index.ts';
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -144,17 +136,6 @@ export interface GameDriver {
   /** Upcoming algorithm shifts visible via the algorithm_insight upgrade. */
   getUpcomingShifts(): ScheduledShift[];
   /**
-   * Player confirms the PR Response with a chosen engagement spend.
-   * Transitions scandal state machine from scandal_active → resolving.
-   * The game loop applies damage on the next tick.
-   */
-  confirmPR(engagementSpent: number): void;
-  /**
-   * Dismiss the aftermath resolution display. Clears lastResolution from
-   * the state machine so the UI can stop showing the aftermath card.
-   */
-  dismissScandalResolution(): void;
-  /**
    * Subscribe to viral burst events. Fires once per event, synchronously,
    * before state subscribers are notified. Returns an unsubscribe function.
    */
@@ -242,21 +223,6 @@ export function createDriver(options: DriverOptions): GameDriver {
     return createInitialGameState(staticData, now());
   })();
 
-  // Scandal: unfreeze accumulators (they were frozen on last save/close),
-  // ensure state machine exists for old saves, and take a fresh session
-  // snapshot for the magnitude floor. This runs on every open/foreground.
-  {
-    const unfrozen = unfreezeAccumulators(state.accumulators ?? []);
-    const sm = state.scandalStateMachine ?? createDefaultStateMachine(staticData);
-    const snapshot = createScandalSessionSnapshot(state, now());
-    state = {
-      ...state,
-      accumulators: unfrozen,
-      scandalStateMachine: sm,
-      scandalSessionSnapshot: snapshot,
-    };
-  }
-
   let lastTickAt = now();
   const listeners = new Set<StateListener>();
   const viralListeners = new Set<ViralBurstListener>();
@@ -339,8 +305,6 @@ export function createDriver(options: DriverOptions): GameDriver {
         last_close_state: snapshot,
         last_close_time: t,
       },
-      // Freeze accumulators on save so they resume correctly on next open.
-      accumulators: freezeAccumulators(state.accumulators),
     };
     // Don't go through applyState here — last_close_state / last_close_time
     // changes on save shouldn't re-render the UI, but keep local state
@@ -385,16 +349,7 @@ export function createDriver(options: DriverOptions): GameDriver {
 
     buy(generatorId) {
       runAction('buy', { generatorId }, () => {
-        const prevState = state;
-        const afterBuy = buyGenerator(prevState, generatorId, staticData);
-        // Update Trend Chasing accumulator based on the output mix shift.
-        const updatedAccumulators = updateAccumulatorsOnPurchase(
-          afterBuy.accumulators,
-          prevState,
-          afterBuy,
-          staticData,
-        );
-        applyState({ ...afterBuy, accumulators: updatedAccumulators });
+        applyState(buyGenerator(state, generatorId, staticData));
       });
     },
 
@@ -466,22 +421,6 @@ export function createDriver(options: DriverOptions): GameDriver {
     },
 
     getUpcomingShifts: () => getUpcomingShifts(state, staticData),
-
-    confirmPR(engagementSpent) {
-      const sm = state.scandalStateMachine;
-      if (sm.state !== 'scandal_active') return;
-      const nextSm = onPlayerConfirm(sm, engagementSpent);
-      applyState({ ...state, scandalStateMachine: nextSm });
-    },
-
-    dismissScandalResolution() {
-      const sm = state.scandalStateMachine;
-      if (sm.lastResolution === null) return;
-      applyState({
-        ...state,
-        scandalStateMachine: { ...sm, lastResolution: null },
-      });
-    },
 
     onViralBurst(listener) {
       viralListeners.add(listener);

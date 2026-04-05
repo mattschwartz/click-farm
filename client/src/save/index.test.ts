@@ -10,6 +10,7 @@ import {
   migrateV3toV4,
   migrateV4toV5,
   migrateV5toV6,
+  migrateV6toV7,
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -239,16 +240,16 @@ describe('importSaveJSON', () => {
 // ---------------------------------------------------------------------------
 
 describe('migrate', () => {
-  it('passes through current-version (v6) data unchanged', () => {
+  it('passes through current-version (v7) data unchanged', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const data: SaveData = {
-      version: 6,
+      version: 7,
       state,
       lastCloseTime: 0,
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(6);
+    expect(result.version).toBe(7);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -386,7 +387,7 @@ describe('migrateV3toV4', () => {
 
   it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(6);
+    expect(result.version).toBe(7);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
     expect(result.state.player.creator_kit).toEqual({});
@@ -416,7 +417,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version via the chain', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(6);
+    expect(result.version).toBe(7);
     expect(result.state.player.creator_kit).toEqual({});
   });
 
@@ -445,7 +446,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(6);
+    expect(result.version).toBe(7);
     expect(result.state.player.creator_kit).toEqual({});
   });
 });
@@ -525,8 +526,9 @@ describe('migrateV5toV6', () => {
     expect(result.state.generators.selfies.count).toBe(42);
   });
 
-  it('integrates with migrate() — a v1 save reaches v6 via the full chain', () => {
-    // Start with a v1-shaped save: strip viralBurst, scandal fields, creator_kit.
+  it('integrates with migrate() — a v1 save reaches v7 via the full chain', () => {
+    // Start with a v1-shaped save. Post-Scandals-removal, a V1 save cannot
+    // have scandal fields (they were introduced in V3 and stripped in V7).
     const base = createInitialGameState(STATIC_DATA, 0);
     const v1State = {
       ...base,
@@ -541,8 +543,102 @@ describe('migrateV5toV6', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(6);
+    expect(result.version).toBe(7);
     expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// migrateV6toV7 — strip the Scandals system
+// ---------------------------------------------------------------------------
+
+describe('migrateV6toV7', () => {
+  function makeV6SaveData(): SaveData {
+    const base = createInitialGameState(STATIC_DATA, 0);
+    // Simulate a V6 save by re-adding the pre-removal scandal fields.
+    const stateWithScandal = {
+      ...base,
+      accumulators: [
+        {
+          scandal_type: 'content_burnout',
+          scope_type: 'generator',
+          scope_id: 'selfies',
+          value: 0.42,
+          base_threshold: 0.7,
+          frozen: false,
+        },
+      ],
+      scandalStateMachine: {
+        state: 'normal',
+        activeScandal: null,
+        suppressedNotification: null,
+        timerStartTime: null,
+        timerDuration: 13_500,
+        readBeatDuration: 1_500,
+        pendingEngagementSpend: 0,
+        lastResolution: null,
+      },
+      scandalSessionSnapshot: null,
+    } as unknown as SaveData['state'];
+    return {
+      version: 6,
+      state: stateWithScandal,
+      lastCloseTime: 0,
+      lastCloseState: null,
+    };
+  }
+
+  it('bumps version from 6 to 7', () => {
+    const result = migrateV6toV7(makeV6SaveData());
+    expect(result.version).toBe(7);
+  });
+
+  it('strips state.accumulators', () => {
+    const result = migrateV6toV7(makeV6SaveData());
+    expect(
+      (result.state as unknown as Record<string, unknown>).accumulators,
+    ).toBeUndefined();
+  });
+
+  it('strips state.scandalStateMachine', () => {
+    const result = migrateV6toV7(makeV6SaveData());
+    expect(
+      (result.state as unknown as Record<string, unknown>).scandalStateMachine,
+    ).toBeUndefined();
+  });
+
+  it('strips state.scandalSessionSnapshot', () => {
+    const result = migrateV6toV7(makeV6SaveData());
+    expect(
+      (result.state as unknown as Record<string, unknown>).scandalSessionSnapshot,
+    ).toBeUndefined();
+  });
+
+  it('preserves every other GameState field (player, generators, platforms, algorithm, viralBurst)', () => {
+    const data = makeV6SaveData();
+    data.state.player.engagement = 4242;
+    data.state.player.clout = 7;
+    const result = migrateV6toV7(data);
+    expect(result.state.player.id).toBe(data.state.player.id);
+    expect(result.state.player.engagement).toBe(4242);
+    expect(result.state.player.clout).toBe(7);
+    expect(result.state.generators).toEqual(data.state.generators);
+    expect(result.state.platforms).toEqual(data.state.platforms);
+    expect(result.state.algorithm).toEqual(data.state.algorithm);
+    expect(result.state.viralBurst).toEqual(data.state.viralBurst);
+  });
+
+  it('is idempotent on a save that already lacks scandal fields', () => {
+    const base = createInitialGameState(STATIC_DATA, 0);
+    const data: SaveData = {
+      version: 6,
+      state: base,
+      lastCloseTime: 0,
+      lastCloseState: null,
+    };
+    const result = migrateV6toV7(data);
+    expect(result.version).toBe(7);
+    expect(result.state.player.id).toBe(base.player.id);
   });
 });
 

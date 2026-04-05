@@ -6,8 +6,8 @@
 //
 // Reduce Motion propagates via the settings hook — this component is a
 // pure editor over those values plus the save-management actions. The
-// reduce-time-pressure toggle is persisted but not yet read by the
-// scandal module (future wiring).
+// reduceTimePressure schema field is retained as dormant until a future
+// feature wires it back in (remove-scandals-interim.md AC #13).
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -43,7 +43,6 @@ export function formatExportFilename(
 
 interface Props {
   settings: Settings;
-  onSetReduceTimePressure: (v: boolean) => void;
   onSetReduceMotion: (v: boolean) => void;
   onSetSound: (v: boolean) => void;
   /** Current rebrand count — drives the export filename. */
@@ -62,7 +61,6 @@ type InlineStatus = { kind: 'success' | 'error'; text: string } | null;
 
 export function SettingsModal({
   settings,
-  onSetReduceTimePressure,
   onSetReduceMotion,
   onSetSound,
   rebrandCount,
@@ -201,12 +199,6 @@ export function SettingsModal({
             <div className="settings-group">
               <SettingsToggle
                 buttonRef={firstToggleRef}
-                label="Reduce Time Pressure"
-                description="Doubles the scandal decision window. For players who find the countdown stressful."
-                checked={settings.reduceTimePressure}
-                onChange={onSetReduceTimePressure}
-              />
-              <SettingsToggle
                 label="Reduce Motion"
                 description="Replaces decorative motion with static alternatives. Number animations preserved."
                 checked={settings.reduceMotion}

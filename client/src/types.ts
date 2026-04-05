@@ -221,164 +221,6 @@ export interface ViralBurstPayload {
 }
 
 // ---------------------------------------------------------------------------
-// Scandal system types
-// ---------------------------------------------------------------------------
-
-export type ScandalTypeId =
-  | 'content_burnout'
-  | 'platform_neglect'
-  | 'hot_take_backlash'
-  | 'trend_chasing'
-  | 'growth_scrutiny'
-  | 'fact_check';
-
-/** Coarse risk signal exposed to the UI layer. */
-export type RiskLevel = 'none' | 'building' | 'high';
-
-/**
- * Tracks accumulated risk for a specific scandal type, scoped to a generator,
- * platform, or the whole empire. See scandal-system.md §RiskAccumulator.
- */
-export interface RiskAccumulator {
-  scandal_type: ScandalTypeId;
-  scope_type: 'generator' | 'platform' | 'global';
-  /** The generator_id or platform_id this accumulator is scoped to. Null for global. */
-  scope_id: string | null;
-  /** Current accumulated pressure. [0, 1]. Resets to 0 after firing. */
-  value: number;
-  /** Base threshold before empire scaling. */
-  base_threshold: number;
-  /** True while the player is offline. Accumulators do not advance when frozen. */
-  frozen: boolean;
-}
-
-/**
- * A fired scandal event. Created when an accumulator crosses its threshold.
- * See scandal-system.md §ScandalEvent.
- */
-export interface ScandalEvent {
-  id: string;
-  scandal_type: ScandalTypeId;
-  target_platform: PlatformId;
-  /** Fraction of platform followers to remove (before PR Response mitigation). [0.05, 0.15] */
-  raw_magnitude: number;
-  /** Set after PR Response resolves. Null while scandal is active. */
-  final_magnitude: number | null;
-  /** Engagement spent by the player on PR Response. */
-  engagement_spent: number;
-  /** Actual followers removed after all rules applied. Set on resolution. */
-  followers_lost: number;
-  /** Epoch ms when the scandal fired. */
-  timestamp: number;
-  /** True after PR Response window closes and damage is applied. */
-  resolved: boolean;
-}
-
-/**
- * Snapshot of per-platform follower counts taken when the app is foregrounded.
- * Used to enforce the magnitude floor: no scandal can push a platform below
- * this level in the current session. Never persisted across sessions.
- *
- * See scandal-system.md §SessionSnapshot.
- */
-export interface ScandalSessionSnapshot {
-  /** Epoch ms when the snapshot was taken. */
-  timestamp: number;
-  /** Follower count per platform at snapshot time. */
-  platform_followers: Record<PlatformId, number>;
-}
-
-/**
- * State machine for the PR Response flow.
- * See scandal-system.md §PR Response State Machine.
- */
-export interface ScandalStateMachine {
-  state: 'normal' | 'scandal_active' | 'resolving';
-  activeScandal: ScandalEvent | null;
-  /** Flavor text for a suppressed scandal — shown after primary resolves. */
-  suppressedNotification: string | null;
-  /** Epoch ms when the timer started (set on scandal_active entry). */
-  timerStartTime: number | null;
-  /** Total timer duration in ms (read beat + decision window). */
-  timerDuration: number;
-  /** Duration of the comedic read beat before the slider becomes active. */
-  readBeatDuration: number;
-  /** Engagement to spend on PR Response. Set by player (task #31) or 0 on auto-resolve. */
-  pendingEngagementSpend: number;
-  /**
-   * Set after a scandal resolves so the UI can display the aftermath.
-   * Cleared by the player dismissing the aftermath display.
-   */
-  lastResolution: {
-    type: ScandalTypeId;
-    platformAffected: PlatformId;
-    followersLost: number;
-    suppressedNotice: string | null;
-  } | null;
-}
-
-// ---------------------------------------------------------------------------
-// Scandal static data types
-// ---------------------------------------------------------------------------
-
-export interface ScandalTypeDef {
-  id: ScandalTypeId;
-  scopeType: 'generator' | 'platform' | 'global';
-  /** Which generator_ids or platform_ids this applies to. ['*'] for global. */
-  applicableScopes: string[];
-  /** Base threshold before empire scaling. */
-  baseThreshold: number;
-  /** Base fraction of followers to remove. Clamped to [0.05, 0.15]. */
-  baseMagnitude: number;
-  /**
-   * Per-ms accumulator increment rate when trigger condition is fully active.
-   * Actual increment is scaled by the strength of the trigger condition.
-   */
-  incrementRate: number;
-  /** Per-ms decay rate when trigger condition is absent (accumulators drain). */
-  decayRate: number;
-  /**
-   * GeneratorId whose algorithm modifier amplifies this scandal's increment.
-   * Empty string if algorithm state does not affect this type.
-   */
-  algorithmModifierKey: string;
-}
-
-export interface ScandalStaticData {
-  types: Record<ScandalTypeId, ScandalTypeDef>;
-  empireScaleCurve: {
-    /** Denominator in empire_scale = 1 / (1 + followers / scaleConstant). */
-    scaleConstant: number;
-    /** Below this follower count, all accumulator increments are zeroed. */
-    minFollowersToEnable: number;
-  };
-  prResponse: {
-    /** Duration of read-beat (flavor text visible, slider inactive) in ms. */
-    readBeatMs: number;
-    /** Decision window in ms (after read beat, before auto-resolve). */
-    decisionWindowMs: number;
-    /** Max mitigation rate: spending max engagement reduces loss to (1 - maxMitigationRate). */
-    maxMitigationRate: number;
-  };
-  riskLevelThresholds: {
-    /** Accumulator value/threshold ratio at which risk becomes 'building'. */
-    building: number;
-    /** Accumulator value/threshold ratio at which risk becomes 'high'. */
-    high: number;
-  };
-  /**
-   * Trigger concentrations for tick-based accumulators.
-   * These are the behavioral thresholds the increment formula uses internally.
-   */
-  triggerThresholds: {
-    /** Generator output share above which Content Burnout increments. */
-    contentBurnoutShare: number;
-    /** Platform growth share above which Growth Scrutiny increments. */
-    growthScrutinyShare: number;
-  };
-}
-
-// ---------------------------------------------------------------------------
 // GameState — the complete in-memory state passed to the tick function
 // ---------------------------------------------------------------------------
 
@@ -388,15 +230,6 @@ export interface GameState {
   platforms: Record<PlatformId, PlatformState>;
   algorithm: AlgorithmState;
   viralBurst: ViralBurstState;
-  /** Risk accumulators for all scandal types. Persisted in save. */
-  accumulators: RiskAccumulator[];
-  /** PR Response state machine. Persisted in save. */
-  scandalStateMachine: ScandalStateMachine;
-  /**
-   * Follower snapshot taken on app foreground. Used for magnitude floor.
-   * Not persisted meaningfully — driver overwrites on every open.
-   */
-  scandalSessionSnapshot: ScandalSessionSnapshot | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -515,7 +348,6 @@ export interface StaticData {
     platforms: Record<PlatformId, number>;
   };
   viralBurst: ViralBurstConfig;
-  scandal: ScandalStaticData;
 }
 
 // ---------------------------------------------------------------------------

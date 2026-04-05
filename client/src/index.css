@@ -2,7 +2,7 @@
   /* Typography faces — see proposals/accepted/typography-system.md.
      --font-ui is the workhorse (Space Grotesk) used for chrome, data, numerals.
      --font-voice is the voice face (Fraunces) loaded and available but applied
-     only at "witness" moments (scandals, prestige, rebrand) by downstream specs. */
+     only at "witness" moments (prestige, rebrand) by downstream specs. */
   --font-ui: 'Space Grotesk', 'Space Grotesk Fallback', system-ui, sans-serif;
   --font-voice: 'Fraunces', 'Space Grotesk Fallback', Georgia, serif;
 
