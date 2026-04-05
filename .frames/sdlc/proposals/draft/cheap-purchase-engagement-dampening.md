@@ -119,3 +119,52 @@ The floor ensures purchasing never produces nothing — the "sweep the board" co
 
 5. **Tuning values for `T` and `floor`.**
    Starting values proposed: `T = 30s`, `floor = 0.05`. These are guesses. Need playtesting to confirm they produce the intended feel. **Owner: game-designer** (post-implementation, via playtesting).
+
+---
+# Review: architect
+
+**Date**: 2026-04-05
+**Decision**: Request for Comment
+
+**Comments**
+
+The design intent is sound and the `cost / (income × T)` shape is a good fit — it leans on state the system already has and keeps the tuning surface narrow. My concerns are structural, not directional. Three of the four need resolution in the proposal body before an engineer can plan or build; the rest is supplemental architectural guidance.
+
+**Blocking — needs designer resolution before plan:**
+
+1. **Open Question #1 (A/B/C) forces a data-model decision, not just a behavioral one.** Each option has a different cost profile:
+
+   - **Option A (bake D at purchase time)** is not as simple as it reads. A generator's units accumulate at *different D values* across purchase history. You can't store a single D per generator without defining an aggregation rule. Cleanest form I see: a per-generator **`avg_D`** scalar, updated on each purchase as
+     ```
+     avg_D_new = (count_old × avg_D_old + 1 × D_new) / (count_old + 1)
+     ```
+     Effective rate becomes `count × base_rate × level_multiplier × avg_D × algoMod × clout × kit`. One new scalar field on `GeneratorState`, no per-unit history, tick hot-path structurally unchanged. Upgrades do not retro-touch `avg_D` (which matches the Option A semantic the designer described).
+
+   - **Option B (continuous recompute)** introduces a bootstrapping problem: D's input is `income_per_sec`, which is itself the sum of per-generator effective rates — each of which depends on D. The engineer will pick silently if we don't name it. Resolvable (e.g. use prior-tick total or the undampened sum), but it is a required naming. B also changes the semantic of "cost" for existing units: a level-1 selfie's dampening depends on the *next* selfie's price, which is weird.
+
+   - **Option C (threshold step-function on ownership)** is architecturally very close to A-with-`avg_D` plus a periodic `avg_D` decay when `cost < threshold × income`. It is a natural v2 extension of A, not a separate architecture.
+
+   **Recommendation: Option A, implemented as per-generator `avg_D`.** It localizes change to the purchase path, leaves the tick hot-path shape identical, and keeps the door open to Option C as a follow-up without a data-model rewrite. I think the designer's lean toward A is right; I am naming the data-model form so the engineer doesn't have to infer it.
+
+2. **Open Question #4 (algorithm-state inflation) has a clean non-rolling answer.** Compute D against *neutral-algorithm income* — i.e. the sum of `count × base_rate × level_multiplier × clout × kit` without `algoMod`. No rolling window, no new time-series state, deterministic and cheap (already computable from current state inside `computeAllGeneratorEffectiveRates`). This eliminates the "dampened more during favorable states" artifact the designer flagged, without introducing averaging infrastructure. I recommend adopting this as the income basis and resolving Q4 directly in the proposal body.
+
+3. **Downstream coupling to viral burst and scandal accumulators — please confirm intent.** `computeGeneratorEffectiveRate` feeds three other subsystems beyond engagement accumulation:
+   - **Viral burst** — top-generator selection and magnitude computation use effective rates. Dampening old-tier units will shift which generator is "top" and reduce bonus magnitude on old-heavy loadouts.
+   - **Scandal accumulators** — `content_burnout`, `hot_take_backlash`, `fact_check`, and follower-distribution-driven accumulators (`platform_neglect`, `growth_scrutiny`) all key off per-generator shares or follower distribution, which ride on these rates. Dampening will reduce old-generator shares and therefore accumulator pressure from old-tier farming.
+   - **Follower conversion** — the proposal already names this and says "intended." Good.
+
+   I believe the viral-burst and scandal-accumulator effects are *also* intended — "engagement/sec should track current strategic position" naturally extends to "scandals should track current strategic position." But it silently shifts scandal trigger frequencies for players with heavy old-tier stacks, and the designer should confirm that is the desired behavior. If confirmed, a one-line note in the "What This Does NOT Change" / "What This Also Changes" sections would close the loop.
+
+**Non-blocking — architectural notes:**
+
+- The `avg_D` field is the only schema change implied by Option A. No migrations needed — existing saves default to `avg_D = 1.0` (undampened), which is behaviorally correct for pre-existing stacks and matches the designer's stated acceptance that "pre-existing hoards keep producing at full rate."
+- One tuning knob (`T`) and one floor (`floor`) belong on a new `engagementDampening` config block in `static-data/index.ts` — not as magic numbers in the purchase flow. Trivial but worth naming.
+- The dampening factor should be computed in one helper — e.g. `computeDampeningFactor(cost, neutralIncomePerSec, config)` — so viral/scandal debugging can introspect it without re-deriving.
+
+**Summary of what I need to re-review:**
+
+- Q1 answered with A/B/C named explicitly; if A, accept or push back on `avg_D` as the storage form.
+- Q4 answered — ideally by adopting neutral-algorithm income as D's basis.
+- Confirmation (or correction) on the viral-burst and scandal-accumulator coupling behavior.
+
+Once those land, I can approve and decompose this into architecture notes + an engineer build task.
