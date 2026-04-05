@@ -1,5 +1,5 @@
 {
-  "next_id": 101,
+  "next_id": 102,
   "tasks": [
     {
       "id": 1,
@@ -3263,7 +3263,7 @@
       "id": 97,
       "role": "ux-designer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Review: large-number notation ladder proposal",
       "requester": "architect",
@@ -3290,7 +3290,8 @@
         "Update reviewers list at top of the proposal per review protocol"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 98,
@@ -3339,7 +3340,7 @@
       "id": 99,
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Plan the Scandal removal: decompose into engineer build tasks",
       "requester": "game-designer",
@@ -3384,7 +3385,8 @@
           "owner": "architect / producer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 100,
@@ -3510,6 +3512,60 @@
         "Manual smoke-test verified: a new save loads, generators purchase, rebrand works, settings modal renders without the Reduce Time Pressure row and with a legitimate MOTION section containing only Reduce Motion"
       ],
       "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 101,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Redo maxed-state visual on Lvl ↑ row button — platinum plaque + arrival celebration",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "The current maxed-state treatment on the per-row Lvl ↑ button (GameScreen.css lines 2306–2316) uses a dim-gold color that collides with the --accent-gold token reserved for the ready-to-buy affordance signal on the same button. Replace it with a platinum-plaque treatment and a one-shot arrival celebration that fires on the ready→maxed transition. No persistent animation. Full spec in the referenced UX doc — this task is purely implementation.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/generator-max-level-state.md",
+          "purpose": "The UX spec — read first. Contains exact colors, gradients, glyph, arrival keyframes, accessibility matrix, and decision log."
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Component to modify. classifyLvlBtnState() at lines 80–91 already returns 'maxed' — no logic change needed there. Button render is at ~line 421. Existing glyph pattern (lvl-chevron for ready state) at ~line 448 is the model for the new lvl-crown glyph."
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Where to redefine .row-btn-upgrade.row-btn-lvl-maxed (currently at lines 2306–2316). Keyframes go nearby. --accent-platinum tokens go in :root at line 17."
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/lvl-up-button-affordance-states.md",
+          "purpose": "Parent spec for the four-state button. Do NOT change dormant/armed/ready — only maxed."
+        }
+      ],
+      "acceptance_criteria": [
+        "Add two new tokens to :root in GameScreen.css: --accent-platinum: #d9dee8 and --accent-platinum-deep: #a6b0c2. Do not reuse these for any other UI yet — they are reserved for maxed/completed states.",
+        "Replace the existing .row-btn-upgrade.row-btn-lvl-maxed rules (lines 2306–2316) with the platinum-plaque treatment per spec §3.2: 1px solid --accent-platinum-deep border, vertical gradient background (platinum at 14% → 6%), inset top-edge highlight + inset depth box-shadow, color --accent-platinum, font-weight 600, letter-spacing 0.08em, cursor: default, no animation.",
+        "Override :hover on maxed to match the non-hover appearance (no scale, no glow, no background change) — the button is non-actionable at max and must not invite interaction.",
+        "Add a lvl-crown glyph span pattern: render <span class=\"lvl-crown\">♛</span> inside the .label span before the LVL text when lvlState === 'maxed'. Style per spec §3.2: font-size 10px, margin-right 3px, color --accent-platinum, transform: translateY(-0.5px). Mirrors the existing lvl-chevron pattern used for ready state.",
+        "Apply the disabled attribute to the button when lvlState === 'maxed' (matching dormant behavior). If the upgrade drawer contains useful owned-levels review content, flag back to ux-designer before committing to disabled — otherwise default to disabled per spec §8 OQ1.",
+        "Add a useRef<LvlBtnState | null>(null) inside GeneratorRow to track prev lvlState. When current lvlState === 'maxed' AND prev !== 'maxed' AND prev !== null (mount guard), set a local state flag that applies the .lvl-maxed-arrival class to the button for 600ms, then clears it. Use a setTimeout or rAF; keep the timer cleanup correct on unmount.",
+        "Mount guard: already-maxed rows on initial render after save load MUST NOT fire the arrival celebration. Only live ready→maxed transitions within a session trigger it. Test with a save file containing a maxed generator — no animation should play on load.",
+        "Add @keyframes lvl-maxed-arrival per spec §4.2: 600ms ease-out, scale 1→1.08→0.98→1, platinum outer halo (box-shadow 0 0 20px 4px rgba(217,222,232,0.55) at peak) that retracts to 0 by end, inset shadows preserved throughout.",
+        "Under @media (prefers-reduced-motion: reduce) AND under html[data-reduce-motion=\"true\"], the .lvl-maxed-arrival animation is disabled entirely (animation: none). The static platinum-plaque visual still communicates the state change without motion.",
+        "Verify color-independence: all four states (dormant, armed, ready, maxed) are distinguishable without color via their glyphs (none / ⊖ / ▲ / ♛), cursor (not-allowed / pointer / pointer / default), and border treatment. Maxed is the only state with inset shadow + wide letter-spacing.",
+        "No regression on the other three states — dormant, armed, ready keep their current visuals and behaviors exactly. many-ready de-escalation and .active (drawer-open) suppression on ready are unaffected.",
+        "QA the ♛ (U+265B) glyph across macOS Safari/Chrome and Windows Chrome/Firefox. If rendering is visibly inconsistent in size or baseline, swap to an inline SVG crown (10×8 viewBox, single path, fill=\"currentColor\") and update the spec file with the decision."
+      ],
+      "open_questions": [
+        {
+          "question": "Should maxed stay clickable to open the drawer (showing owned-levels review) or be fully disabled? Spec defaults to disabled — check drawer contents at max before committing.",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "Arrival audio tick — out of scope here but should be flagged for the audio pass.",
+          "owner": "game-designer"
+        }
+      ],
       "blocked_on": []
     }
   ]

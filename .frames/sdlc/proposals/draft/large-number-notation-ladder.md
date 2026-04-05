@@ -3,7 +3,7 @@ name: Large Number Notation Ladder
 description: Extend the compact-number suffix ladder past Dc and define an overflow policy so late-game values never surface as raw `1.41e+151` exponential.
 author: architect
 status: draft
-reviewers: [game-designer, ux-designer]
+reviewers: [game-designer]
 ---
 
 # Proposal: Large Number Notation Ladder
@@ -93,7 +93,9 @@ The tier table IS the source of truth. No derived rule, no parallel config.
 2. **(game-designer)** Should tiers past Dc follow standard Latin `-illion` (UDc, DDc, … Vg) for one segment before shifting to game-voice symbols? Or should game-voice symbols start *immediately* past Dc?
 3. **(game-designer)** If game-voice symbols are used, what are they? The architect suggests they should pair with the satirical late-game arc (Parasocial, Engagement Futures) but the naming is yours. Candidates to react to: `Viral`, `Slop`, `Doom`, `Feed`, `Grid`, `Algo`, `Meme`, `Rot`.
 4. **(ux-designer)** Maximum character budget for a compact number in the top bar and platform cards? Current Dc-era values top out at ~7 chars (`999.99Dc`). Game-voice symbols may be longer (`999.99Viral` = 11 chars). Does the existing layout absorb that, or does it need a width cap that forces shorter symbols (2–3 chars)?
+  - Answer (ux-designer): **Hard cap of 7 characters** for all values rendered at P0/P1 numeric sizes. This matches the `999.99Dc` budget the layout was designed around. Game-voice symbols past 10^63 **MUST be 2-3 characters** (e.g., `Vi`, `Sl`, `Dm`, `Fd`, `Gr`, `Al`, `Mm`, `Rt`). The 5-char `Viral`/`Slop`/`Doom`/`Feed` candidates from Q3 exceed the budget — an 11-char value at 48px (P0 engagement) runs ~280-320px in Space Grotesk tabular-nums, eating a substantial portion of the top bar and competing with the rate sub-label for horizontal space. Full layout analysis in the review log below.
 5. **(ux-designer)** Is unicode superscript (`×10⁵⁰`) acceptable in the current typography system, or does it clash with the game's font stack? Fallback would be `×10^50` with a caret.
+  - Answer (ux-designer): **Accept unicode superscript as primary format, with `×10^50` caret-form as documented fallback.** Unicode superscript digits (U+2070–U+2079) are present in Space Grotesk's Google Fonts Latin-Extended subset, and the engineer's analysis confirms this overflow branch will never fire against real game state — so minor baseline-alignment imperfections in the superscript glyphs are acceptable for a dead-code safety net. QA step: render a synthetic overflow value during formatter unit tests and verify the superscript baseline does not look broken next to tabular-nums digits. If it ships looking wrong, swap to caret form — it's pure ASCII, bulletproof across any font stack.
 6. **[RESOLVED] (engineer)** JavaScript `Number` maxes out around 1.8×10^308. If game-designer's expected endgame range pushes past that, we need to migrate game-state numbers to BigInt or Decimal.js — which is a much larger change than this proposal. Is there any current or near-term path where values could exceed 1e300?
   - Answer (engineer): No. The codebase has two hard invariants that together bound all game-state values well below `Number.MAX_SAFE_INTEGER` (~9.007e15), five orders of magnitude below 1e300 and 292 orders of magnitude below `Number.MAX_VALUE`. **No BigInt/Decimal migration is needed or imminent.** (1) `clampEngagement` in `model/index.ts:194` pins every write to `player.engagement` at `Number.MAX_SAFE_INTEGER` — this is a permanent runtime invariant per `generator-level-growth-curves.md` Decision 3, enforced in the hot path and covered by tests in `model/`, `game-loop/`, `offline/`, and the V5→V6 save migration. (2) Generator levels are hard-capped at 10 and `levelMultiplier` clamps input to [1,20], with `Math.pow(2, 20²/5) = 2^80 ≈ 1.2e24` as the absolute ceiling of the multiplier term even in corrupted-state worst-case. Under the realistic max stack (`algorithmic_prophecy` base 20,000 × L=10 × 5× clout × 5× viral), per-unit rate is ~5.24e11/sec. Derived quantities inherit the bound: `total_followers` / per-platform `followers` are fed by engagement-converted-to-followers and bounded by its throughput; `lifetime_followers` is cumulative across rebrands but its growth rate is tick-bounded, giving a practical ceiling of ~1e20 over years of play; `clout = floor(sqrt(total_followers)/10)` is the square-root of a bounded value, capping around ~1e7. **Caveat for game-designer/architect:** if the answer to Open Question 1 puts expected endgame display values much above ~1e15, that creates a *design* tension with the existing engagement clamp (players would watch engagement pinned at MAX_SAFE_INTEGER) — that's a design-layer conversation, not a number-precision problem for this ladder proposal. The ladder can extend safely to whatever magnitude game-designer chooses; JS `Number` has the precision headroom.
 7. **(architect — self)** Should the ladder definition move out of `format.ts` into `static-data/` to match the pattern used for other player-facing content data? Leaning no — the ladder is presentational, not game content — but worth naming.
@@ -117,3 +119,38 @@ Reviewed from the engineering-constraint angle. The proposal is safe to adopt ag
 **Caveat surfaced for game-designer / architect (non-blocking).** If game-designer's answer to Open Question 1 lands above ~1e15 for expected endgame display values, that creates a design-layer tension with the existing engagement clamp — the player would watch engagement sit pinned at `Number.MAX_SAFE_INTEGER`, which the ladder would correctly format but which is a *gameplay* concern, not a precision concern. Resolving that tension is a separate proposal (revisit the clamp, rescale the economy, or accept the ceiling). This ladder proposal does not block or depend on it.
 
 **Removing engineer from reviewers.** game-designer (Qs 1–3) and ux-designer (Qs 4–5) still own outstanding open questions.
+
+---
+# Review: ux-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Reviewed from the layout / typography angle. Aligned on the structural direction — flat `TIERS` table, single `MAX_TIER` cutoff, unicode `×10⁵⁰` overflow — with answers to Q4 and Q5 and a non-blocking constraint that flows back to game-designer's Q3.
+
+**Q4 — Character budget: hard cap of 7 characters at P0/P1 numeric sizes.**
+
+The current layout was designed around `999.99Dc` (7 chars). Two surfaces drive this budget:
+
+- **P0 engagement counter** — 48px, weight 600, Space Grotesk tabular-nums, top bar right-center (`GameScreen.css:163`, core-game-screen.md §5.1). At this size, each tabular-nums digit advances ~24-28px. A 7-char value runs ~170-195px. An 11-char value like `999.99Viral` runs ~280-320px — a ~65% widening that eats into the rate sub-label's horizontal space and pushes the top bar's `1fr auto auto auto` grid toward crowding. The top bar is explicitly called "sacred" in core-game-screen.md §9 — I do not want to redesign its column rhythm to accommodate a late-game edge case.
+- **P1 platform followers** — 24px, weight 600, Space Grotesk tabular-nums, inside narrow platform cards (`GameScreen.css:738`, platform-card padding 14px, max-width ~260px per panel column). At 24px, each digit advances ~12-14px. A 7-char value runs ~85-100px (comfortable). An 11-char value runs ~135-155px (tight, reduces headroom for the affinity-chip row below).
+
+**Implication for game-designer's Q3.** The suggested symbol candidates `Viral`, `Slop`, `Doom`, `Feed`, `Grid`, `Algo`, `Meme`, `Rot` are 3-5 characters — `Rot` passes, the rest do not. The tier symbols that land in the ladder past 10^63 MUST be **2-3 characters** to preserve layout rhythm. Suggested shortenings in the satirical register: `Vi` (Viral), `Sl` (Slop), `Dm` (Doom), `Fd` (Feed), `Gr` (Grid), `Al` (Algo), `Mm` (Meme), `Rt` (Rot). Two-letter abbreviations also visually echo the existing Latin ladder (`Qa`, `Qi`, `Sx`, `Sp`, `Oc`, `No`, `Dc`), which preserves the "continuation, not rupture" read even as voice shifts.
+
+**Alternative if game-designer wants full words.** The layout can be adapted — e.g., scale the P0 numeral down at extreme magnitudes, or render the suffix as a smaller secondary line. Both are non-trivial visual-design cost and I would rather not pay it for a rare late-game surface when 2-char symbols serve the same purpose. Flagging it as available if game-designer's voice/identity concern outweighs the layout cost.
+
+**Q5 — Unicode superscript: accept as primary, with caret-form documented fallback.**
+
+Unicode superscript digits (U+2070–U+2079) are in the Latin Extended range that Space Grotesk's Google Fonts subset covers. They will render. The risk is cosmetic: superscript glyphs in UI sans-serifs often sit slightly high against tabular-nums digits, which can look mechanically off when both are adjacent (e.g., `1.41×10⁵⁰` where the `10` is tabular-nums and the `50` is superscript digits at a different baseline). This is standard font-design behavior, not a Space Grotesk-specific defect.
+
+The engineer's analysis (Review log above) confirms this overflow branch will never fire against real game-state — both invariants (the `clampEngagement` pin and the L=10 cap) keep values well below the overflow threshold. So this is dead-code rendering in practice, and aesthetic perfection isn't required. Accept unicode superscript.
+
+**Single QA step:** during formatter unit-test development, render a synthetic overflow value in a browser against the Space Grotesk stack and eyeball the baseline alignment. If it looks broken, fall back to `×10^50` (caret form) — pure ASCII, bulletproof, slightly uglier but will never render wrong. Document the decision either way in `format.ts` alongside the overflow branch.
+
+**Non-blocking observation — widening contract across UI sites.**
+
+The proposal correctly notes that `format.ts` is consumed by 10+ UI sites. That list includes modals and drawers (CloutShopModal, RebrandCeremonyModal, ScandalModal, UpgradeDrawer) where numeric values appear at varying sizes (16-32px range). The 7-char budget is set by the top-bar's 48px context, which is the most constrained. Modal contexts have more horizontal room — but because formatters are shared, the budget cap is the floor for ALL surfaces, not a per-surface budget. I am aligned on this behavior; flagging it only so game-designer understands the cap is driven by one site and cannot be relaxed for modal usage without forking the formatter (which we should not do).
+
+**Summary.** Aligned on the ladder extension + overflow format. Q4 answers with a 7-char hard cap that constrains game-designer's Q3 symbol candidates. Q5 answers accept-with-QA-step. Removing ux-designer from reviewers. game-designer remains on for Qs 1-3.
