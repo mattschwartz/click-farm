@@ -1,5 +1,5 @@
 {
-  "next_id": 72,
+  "next_id": 82,
   "tasks": [
     {
       "id": 1,
@@ -1777,7 +1777,7 @@
       "id": 61,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "UX spec: Creator Kit panel placement and peek-signal",
       "requester": "ux-designer",
@@ -1817,7 +1817,8 @@
           "owner": "ux-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 62,
@@ -1971,7 +1972,7 @@
       "alias": "E4",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Rebrand Ceremony — Phases 2 (Eulogy), 3 (Commit), 4 (Dissolution→Rebirth)",
       "requester": "architect",
@@ -2011,7 +2012,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 66,
@@ -2042,9 +2044,7 @@
         "Component tests cover: badge absence at rebrand_count 0, badge appearance at rebrand_count 1, badge persistence at rebrand_count ≥ 2, first-rebrand ambient copy on rebrand_count 1, ambient copy absence at rebrand_count ≥ 2"
       ],
       "open_questions": [],
-      "blocked_on": [
-        65
-      ]
+      "blocked_on": []
     },
     {
       "id": 67,
@@ -2261,6 +2261,373 @@
         }
       ],
       "blocked_on": []
+    },
+    {
+      "id": 72,
+      "role": "architect",
+      "state": "plan",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Write architecture/creator-kit.md + plan Creator Kit engineer tasks",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The Creator Kit Upgrades proposal is accepted. The architect review recorded the data model delta, two new effect types, the applyRebrand integration, the save-schema bump, the stacking-order convention note, and resolved OQ#1 and OQ#2. That material needs to land in a formal architecture spec before engineer build tasks can be filed. This task: (1) write .frames/sdlc/architecture/creator-kit.md formalizing the contracts, (2) add a short stacking-order convention note to core-systems.md (or embed it in creator-kit.md and cross-link), (3) decompose Creator Kit into engineer build tasks and file them. Game-designer still owes final calls on OQ#1 (Inert vs Hidden for Phone ceiling) and OQ#3/#4/#5 (balance pass) — flag those as blockers on specific build tasks where relevant, don't wait for them to write the arch doc.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/creator-kit-upgrades.md",
+          "purpose": "Accepted proposal — architect review at the bottom carries the contracts, OQ#2 resolution, and OQ#1 recommendation"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Existing CloutUpgrade data model to mirror; tick formula at line 388 is Wardrobe integration point; applyRebrand reset pass needs one-line addition for creator_kit wipe"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Structural template — Creator Kit mirrors this menu's shape"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/viral-burst-event-signal.md",
+          "purpose": "Mogging's integration target — viral_burst_amplifier effect reads into burst multiplier computation"
+        }
+      ],
+      "acceptance_criteria": [
+        ".frames/sdlc/architecture/creator-kit.md exists with: Scope (one sentence in, what's out), Data model (Player.creator_kit, KitItemDef static data shape, all five items), Interface contracts (new effect types: follower_conversion_multiplier, viral_burst_amplifier; reused types documented), Coupling analysis (the five touchpoints table from architect review), applyRebrand integration (one-line addition documented), Save schema migration (version bump + default), Stacking-order convention, Open questions labeled by owner (OQ#1 Phone ceiling for game-designer, balance-pass OQs for game-designer)",
+        "Stacking-order convention is documented either inline in creator-kit.md with a cross-link from core-systems.md, OR added as a new section to core-systems.md — architect picks which reads better",
+        "Engineer build tasks are filed covering: (a) Player.creator_kit state + save migration, (b) KitItemDef static data + five item definitions with placeholder balance values, (c) engagement_multiplier + algorithm_lookahead + platform_headstart integration for kit effects (reuse Clout patterns), (d) new follower_conversion_multiplier effect wired into tick, (e) new viral_burst_amplifier effect wired into viral burst system, (f) applyRebrand wipes creator_kit, (g) Creator Kit menu UI shell (collapsible panel, peek-signal affordance deferred to ux spec task)",
+        "Any build tasks that depend on a still-open OQ have that OQ explicitly called out in the task's open_questions field with the game-designer as owner, so the engineer knows what they're blocked on",
+        "A ux-designer task is filed for the creator-kit-panel UX spec (panel placement, peek-signal affordance, icon set, copy drafts) referenced in the proposal's OQ#6/OQ#7 resolutions"
+      ],
+      "open_questions": [
+        {
+          "question": "OQ#1 from the proposal (Phone ceiling): game-designer picks Inert vs Hidden. Architect review recommended avoiding Fallback-Benefit to preserve single-effect invariant. Flag on the relevant build task but do not block filing.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 73,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit foundation: state field, types, save migration, rebrand wipe",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Add the foundational scaffolding for Creator Kit per the architecture spec. No effects are wired yet — this task only establishes the data model, types, save migration, and rebrand integration. Specifically: (1) add Player.creator_kit: map<KitItemId, int> to the Player entity, (2) define the KitEffect tagged union type with all five discriminators (engagement_multiplier, algorithm_lookahead, platform_headstart_sequential, follower_conversion_multiplier, viral_burst_amplifier), (3) define the KitItemDef type mirroring CloutUpgradeDef shape, (4) add creatorKitItems to the StaticData interface (empty record is acceptable — E2 populates), (5) bump the save format version and write the forward-only migration that defaults player.creator_kit to {} on load, (6) add the one-line player.creator_kit = {} to applyRebrand's reset pass (MUST NOT appear in the preservation list).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Architecture spec — Data Model, KitEffect union, Save Schema Migration, Rebrand wipe sections"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Existing Player entity, StaticData, CloutUpgradeDef shape to mirror, applyRebrand reset pass"
+        }
+      ],
+      "acceptance_criteria": [
+        "Player type has creator_kit: Record<KitItemId, number> field",
+        "KitEffect tagged union is defined with all five discriminators as specified in creator-kit.md",
+        "KitItemDef type is defined with id, max_level, cost[], effect fields",
+        "StaticData.creatorKitItems: Record<KitItemId, KitItemDef> is declared",
+        "Save format version is bumped; loading a pre-bump save returns state with player.creator_kit = {}",
+        "applyRebrand sets player.creator_kit = {} and creator_kit is NOT in any preservation list",
+        "Unit tests cover: save migration from previous version, applyRebrand wipes creator_kit, type-level: KitEffect discriminators compile"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 74,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit static data: five item definitions with placeholder balance",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Populate StaticData.creatorKitItems with the five Creator Kit items defined in the architecture spec (camera, laptop, phone, wardrobe, mogging). Use PLACEHOLDER balance values — game-designer owns final numbers (balance OQs #3, #4, #5). Placeholder guidance: 3 levels per item; cost[] in Engagement roughly calibrated against generator costs; effect value arrays that produce a visible-but-not-absurd result at each level (e.g. Camera values [1.5, 2.5, 4.0] cumulative, Wardrobe [1.25, 1.75, 2.5], Laptop lookaheads [1, 2, 3], Mogging [1.2, 1.5, 2.0]). Phone has no value array (sequential semantics — level count IS the value). Mark every placeholder with a // BALANCE: placeholder comment so game-designer can find them.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "The Five Items table, KitItemDef shape, effect type semantics"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/creator-kit-upgrades.md",
+          "purpose": "Design intent for each item — what each effect should feel like"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Reference costs and level counts for calibration"
+        }
+      ],
+      "acceptance_criteria": [
+        "StaticData.creatorKitItems contains exactly five entries: camera, laptop, phone, wardrobe, mogging",
+        "Each item has a correctly-typed KitEffect matching its role (Camera → engagement_multiplier, Laptop → algorithm_lookahead, Phone → platform_headstart_sequential, Wardrobe → follower_conversion_multiplier, Mogging → viral_burst_amplifier)",
+        "cost[] and value arrays are monotonic (ascending costs, non-decreasing cumulative effects)",
+        "Every placeholder numeric value is marked with a // BALANCE: placeholder comment",
+        "Unit test: each item's cost[] and values[] (if present) have length === max_level"
+      ],
+      "open_questions": [
+        {
+          "question": "OQ#3, #4, #5: exact balance values (level counts, costs, effect magnitudes) — placeholders used, game-designer owns final pass.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [
+        73
+      ]
+    },
+    {
+      "id": 75,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit purchase handler",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the kit-purchase action. The handler validates the purchase, spends engagement, and increments the player's level for that item. It MUST expose a post-purchase hook (or otherwise be extensible) so E6 (Phone mid-run head-start) can cleanly layer in without rewriting the handler. Steps per the architecture spec §Purchase: (1) validate player.creator_kit[item_id] < KitItemDef.max_level, (2) validate player.engagement >= KitItemDef.cost[current_level], (3) decrement engagement, (4) increment level. Reject the action if either validation fails; do not mutate state. Follow the existing UI→game-loop action dispatch pattern used for Clout purchases.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Purchase contract — validation steps, mid-run application note for Phone"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Existing action-dispatch pattern; Clout purchase is the reference implementation"
+        }
+      ],
+      "acceptance_criteria": [
+        "Purchase action handler exists, validates max_level and affordability, spends engagement, increments level",
+        "Invalid purchases (maxed item, insufficient engagement) leave state unchanged and signal rejection",
+        "Handler is structured so a post-purchase hook (needed by E6 for Phone) can layer in without rewriting",
+        "Unit tests cover: successful purchase, max-level rejection, insufficient-engagement rejection, engagement balance after purchase, level increment"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": 76,
+      "alias": "E4",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit tick integration: Camera + Wardrobe",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Wire Camera (engagement_multiplier) and Wardrobe (follower_conversion_multiplier) into the tick formulas per creator-kit.md §Integration Points §2 and §3. Camera folds into the multiplicative engagement-rate chain AFTER Clout effects, BEFORE event effects (per the Stacking Order convention). Wardrobe multiplies the entire per-platform follower-distribution sum at the engagement→follower conversion step (core-systems.md line 388 region). Both effects read from player.creator_kit and lookup the cumulative value at the owned level from StaticData.creatorKitItems[item_id].effect.values[level-1]. If the player owns level 0 (not purchased), the multiplier is 1.0 (no-op).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Stacking Order convention; Integration Points §2 (Camera) and §3 (Wardrobe)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Effective-rate formula and line 388 follower-distribution formula"
+        }
+      ],
+      "acceptance_criteria": [
+        "Camera's engagement_multiplier is applied in the tick's per-generator effective-rate calculation, folded into the multiplicative chain after Clout engagement_multiplier",
+        "Wardrobe's follower_conversion_multiplier wraps the per-platform follower distribution sum per the formula in creator-kit.md §Integration Points §3",
+        "Level-0 (unpurchased) items are a 1.0 no-op — do not change tick output",
+        "Stacking is multiplicative and order-independent for the current effect set",
+        "Unit tests cover: Camera level 0/1/2 affects engagement rate correctly; Wardrobe level 0/1/2 affects follower distribution correctly; Camera × Clout engagement_multiplier stacks multiplicatively"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": 77,
+      "alias": "E5",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit Laptop: additive algorithm lookahead stacking with Clout",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Wire Laptop (algorithm_lookahead) into the populator for AlgorithmState.upcoming_states[] per creator-kit.md §Integration Points §4. The total lookahead used to populate upcoming_states is clout_lookahead + kit_lookahead, clamped to the number of states the schedule-walker can produce. Laptop uses the same effect type shape as Clout's algorithm_insight. Stacking is ADDITIVE (not multiplicative) per the design proposal. Note: upcoming_states is consumed by UI only — not persisted, not used by the tick logic.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Integration Points §4 (Laptop)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "AlgorithmState.upcoming_states field and its populator"
+        }
+      ],
+      "acceptance_criteria": [
+        "upcoming_states[] length = clout_lookahead + kit_lookahead (clamped to available states)",
+        "Laptop level 0 contributes 0 lookahead (no-op when unpurchased)",
+        "Unit tests cover: laptop-only lookahead, clout-only lookahead, both stacked additively, clamp when sum exceeds available states"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": 78,
+      "alias": "E6",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit Phone: sequential platform head-start with mid-run apply",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement Phone's sequential platform head-start per creator-kit.md §Integration Points §5. When Phone is purchased mid-run, iterate platforms in static-declaration order and unlock the next still-locked platform that is NOT already covered by a Clout platform_headstart. The number of platforms unlocked by Phone equals the Phone level. Hook into the purchase handler's post-purchase extension point (from E3). NOTE: There is no applyRebrand work for Phone — creator_kit is already wiped to {} before Phone would run. Phone is purchase-handler-only.\n\nIMPORTANT — OQ#1 (Phone ceiling): game-designer has not yet picked Inert vs Hidden for when all platforms are already head-started. Architect recommended avoiding Fallback-Benefit. IMPLEMENT INERT AS PLACEHOLDER (purchase succeeds, no platform unlocks) and leave a clear // OQ#1: game-designer to pick Inert vs Hidden comment at the decision site. If game-designer picks Hidden, UI will gate the item out of the menu — the handler's Inert behavior is harmless.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Integration Points §5 (Phone); Stacking Order §Sequential stacking"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "applyRebrand platform_headstart re-application pattern (reference implementation for sequential semantics)"
+        }
+      ],
+      "acceptance_criteria": [
+        "Phone purchase unlocks the next still-locked platform in static-declaration order, skipping Clout-covered platforms",
+        "When all platforms are already unlocked/head-started, Phone purchase succeeds as Inert (engagement spent, level incremented, no platform change) — flagged with // OQ#1 comment at the decision site",
+        "Kit wipe on rebrand implicitly resets Phone — no Phone-specific rebrand code required (verify test)",
+        "Unit tests cover: Phone L1 with no Clout head-starts → first platform unlocks, Phone L1 with Clout head-start on platform[0] → platform[1] unlocks, Phone L2 with no Clout head-starts → first two platforms unlock, Phone purchase when all platforms already unlocked → Inert (engagement spent, no unlock change)"
+      ],
+      "open_questions": [
+        {
+          "question": "OQ#1: Phone ceiling behavior when all platforms already head-started — Inert vs Hidden. Architect recommends avoiding Fallback-Benefit. Currently implemented as Inert with a marker comment. If Hidden is picked, the UI will gate the item out of the menu and no handler change is needed.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [
+        73,
+        74,
+        75
+      ]
+    },
+    {
+      "id": 79,
+      "alias": "E7",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit Mogging: viral burst amplifier",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Wire Mogging (viral_burst_amplifier) into the viral burst trigger per creator-kit.md §Integration Points §6. At viral burst trigger time, multiply the rolled boost_factor by the kit amplifier value before magnitude is computed. Specifically: read kit_amplifier = creatorKitItems.mogging.effect.values[level-1] (or 1.0 at level 0), then boost_factor = boost_factor_raw * kit_amplifier. The existing magnitude and bonus_rate_per_ms formulas from viral-burst-event-signal.md §3 then use the amplified boost_factor unchanged. This is ONE new read point in the viral burst trigger — no other changes to the viral burst subsystem.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Integration Points §6 (Mogging)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/viral-burst-event-signal.md",
+          "purpose": "§3 Magnitude calculation — existing boost_factor roll and magnitude formulas"
+        }
+      ],
+      "acceptance_criteria": [
+        "Viral burst magnitude computation reads player.creator_kit.mogging and applies the amplifier to boost_factor before magnitude is computed",
+        "Level 0 (unpurchased) Mogging is a 1.0 no-op — boost_factor is unchanged",
+        "Amplified boost_factor flows through to both magnitude and bonus_rate_per_ms (per existing formulas)",
+        "Unit tests cover: Mogging level 0 viral burst matches pre-kit behavior; Mogging level N scales boost_factor and produces proportionally higher magnitude; bonus_rate_per_ms is consistent with the amplified boost_factor"
+      ],
+      "open_questions": [
+        {
+          "question": "OQ#3: should a hard cap on total post-amplification boost_factor be enforced? Architecturally trivial to add a clamp step. Not implemented now — game-designer balance pass.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": 80,
+      "alias": "U1",
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "UX spec: creator-kit-panel (placement, peek signal, icons, copy)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Write the follow-up UX spec for the Creator Kit panel at .frames/sdlc/ux/creator-kit-panel.md. The accepted proposal resolved the direction (dedicated collapsible panel, receded visual weight, peek-visible spend signal tied to currency readout) but deferred the detailed treatment. This task: specify exact panel placement relative to the generator list and action column, the collapsed/expanded behavior, the peek-signal affordance (triggered when the player's Engagement balance crosses the next-affordable kit tier), type scale and color treatment that differentiates kit rows from generator rows, the icon set for the five items (Camera, Laptop, Phone, Wardrobe, Mogging — one glyph each, legible at list-row scale), and satirical-but-warm copy drafts. Coordinate copy drafts with game-designer per OQ#7 resolution.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/creator-kit-upgrades.md",
+          "purpose": "OQ#6 and OQ#7 resolutions define direction and constraints"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "The five items and their effects — the content the panel must present"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/typography-system.md",
+          "purpose": "Type scale constraints for the kit panel differentiation"
+        }
+      ],
+      "acceptance_criteria": [
+        ".frames/sdlc/ux/creator-kit-panel.md exists with sections: panel placement, collapsed/expanded behavior, peek-signal affordance, visual differentiation from generator rows, icon set (one glyph per item), copy drafts",
+        "Peek-signal trigger is specified: what threshold, what affordance treatment, where it surfaces (near currency readout, not inside the panel)",
+        "Copy drafts for all five items are present and reviewed with game-designer for satirical-but-warm tone",
+        "No competing visual weight with the generator list — differentiation via placement, type scale, color specified explicitly",
+        "Spec references accepted-proposal OQ#6 and OQ#7 resolutions as the source of constraints"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 81,
+      "alias": "E8",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Creator Kit menu UI shell (collapsible panel + purchase rows)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the Creator Kit UI panel per the UX spec produced in U1. The panel is a collapsible container showing the five kit items (Camera, Laptop, Phone, Wardrobe, Mogging) with their current level, cost to next level, and a buy button wired to the E3 purchase handler. The peek-signal affordance is also implemented per the UX spec (surfaces near the currency readout when balance crosses a kit affordability threshold). Visual differentiation from generator rows follows the UX spec's type scale and color treatment. Icons from the UX spec asset set.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/creator-kit-panel.md",
+          "purpose": "UX spec — placement, peek signal, visual treatment, icons, copy (produced by U1)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Data model (player.creator_kit, KitItemDef) and purchase handler contract"
+        }
+      ],
+      "acceptance_criteria": [
+        "Creator Kit panel renders all five items with current level, next-level cost, and buy button",
+        "Panel is collapsible per UX spec behavior",
+        "Buy button dispatches the purchase action implemented in E3; disabled states match validation (max level, insufficient engagement)",
+        "Peek-signal affordance surfaces per UX spec when Engagement balance crosses a kit affordability threshold",
+        "Visual treatment (type scale, color, placement) matches UX spec and does not compete with generator list",
+        "Component tests cover: rendering, disabled-state logic, purchase dispatch, peek-signal trigger condition"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        73,
+        74,
+        75,
+        80
+      ]
     }
   ]
 }
