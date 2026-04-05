@@ -1483,6 +1483,23 @@
 /* Action row — elevated treatment with tinted background. */
 .upgrade-level-row.action-row {
   background: rgba(var(--drawer-color-rgb, 200, 180, 150), 0.08);
+  /* Button sits on the drawer edge nearest the row trigger (left edge) —
+     cuts pointer travel for repeat upgrades. See spec §2.3 / Decision #6. */
+  grid-template-columns: auto 48px 72px 1fr;
+}
+
+.upgrade-level-row.action-row .upgrade-btn {
+  grid-column: 1;
+  grid-row: 1;
+}
+.upgrade-level-row.action-row .upgrade-level-lv {
+  grid-column: 2;
+}
+.upgrade-level-row.action-row .upgrade-level-multi {
+  grid-column: 3;
+}
+.upgrade-level-row.action-row .upgrade-level-cost {
+  grid-column: 4;
 }
 
 .upgrade-level-row.action-row:hover {
@@ -1529,7 +1546,7 @@
   to   { opacity: 1; }
 }
 
-/* Upgrade button — right-aligned in the action row. */
+/* Upgrade button — left-aligned in the action row (spec §2.3 / Decision #6). */
 .upgrade-btn {
   width: 100px;
   height: 36px;

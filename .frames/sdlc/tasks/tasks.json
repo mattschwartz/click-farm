@@ -1,5 +1,5 @@
 {
-  "next_id": 70,
+  "next_id": 71,
   "tasks": [
     {
       "id": 1,
@@ -1871,7 +1871,7 @@
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Migrate CloutUpgrade schema to per-level arrays + add missing data entries",
       "requester": "architect",
@@ -1915,7 +1915,8 @@
         "All existing tests updated to new schema and pass; new test coverage added for post-prestige generator unlocking on rebrand, engagement_boost multi-level values, algorithm_insight multi-level lookaheads"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 64,
@@ -1962,8 +1963,7 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        62,
-        63
+        62
       ]
     },
     {
@@ -2052,7 +2052,7 @@
       "id": 67,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Left-align Upgrade button in generator upgrade drawer",
       "requester": "ux-designer",
@@ -2075,7 +2075,8 @@
         "Close button in the footer remains right-aligned"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 68,
@@ -2169,6 +2170,44 @@
           "owner": "game-designer"
         }
       ],
+      "blocked_on": []
+    },
+    {
+      "id": 70,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Remove post-prestige generators from main generator list",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are currently rendered in the main generator list in GameScreen, below Viral Stunts, each showing a — x1.00 multiplier and a 'Buy' action priced in engagement (e.g. 'Buy AI Slop — cost: 200.00M engagement'). This contradicts the accepted spec ux/prestige-rebrand-screen.md §3.1 and §3.4, which places these generators in the Clout Shop modal under the UNLOCKS category, priced in Clout, purchased via the Upgrades button in the prestige cluster (bottom-right).\n\nThe Clout Shop is a separate planned task (see the existing 'Clout Shop modal — full upgrade list + purchase flow + states' build task). Until it lands, post-prestige generators should simply NOT appear in the main generator list at all. When the Clout Shop ships, they will render there as UNLOCKS rows per spec.\n\nThis is a surgical filter change: the generator list rendering logic should exclude any generator whose id is in the postPrestige set (already defined in save/index.ts as ['ai_slop', 'deepfakes', 'algorithmic_prophecy']).\n\nThe three symptoms this fixes (all currently visible on screen):\n1. The locked state reads as broken — '— x1.00' is ambiguous between 'no multiplier' and 'row failed to load'\n2. No PRESTIGE band label — these rows sit below the LATE band in visual no-man's-land\n3. Cost is denominated in engagement without any engagement-pool indicator visible on the main screen, so the player has no way to reason about proximity to unlock\n\nAll three evaporate when the generators stop rendering here. They will re-emerge in the correct surface (Clout Shop, in Clout) when that task ships.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/prestige-rebrand-screen.md",
+          "purpose": "§3.1 Clout Shop modal layout (shows AI Slop as an UNLOCKS row with 'locked cost: 25 ⬆'), §3.4 category definitions — UNLOCKS merges generator_unlock + platform_headstart effect types"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "postPrestige array at ~line 203 defines the set of generator ids to filter: ['ai_slop', 'deepfakes', 'algorithmic_prophecy']"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Generator definitions including ai_slop (line 122), deepfakes (line 132), algorithmic_prophecy — these stay in static data, they just shouldn't render in the main list"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Main generator list rendering — apply the filter here"
+        }
+      ],
+      "acceptance_criteria": [
+        "Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) no longer render in the main generator list in GameScreen",
+        "The LATE band is the last band visible in the generator list (no orphan rows below it)",
+        "Generator data definitions for post-prestige generators remain intact in static-data/index.ts — only the main-list rendering is filtered",
+        "Existing tests still pass; no test references the post-prestige generators rendering in the main list",
+        "Visual verification against the screenshot in this task: the generator list should end cleanly at Viral Stunts"
+      ],
+      "open_questions": [],
       "blocked_on": []
     }
   ]
