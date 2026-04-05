@@ -2481,7 +2481,7 @@
       "alias": "E6",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit Phone: sequential platform head-start with mid-run apply",
       "requester": "architect",
@@ -2509,7 +2509,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 79,

@@ -14,7 +14,7 @@
 // accepted so the mid-run Phone head-start (task #78) can layer a
 // post-purchase hook in without rewriting this handler.
 
-import type { GameState, KitItemId, StaticData } from '../types.ts';
+import type { GameState, KitItemId, PlatformId, StaticData } from '../types.ts';
 import { spendEngagement } from '../model/index.ts';
 
 // ---------------------------------------------------------------------------
@@ -200,6 +200,54 @@ export function canPurchaseKitItem(
 }
 
 // ---------------------------------------------------------------------------
+// Phone sequential head-start
+//
+// Architecture (creator-kit.md §Integration Points §5, §Stacking Order):
+//   Iterate platforms in their static-declaration order and unlock the next
+//   still-locked platform. Clout `platform_headstart` is applied first (at
+//   rebrand); by the time Phone runs mid-run, Clout-covered platforms are
+//   already unlocked, so the "still-locked" check subsumes "skip Clout-
+//   covered".
+//
+// Phone's purchase handler is the ONLY site where this logic runs —
+// applyRebrand wipes creator_kit to {} before rebrand reset runs, so Phone
+// has no rebrand-time work (see architect's note in the spec).
+// ---------------------------------------------------------------------------
+
+/**
+ * Unlocks the next still-locked platform in static-declaration order.
+ * Called after a Phone purchase to apply the level bump's head-start.
+ *
+ * If every platform is already unlocked, returns state unchanged — the Phone
+ * purchase still succeeds (engagement was already spent, level already
+ * incremented). See OQ#1 below for the Inert vs Hidden decision.
+ */
+export function applyPhoneHeadStart(
+  state: GameState,
+  staticData: StaticData,
+): GameState {
+  const platformIds = Object.keys(staticData.platforms) as PlatformId[];
+  for (const pid of platformIds) {
+    const p = state.platforms[pid];
+    if (p === undefined) continue;
+    if (!p.unlocked) {
+      return {
+        ...state,
+        platforms: {
+          ...state.platforms,
+          [pid]: { ...p, unlocked: true },
+        },
+      };
+    }
+  }
+  // OQ#1: game-designer to pick Inert vs Hidden when all platforms are
+  // already head-started. Currently Inert — purchase succeeds as no-op on
+  // platform state. If Hidden is chosen, UI gates this item out of the menu
+  // and this branch becomes unreachable (harmless).
+  return state;
+}
+
+// ---------------------------------------------------------------------------
 // Purchase handler
 // ---------------------------------------------------------------------------
 
@@ -253,7 +301,7 @@ export function purchaseKitItem(
 
   const player = spendEngagement(state.player, cost);
   const newLevel = current + 1;
-  const nextState: GameState = {
+  let nextState: GameState = {
     ...state,
     player: {
       ...player,
@@ -263,6 +311,14 @@ export function purchaseKitItem(
       },
     },
   };
+
+  // Phone's sequential head-start is applied inside the handler per
+  // architecture/creator-kit.md §Purchase (step 5) — it's a core purchase
+  // behavior, not an optional hook. The afterPurchase hook still runs
+  // afterwards so callers can observe / layer on extra state.
+  if (itemId === 'phone') {
+    nextState = applyPhoneHeadStart(nextState, staticData);
+  }
 
   if (options.afterPurchase) {
     return options.afterPurchase(nextState, itemId, newLevel);

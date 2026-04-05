@@ -9,7 +9,7 @@ import {
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
-import type { GameState, KitItemId } from '../types.ts';
+import type { GameState, KitItemId, PlatformId } from '../types.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -367,5 +367,99 @@ describe('kitAlgorithmLookaheadBonus', () => {
         STATIC_DATA,
       ),
     ).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phone sequential head-start (applied inside purchaseKitItem)
+// ---------------------------------------------------------------------------
+
+describe('purchaseKitItem — Phone sequential head-start', () => {
+  const phoneCost0 = STATIC_DATA.creatorKitItems.phone.cost[0];
+  const phoneCost1 = STATIC_DATA.creatorKitItems.phone.cost[1];
+  const platformIdsInOrder = Object.keys(
+    STATIC_DATA.platforms,
+  ) as PlatformId[];
+
+  it('L1 with no Clout head-starts → unlocks the first still-locked platform (instasham)', () => {
+    const state = seed(phoneCost0);
+    // Sanity: initial state has chirper unlocked (threshold=0), others locked.
+    expect(state.platforms.chirper.unlocked).toBe(true);
+    expect(state.platforms.instasham.unlocked).toBe(false);
+    expect(state.platforms.grindset.unlocked).toBe(false);
+
+    const next = purchaseKitItem(state, 'phone', STATIC_DATA);
+    expect(next.player.creator_kit.phone).toBe(1);
+    expect(next.platforms.instasham.unlocked).toBe(true);
+    // Grindset still locked — Phone L1 only unlocks one platform.
+    expect(next.platforms.grindset.unlocked).toBe(false);
+  });
+
+  it('L1 with Clout head-start covering platform[1] → unlocks the next still-locked (grindset)', () => {
+    // Simulate rebrand-time Clout head-start by pre-unlocking instasham.
+    const base = seed(phoneCost0);
+    const state: GameState = {
+      ...base,
+      platforms: {
+        ...base.platforms,
+        instasham: { ...base.platforms.instasham, unlocked: true },
+      },
+    };
+
+    const next = purchaseKitItem(state, 'phone', STATIC_DATA);
+    expect(next.platforms.instasham.unlocked).toBe(true);
+    expect(next.platforms.grindset.unlocked).toBe(true);
+  });
+
+  it('L2 via two sequential purchases → unlocks the first two still-locked platforms in order', () => {
+    const state = seed(phoneCost0 + phoneCost1);
+
+    const afterFirst = purchaseKitItem(state, 'phone', STATIC_DATA);
+    expect(afterFirst.player.creator_kit.phone).toBe(1);
+    expect(afterFirst.platforms.instasham.unlocked).toBe(true);
+    expect(afterFirst.platforms.grindset.unlocked).toBe(false);
+
+    const afterSecond = purchaseKitItem(afterFirst, 'phone', STATIC_DATA);
+    expect(afterSecond.player.creator_kit.phone).toBe(2);
+    expect(afterSecond.platforms.instasham.unlocked).toBe(true);
+    expect(afterSecond.platforms.grindset.unlocked).toBe(true);
+  });
+
+  it('is Inert when all platforms are already unlocked (engagement spent, level incremented, no platform change)', () => {
+    const base = seed(phoneCost0 + 1_234);
+    const state: GameState = {
+      ...base,
+      platforms: Object.fromEntries(
+        platformIdsInOrder.map((pid) => [
+          pid,
+          { ...base.platforms[pid], unlocked: true },
+        ]),
+      ) as typeof base.platforms,
+    };
+
+    const next = purchaseKitItem(state, 'phone', STATIC_DATA);
+    expect(next.player.creator_kit.phone).toBe(1);
+    expect(next.player.engagement).toBe(1_234); // cost spent
+    // All platforms remain unlocked; nothing else flipped.
+    for (const pid of platformIdsInOrder) {
+      expect(next.platforms[pid].unlocked).toBe(true);
+    }
+  });
+
+  it('iterates in static-declaration order (chirper → instasham → grindset)', () => {
+    // Regression guard: if the first platform were locked somehow, Phone
+    // would unlock it before touching later ones.
+    const base = seed(phoneCost0);
+    const state: GameState = {
+      ...base,
+      platforms: {
+        ...base.platforms,
+        chirper: { ...base.platforms.chirper, unlocked: false },
+      },
+    };
+
+    const next = purchaseKitItem(state, 'phone', STATIC_DATA);
+    expect(next.platforms.chirper.unlocked).toBe(true);
+    expect(next.platforms.instasham.unlocked).toBe(false);
   });
 });
