@@ -2,8 +2,8 @@
 name: Generator Badge Breathing
 description: Owned generator badges should pulse with a slow ambient breath animation, staggered by unlock order, so the generator list feels like a running machine rather than a static menu.
 author: ux-designer
-status: draft
-reviewers: [engineer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Generator Badge Breathing
@@ -57,4 +57,24 @@ A rate-coupled approach (faster generators pulse faster) was considered and reje
 ## Open Questions
 
 1. The amplitude of 1.025 is a starting point. Engineer should test in-browser — it may need to go as low as 1.015 to avoid feeling distracting at small badge sizes, or as high as 1.04 to be visible at all. **Owner: engineer (tune in-browser)**
+   - [RESOLVED] Tuning deferred to in-browser testing per intent. 1.025 is currently shipped in CSS. No answer until it's actually seen at different badge sizes — this is not a blocking question.
 2. Should the breathing animation be applied via a CSS class toggled in React (`.badge.owned`) or directly via a CSS rule targeting `.generator-row:not(.locked) .badge`? The latter requires no React change. **Owner: engineer**
+   - [RESOLVED] CSS class toggled in React (`.badge.badge-owned`). The pure CSS approach wouldn't work here because the `--breathe-delay` custom property is set inline on the badge element from React (computed per-generator index). React already owns that element's style — keeping the class toggle there is consistent. Already implemented this way.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Both OQs resolved, proposal is already implemented.
+
+1. **Amplitude** — 1.025 is shipped. In-browser tuning is the correct path; this is not a blocking question. Range of 1.015–1.04 from the spec gives adequate room.
+
+2. **CSS class vs pure CSS rule** — React-toggled `.badge-owned` is correct and already implemented. The pure CSS rule `.generator-row:not(.locked) .badge` would have required a different approach to `--breathe-delay`, which is computed per generator index and set inline from React. Since React already owns the style attribute on that element, the class toggle is the natural fit.
+
+One note: the `prefers-reduced-motion` media query is present and disables breathing. The in-game Reduce Motion toggle (task #48) is noted in a comment in the CSS — that wiring is correctly deferred.
+
+Moving to accepted.

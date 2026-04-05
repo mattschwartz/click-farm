@@ -2,8 +2,8 @@
 name: Engagement Counter Interpolation
 description: The engagement counter should update at 60fps via predictive interpolation rather than jumping on 100ms game loop ticks.
 author: ux-designer
-status: draft
-reviewers: [engineer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Engagement Counter Interpolation
@@ -61,4 +61,21 @@ This is not a change to game logic, tick rate, or state management. The game loo
 ## Open Questions
 
 1. Is a `useInterpolatedValue` hook the right home for this, or should the RAF loop live directly in `TopBar`? A standalone hook is more testable and reusable (viral counter may want this too). **Owner: engineer**
+   - [RESOLVED] Standalone hook. `useInterpolatedValue.ts` already exists and is consumed by `TopBar`. The pure `interpolateValue` function is extracted separately for unit testing without React or RAF.
 2. Should the hook accept a `clamp` parameter to prevent the interpolated value from exceeding `last_game_value + (rate × tick_interval)`? This would prevent brief over-prediction if a rate spike resolves within one tick. **Owner: engineer**
+   - [RESOLVED] Yes, with `clamp = true` as the default. Already implemented — `maxMs` defaults to `TICK_INTERVAL_MS`. Over-prediction is silently suppressed without requiring callers to opt in.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Both OQs are answered by the existing implementation — this proposal is already shipped.
+
+1. **Standalone hook** — `useInterpolatedValue.ts` exists, exports `interpolateValue` as a pure function for unit testing, and is already consumed by `TopBar`. The viral counter will be able to reuse it directly.
+2. **Clamp** — implemented as `clamp = true` default. `interpolateValue` takes `maxMs = TICK_INTERVAL_MS`. No caller opts in explicitly; the safe behavior is the default.
+
+No issues. Proposal matches implementation. Moving to accepted.

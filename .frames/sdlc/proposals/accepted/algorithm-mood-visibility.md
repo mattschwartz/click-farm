@@ -2,8 +2,8 @@
 name: Algorithm Mood Visibility
 description: The algorithm mood background should be perceptible through content panels via screen-edge vignettes, with panel opacity tuning deferred until contrast is verified across all states.
 author: ux-designer
-status: draft
-reviewers: [engineer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Algorithm Mood Visibility
@@ -83,4 +83,24 @@ Phase 2 becomes worth doing once Phase 1 is shipped and the gap is re-evaluated 
 ## Open Questions
 
 1. Should the vignette be a second `<div>` layer in `AlgorithmBackground`, or a `::before`/`::after` pseudo-element on the existing element? Pseudo-element is simpler if the existing element already has one in use. **Owner: engineer**
+   - [RESOLVED] Second `<div>` inside `AlgorithmBackground`. The `::after` pseudo-element is already occupied by the shimmer layer (see `GameScreen.css`). `::before` is free, but the viral burst override requires React prop control — the component needs to accept burst state (active, platform affinity color) and drive the crossfade. A React-controlled `<div>` handles this cleanly; a pseudo-element would require threading the burst color through CSS custom properties and managing the 3-phase state machine entirely in CSS, which is brittle. The second `<div>` keeps all mood-background logic in one component and makes the instability factor and viral state trivially passable as props.
 2. The opacity targets above are starting points. Engineer should tune in-browser across all five states to confirm they're perceptible but not distracting. Is there a brightness or saturation constraint that should be specified here to bound the tuning? **Owner: ux-designer (can answer in review if engineer flags)**
+   - [RESOLVED] No hard constraint needed from the engineer's side. The opacity table is sufficient direction. The implicit bound is: perceptible at a glance without requiring attention. In-browser tuning can proceed without a formal ceiling — if it reads as distraction, it's over; if it's invisible, it's under. The per-mood targets in the table already encode the relative muting intent (Corporate Takeover at 20% vs Engagement Bait at 32%).
+
+---
+# Review: engineer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Both OQs answered. No blocking concerns.
+
+1. **Second `<div>` over pseudo-element** — `::after` is already taken by the shimmer animation in `GameScreen.css`. `::before` is available but the wrong tool here: the viral burst override (3-phase state machine, crossfade to platform affinity color, pulse, crossfade back) requires React to drive it. Threading that through CSS custom properties on a pseudo-element is achievable but brittle — any change to the burst phases requires coordinated CSS + React state changes. A second `<div>` inside `AlgorithmBackground` receives instability factor and burst state as props and handles everything in one place. `AlgorithmBackground` already computes `instabilityFactor` for the speed multiplier, so passing it through to the vignette opacity scale is trivial.
+
+2. **Opacity constraint** — no hard bound needed. The per-mood table encodes relative intent (Corporate Takeover at 20% is subtler by design; Engagement Bait at 32% is the loudest). Engineer tunes in-browser with those as anchors. No formal ceiling necessary.
+
+Phase 2 (panel opacity) is correctly deferred — contrast verification across all five mood states is an engineering measurement, not a design call, and Phase 1 alone should move the needle.
+
+Moving to accepted.
