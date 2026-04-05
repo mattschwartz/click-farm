@@ -3,7 +3,7 @@ name: Manual Action Ladder
 description: Replaces the single Post button with a ladder of content verbs (Chirp, Selfie, Livestream, …) where each verb follows a three-step lifecycle — unlock, upgrade, automate — and every verb stays permanently manual-clickable. Automators are parallel actors that press each verb on their own cooldowns, not replacements for the player's hand.
 author: game-designer
 status: draft
-reviewers: [engineer, game-designer, architect]
+reviewers: [engineer, game-designer]
 ---
 
 # Proposal: Manual Action Ladder
@@ -216,6 +216,73 @@ This proposal modifies or extends several accepted decisions. On acceptance, the
 ## Revision: 2026-04-05 — game-designer (post-engineer-review)
 
 Integrated engineer's OQ16 (count=0 cooldown-undefined gap) and non-blocking platform-affinity flag. OQ16 resolved with engineer's recommended **phantom-hand floor** — `cooldown = 1 / (max(1, count) × base_event_rate)` — pending architect sign-off. OQ17 added and resolved from the game-designer side: `postClick` does NOT apply platform affinity at tap time, preserving today's engagement→distribution split. §12 "What This Locks In" updated with the `max(1, count)` floor and the platform-affinity-at-tap-time exclusion. Architect is requested to sign off on OQ16's formula change and confirm OQ17 preserves the earned-formula's intent.
+
+---
+# Review: architect (re-review)
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Re-review per game-designer's 2026-04-05 revision. Two items required architect sign-off (OQ16, OQ17). Both approved. No remaining architectural concerns.
+
+**OQ16 — Phantom-hand cooldown floor → APPROVED.**
+
+`cooldown = 1 / (max(1, count) × base_event_rate)` is the right resolution. It's the one I would have picked if I'd caught the gap myself during my first pass; the engineer surfaced it correctly, the game-designer adopted the right option. It preserves every property of my derived-view contract:
+
+- No new data field.
+- No formula mode-switch — still a one-liner, still derived from `count` and `base_event_rate`.
+- Semantically honest: the player's hand is actor #1 on every unlocked verb; automators are actors #2+. The floor names that relationship directly in the math.
+- First Automate purchase (count: 0 → 1) halves the cooldown, which lands §4's "dual payoff is felt in the player's hand" teaching moment on the most important purchase — the first one. After that, 1/n diminishing returns on the cooldown dimension are fine because the automator-throughput dimension is compounding multiplicatively.
+
+**One scoping clarification that must be explicit in implementation:** the `max(1, count)` floor belongs to the *manual-cooldown derivation only*. The passive-rate production formula inside the tick loop stays unfloored:
+
+```
+effective_rate = count × base_event_rate × base_event_yield × level_multiplier × algo_mod × clout × kit
+```
+
+If the floor were applied to passive production, a freshly-unlocked existing generator (count=0) would spuriously produce 1-actor's-worth of passive output — wrong, and a silent balance regression for the existing 7-generator roster. The floor exists because a manual cooldown has no natural "zero" meaning (the player's hand is always available), whereas passive production does have a natural zero ("no automators = no passive output"). Keep these two surfaces separated: floor at `postClick`'s cooldown gate and at any cooldown-display derivation; no floor at `computeGeneratorEffectiveRate` / tick-loop production.
+
+Concretely, the cooldown gate in `postClick` (step 5 of my original OQ13 spec) should read:
+
+```
+const cooldownMs = 1000 / (Math.max(1, genState.count) × def.base_event_rate);
+if (now - (state.player.last_manual_click_at[verbId] ?? 0) < cooldownMs) return state;
+```
+
+This also addresses engineer's non-blocking flag #2 on `last_manual_click_at` missing-key semantics — the `?? 0` makes "never clicked" semantically explicit at the gate site.
+
+Incidental corollary for OQ9 (offline progression): because the floor is scoped to cooldown-only, the architecture already gives the designer-intended answer for free. Automated verbs (count ≥ 1) produce offline through the existing passive-rate pipeline; manual-only verbs (count = 0) produce nothing offline because the tick formula has no floor and the player's hand is not tapping while away. No special-casing needed. Game-designer can close OQ9 with "no new offline machinery required" when they sweep the remaining OQs.
+
+**OQ17 — No platform affinity at `postClick` tap time → CONFIRMED. Preserves earned-formula intent.**
+
+My step-4 formula's trailing `× platform_affinity_if_applicable` was a hedge because I hadn't locked the designer's intent on per-verb-to-platform coupling at tap time. Game-designer's resolution — manual clicks add flat engagement, platform routing happens downstream at `computeFollowerDistribution` — is the architecturally correct resolve, and I should have written the formula more precisely the first time.
+
+Reasoning: today's passive generators already produce platform-agnostic engagement. `base_engagement_rate` (now `base_event_yield × base_event_rate`) has no per-platform multiplier at production time; content affinity enters at the distribution stage when engagement is partitioned into per-platform follower gain. Manual clicks matching that same discipline keeps the engagement→distribution split clean: one generation surface (production), one routing surface (distribution), no cross-contamination.
+
+**Formula of record — corrected per-manual-tap engagement earned:**
+
+```
+earned = def.base_event_yield × level_multiplier(genState.level) × algoMod × clout_bonus × kit_bonus
+```
+
+No platform affinity term. Algorithm modifier stays at production (it's a yield-per-event multiplier, not a routing multiplier — same role as for passive generators). Platform affinity applies at distribution, not production, for both manual and automator output. Symmetric treatment, zero new coupling.
+
+Architectural benefits of this resolve:
+
+- `postClick` stays stateless with respect to platform selection — no "which platform is this verb tapping?" decision at runtime.
+- Actions column does not couple to the platform matrix at click time.
+- Content_affinity table remains the single source of truth for platform routing, applied in one place (`computeFollowerDistribution`).
+- Matches today's engineer-observed behavior (engineer's non-blocking flag #1) — no behavior change needed beyond the `postClick(verbId)` signature refactor.
+
+**Non-blocking observations (carried forward or new):**
+
+1. *My OQ11/12/13 resolutions remain unchanged.* Consolidation, yield/rate split, and `postClick(verbId)` stand as authored. Only step-4's formula is corrected (platform-affinity term removed) and step-5's cooldown gate gains the `max(1, count)` floor and the `?? 0` missing-key guard.
+2. *OQ7 (rate-scaled clicks interaction) is game-designer + architect jointly-owned, but game-design-weighted.* Architectural cost assessment: option (a) "apply rate-scaling only to non-top-rung" requires per-verb ladder-rank state at click time — introduces coupling from `postClick` to ladder ordering. Option (b) "reject rate-scaled clicks" is zero structural cost. Option (c) "stale-verb boost keyed to non-top-rung" is option (a) with extra tuning dimension. I lean (b) on architecture grounds — the fresh-calibration-per-verb story in this proposal substantively solves what rate-scaled-clicks was solving, and option (a)/(c) lock us into ladder-rank as a load-bearing click-time input. But this is a game-design call; I'm naming the cost, not making the call.
+3. *Non-blocking: `last_manual_click_at` is a `Record<GeneratorId, number>` keyed by the union type.* Under consolidation every verb is a GeneratorId, so the Record's key space is stable and TypeScript will flag unknown verb IDs at compile time. Engineer may implement as `Partial<Record<GeneratorId, number>>` if a tighter optional-key type is preferred — either shape satisfies the contract.
+
+Removing architect from reviewers. Engineer still listed pending re-review of OQ16 resolution (their blocking concern); game-designer still listed per the engineer's RFC loop. Both concerns are architecturally cleared from my side.
 
 ---
 ## Revision: 2026-04-05 — game-designer
