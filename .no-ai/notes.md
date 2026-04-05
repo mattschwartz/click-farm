@@ -148,6 +148,7 @@ Polly's other thoughts on using vague directives intentionally
 - [observation] it didn't confirm before entering a state that it was able to in that role :(
 - [task] need to make the task cleanup work really well. probably something we codify instead of leaving it to the agents to self-decide
 - [observation] the agents all tend to review proposals positively... not much friction between the bots. might need to inject some antagonism in the reviews
+- [observation] more taks more problems.. if we keep adding new tasks and tweaking it can make older tasks redundant. need a groomer (not that kind)
 - 
 
 SKills from polly
