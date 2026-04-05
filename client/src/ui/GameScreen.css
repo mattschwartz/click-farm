@@ -134,6 +134,24 @@
   font-style: italic;
 }
 
+/* RUN badge — appears inline with algorithm state name (task #66, UX §5).
+   Hidden at rebrand_count 0; 400ms fade-in on first appearance (rebrand_count 1). */
+.run-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-p3); /* ~4.5:1 contrast, muted per spec */
+  margin-left: 8px;
+  animation: run-badge-fade-in 400ms ease-out;
+}
+
+@keyframes run-badge-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .engagement-slot {
   display: flex;
   flex-direction: column;
@@ -2048,6 +2066,39 @@
 .row-btn-upgrade.active {
   background: rgba(255, 255, 255, 0.10);
   border-color: rgba(255, 255, 255, 0.28);
+}
+
+/* ==========================================================================
+   Post-rebrand ambient surfaces (task #66, UX §5)
+   ========================================================================== */
+
+/* First-rebrand ambient copy — top-right, 600ms fade-in, 4s hold, 600ms fade-out.
+   Only shown when rebrand_count === 1. */
+.ambient-copy {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 40;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--text-p2);
+  pointer-events: none;
+  animation: ambient-copy-fade-in 600ms ease-out;
+}
+
+.ambient-copy.ambient-copy-fading {
+  animation: ambient-copy-fade-out 600ms ease-out forwards;
+}
+
+@keyframes ambient-copy-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ambient-copy-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 /* Reduce Motion — drawer appears/disappears instantly; dim still applies. */

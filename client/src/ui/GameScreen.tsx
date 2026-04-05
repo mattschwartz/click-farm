@@ -225,6 +225,32 @@ export function GameScreen() {
   const rebrandBtnRef = useRef<HTMLButtonElement>(null);
   const upgradesBtnRef = useRef<HTMLButtonElement>(null);
 
+  // First-rebrand ambient copy (task #66, UX §5).
+  // Show 'You are new again.' top-right on first rebrand (rebrand_count === 1),
+  // fade in 600ms, hold 4s, fade out 600ms, then dismiss.
+  const [showAmbientCopy, setShowAmbientCopy] = useState(false);
+  const [ambientCopyFading, setAmbientCopyFading] = useState(false);
+  const ambientCopyShownRef = useRef(false);
+
+  useEffect(() => {
+    if (state.player.rebrand_count === 1 && !ambientCopyShownRef.current) {
+      ambientCopyShownRef.current = true;
+      setShowAmbientCopy(true);
+      // Hold for 4s, then fade out for 600ms
+      const t1 = window.setTimeout(() => {
+        setAmbientCopyFading(true);
+      }, 4000);
+      const t2 = window.setTimeout(() => {
+        setShowAmbientCopy(false);
+        setAmbientCopyFading(false);
+      }, 4600);
+      return () => {
+        window.clearTimeout(t1);
+        window.clearTimeout(t2);
+      };
+    }
+  }, [state.player.rebrand_count]);
+
   // Upgrades button — opens Clout Shop shell.
   const handleUpgradesClick = () => {
     setShowShopModal(true);
@@ -288,6 +314,7 @@ export function GameScreen() {
           totalFollowers={state.player.total_followers}
           viralGold={viralPhase !== null}
           summaryBadge={summaryBadge}
+          rebrandCount={state.player.rebrand_count}
         />
 
         <div className="game-body">
@@ -410,6 +437,14 @@ export function GameScreen() {
           onConfirm={handleCeremonyConfirm}
           onComplete={handleCeremonyComplete}
         />
+      )}
+
+      {/* First-rebrand ambient copy (task #66, UX §5) — top-right, 600ms fade-in,
+          4s hold, 600ms fade-out. Never shown after rebrand_count >= 2. */}
+      {showAmbientCopy && (
+        <div className={`ambient-copy${ambientCopyFading ? ' ambient-copy-fading' : ''}`}>
+          You are new again.
+        </div>
       )}
     </>
   );

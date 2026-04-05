@@ -24,6 +24,8 @@ interface Props {
   viralGold?: boolean;
   /** Summary badge shown after burst ends: "VIRAL +N" (UX §9.2 Phase 3). */
   summaryBadge?: { magnitude: number; fading: boolean } | null;
+  /** Rebrand count — drives RUN N badge appearance (UX §5, task #66). */
+  rebrandCount?: number;
 }
 
 type TransitionPhase = 'idle' | 'exiting' | 'entering';
@@ -38,6 +40,7 @@ export function TopBar({
   totalFollowers,
   viralGold,
   summaryBadge,
+  rebrandCount = 0,
 }: Props) {
   // Track algorithm state transitions — when current_state_index changes,
   // we slide the old label out and the new one in (UX §4.4, 1.2s total).
@@ -107,6 +110,14 @@ export function TopBar({
   // Smooth the engagement counter at ~60fps via RAF interpolation (§3).
   const displayedEngagement = useInterpolatedValue(engagement, engagementRate);
 
+  // RUN badge fade-in on first appearance (task #66, UX §5).
+  const [badgeShown, setBadgeShown] = useState(rebrandCount > 0);
+  useEffect(() => {
+    if (rebrandCount > 0 && !badgeShown) {
+      setBadgeShown(true);
+    }
+  }, [rebrandCount, badgeShown]);
+
   const mood = ALGORITHM_MOOD[displayedStateId];
 
   return (
@@ -116,6 +127,9 @@ export function TopBar({
           <span className={`name ${phase === 'exiting' ? 'exiting' : phase === 'entering' ? 'entering' : ''}`}>
             {mood?.name ?? displayedStateId}
           </span>
+          {badgeShown && (
+            <span className="run-badge">RUN {rebrandCount + 1}</span>
+          )}
         </div>
         <div className="tagline">{mood?.tagline ?? ''}</div>
       </div>
