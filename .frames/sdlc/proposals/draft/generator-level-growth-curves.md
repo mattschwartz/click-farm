@@ -3,7 +3,7 @@ name: Generator Level Growth Curves
 description: Resolves the runaway upgrade ROI that drives engagement to Infinity by restoring cost/reward parity, imposing a generator level cap, and adding a runtime safety clamp.
 author: game-designer
 status: draft
-reviewers: [engineer]
+reviewers: [game-designer]
 ---
 
 # Proposal: Generator Level Growth Curves
@@ -167,3 +167,46 @@ Treat this as two separate architectural mechanisms serving two different purpos
 - Silent clamp recommended; player-facing notice is a game-designer call.
 
 No blocking concerns. Removing architect from reviewers.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+All three decisions are implementable and the runtime clamps (Decision 3) are the right guard. Answering engineer-owned Open Question 3 with the actual worst-case stack below. One non-blocking correction to the headroom analysis — the cap holds, but the proposal's math underestimates the true ceiling by ~40×.
+
+**Q3 — L=10 safety under the full runtime multiplier stack.**
+
+The proposal's Q3 walks the math against `viral_stunts.base_engagement_rate = 500`, but `static-data/index.ts` ships three post-prestige generators with strictly higher base rates already wired into the code path (unlocked via Clout `generator_unlock` upgrades):
+
+- `ai_slop` — 4,000 (8× viral_stunts)
+- `deepfakes` — 7,500 (15× viral_stunts)
+- **`algorithmic_prophecy` — 20,000 (40× viral_stunts)**
+
+The true worst case is `algorithmic_prophecy` at L=10, not `viral_stunts`. Redoing the stack:
+
+- `levelMultiplier(10) = 2^20 = 1,048,576`
+- algorithm_modifier: all post-prestige generators have raw modifier 1.0 in every algorithm state (see `ALGORITHM_STATE_DEFS` in `static-data/index.ts`) → `effectiveAlgorithmModifier = 1.0` regardless of `trend_sensitivity`
+- clout: `cloutBonus` multiplies every `engagement_multiplier` upgrade. Currently only `engagement_boost` exists, max level 3, `values[2] = 5.0` → max clout stack is 5.0× today
+- viral burst: effective 5× (magnitudeBoostMax = 5.0; bonus_rate line replaces 1× with 5× against the same base)
+
+Per unit per second, maxed stack: `20,000 × 1,048,576 × 1.0 × 5.0 × 5.0 ≈ 5.24e11`.
+
+For the per-second rate to reach `Number.MAX_SAFE_INTEGER` (~9.007e15), count would need to exceed ~17,200 units of algorithmic_prophecy. With `buy_cost_multiplier = 1.15` and `base_buy_cost = 20e9`, reaching that count costs on the order of `20e9 × 1.15^17,199` — astronomically infeasible even with clout discounts. **Rate computation at L=10 is safe from Infinity and from per-tick precision loss.**
+
+Per-tick earned engagement at 100ms: `rate_per_sec × 0.1`. Even for absurd counts, single-tick engagement stays many orders of magnitude below `Number.MAX_VALUE` (~1.8e308). No single-tick overflow path exists at L=10.
+
+**The engagement accumulator is the real pressure point, and Decision 3's clamp is the correct answer.** At realistic late-late-game counts (e.g. 50 units of algorithmic_prophecy at L=10 during a viral burst ≈ 2.6e13 engagement/sec), the `player.engagement` total crosses `MAX_SAFE_INTEGER` in ~6 minutes of continuous play. At that magnitude floats round to even, so the stored value is already arithmetically meaningless before it overflows — clamping to MAX_SAFE_INTEGER on every tick write loses nothing the player would feel, and it eliminates the Infinity-on-save failure mode permanently. I endorse keeping Decision 3's engagement clamp independent of Decisions 1 and 2.
+
+**Headroom for future stacking.** `cloutBonus` multiplies across all `engagement_multiplier` upgrades, not just one. If future Clout upgrades add additional engagement multipliers (e.g. a second 5× upgrade stacks to 25×), per-unit rate at L=10 scales linearly with the stack — 25× clout only raises worst-case per-unit rate to ~2.6e12/sec, still comfortably safe at realistic counts. Brand deals / gigs referenced in task context are not yet wired into `computeGeneratorEffectiveRate`; when they are, they'll add one more multiplicative factor. The ~4 orders of magnitude of headroom between current worst-case (5.24e11/unit·sec) and MAX_SAFE_INTEGER is comfortable for any plausible stack extension.
+
+**If the cap were raised beyond 10:** the quadratic exponent bites hard. L=14 gives `2^(196/5) = 2^39.2 ≈ 6.3e11` — the per-unit rate under the same stack jumps to ~3.2e17, already past MAX_SAFE_INTEGER before any count multiplier. So the proposal's "beyond ~14 risks overflow" statement is correct, and L=10 has the right margin of safety. **Do not raise the cap without revisiting this analysis.**
+
+**Non-blocking implementation note.** When `max_level: 10` is added to `GeneratorDef` and `generatorUpgradeCost` gains its at-cap guard, please also swap the cost formula at `client/src/generator/index.ts:59` (the `4^(currentLevel-1)` line) to the `levelMultiplier(targetLevel)` shape from Decision 1, and update the `base_upgrade_cost` doc comment in `types.ts:390` that still encodes the old `4^(currentLevel-1)` formula — architect's review already flagged this. Same PR, as architect recommended.
+
+**Protocol note.** Q4 (`base_upgrade_cost` rebalance after the fix) is game-designer-owned and unresolved. It is explicitly flagged as non-blocking balance work, but per the proposals protocol (matching the precedent from `level-multiplier-curve.md` where engineer added game-designer for formal self-closure), I'm adding game-designer to the reviewers list so the self-question can be formally marked [RESOLVED] — even if the resolution is "deferred to post-fix playtesting" — before the proposal moves to accepted. Process step only; no content concerns.
+
+Removing engineer from reviewers. Adding game-designer.
