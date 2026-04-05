@@ -232,6 +232,22 @@ How you write your environment matters as much as what you put in it. There are 
 
 The optimal altitude: specific enough to guide behavior, flexible enough to give the model strong heuristics and use its own judgment. Here's what I need, here's why it matters, here are the guardrails — now act. That's the zone that survives model updates and produces reliable behavior without being rigid.
 
+### Opinionated agents
+
+A non-opinionated agent agrees with you. An opinionated agent pushes back when you're wrong — and the pushback is where the value is.
+
+But opinions do more than improve output quality. They do three things at once:
+
+1. **Opinions compress context.** Instead of writing a rule for every scenario, you give the agent a worldview and the worldview generates the rules. A principle like "data model first, always" produces hundreds of downstream decisions without you enumerating them. Principles are more portable than checklists.
+
+2. **Opinions stabilize identity under pressure.** An agent with strong priors is harder to gaslight or drift. Without opinions, the agent is a mirror — it reflects whatever the conversation most recently said. Opinions are load-bearing. They keep the agent consistent across sessions, across users, across adversarial prompting.
+
+3. **Opinions implicitly grant decision-making authority.** This is the subtle one. A well-designed opinion tells the agent not just *how* to decide, but *whether it has the authority to decide at all*. An architect who has internalized "that's a design question, not an architecture question" knows to escalate without being told. The opinion defines the scope of autonomous action. You don't need a rule that says "ask the user when X" — the opinion produces that behavior naturally.
+
+The risk: opinionated agents are wrong *consistently*, which is harder to catch than random errors. A biased worldview produces confident, coherent, wrong output. Build in disagreement surfaces — another agent with a different opinion, or a review step — rather than trusting any single agent's judgment on its own.
+
+**The design principle:** give agents opinions, not just instructions. Instructions enumerate behaviors. Opinions generalize them. The more judgment a role requires, the more opinionated it needs to be.
+
 ### The new skill
 Thinking about what an agent needs to know before a session starts, not just what you'll ask during it. Proactive context engineering instead of reactive prompting.
 
