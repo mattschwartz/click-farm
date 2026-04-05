@@ -87,6 +87,7 @@ Mark the task done so that `tasks.json` reflects the completed state before it i
 - You MUST mark the task complete using `bash .frames/sdlc/tools/task.sh complete <id>`
 - You MUST NOT consider the task complete until the done-when condition is satisfied and all tests pass
 - If completing this task unblocks other tasks (check their dependencies), You SHOULD note which tasks are now unblocked, because the next planning session needs to know what's ready
+- You MUST NOT stop here — marking the task complete is not the end of the session. You MUST proceed to Step 7 and commit, because uncommitted work does not exist as far as the rest of the team is concerned.
 
 ### 7. Commit
 
