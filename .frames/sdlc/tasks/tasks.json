@@ -2216,7 +2216,7 @@
       "id": 71,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Wire up typography system — Space Grotesk + Fraunces via Google Fonts",
       "requester": "architect",
@@ -2262,7 +2262,8 @@
           "owner": "engineer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 72,
