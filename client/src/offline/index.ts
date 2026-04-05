@@ -233,6 +233,9 @@ export function calculateOffline(
     generators: postUnlockGenerators,
     platforms: postUnlockPlatforms,
     algorithm: algorithmState,
+    // viralBurst is always reset after an offline session — any in-progress
+    // burst is stale and cannot be meaningfully resumed.
+    viralBurst: { active_ticks_since_last: 0, active: null },
   };
   // Recompute snapshot so the stored per-second rates reflect the now-current
   // algorithm state (otherwise it'd be stale from close).

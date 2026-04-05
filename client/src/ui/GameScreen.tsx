@@ -168,15 +168,15 @@ export function GameScreen() {
           disabled={state.player.total_followers <= 0}
           title={
             state.player.total_followers > 0
-              ? `Rebrand for ${rebrandPreview} Clout (${fmtCompactInt(state.player.total_followers)} followers this run)`
+              ? `Rebrand for ${fmtCompactInt(rebrandPreview)} Clout (${fmtCompactInt(state.player.total_followers)} followers this run)`
               : 'Earn followers first'
           }
         >
-          Rebrand · +{rebrandPreview} Clout
+          Rebrand · +{fmtCompactInt(rebrandPreview)} Clout
         </button>
         {state.player.clout > 0 && (
           <div className="rebrand-tooltip">
-            {state.player.clout} Clout · {state.player.rebrand_count} rebrands
+            {fmtCompactInt(state.player.clout)} Clout · {state.player.rebrand_count} rebrands
           </div>
         )}
       </div>
