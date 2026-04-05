@@ -88,6 +88,8 @@ Default output is JSON — use it for machine processing and decision-making. Us
 
 ### Creating a task
 
+Every task must be granular enough such that exactly 1 role and 1 state can solve it. If a task requires multiple states, you MUST NOT file it because the task is impossible to resolve.
+
 ```bash
 bash .frames/sdlc/tools/task.sh add --role <target-role> <<'EOF'
 {

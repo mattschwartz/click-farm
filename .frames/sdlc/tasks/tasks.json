@@ -1926,7 +1926,7 @@
       "alias": "E3",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Clout Shop modal — full upgrade list + purchase flow + states",
       "requester": "architect",
@@ -1965,7 +1965,8 @@
         "Component tests cover: category ordering, row rendering per state, purchase flow (successful and insufficient), empty/partial/all-maxed states, Reduce Motion variant"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 65,
