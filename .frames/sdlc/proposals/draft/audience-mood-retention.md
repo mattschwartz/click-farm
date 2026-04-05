@@ -3,7 +3,7 @@ name: Audience Mood (Retention) Replaces Scandals
 description: Replaces the discrete scandal event system with a continuous, diagnostic retention multiplier driven by audience mood — removing modal interruptions and active follower loss while preserving negative pressure on the core loop.
 author: game-designer
 status: draft
-reviewers: [architect, ux-designer]
+reviewers: [ux-designer]
 ---
 
 # Proposal: Audience Mood (Retention) Replaces Scandals
@@ -121,3 +121,86 @@ Exact numbers are implementation-time tuning decisions.
 4. **What does the migration look like for code and tasks already building on scandals?** The scandal system has implemented code, tests, UI, and may have in-flight tasks. Need a migration/deprecation plan. **Owner: architect**
 5. **Should Clout upgrades interact with Audience Mood (e.g., faster recovery, raised retention floor)?** Defer to Prestige Economy proposal, consistent with the prior deferral on scandal-reducing Clout upgrades. **Owner: game-designer (future proposal)**
 6. **Does the per-post floating number ("+50 (×0.5)") create too much visual noise on high-frequency clicks?** At late-game click rates this could flood the screen. May need a smoothed/aggregated presentation. **Owner: ux-designer**
+
+---
+# Review: architect
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Aligned on the direction. This proposal is architecturally *cleaner* than the scandal system it replaces — removing a state machine, a modal flow, a session snapshot, and stacking suppression, while adding one localized subsystem and one multiplier in the core tick. Overall architectural complexity decreases.
+
+Two architect-owned questions (OQ#3, OQ#4) answered below, plus notes for the architecture spec that will follow.
+
+**Framing correction: this is a replacement, not an additive system.**
+
+The superseded `architecture/scandal-system.md` declared itself additive — "bolts onto the core architecture without structural changes." Audience Mood is different. The retention multiplier enters the core follower-distribution formula (`core-systems.md` line 388) as:
+
+```
+followers_per_platform_per_tick = (existing formula) × platform.retention
+```
+
+One multiplier at one known integration point. That's integrated into the tick, not bolted on. The "growth is monotonically non-decreasing from mood" guarantee falls out automatically because retention ∈ [floor, 1.0] scales gains and never touches follower count directly. This framing matters for the new architecture doc — the additive-system assumption (load-bearing in the old doc) is explicitly retired.
+
+**Data model delta — Platform gains the following fields:**
+
+- `retention: float` in [retention_floor, 1.0], default 1.0
+- `content_fatigue: map<generator_id, float>` — per-(platform, generator), in [0, 1]. Must be per-generator so flavor text can name the specific content type ("bored of your selfies"). A single scalar would lose that legibility.
+- `neglect: float` in [0, 1]
+- `algorithm_misalignment: float` in [0, 1]
+
+Generator `content_affinity` is already modeled (`core-systems.md` line 62), so the proposal's "affinity is already there" assumption holds — no hidden dependency.
+
+**Pressure update cadences — reuse the proven pattern.**
+
+Same event-driven vs tick-driven split the old scandal system used:
+- **Event-driven (on post action):** Content Fatigue, Algorithm Misalignment
+- **Tick-driven:** Neglect (increments over elapsed time since last post on that platform, resets on any post)
+
+Neglect freezes offline per the "no negative events offline" rule — identical freeze semantics to the old Platform Neglect accumulator. This is intentional pattern reuse, not accidental similarity.
+
+**Recovery pattern.**
+- Content Fatigue on platform P for generator G decays when the player posts a *different* generator type to P.
+- Neglect on P decays on any post to P.
+- Misalignment on P decays when posted content is aligned with the current Algorithm state.
+
+All three decay event-driven (or tick-driven for Neglect during sustained correct play). No hidden cooldowns, consistent with the proposal's "Recovery is visible in real time" requirement.
+
+**OQ#3 — Composition method (architectural cost): all three options are equivalent.**
+
+Take-worst (`min`), multiplicative (`*`), and dominant-display (multiplicative + argmax for label) are all O(1) per platform per tick. The arithmetic is trivially cheap. Dominant-display adds one extra concern: tie-breaking when two pressures produce equal magnitudes — resolved with a deterministic fixed priority list (e.g., Content Fatigue > Algorithm Misalignment > Neglect). That's three lines of code.
+
+**Cost does not discriminate between the options. This is purely a design / UX call. I support the game-designer's recommendation of (c) dominant-display** — it preserves the multiplicative pressure model while keeping the platform card legible. The tie-breaking rule belongs in the design spec, not in implementation.
+
+**OQ#4 — Migration plan:**
+
+a) **Architecture docs.** Mark `architecture/scandal-system.md` as SUPERSEDED at the top of the file (do not delete — retain as historical record). Write a new `architecture/audience-mood.md` spec before engineer build tasks are filed. The new doc defines: retention data model on Platform, pressure accumulators, update triggers, recovery formulas, tick integration point, save-schema migration.
+
+b) **Code deprecation.** Full removal, no salvage — the mechanics are fundamentally different:
+   - `client/src/scandal/` (entire directory)
+   - `client/src/ui/ScandalModal.tsx`
+   - `client/src/ui/ScandalAftermathCard.tsx`
+   - Scandal state machine types and transitions
+   - Session snapshot logic and foreground-snapshot lifecycle
+   - Stacking suppression
+   - The `scandal_active` / `resolving` game-loop states (loop collapses to single state)
+
+c) **In-flight task audit.** I scanned the open-task board before writing this. No open tasks depend on scandal mechanics — tasks #48, #55, #60–66, #69–71 are in other subsystems. Safe to proceed on migration timing.
+
+d) **Save-schema migration (new concern I am adding — not in proposal).** Existing saves carry scandal fields (`risk_accumulators`, possibly scandal state, possibly session snapshot remnants). On load, the new build must:
+   1. Bump save schema version
+   2. Drop scandal-era fields
+   3. Initialize `retention = 1.0` and all pressure accumulators to 0 for every platform
+   4. Return the migrated state to the game
+   
+   Forward-only migration — old builds can't load new saves. This is the standard approach and acceptable given current scope (solo-dev, pre-launch, no production save-base to protect). Flagged as ENGINEERING for the new arch doc.
+
+e) **Sequencing constraint.** Tear-out and rebuild MUST happen in the same engineering cycle, not sequential passes. Deleting scandals before Audience Mood is playable leaves the game without negative pressure — a regression in design intent. Plan the work so both land together.
+
+**Non-blocking architectural observation:**
+
+OQ#6 (per-post floating number flood at high click rates) is UX-domain, but I'll note: architecturally the signal is cheap — the multiplier is just an annotation on an existing floating-number emission. Aggregation / smoothing, if needed, is a presentation-layer transform, not a model-layer change.
+
+**Summary:** Aligned on the direction. OQ#3 resolved: architecturally neutral — supporting game-designer's (c) recommendation. OQ#4 resolved: migration plan above, carries forward into a new `architecture/audience-mood.md` spec which I will write after this proposal is fully accepted. Removing myself from reviewers. ux-designer stays on for OQ#1, #2, #6.
