@@ -1,0 +1,655 @@
+/* Core Game Screen styles — implements UX spec §§2–8.
+ *
+ * Design tokens live as CSS custom properties at the top of each component
+ * so they can be tuned without hunting. The ambient "weather" background
+ * sits on a single fixed layer beneath the content grid; content sits on
+ * translucent dark panels so it remains legible across all moods.
+ */
+
+:root {
+  --bg-base: #0b0d12;
+  --panel-bg: rgba(18, 21, 28, 0.82);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text-p0: #ffffff;       /* 15.8:1 against #0b0d12 */
+  --text-p1: rgba(255, 255, 255, 0.86);
+  --text-p2: rgba(255, 255, 255, 0.66);
+  --text-p3: rgba(255, 255, 255, 0.42); /* 3:1 receded */
+  --accent-gold: #ffd66b;
+  --accent-green: #5fd692;
+  --accent-amber: #ffb347;
+  --accent-red: #ff6b6b;
+}
+
+/* --- Ambient background layer (Algorithm mood) -------------------------- */
+
+.algorithm-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-size: 200% 200%;
+  transition: background-image 400ms ease-in-out;
+  animation: mood-drift var(--mood-cycle, 6s) ease-in-out infinite;
+  pointer-events: none;
+}
+
+.algorithm-background::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.04), transparent 55%),
+    radial-gradient(ellipse at 70% 80%, rgba(255, 255, 255, 0.03), transparent 60%);
+  animation: mood-shimmer calc(var(--mood-cycle, 6s) * 1.5) ease-in-out infinite;
+}
+
+/* Instability intensification — the UX spec §4.3 says motion speeds up and
+ * saturation nudges in the final 20% of the shift interval. We scale the
+ * animation-duration down via --mood-cycle and bump saturation via filter. */
+.algorithm-background.instability {
+  filter: saturate(1.15) brightness(1.08);
+}
+
+@keyframes mood-drift {
+  0%   { background-position: 0%   0%;   }
+  50%  { background-position: 100% 100%; }
+  100% { background-position: 0%   0%;   }
+}
+
+@keyframes mood-shimmer {
+  0%, 100% { opacity: 0.6; transform: translateY(0); }
+  50%      { opacity: 1.0; transform: translateY(-8px); }
+}
+
+/* --- Screen layout ------------------------------------------------------- */
+
+.game-screen {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  color: var(--text-p0);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  display: grid;
+  grid-template-rows: 80px 1fr;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.game-body {
+  display: grid;
+  grid-template-columns: 320px 1fr 280px;
+  gap: 16px;
+  padding: 16px;
+  min-height: 0;
+}
+
+/* --- Top bar (UX §2, §3, §5) -------------------------------------------- */
+
+.top-bar {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 32px;
+  padding: 0 24px;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--panel-border);
+  backdrop-filter: blur(6px);
+}
+
+.algo-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.algo-label .name-slot {
+  position: relative;
+  height: 24px;
+  overflow: hidden;
+}
+
+.algo-label .name {
+  position: absolute;
+  inset: 0;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-p1);
+  transition: transform 400ms ease-in-out, opacity 400ms ease-in-out;
+}
+
+.algo-label .name.exiting {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+.algo-label .name.entering {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.algo-label .tagline {
+  font-size: 12px;
+  color: var(--text-p2);
+  font-style: italic;
+}
+
+.engagement-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1;
+}
+
+.engagement-value {
+  font-size: 48px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-p0);
+  font-variant-numeric: tabular-nums;
+}
+
+.engagement-rate {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-p2);
+  margin-top: 4px;
+}
+
+.followers-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1;
+}
+
+.followers-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-p2);
+  margin-bottom: 4px;
+}
+
+.followers-value {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--text-p1);
+  font-variant-numeric: tabular-nums;
+  transition: color 200ms ease-out;
+}
+
+.followers-value.decreased {
+  color: var(--accent-red);
+}
+
+/* --- Post zone (UX §8) --------------------------------------------------- */
+
+.post-zone {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.post-button {
+  width: 100%;
+  max-width: 260px;
+  height: 220px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, #1d2230 0%, #12151e 100%);
+  color: var(--text-p0);
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 120ms ease-out, border-color 120ms ease-out;
+  position: relative;
+}
+
+.post-button:hover {
+  transform: scale(1.02);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.post-button:active {
+  transform: scale(0.97);
+  transition: transform 60ms ease-out;
+}
+
+.post-button .primary {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.post-button .context {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-p2);
+}
+
+.post-rate {
+  font-size: 14px;
+  color: var(--text-p2);
+}
+
+/* Click feedback floaters */
+.float-number {
+  position: absolute;
+  pointer-events: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent-gold);
+  animation: float-up 500ms ease-out forwards;
+  z-index: 2;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -56px);
+  }
+}
+
+/* --- Generator list (UX §6) --------------------------------------------- */
+
+.generator-list {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.category-divider {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--text-p2);
+  text-transform: uppercase;
+  padding: 12px 4px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 4px;
+}
+
+.category-divider:first-child {
+  padding-top: 0;
+}
+
+.generator-row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto auto auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: opacity 200ms ease-out, background 120ms ease-out;
+}
+
+.generator-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.generator-row.locked {
+  opacity: 0.42; /* 3:1 receded contrast per UX §3 */
+}
+
+.generator-row.upgraded-pulse {
+  animation: row-pulse 250ms ease-out;
+}
+
+@keyframes row-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.02); }
+}
+
+/* Category badge shapes — pre-attentive differentiator (UX §6.1) */
+.badge {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  background: var(--gen-color, #444);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.badge.shape-circle { border-radius: 50%; }
+.badge.shape-hexagon { clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%); border-radius: 0; }
+.badge.shape-diamond { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); border-radius: 0; }
+
+.badge.hollow {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--gen-color, #444);
+}
+
+.generator-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-p1);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.generator-row.locked .generator-name {
+  color: var(--text-p3);
+}
+
+.generator-count {
+  font-size: 13px;
+  color: var(--text-p2);
+  font-variant-numeric: tabular-nums;
+  min-width: 36px;
+  text-align: right;
+}
+
+.generator-rate {
+  font-size: 13px;
+  color: var(--text-p2);
+  font-variant-numeric: tabular-nums;
+  min-width: 76px;
+  text-align: right;
+}
+
+.unlock-label {
+  font-size: 11px;
+  color: var(--text-p3);
+  font-style: italic;
+  grid-column: 2 / -1;
+  text-align: right;
+}
+
+/* Modifier chip (UX §4.5) */
+.modifier-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid currentColor;
+  background: rgba(0, 0, 0, 0.24);
+  min-width: 52px;
+  justify-content: center;
+}
+
+.modifier-chip.boost { color: var(--accent-green); }
+.modifier-chip.penalty { color: var(--accent-amber); }
+.modifier-chip.neutral { color: var(--text-p2); }
+
+.modifier-chip.pulse { animation: chip-pulse 400ms ease-out; }
+
+@keyframes chip-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.15); }
+}
+
+/* Action buttons on generator rows */
+.row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.row-btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-p1);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition: background 120ms ease-out;
+}
+
+.row-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.row-btn:disabled {
+  color: var(--text-p3);
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.row-btn .label {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-p2);
+  display: block;
+  margin-bottom: 1px;
+}
+
+/* --- Platform panel (UX §7) --------------------------------------------- */
+
+.platform-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.platform-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+  border-top: 3px solid var(--platform-accent, var(--panel-border));
+  transition: opacity 400ms ease-out, filter 400ms ease-out;
+}
+
+.platform-card.locked {
+  opacity: 0.42;
+  filter: grayscale(1);
+}
+
+.platform-card .platform-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.platform-card .platform-icon {
+  font-size: 20px;
+}
+
+.platform-card .platform-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-p1);
+}
+
+.platform-card .platform-followers {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-p0);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.platform-card .platform-sub-label {
+  font-size: 11px;
+  color: var(--text-p2);
+  margin-top: 2px;
+}
+
+.platform-card .affinity-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.affinity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  color: var(--text-p2);
+  font-variant-numeric: tabular-nums;
+}
+
+.affinity-chip .glow {
+  animation: affinity-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes affinity-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 214, 107, 0); }
+  50%      { box-shadow: 0 0 6px 1px rgba(255, 214, 107, 0.5); }
+}
+
+.platform-card .rate-row {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-p2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.platform-card .rate-row.gaining {
+  color: var(--accent-green);
+}
+
+.unlock-teaser {
+  font-size: 11px;
+  color: var(--text-p3);
+  font-style: italic;
+}
+
+/* --- Offline gains modal (UX §11) --------------------------------------- */
+
+.offline-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fade-in 200ms ease-out;
+}
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.offline-modal {
+  background: #161923;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 28px;
+  width: 480px;
+  max-width: 90vw;
+  color: var(--text-p0);
+}
+
+.offline-modal h2 {
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0 0 4px;
+}
+
+.offline-modal .away {
+  font-size: 13px;
+  color: var(--text-p2);
+  margin-bottom: 16px;
+}
+
+.offline-modal .gain-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.offline-modal .gain-row .value {
+  color: var(--accent-gold);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.offline-modal .dismiss-btn {
+  margin-top: 20px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-p0);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.offline-modal .dismiss-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* --- Rebrand corner affordance (minimal, full UI is separate screen) ---- */
+
+.rebrand-corner {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.rebrand-corner .rebrand-btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(18, 21, 28, 0.82);
+  color: var(--text-p2);
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.rebrand-corner .rebrand-btn:hover:not(:disabled) {
+  color: var(--text-p0);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.rebrand-corner .rebrand-btn:disabled {
+  color: var(--text-p3);
+  cursor: not-allowed;
+}
+
+.rebrand-corner .rebrand-tooltip {
+  font-size: 10px;
+  color: var(--text-p3);
+}

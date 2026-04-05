@@ -498,7 +498,7 @@
       "alias": "E10",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Core Game UI",
       "requester": "architect",
@@ -529,7 +529,8 @@
         "UI communicates with backend per the interface contracts in the architecture spec"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 30,
