@@ -2,8 +2,8 @@
 name: Game Screen UX Audit — Top Bar, Platform Cards, Post Column
 description: Fix title/number collision, eliminate raw-digit bleed-through on platform cards, restore clout/follower parity, and resolve dead space in the Post column.
 author: ux-designer
-status: draft
-reviewers: [game-designer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Game Screen UX Audit — Top Bar, Platform Cards, Post Column
@@ -92,8 +92,10 @@ This piggybacks on the accepted `lvl-up-button-affordance-states.md` proposal �
 
 ## Open Questions
 
-1. Is followers a peer currency with clout, or subordinate? — owner: game-designer
-2. For Fix #5 (Post column), do you want direction (A) shrink-to-fit or (B) fill-with-feedback? — owner: game-designer
+1. **[RESOLVED]** Is followers a peer currency with clout, or subordinate? — owner: game-designer
+  - Answer (game-designer): Subordinate, deliberately. Clout is the active currency — what the player spends on generators and watches climb per second; it carries the decision load. Followers is the accumulation currency — it gates platform unlocks and feeds the clout-gain multiplier, but the player does not *spend* followers moment-to-moment. Both MUST be legible at a glance, but clout wears the crown. The bug the proposal identifies is the top-right *corner placement* of followers, not the size gap itself. Target treatment: followers at ~70% of clout's visual weight (not ~40%), placed directly adjacent to clout with tight alignment, labeled, so the player reads "clout 147.99Sx — followers 17.89Sx" as one unit. Do NOT equalize the type scale.
+2. **[RESOLVED]** For Fix #5 (Post column), do you want direction (A) shrink-to-fit or (B) fill-with-feedback? — owner: game-designer
+  - Answer (game-designer): **(B) fill-with-feedback.** The Post button is the game's core verb and the player's only active decision in the core loop. Dead space on that surface is design malpractice — it abandons the one moment-to-moment payoff the player gets for tapping. The target feeling for Post is immediate, visceral, embodied confirmation that the tap mattered; floaters, watermark, and streak ring all serve that feeling directly. **Hard constraint on streak ring:** it MUST be decorative present-tense momentum feedback — it shows "you're tapping right now" and decays smoothly to zero when taps stop. No penalty for breaking streak, no escalating reward tiers, no streak counter that persists across sessions. The moment streak becomes a retention hook, it crosses the engagement/manipulation line (variable-ratio reinforcement + loss aversion). Spec this in the follow-up task the engineer flagged: streak-ring is opacity/scale/color responding to current tap-rate-over-window, nothing more.
 3. **[RESOLVED]** Is the `lvl-up-button-affordance-states.md` differentiation already wired in code? If not, is the engineer's existing work-in-progress blocking it? — owner: engineer
   - Answer (engineer): Yes, wired. Task #69 (commit `a146137`) landed the four affordance states in `client/src/ui/GeneratorList.tsx` — `dormant` (count=0), `armed` (owned but can't afford), `ready` (can afford), `maxed` (at `max_level`). The spec is cited at `GeneratorList.tsx:75` and `:352`, and each state has distinct styling per `lvl-up-button-affordance-states.md`. Fix #7 can build directly on this: the "outlined gold when LVL is better value-per-engagement" treatment is a *new* affordance variant layered on top of the existing `ready` state — it needs a new computed flag (`isBetterValueThanBuy`) feeding a fifth visual variant, not a rewrite of the state machine. No engineer work-in-progress is blocking this.
 4. **[RESOLVED]** Is the raw-digit string on the platform cards a bug (unformatted value rendered accidentally) or an intentional "real number" display that got implemented loosely? — owner: engineer
@@ -118,3 +120,31 @@ Both engineer-owned questions resolved inline at Open Questions 3 and 4. Summary
 **Other cosmetic note (non-blocking).** Fix #4 mentions "no jitter when the number abbreviation shifts (e.g. `Qi → Sx`)" — `font-variant-numeric: tabular-nums` is already applied to `.platform-followers` at `GameScreen.css:742` and `.affinity-chip` at `:768`, but NOT to the per-second rate element or the top-bar totals. When Fix #4 lands, the relevant elements should get that property too, or tier transitions will jitter even with identical x-alignment.
 
 **Removing engineer from reviewers.** game-designer still owns Open Questions 1 and 2.
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Q1 and Q2 resolved inline. Summary of my positions below, plus scope observations on the fixes inside my domain.
+
+**Q1 (Clout/Followers parity).** Subordinate, deliberately. Clout is the active decision currency; followers is the accumulation currency. The corner placement is the bug, not the size gap. Target ratio is ~70% follower-to-clout visual weight, placed adjacent with tight alignment — read as one unit. See resolved open question for full reasoning.
+
+**Q2 (Post column direction).** (B) fill-with-feedback. The Post button is the core verb of the core loop; dead space there is a misallocation of the player's attention. Floaters + watermark + streak ring all serve the target feeling of "immediate visceral confirmation the tap mattered." **Hard constraint on streak mechanics:** decorative present-tense momentum only. No penalty for breaking streak, no escalating reward tiers, no cross-session persistence. The moment streak becomes a retention hook it becomes variable-ratio reinforcement layered on top of the core loop's natural variance — that's the engagement/manipulation line. Engineer's follow-up task needs to spec streak as opacity/scale/color driven by current tap-rate-over-window, nothing more.
+
+**Fix #3 (parity).** Aligned with my Q1 answer. The visual grammar should read "clout is the headline, followers is the ledger" — not "followers is an afterthought."
+
+**Fix #5 (Post column B).** Aligned, with the streak-ring constraint above. Floaters (`+5.30` ghosts rising) are fine — they're per-tap immediate feedback, not reinforcement schedules. Generator watermark (current target generator's icon behind the button) is a nice touch: it reinforces the "what am I farming right now" mental model without adding a new system.
+
+**Fix #6 (tier labels STARTER/MID/LATE).** Raising contrast is correct. The labels communicate progression shape — they're structural. One design-side note for UX: the current three-tier taxonomy assumes a fixed pacing shape, but the `late-game-content-arc` draft proposal (still in review) may introduce tier 4 (post-prestige generators 8–12). If/when that lands, we'll need a fourth label — not blocking this proposal, just a heads-up for when tier taxonomy next touches the screen.
+
+**Fix #7 (BUY vs LVL↑ value-per-engagement).** Aligned. The rule "LVL↑ wears gold when it's the better value-per-engagement action" is the right affordance — it's honest (shows the player the better choice) without being paternalistic (doesn't remove the choice). The "better value" computation is: `(Δ engagement/sec from levelling) / (clout cost of levelling)` vs `(Δ engagement/sec from buying) / (clout cost of buying)`. This is already implicit in the accepted `lvl-up-button-affordance-states.md` — no new design surface.
+
+**Fix #9 (Creator Kit hierarchy).** Aligned. Cost is the decision point; it should read first. Standard decision-making hierarchy.
+
+**Non-blocking observation.** The proposal doesn't touch the Upgrades / Rebrand buttons in the lower-right (correctly out-of-scope), but after these fixes land the lower-right corner will be the least-polished zone on the screen. Likely a candidate for a follow-up audit pass once this one ships.
+
+**Removing game-designer from reviewers.** All open questions resolved. This is the last review. Proposal is Aligned and moves to accepted.
