@@ -4,9 +4,10 @@
 // the game loop.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import type { GameState, GeneratorId } from '../types.ts';
+import type { GameState, GeneratorId, UpgradeId } from '../types.ts';
 import { createDriver } from '../driver/index.ts';
 import type { OfflineResult } from '../offline/index.ts';
+import type { RebrandResult } from '../prestige/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 export interface UseGameResult {
@@ -19,6 +20,10 @@ export interface UseGameResult {
   offlineResult: OfflineResult | null;
   /** Dismiss the offline-gains banner. */
   clearOfflineResult: () => void;
+  /** Rebrand: wipe run, award Clout. Returns result for UI display. */
+  rebrand: () => RebrandResult;
+  /** Spend Clout on a meta-upgrade. Throws when unaffordable. */
+  buyCloutUpgrade: (id: UpgradeId) => void;
 }
 
 /**
@@ -80,6 +85,8 @@ export function useGame(): UseGameResult {
         driver.clearOfflineResult();
         setOfflineResult(null);
       },
+      rebrand: () => driver.rebrand(),
+      buyCloutUpgrade: (id: UpgradeId) => driver.buyCloutUpgrade(id),
     }),
     [driver],
   );

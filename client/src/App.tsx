@@ -5,14 +5,27 @@
 // engagement, engagement converts to followers, followers unlock platforms,
 // the algorithm shifts. Intentionally unstyled and dense.
 
+import { useState } from 'react';
 import { useGame } from './ui/useGame.ts';
 import { STATIC_DATA } from './static-data/index.ts';
 import {
   generatorBuyCost,
   generatorUpgradeCost,
 } from './generator/index.ts';
-import type { GeneratorId, PlatformId } from './types.ts';
+import {
+  cloutForRebrand,
+  cloutUpgradeCost,
+} from './prestige/index.ts';
+import type { GeneratorId, PlatformId, UpgradeId } from './types.ts';
 import './App.css';
+
+const UPGRADE_ORDER: UpgradeId[] = [
+  'faster_engagement',
+  'algorithm_insight',
+  'platform_headstart_chirper',
+  'platform_headstart_instasham',
+  'platform_headstart_grindset',
+];
 
 const GENERATOR_ORDER: GeneratorId[] = [
   'selfies',
@@ -48,7 +61,19 @@ function fmtDuration(ms: number): string {
 }
 
 function App() {
-  const { state, click, buy, upgrade, offlineResult, clearOfflineResult } = useGame();
+  const {
+    state,
+    click,
+    buy,
+    upgrade,
+    offlineResult,
+    clearOfflineResult,
+    rebrand,
+    buyCloutUpgrade,
+  } = useGame();
+  const [lastRebrand, setLastRebrand] = useState<number | null>(null);
+
+  const rebrandPreview = cloutForRebrand(state.player.total_followers);
 
   return (
     <main style={{ fontFamily: 'system-ui, sans-serif', padding: 16, maxWidth: 960, margin: '0 auto' }}>
@@ -195,6 +220,77 @@ function App() {
             })}
           </tbody>
         </table>
+      </section>
+
+      {/* Prestige ------------------------------------------------------ */}
+      <section style={{ padding: 12, border: '1px solid #ccc', borderRadius: 4, marginTop: 16 }}>
+        <strong>Prestige</strong>
+        <div style={{ marginTop: 8, fontSize: 14 }}>
+          Rebrand now for <strong>{rebrandPreview}</strong> Clout
+          {' '}({fmtInt(state.player.total_followers)} followers this run).
+          {' '}<em style={{ opacity: 0.6 }}>
+            Wipes engagement, followers, generators, platforms. Keeps Clout + upgrades.
+          </em>
+        </div>
+        <button
+          onClick={() => {
+            if (state.player.total_followers === 0) return;
+            if (!confirm(`Rebrand for ${rebrandPreview} Clout? Run will reset.`)) return;
+            const r = rebrand();
+            setLastRebrand(r.cloutEarned);
+          }}
+          disabled={state.player.total_followers === 0}
+          style={{
+            marginTop: 8,
+            padding: '6px 12px',
+            cursor: state.player.total_followers > 0 ? 'pointer' : 'not-allowed',
+          }}
+        >
+          Rebrand (+{rebrandPreview} Clout)
+        </button>
+        {lastRebrand !== null && (
+          <div style={{ marginTop: 8, fontSize: 13, color: '#080' }}>
+            Last rebrand: +{lastRebrand} Clout awarded.
+          </div>
+        )}
+
+        <div style={{ marginTop: 12, fontSize: 14 }}>
+          <strong>Clout Upgrades</strong>
+          <table style={{ width: '100%', marginTop: 8, fontSize: 13 }}>
+            <thead>
+              <tr style={{ textAlign: 'left', opacity: 0.7 }}>
+                <th>Upgrade</th>
+                <th>Level</th>
+                <th>Next Cost</th>
+                <th>Buy</th>
+              </tr>
+            </thead>
+            <tbody>
+              {UPGRADE_ORDER.map((id) => {
+                const lvl = state.player.clout_upgrades[id] ?? 0;
+                const cost = cloutUpgradeCost(lvl, id, STATIC_DATA);
+                const def = STATIC_DATA.cloutUpgrades[id];
+                const canBuy = cost !== null && state.player.clout >= cost;
+                return (
+                  <tr key={id}>
+                    <td>{id}</td>
+                    <td>{lvl} / {def.max_level}</td>
+                    <td>{cost === null ? '—' : `${cost} Clout`}</td>
+                    <td>
+                      <button
+                        onClick={() => buyCloutUpgrade(id)}
+                        disabled={!canBuy}
+                        style={{ cursor: canBuy ? 'pointer' : 'not-allowed' }}
+                      >
+                        {cost === null ? 'MAX' : 'buy'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
   );

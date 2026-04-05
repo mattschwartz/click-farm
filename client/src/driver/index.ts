@@ -11,12 +11,20 @@
 // Architecture contract: single-player, client-authoritative. The driver IS
 // the authority during play. See core-systems.md §Component Boundaries.
 
-import type { GameState, GeneratorId, StaticData } from '../types.ts';
+import type { GameState, GeneratorId, StaticData, UpgradeId } from '../types.ts';
 import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
 import { buyGenerator, upgradeGenerator } from '../generator/index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { load, save } from '../save/index.ts';
 import { calculateOffline, type OfflineResult } from '../offline/index.ts';
+import {
+  calculateRebrand,
+  applyRebrand,
+  purchaseCloutUpgrade,
+  getUpcomingShifts,
+  type RebrandResult,
+} from '../prestige/index.ts';
+import type { ScheduledShift } from '../algorithm/index.ts';
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -74,6 +82,15 @@ export interface GameDriver {
   getOfflineResult(): OfflineResult | null;
   /** Clear the stored offline result (e.g. after the UI shows it). */
   clearOfflineResult(): void;
+  /**
+   * Rebrand: wipe the current run, award Clout, start a fresh run.
+   * Returns the RebrandResult so the UI can show the Clout earned.
+   */
+  rebrand(): RebrandResult;
+  /** Spend Clout to level up a meta-upgrade. Throws when unaffordable. */
+  buyCloutUpgrade(upgradeId: UpgradeId): void;
+  /** Upcoming algorithm shifts visible via the algorithm_insight upgrade. */
+  getUpcomingShifts(): ScheduledShift[];
 }
 
 // ---------------------------------------------------------------------------
@@ -241,5 +258,20 @@ export function createDriver(options: DriverOptions): GameDriver {
     clearOfflineResult: () => {
       offlineResult = null;
     },
+
+    rebrand() {
+      const result = calculateRebrand(state);
+      applyState(applyRebrand(state, result, staticData, now()));
+      // Rebrand starts a fresh run — reset the tick clock so the first tick
+      // after rebrand doesn't see stale elapsed time.
+      lastTickAt = now();
+      return result;
+    },
+
+    buyCloutUpgrade(upgradeId) {
+      applyState(purchaseCloutUpgrade(state, upgradeId, staticData));
+    },
+
+    getUpcomingShifts: () => getUpcomingShifts(state, staticData),
   };
 }

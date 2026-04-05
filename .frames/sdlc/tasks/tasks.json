@@ -464,7 +464,7 @@
       "alias": "E9",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Prestige: The Rebrand",
       "requester": "architect",
@@ -490,7 +490,8 @@
         "Tests verify: reset completeness, Clout calculation accuracy, meta-upgrade persistence and effects"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 29,
@@ -734,7 +735,7 @@
       "id": 36,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Upgrade Curve Drawer Spec",
       "requester": "ux-designer",
@@ -757,7 +758,8 @@
         "Spec is self-contained enough for engineer to implement without follow-up questions"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 37,
@@ -829,7 +831,7 @@
       "id": 39,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Settings Screen Spec",
       "requester": "ux-designer",
@@ -850,13 +852,14 @@
         "Accessibility requirements met"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 40,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Purchase Feedback & Rate Visibility",
       "requester": "game-designer",
@@ -881,7 +884,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 41,
