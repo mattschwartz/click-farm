@@ -46,20 +46,44 @@ export function save(state: GameState, now: number = Date.now()): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-/** Deserialize and migrate save data. Returns null on missing or corrupt save. */
-export function load(): GameState | null {
+/**
+ * Discriminated result of a load() attempt. The `corrupt` variant carries the
+ * underlying Error so the driver can fan it out to onSaveError listeners and
+ * the UI can explain why the save couldn't be restored. Task #55.
+ */
+export type LoadResult =
+  | { kind: 'none' }
+  | { kind: 'loaded'; state: GameState }
+  | { kind: 'corrupt'; error: Error };
+
+/**
+ * Deserialize and migrate save data. Returns a discriminated result:
+ *   - `{ kind: 'none' }`     — no save in localStorage (fresh slot)
+ *   - `{ kind: 'loaded' }`   — save parsed, migrated, and restored
+ *   - `{ kind: 'corrupt' }`  — save exists but failed to parse or migrate
+ *
+ * Corrupt saves are NOT wiped here — the caller decides whether to preserve
+ * the bad blob (so the player/devs can recover it) or clear it and move on.
+ */
+export function load(): LoadResult {
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw === null) return null;
+  if (raw === null) return { kind: 'none' };
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
-  } catch {
-    // Corrupt JSON — treat as no save
-    return null;
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    return { kind: 'corrupt', error };
   }
 
-  const migrated = migrate(parsed as SaveData);
+  let migrated: SaveData;
+  try {
+    migrated = migrate(parsed as SaveData);
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    return { kind: 'corrupt', error };
+  }
   const gameState = migrated.state;
 
   // Always ensure viralBurst is present — a v2 save written before the field
@@ -70,7 +94,7 @@ export function load(): GameState | null {
     active_ticks_since_last: 0,
     active: null,
   };
-  return {
+  return { kind: 'loaded', state: {
     ...gameState,
     viralBurst: { ...viralBurst, active: null },
     // Ensure scandal fields are present. Driver sets real values on open.
@@ -94,7 +118,7 @@ export function load(): GameState | null {
       pendingEngagementSpend: 0,
     },
     scandalSessionSnapshot: null, // always reset — driver repopulates on open
-  };
+  } };
 }
 
 /** Remove save data from localStorage. */

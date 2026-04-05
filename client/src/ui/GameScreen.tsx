@@ -110,6 +110,8 @@ export function GameScreen() {
     resumeLoop,
     buyCloutUpgrade,
     buyKitItem,
+    saveError,
+    clearSaveError,
   } = useGame();
 
   // Settings — persisted separately from GameState, propagates reduceMotion
@@ -369,6 +371,26 @@ export function GameScreen() {
           peekSignalActive={isPeekSignalActive(state, STATIC_DATA)}
           onOpenSettings={() => setShowSettingsModal(true)}
         />
+
+        {saveError && (
+          <div className="save-error-banner" role="alert">
+            <span className="save-error-banner-text">
+              {saveError.kind === 'load_corrupt'
+                ? 'Your save could not be read — starting a fresh run.'
+                : saveError.kind === 'save_quota'
+                  ? 'Browser storage is full — progress is in memory only.'
+                  : 'Save failed — progress is in memory only.'}
+            </span>
+            <button
+              type="button"
+              className="save-error-banner-close"
+              onClick={clearSaveError}
+              aria-label="Dismiss save error"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         <div className="game-body">
           <PostZone

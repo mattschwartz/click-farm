@@ -1518,7 +1518,7 @@
       "id": 55,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Harden save/load error reporting",
       "requester": "architect",
@@ -1550,7 +1550,8 @@
         "tests cover: corrupt JSON triggers load_corrupt event; mocked quota-exceeded triggers save_quota event; normal operation emits nothing"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 56,

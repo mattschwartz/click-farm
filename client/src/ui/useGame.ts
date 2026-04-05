@@ -5,7 +5,7 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { GameState, GeneratorId, KitItemId, UpgradeId } from '../types.ts';
-import { createDriver, type ActionError } from '../driver/index.ts';
+import { createDriver, type ActionError, type SaveError } from '../driver/index.ts';
 import type { OfflineResult } from '../offline/index.ts';
 import type { RebrandResult } from '../prestige/index.ts';
 import { computeScandalUIState, type ScandalUIState } from '../scandal/index.ts';
@@ -35,6 +35,14 @@ export interface UseGameResult {
   lastActionError: ActionError | null;
   /** Clear the last action error (call after displaying it to the user). */
   clearActionError: () => void;
+  /**
+   * Last save-subsystem error (corrupt load / quota exceeded / unknown storage
+   * failure). Stays set until dismissed — unlike actionError, these are
+   * persistent concerns the UI should keep visible. Task #55.
+   */
+  saveError: SaveError | null;
+  /** Dismiss the save-error notification. */
+  clearSaveError: () => void;
   /** Derived scandal UI state — risk levels, active modal data, aftermath. */
   scandalUIState: ScandalUIState;
   /** Confirm PR Response with chosen engagement spend. */
@@ -73,11 +81,20 @@ export function useGame(): UseGameResult {
     () => driver.getOfflineResult(),
   );
   const [lastActionError, setLastActionError] = useState<ActionError | null>(null);
+  const [saveError, setSaveError] = useState<SaveError | null>(null);
 
   // Subscribe to action errors from the driver. The listener overwrites the
   // last-error slot; consumers that need queueing can layer their own buffer.
   useEffect(() => {
     const unsub = driver.onActionError((e) => setLastActionError(e));
+    return unsub;
+  }, [driver]);
+
+  // Subscribe to save-subsystem errors. The driver replays any pending
+  // load_corrupt event from construction to the first subscriber, so this
+  // must mount early in the component lifecycle. Task #55.
+  useEffect(() => {
+    const unsub = driver.onSaveError((e) => setSaveError(e));
     return unsub;
   }, [driver]);
 
@@ -125,6 +142,7 @@ export function useGame(): UseGameResult {
       buyCloutUpgrade: (id: UpgradeId) => driver.buyCloutUpgrade(id),
       buyKitItem: (id: KitItemId) => driver.buyKitItem(id),
       clearActionError: () => setLastActionError(null),
+      clearSaveError: () => setSaveError(null),
       confirmPR: (engagementSpent: number) => driver.confirmPR(engagementSpent),
       dismissScandalResolution: () => driver.dismissScandalResolution(),
       pauseLoop: () => driver.stop(),
@@ -140,5 +158,5 @@ export function useGame(): UseGameResult {
     [state],
   );
 
-  return { state, offlineResult, lastActionError, scandalUIState, ...actions };
+  return { state, offlineResult, lastActionError, saveError, scandalUIState, ...actions };
 }

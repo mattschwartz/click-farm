@@ -77,6 +77,22 @@ export interface ActionError {
 
 export type ActionErrorListener = (e: ActionError) => void;
 
+/**
+ * Fired when save subsystem operations fail (load-time corruption, save-time
+ * quota exceeded, etc). Kept separate from ActionError because these aren't
+ * triggered by player actions — they're storage problems the UI surfaces
+ * as a persistent warning rather than a transient action shake. Task #55.
+ */
+export type SaveErrorKind = 'load_corrupt' | 'save_quota' | 'save_unknown';
+
+export interface SaveError {
+  kind: SaveErrorKind;
+  /** Short, human-readable detail from the underlying Error (if any). */
+  details?: string;
+}
+
+export type SaveErrorListener = (e: SaveError) => void;
+
 export interface DriverOptions {
   /** Injectable clock for tests. Defaults to Date.now. */
   now?: () => number;
@@ -151,6 +167,13 @@ export interface GameDriver {
    * for surfacing "that didn't work" feedback in the UI.
    */
   onActionError(listener: ActionErrorListener): Unsubscribe;
+  /**
+   * Subscribe to save subsystem errors — corrupt save on load, quota-exceeded
+   * on persist, etc. Listeners attached after createDriver() receive any
+   * pending load_corrupt event that fired during construction: the driver
+   * stashes the first such error and replays it on subscribe. Task #55.
+   */
+  onSaveError(listener: SaveErrorListener): Unsubscribe;
 }
 
 // ---------------------------------------------------------------------------
@@ -179,32 +202,41 @@ export function createDriver(options: DriverOptions): GameDriver {
     persistToStorage = true,
   } = options;
 
-  // Load from storage or create initial state.
+  // Load from storage or create initial state. A corrupt save is captured
+  // here and replayed to the first onSaveError listener that attaches —
+  // creation happens before any React effect can subscribe. Task #55.
   let offlineResult: OfflineResult | null = null;
+  let pendingSaveError: SaveError | null = null;
   let state: GameState = (() => {
     if (loadFromStorage) {
-      try {
-        const loaded = load();
-        if (loaded) {
-          // Apply offline gains if the save has a last_close_time and we're
-          // opening later than that. Skip if no close time (first session
-          // of this save) or if the clock has run backwards.
-          const closeTime = loaded.player.last_close_time;
-          const openTime = now();
-          if (closeTime !== null && openTime > closeTime) {
-            const { result, newState } = calculateOffline(
-              loaded,
-              closeTime,
-              openTime,
-              staticData,
-            );
-            offlineResult = result;
-            return newState;
-          }
-          return loaded;
+      const result = load();
+      if (result.kind === 'corrupt') {
+        // eslint-disable-next-line no-console
+        console.error('[driver] save is corrupt — falling back to initial state', {
+          error: result.error,
+        });
+        pendingSaveError = {
+          kind: 'load_corrupt',
+          details: result.error.message,
+        };
+      } else if (result.kind === 'loaded') {
+        const loaded = result.state;
+        // Apply offline gains if the save has a last_close_time and we're
+        // opening later than that. Skip if no close time (first session
+        // of this save) or if the clock has run backwards.
+        const closeTime = loaded.player.last_close_time;
+        const openTime = now();
+        if (closeTime !== null && openTime > closeTime) {
+          const { result: offline, newState } = calculateOffline(
+            loaded,
+            closeTime,
+            openTime,
+            staticData,
+          );
+          offlineResult = offline;
+          return newState;
         }
-      } catch {
-        // Fall through to initial state — corrupt save shouldn't block play.
+        return loaded;
       }
     }
     return createInitialGameState(staticData, now());
@@ -229,6 +261,11 @@ export function createDriver(options: DriverOptions): GameDriver {
   const listeners = new Set<StateListener>();
   const viralListeners = new Set<ViralBurstListener>();
   const errorListeners = new Set<ActionErrorListener>();
+  const saveErrorListeners = new Set<SaveErrorListener>();
+
+  function emitSaveError(e: SaveError): void {
+    for (const listener of saveErrorListeners) listener(e);
+  }
   let tickHandle: number | null = null;
   let saveHandle: number | null = null;
 
@@ -311,9 +348,24 @@ export function createDriver(options: DriverOptions): GameDriver {
     state = withSnapshot;
     try {
       save(state, t);
-    } catch {
-      // Swallow storage errors silently — game remains playable in memory.
-      // TODO(engineer): surface a soft warning to the UI when quota is hit.
+    } catch (err) {
+      // Distinguish quota from other storage failures so the UI can explain
+      // why the save won't stick. DOMException.name === 'QuotaExceededError'
+      // is the Standard way; legacy Firefox used code 1014 via NS_ERROR_DOM_
+      // QUOTA_REACHED. Either matches kind: 'save_quota'.
+      const isQuota =
+        err instanceof DOMException &&
+        (err.name === 'QuotaExceededError' ||
+          err.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+          err.code === 22 ||
+          err.code === 1014);
+      const details = err instanceof Error ? err.message : String(err);
+      // eslint-disable-next-line no-console
+      console.error('[driver] save failed', { kind: isQuota ? 'save_quota' : 'save_unknown', details });
+      emitSaveError({
+        kind: isQuota ? 'save_quota' : 'save_unknown',
+        details,
+      });
     }
   }
 
@@ -440,6 +492,21 @@ export function createDriver(options: DriverOptions): GameDriver {
       errorListeners.add(listener);
       return () => {
         errorListeners.delete(listener);
+      };
+    },
+
+    onSaveError(listener) {
+      saveErrorListeners.add(listener);
+      // Replay the construction-time corrupt-load event to late subscribers.
+      // One-shot: consume the pending slot so a second listener doesn't see
+      // it as well (the first receiver is responsible for UI state).
+      if (pendingSaveError !== null) {
+        const pending = pendingSaveError;
+        pendingSaveError = null;
+        listener(pending);
+      }
+      return () => {
+        saveErrorListeners.delete(listener);
       };
     },
   };

@@ -40,26 +40,33 @@ beforeEach(() => {
 // save / load round-trip
 // ---------------------------------------------------------------------------
 
+// Narrowing helper: fail loudly if load() didn't reach the `loaded` branch.
+function expectLoaded(result: ReturnType<typeof load>) {
+  if (result.kind !== 'loaded') {
+    throw new Error(`expected kind=loaded, got kind=${result.kind}`);
+  }
+  return result.state;
+}
+
 describe('save and load', () => {
   it('round-trips game state through localStorage', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     save(state);
-    const loaded = load();
+    const loaded = expectLoaded(load());
 
-    expect(loaded).not.toBeNull();
-    expect(loaded!.player.id).toBe(state.player.id);
-    expect(loaded!.player.engagement).toBe(state.player.engagement);
-    expect(loaded!.player.clout).toBe(state.player.clout);
+    expect(loaded.player.id).toBe(state.player.id);
+    expect(loaded.player.engagement).toBe(state.player.engagement);
+    expect(loaded.player.clout).toBe(state.player.clout);
   });
 
   it('preserves generator state', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     save(state);
-    const loaded = load();
+    const loaded = expectLoaded(load());
 
     // selfies (threshold=0) starts owned per fresh-state rules.
-    expect(loaded!.generators.selfies.owned).toBe(true);
-    expect(loaded!.generators.selfies.count).toBe(0);
+    expect(loaded.generators.selfies.owned).toBe(true);
+    expect(loaded.generators.selfies.count).toBe(0);
   });
 
   it('preserves platform follower counts independently', () => {
@@ -73,22 +80,22 @@ describe('save and load', () => {
       },
     };
     save(stateWithFollowers);
-    const loaded = load();
+    const loaded = expectLoaded(load());
 
-    expect(loaded!.platforms.chirper.followers).toBe(1234);
-    expect(loaded!.platforms.instasham.followers).toBe(567);
-    expect(loaded!.platforms.grindset.followers).toBe(0);
+    expect(loaded.platforms.chirper.followers).toBe(1234);
+    expect(loaded.platforms.instasham.followers).toBe(567);
+    expect(loaded.platforms.grindset.followers).toBe(0);
   });
 
   it('preserves algorithm state', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     save(state);
-    const loaded = load();
+    const loaded = expectLoaded(load());
 
-    expect(loaded!.algorithm.current_state_id).toBe(
+    expect(loaded.algorithm.current_state_id).toBe(
       state.algorithm.current_state_id
     );
-    expect(loaded!.algorithm.current_state_index).toBe(
+    expect(loaded.algorithm.current_state_index).toBe(
       state.algorithm.current_state_index
     );
   });
@@ -98,9 +105,9 @@ describe('save and load', () => {
     vi.setSystemTime(now);
     const state = createInitialGameState(STATIC_DATA, 0);
     save(state);
-    const loaded = load();
+    const loaded = expectLoaded(load());
 
-    expect(loaded!.player.last_close_time).toBe(now);
+    expect(loaded.player.last_close_time).toBe(now);
     vi.useRealTimers();
   });
 
@@ -115,19 +122,31 @@ describe('save and load', () => {
       lastCloseState: state.player.last_close_state,
     });
     localStorage.setItem('click_farm_save', rawSave);
-    const loaded = load();
-    expect(loaded).not.toBeNull();
-    expect(loaded!.viralBurst).toBeDefined();
-    expect(loaded!.viralBurst.active).toBeNull();
+    const loaded = expectLoaded(load());
+    expect(loaded.viralBurst).toBeDefined();
+    expect(loaded.viralBurst.active).toBeNull();
   });
 
-  it('returns null when no save exists', () => {
-    expect(load()).toBeNull();
+  it('returns kind="none" when no save exists', () => {
+    expect(load()).toEqual({ kind: 'none' });
   });
 
-  it('returns null on corrupt save data', () => {
+  it('returns kind="corrupt" on malformed JSON, carrying the parse error', () => {
     localStorage.setItem('click_farm_save', 'not-json{{{{');
-    expect(load()).toBeNull();
+    const result = load();
+    expect(result.kind).toBe('corrupt');
+    if (result.kind === 'corrupt') {
+      expect(result.error).toBeInstanceOf(Error);
+    }
+  });
+
+  it('returns kind="corrupt" when migrate throws (unknown version)', () => {
+    localStorage.setItem(
+      'click_farm_save',
+      JSON.stringify({ version: 999, state: {} }),
+    );
+    const result = load();
+    expect(result.kind).toBe('corrupt');
   });
 });
 
@@ -136,11 +155,11 @@ describe('save and load', () => {
 // ---------------------------------------------------------------------------
 
 describe('clearSave', () => {
-  it('removes save data so load returns null', () => {
+  it('removes save data so load returns kind="none"', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     save(state);
     clearSave();
-    expect(load()).toBeNull();
+    expect(load()).toEqual({ kind: 'none' });
   });
 });
 
@@ -170,10 +189,10 @@ describe('importSaveJSON', () => {
     save(state);
     const json = exportSaveJSON();
     clearSave();
-    expect(load()).toBeNull();
+    expect(load()).toEqual({ kind: 'none' });
     const result = importSaveJSON(json as string);
     expect(result.ok).toBe(true);
-    expect(load()).not.toBeNull();
+    expect(load().kind).toBe('loaded');
   });
 
   it('rejects non-JSON input', () => {
