@@ -1,5 +1,5 @@
 {
-  "next_id": 62,
+  "next_id": 67,
   "tasks": [
     {
       "id": 1,
@@ -1814,6 +1814,236 @@
         }
       ],
       "blocked_on": []
+    },
+    {
+      "id": 62,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Prestige cluster (Upgrades + Rebrand buttons) + Phase 1 rebrand modal",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Replace the current single-button rebrand-corner in GameScreen.tsx (~line 321) with the two-button prestige cluster per ux/prestige-rebrand-screen.md §2.1–2.3. Both buttons are visually grouped (~12px spacing, shared tint/border) and sit bottom-right, visually deferential to the engagement counter and generator list. Before the player reaches the first-rebrand eligibility threshold, both buttons render at 3:1 contrast (not hidden) — seeing them teases the system. Hover tooltips: Upgrades shows current Clout balance (e.g. '42 Clout'); Rebrand shows Clout-on-rebrand preview (e.g. 'Rebrand → +8 Clout') using the existing cloutForRebrand(total_followers) function.\n\nThis task also KILLS window.confirm. The existing handleRebrand() uses window.confirm, which violates the project SOP on browser dialogs. Replace it with a modal that renders only Phase 1 of the Rebrand Ceremony (the Threshold Review, per §4.2): a factual account of 'Current followers / Clout earned / New Clout balance' and side-by-side 'What resets' and 'What persists' lists, with Cancel and Continue buttons. Cancel closes the modal and resumes the game loop. Continue calls the existing driver rebrand() method and returns immediately to the main screen (Phases 2–4 land in E4). The game loop MUST pause while the ceremony modal is open (production halts, Algorithm shifts pause) per §4.1.\n\nThe Upgrades button opens a Clout Shop modal SHELL for now — header 'Rebrand Upgrades', Clout balance display, × close affordance (plus Esc and backdrop click), but an empty list body ('Upgrades coming soon' or equivalent). The real shop list and purchase flow land in E3. Game loop continues ticking when shop is open (not paused, backdrop ~30% opacity) per §3.1. Keyboard nav: Esc closes both modals, Tab focus-traps while open, Enter confirms primary action.\n\nThis chunk must ship a working replacement for window.confirm — no interim state leaves the confirm call in place.",
+      "related_items": [
+        {
+          "ref": "ux/prestige-rebrand-screen.md",
+          "purpose": "§2 entry points (prestige cluster, Upgrades button, Rebrand button), §3.1–3.2 shop modal shell & Clout balance display, §4.1–4.2 ceremony trigger & Phase 1 Threshold Review, §7 accessibility/keyboard, §8 motion brief"
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "Player entity, calculateRebrand/applyRebrand contracts, clout & rebrand_count fields"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Current placeholder handleRebrand with window.confirm (~line 212) and rebrand-corner (~line 321) to be replaced"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Driver exposes rebrand() method and cloutForRebrand helper — already wired, reuse as-is"
+        }
+      ],
+      "acceptance_criteria": [
+        "Two-button prestige cluster renders bottom-right of GameScreen, visually grouped, at 3:1 contrast when locked and full contrast once rebrand eligibility threshold is reached",
+        "Upgrades button hover tooltip shows current Clout balance; Rebrand button hover tooltip shows Clout-on-rebrand preview from cloutForRebrand(total_followers)",
+        "window.confirm is removed from handleRebrand and from the codebase entirely — no interim uses remain",
+        "Tapping Rebrand opens a Phase 1 Threshold Review modal with Current followers / Clout earned / New Clout balance, What resets, What persists sections per §4.2",
+        "Phase 1 Cancel closes the modal and resumes the game loop; Continue calls driver.rebrand() and returns to main screen with new run state",
+        "Game loop pauses (production halted, Algorithm shifts paused) for the duration the ceremony modal is open; resumes on close",
+        "Tapping Upgrades opens a Clout Shop modal shell (header, Clout balance, close affordances, placeholder body) — backdrop dims main screen to ~30% opacity and game loop continues ticking",
+        "Both modals support Esc-to-close, Tab focus-trap, and backdrop-click-to-close; focus returns to the triggering button on close",
+        "Unit/component tests cover: locked-state rendering, tooltip content, Phase 1 modal open/cancel/continue flow, game-loop pause on ceremony open and resume on close, shop shell open/close"
+      ],
+      "open_questions": [
+        {
+          "question": "Rebrand eligibility threshold — at what total_followers value does the Rebrand button first unlock from its 3:1 locked state? UX spec §9.1 flags this as open. ux/prestige-rebrand-screen.md §2.3 example tooltip shows 'Rebrand at 1,000 followers'; clout-upgrade-menu.md implies ~10,000 followers for first good rebrand (Tier 1 = 10 Clout = sqrt(10,000)/10). These are ~10x apart and need reconciliation before the locked-state affordance can be tuned.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 63,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Migrate CloutUpgrade schema to per-level arrays + add missing data entries",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The CloutUpgrade data model in architecture/core-systems.md was updated to use per-level arrays (`values: float[]`, `lookaheads: int[]`) to support non-uniform effects across levels (e.g. engagement_boost L1=1.5×, L2=2.5×, L3=5×). The current code in client/src/types.ts, client/src/static-data/index.ts, and client/src/game-loop/index.ts still uses the OLD single-scalar schema (`value: number`, `lookahead: number`). This task brings the code up to the architecture spec and populates the full upgrade + post-prestige generator data set per the accepted clout-upgrade-menu.md proposal. This is a pure backend/data task — no player-facing UI changes. It is a prerequisite for E3 (the Clout Shop UI) to correctly display and consume per-level effects.\n\nScope:\n\n1) Type migration in client/src/types.ts:\n   - { type: 'engagement_multiplier'; value: number } → { type: 'engagement_multiplier'; values: number[] }\n   - { type: 'algorithm_insight'; lookahead: number } → { type: 'algorithm_insight'; lookaheads: number[] }\n   - Keep generator_unlock and platform_headstart as-is (max_level: 1)\n\n2) Update static data entries in client/src/static-data/index.ts:\n   - Add `engagement_boost`: cost [10, 30, 75], max_level 3, values [1.5, 2.5, 5.0]\n   - Update `algorithm_insight`: cost [15, 40], max_level 2, lookaheads [1, 2]\n   - Update `platform_headstart_instasham`: cost [20]\n   - Update `platform_headstart_grindset`: cost [50]\n   - Remove `platform_headstart_chirper` if present (chirper is starter platform)\n   - Add `ai_slop_unlock`: cost [25], effect { type: 'generator_unlock', generator_id: 'ai_slop' }\n   - Add `deepfakes_unlock`: cost [60], effect { type: 'generator_unlock', generator_id: 'deepfakes' }\n   - Add `algorithmic_prophecy_unlock`: cost [100], effect { type: 'generator_unlock', generator_id: 'algorithmic_prophecy' }\n\n3) Add post-prestige generator definitions to generator static data:\n   - `ai_slop`: base_engagement_rate = 8× Viral Stunts, follower_conversion_rate 0.6, trend_sensitivity 0.1\n   - `deepfakes`: base_engagement_rate = 15× Viral Stunts, follower_conversion_rate 0.3, trend_sensitivity 0.95\n   - `algorithmic_prophecy`: base_engagement_rate = 40× Viral Stunts, follower_conversion_rate 0.5, trend_sensitivity 0.5\n   - These generators MUST have NO entry in unlockThresholds.generators (never follower-unlocked; unlocked only via Clout upgrade)\n\n4) Update game-loop effect consumption (client/src/game-loop/index.ts) to index into arrays:\n   - engagement_multiplier: cloutBonus reads `effect.values[level - 1]` instead of scalar.\n   - algorithm_insight: prestige/index.ts getUpcomingShifts reads `effect.lookaheads[level - 1]`\n\n5) Verify applyRebrand re-applies `generator_unlock` effects after resetting generators to owned:false, per architecture §Prestige post-reset Clout re-application order. Fix if missing. Same for platform_headstart on platform reset.\n\n6) Update tests in client/src/game-loop/index.test.ts, client/src/prestige/index.test.ts, client/src/driver/index.test.ts to match new schema. Add test coverage for post-prestige generator unlocking via applyRebrand.",
+      "related_items": [
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "§Data Model CloutUpgrade and UpgradeEffect tagged union (per-level arrays), §applyRebrand post-reset re-application order"
+        },
+        {
+          "ref": "proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Full upgrade roster with costs, levels, and effect values; post-prestige generator stats; architect + engineer reviews confirming data model wiring"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "UpgradeEffect type union (line 42) — current old schema, needs migration"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "CLOUT_UPGRADE_DEFS (line 240) — current entries to migrate + new entries to add; generator defs to extend"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "cloutBonus logic (line 102) reads engagement_multiplier.value — update to array index"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "applyRebrand (line 115) — verify generator_unlock re-application; getUpcomingShifts (line 274) reads algorithm_insight.lookahead"
+        }
+      ],
+      "acceptance_criteria": [
+        "UpgradeEffect type union uses per-level arrays for engagement_multiplier (values: number[]) and algorithm_insight (lookaheads: number[])",
+        "CLOUT_UPGRADE_DEFS contains engagement_boost, algorithm_insight, platform_headstart_instasham, platform_headstart_grindset, ai_slop_unlock, deepfakes_unlock, algorithmic_prophecy_unlock with costs and values per clout-upgrade-menu.md",
+        "Generator static data includes ai_slop, deepfakes, algorithmic_prophecy with the specified base_engagement_rate (relative to Viral Stunts), follower_conversion_rate, and trend_sensitivity",
+        "Post-prestige generators have NO entry in unlockThresholds.generators — they cannot be follower-unlocked",
+        "Game-loop cloutBonus correctly indexes effect.values[level - 1] for engagement_multiplier upgrades",
+        "getUpcomingShifts correctly indexes effect.lookaheads[level - 1] for algorithm_insight upgrade",
+        "applyRebrand iterates clout_upgrades after resetting generators and sets generators[generator_id].owned = true for each generator_unlock effect at level ≥ 1",
+        "applyRebrand iterates clout_upgrades after resetting platforms and sets platforms[platform_id].unlocked = true for each platform_headstart effect at level ≥ 1",
+        "All existing tests updated to new schema and pass; new test coverage added for post-prestige generator unlocking on rebrand, engagement_boost multi-level values, algorithm_insight multi-level lookaheads"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 64,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Clout Shop modal — full upgrade list + purchase flow + states",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Replace the Clout Shop modal shell from E1 with the full shop per ux/prestige-rebrand-screen.md §3. The shop is ~720×560px, centered, dark-backdrop-at-30%, and MUST NOT pause the game loop — the main screen continues ticking at the modal edges. This is planning, not escape.\n\nScope:\n\n1) Clout balance header (§3.2): 'Clout: N' top of modal body, 36px/weight-600 numeral, P0 contrast (15.8:1), animates downward (400ms tick) on purchase.\n\n2) Upgrade categories (§3.4), in fixed order: ENGAGEMENT (engagement_multiplier effects), UNLOCKS (generator_unlock + platform_headstart effects merged), INSIGHT (algorithm_insight effect). Within each category, rows sort by ascending cost so next-affordable is near category top.\n\n3) Upgrade row anatomy (§3.3): 72px row height, 28px icon, 16px/weight-500 name, 12px muted-7:1 description (always shown, not hover), 'Lv N/M' / 'owned' / 'locked' state, cost (or MAX or ✓), right-aligned ⬆ purchase button.\n\n4) Purchase flow (§3.5): tap ⬆ → button depress scale 0.97 (60ms) → row pulse 1.0→1.02→1.0 (250ms) → Clout balance tick-down (400ms) → row updates (level advances, cost updates or becomes MAX/✓) → small positive chime sound. No confirmation dialog.\n\n5) Insufficient-Clout state (§3.5): button at 3:1 contrast (not faded), cost label amber (not red), on tap: 4px horizontal shake for 200ms, no state change, no sound.\n\n6) Shop states (§3.6): empty (first visit, Clout:0, all rows locked, header copy 'Earn Clout by rebranding. Your first rebrand is ahead.'), partial (default), all-maxed (footer 'You\\'ve mastered the system. Rebrand to reset the stage.').\n\n7) Reduce Motion variants (§7 / §8 motion brief): replace Clout tick-down animation with instant value update, replace row purchase pulse with instant, replace insufficient shake with no motion (preserve amber cost + no-sound signal). Gate by same Reduce Motion detection used in core-game-screen.md §12.\n\n8) Accessibility: CVD-safe (no color-only signals — text labels ✓/MAX/locked/cost/glyph pair with state), P0/P1/P2 contrasts per role standards, ⬆ button ≥44×44px hit area, full keyboard nav, focus trap while modal open.",
+      "related_items": [
+        {
+          "ref": "ux/prestige-rebrand-screen.md",
+          "purpose": "§3 full Clout Shop spec (layout, balance, rows, categories, purchase flow, states), §7 accessibility, §8 motion brief"
+        },
+        {
+          "ref": "proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Upgrade descriptions and flavor copy for row text"
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "CloutUpgrade data model, UpgradeEffect union, clout_upgrades player state map"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Driver exposes purchase method for Clout upgrades (or needs one added — engineer confirm)"
+        }
+      ],
+      "acceptance_criteria": [
+        "Clout Shop modal renders ~720×560px, centered, with backdrop at ~30% opacity; main game loop continues ticking while shop is open",
+        "Clout balance displays at 36px/weight-600 at top of modal body; animates down (400ms) on purchase",
+        "Upgrade rows grouped into ENGAGEMENT → UNLOCKS → INSIGHT categories in fixed order; within each category rows sort by ascending cost",
+        "Each row shows icon, name, description, level indicator (Lv N/M | owned | locked), cost (or MAX or ✓), and right-aligned ⬆ button per §3.3",
+        "Tapping ⬆ on affordable upgrade: button scale 0.97 (60ms), row pulse 1.0→1.02→1.0 (250ms), Clout tick-down (400ms), row state updates, positive chime sound",
+        "Insufficient-Clout: button at 3:1 contrast, amber cost label, 200ms horizontal shake on tap, no state change, no sound",
+        "Empty state (zero Clout, no owned upgrades): shows header copy and all locked rows per §3.6",
+        "All-maxed state: footer copy 'You\\'ve mastered the system. Rebrand to reset the stage.' per §3.6",
+        "Reduce Motion preference detected: balance updates instantly, no row pulse, no shake — audible feedback preserved",
+        "Upgrade category colors pass CVD simulators; all state signals paired with text/glyph (never color-alone)",
+        "Esc/×/backdrop-click closes modal; Tab focus-traps; ⬆ buttons are ≥44×44px hit areas",
+        "Component tests cover: category ordering, row rendering per state, purchase flow (successful and insufficient), empty/partial/all-maxed states, Reduce Motion variant"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        62,
+        63
+      ]
+    },
+    {
+      "id": 65,
+      "alias": "E4",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Rebrand Ceremony — Phases 2 (Eulogy), 3 (Commit), 4 (Dissolution→Rebirth)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Extend E1's minimal Phase 1 modal into the full 4-phase Rebrand Ceremony per ux/prestige-rebrand-screen.md §4.3–4.6. Total runtime ~8s first rebrand (unskipped), ~5s subsequent (eulogy skipped). The ceremony must feel earned — it fires rarely and deserves its runtime. Game loop stays paused for the entire ceremony (established in E1).\n\nScope:\n\n1) Phase 2 Eulogy (§4.3, ~3–4s, skippable): 3–4 sequential stanzas, each fading in over 600ms and lingering ~1s. Content sources: top platform by followers, top generator by lifetime engagement, longest-held Algorithm state during run, total engagement earned. Stanzas pulled from a data-driven template library with run-state substitution (see open question). Background desaturates 0% → 40% over 3s (linear). Skip link bottom-right: first rebrand (rebrand_count === 0 → 1) HIDES skip until 3rd stanza appears; subsequent rebrands show skip immediately. Tone: affectionate, deadpan, satirical. Auto-advances to Phase 3 1s after final stanza — no manual advance.\n\n2) Phase 3 Commit (§4.4, ~1s): single headline 'Become someone new.' (24px/weight-500), one 280×80px button labeled 'Rebrand' (biggest button in the game). No Cancel button. Backdrop-click/Esc cancels. On tap: button scale 0.96 (80ms), low-register tone (lowest in game), transition to Phase 4.\n\n3) Phase 4 Dissolution → Rebirth (§4.5, ~3.8s):\n   - Dissolution (0–2s): backdrop counters (engagement, followers, generators) tick downward rapidly (0→1000ms ease-in), background desaturates to 10% (500→2000ms ease-in), descending-pitch whoosh sound (800→1800ms), screen fades to deep-muted-blue wash (1500→2000ms ease-in).\n   - Rebirth (2–3.8s): 400ms held silence on dark wash, single clean opening tone (higher register than commit tone, 2400→2600ms), fade to fresh main screen over 900ms (2600→3500ms ease-out).\n   - Phase 4 has NO cancellation — rebrand is committed to state when Phase 4 begins; visual is just playing out.\n\n4) Cancellation behavior (§4.6): Phase 2 backdrop-click/Esc cancels (no visible Cancel). Phase 3 backdrop-click/Esc cancels (no visible Cancel). Phase 4 cannot cancel.\n\n5) Reduce Motion variants (§7): replace counter tick-down dissolution with single 1s fade-to-zero, replace Phase 2 background desaturation with instant, replace Phase 4 desaturation with instant, preserve sound design AND held-silence timing AND fade-back timing (timing is not motion).\n\n6) Screen reader support (§7): Phase 2 stanzas render with aria-live='polite'. Phase 4 announces 'Rebranding. Run N beginning.' via aria-live.\n\n7) Call driver.rebrand() at the Commit tap (transition from Phase 3 to Phase 4) — this commits the rebrand to state. Phase 4 visual plays out after state is committed.",
+      "related_items": [
+        {
+          "ref": "ux/prestige-rebrand-screen.md",
+          "purpose": "§4.3 Phase 2 Eulogy, §4.4 Phase 3 Commit, §4.5 Phase 4 Dissolution→Rebirth, §4.6 cancellation, §7 accessibility & Reduce Motion, §8 motion brief"
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "calculateRebrand/applyRebrand contracts, rebrand_count for first-rebrand detection"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "driver.rebrand() method — call at Phase 3→4 transition"
+        }
+      ],
+      "acceptance_criteria": [
+        "Phase 2 plays 3–4 stanzas pulled from template library with run-state substitution, each fading in 600ms and holding 1s, background desaturating 0%→40% over 3s",
+        "Phase 2 Skip link: hidden until 3rd stanza on first rebrand (rebrand_count 0→1), visible immediately on subsequent rebrands",
+        "Phase 2 auto-advances to Phase 3 1s after final stanza",
+        "Phase 3 renders 'Become someone new.' headline and single 280×80px Rebrand button with no visible Cancel; backdrop/Esc cancels",
+        "Phase 3 tap: button scales 0.96 (80ms), plays low-register commit tone, calls driver.rebrand(), transitions to Phase 4",
+        "Phase 4 Dissolution plays counter tick-down, desaturation, descending whoosh, fade-to-wash per timing brief §4.5; Phase 4 is non-cancellable",
+        "Phase 4 Rebirth plays 400ms held silence, opening tone, fade to fresh main screen over 900ms",
+        "Phase 2 and Phase 3 support Esc/backdrop cancellation (no visible Cancel button) — closing resumes game loop with no state change since rebrand() has not been called yet",
+        "Reduce Motion variant: dissolution is single 1s fade-to-zero, desaturations are instant, sounds and held silence preserved",
+        "Phase 2 stanzas render with aria-live='polite'; Phase 4 emits aria-live announcement 'Rebranding. Run N beginning.'",
+        "Total unskipped ceremony runtime: ~8s first rebrand, ~5s subsequent (eulogy skip flows through faster)",
+        "Component/integration tests cover: first-rebrand skip-hiding, subsequent-rebrand skip-visible, Phase 2→3→4 chain, Phase 2/3 cancellation returning to main screen, Phase 4 non-cancellability, Reduce Motion variant"
+      ],
+      "open_questions": [
+        {
+          "question": "Eulogy stanza template library — Phase 2 pulls from a data-driven template library with run-state substitution. Need an initial set of ~20 templates for variety, in the game's satirical-affectionate-deadpan voice. Voice ownership is game-designer; format/length constraints are from the UX spec (short stanzas, punchlines via juxtaposition). Flagged in ux/prestige-rebrand-screen.md §9.3.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [
+        62
+      ]
+    },
+    {
+      "id": 66,
+      "alias": "E5",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Post-rebrand re-entry: RUN badge + first-rebrand ambient copy",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Add the post-rebrand re-entry surface per ux/prestige-rebrand-screen.md §5. Intentionally minimal — no welcome modal, no tutorial, no encouragement. The cleared main screen IS the reward. This task adds only the two ambient elements that exist.\n\nScope:\n\n1) Rebrand count badge: appears inline with the algorithm state name in the top bar (top-left), format 'RUN N' (e.g. 'RUN 2'), 11px, uppercase, muted 4.5:1 contrast. Introduced on first rebrand (rebrand_count transitions 0→1, badge shows 'RUN 2'). Persists across all subsequent runs. Fades in over 400ms on first appearance.\n\n2) First-rebrand ambient copy: ONLY on first rebrand (rebrand_count === 1 post-rebrand), show quiet copy 'You are new again.' in top-right. 600ms fade-in, 4s hold, 600ms fade-out. No interaction, no button. Purely ambient. Never shown again.\n\n3) Audit the cleared main screen to confirm it already satisfies §5's 'what they don't see' list: no modal, no welcome copy, no tutorial, no encouragement. This is likely already true — post-rebrand returns through normal GameScreen rendering with new state. Confirm with test coverage or inline audit note.\n\nDo NOT build: persona naming (flagged open in §9.2, not scoped here).",
+      "related_items": [
+        {
+          "ref": "ux/prestige-rebrand-screen.md",
+          "purpose": "§5 Post-Rebrand Re-Entry — badge placement, format, first-rebrand ambient copy behavior"
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "player.rebrand_count field for first-rebrand detection"
+        }
+      ],
+      "acceptance_criteria": [
+        "Rebrand count badge renders inline with algorithm state name, top-left, 'RUN N' format, 11px uppercase at 4.5:1 contrast",
+        "Badge is absent when rebrand_count === 0; appears with 400ms fade-in on first post-rebrand render (rebrand_count === 1); persists across runs",
+        "First-rebrand ambient copy 'You are new again.' appears top-right after first rebrand only, 600ms fade-in, 4s hold, 600ms fade-out; never shown for subsequent rebrands",
+        "Cleared main screen shows no welcome modal, no welcome copy, no tutorial — verified by audit or test",
+        "Component tests cover: badge absence at rebrand_count 0, badge appearance at rebrand_count 1, badge persistence at rebrand_count ≥ 2, first-rebrand ambient copy on rebrand_count 1, ambient copy absence at rebrand_count ≥ 2"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        65
+      ]
     }
   ]
 }
