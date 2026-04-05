@@ -12,25 +12,58 @@
   position: fixed;
   inset: 0;
   z-index: 0;
+  background: var(--surface-canvas, #FAF8F5);
   background-size: 200% 200%;
   transition: background-image 400ms ease-in-out;
   animation: mood-drift var(--mood-cycle, 6s) ease-in-out infinite;
   pointer-events: none;
-  /* TEMP (task #108 visual-QA bridge): neutralize the inline dark mood
-   * gradient painted by AlgorithmBackground.tsx from ALGORITHM_MOOD.
-   * E2/#109 deletes this override when it strips the `background` strings
-   * from display.ts (their AC5) and replaces them with the edge vignette. */
-  background-image: none !important;
+}
+
+/* --- Algorithm mood edge vignette ----------------------------------------
+ * Radial gradient wash at screen edges. Color and opacity driven by
+ * --mood-color-edge / --mood-edge-opacity tokens bound per algorithm state
+ * in tokens.css. Instability and viral burst override opacity/color inline.
+ * Architecture: visual-theming.md §Vignette Layer — DOM Contract. */
+
+.algorithm-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 120% 100% at 50% 50%,
+    transparent 40%,
+    var(--mood-color-edge, transparent) 100%
+  );
+  transition: background 400ms ease-in-out, opacity 400ms ease-in-out;
+}
+
+/* Viral burst peak: pulse the vignette opacity at 2s cycle. */
+.algorithm-vignette.vignette-pulse {
+  animation: vignette-mood-pulse 2s ease-in-out infinite;
+}
+
+@keyframes vignette-mood-pulse {
+  0%, 100% { opacity: 0.16; }
+  50%      { opacity: 0.32; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .algorithm-vignette {
+    transition: none;
+  }
+  .algorithm-vignette.vignette-pulse {
+    animation: none;
+  }
 }
 
 .algorithm-background::after {
   content: '';
   position: absolute;
   inset: 0;
-  /* Shimmer overlay — currently white-on-warm-white (near-invisible on
-   * light-mode canvas). Retained as a structural hook; E2/#109 owns the
-   * AlgorithmBackground visual rework (vignette layer + shimmer tuning).
-   * Tokenized here only to satisfy the no-literals rule (task #108 AC7). */
+  /* Shimmer overlay — white-on-warm-white (near-invisible on light-mode
+   * canvas). Retained as a structural hook for a follow-up particle pass.
+   * Tokenized per no-literals rule (task #108 AC7). */
   background:
     radial-gradient(ellipse at 30% 20%, rgba(var(--palette-white-rgb), 0.04), transparent 55%),
     radial-gradient(ellipse at 70% 80%, rgba(var(--palette-white-rgb), 0.03), transparent 60%);
@@ -776,17 +809,30 @@
   color: var(--text-primary);
 }
 
-/* Follower count — isolated from float-number overlays and affinity icons
- * to prevent pixel collision (game-screen-hud-refinements §4.3). */
+/* Follower count + rate on one line (game-screen-hud-refinements §4.3). */
+.platform-card .platform-followers-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
 .platform-card .platform-followers {
   font-size: 24px;
   font-weight: 600;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  position: relative;
-  z-index: 3;
-  text-decoration: none;
+}
+
+.platform-card .platform-rate {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.platform-card .platform-rate.gaining {
+  color: var(--accent-green);
 }
 
 .platform-card .platform-sub-label {
@@ -826,18 +872,6 @@
   50%      { box-shadow: 0 0 6px 1px rgba(var(--palette-gold-rgb),0.5); }
 }
 
-.platform-card .rate-row {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.platform-card .rate-row.gaining {
-  color: var(--accent-green);
-}
 
 .unlock-teaser {
   font-size: 11px;
@@ -1706,43 +1740,9 @@
   }
 }
 
-/* --- Screen edge vignette (Phase 1: fade in, Phase 2: pulse, Phase 3: out) */
-
-.viral-vignette {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  /* inset box-shadow creates the edge glow; div opacity drives timing */
-  box-shadow: inset 0 0 140px 40px var(--vignette-color, transparent);
-  opacity: 0;
-  transition: opacity 300ms ease-in-out;
-}
-
-.viral-vignette-build {
-  opacity: 0.35;
-  transition: opacity 300ms ease-in-out;
-}
-
-.viral-vignette-peak {
-  animation: vignette-pulse 2s ease-in-out infinite;
-}
-
-.viral-vignette-decay {
-  opacity: 0;
-  transition: opacity 400ms ease-in-out;
-}
-
-@keyframes vignette-pulse {
-  0%, 100% { opacity: 0.28; }
-  50%       { opacity: 0.50; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .viral-vignette {
-    display: none;
-  }
-}
+/* --- Legacy viral-vignette block removed by task #109. The viral burst
+ * edge vignette is now handled by AlgorithmBackground's .algorithm-vignette
+ * layer with viralBurst override. See algorithm-mood-visibility proposal. */
 
 /* --- Camera-style zoom pulse (Phase 2 only) --------------------------------
  * ±1% scale on the game-screen. Fixed-position siblings (vignette, particles,
@@ -2910,6 +2910,14 @@ html[data-reduce-motion="true"] .algorithm-background.instability {
   animation: none;
 }
 
+html[data-reduce-motion="true"] .algorithm-vignette {
+  transition: none;
+}
+
+html[data-reduce-motion="true"] .algorithm-vignette.vignette-pulse {
+  animation: none;
+}
+
 html[data-reduce-motion="true"] .badge.badge-owned {
   animation: none;
 }
@@ -2933,10 +2941,6 @@ html[data-reduce-motion="true"] .platform-card.viral-illuminate {
     0 0 0 2px var(--platform-accent),
     0 0 20px 2px var(--platform-accent);
   animation: none;
-}
-
-html[data-reduce-motion="true"] .viral-vignette {
-  display: none;
 }
 
 html[data-reduce-motion="true"] .game-screen.viral-zoom-pulse {

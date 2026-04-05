@@ -3925,7 +3925,7 @@
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Add edge vignette layer to AlgorithmBackground; migrate ALGORITHM_MOOD from per-state gradients to edge tokens",
       "requester": "architect",
@@ -3971,7 +3971,8 @@
           "owner": "ux-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 110,
@@ -4051,9 +4052,7 @@
         "All existing tests pass; any modal snapshot/style tests updated"
       ],
       "open_questions": [],
-      "blocked_on": [
-        109
-      ]
+      "blocked_on": []
     },
     {
       "id": 111,

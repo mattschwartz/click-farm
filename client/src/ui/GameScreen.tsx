@@ -340,18 +340,20 @@ export function GameScreen() {
         now={now}
         intervalMs={intervalMs}
         viralActive={viralPhase !== null}
+        viralBurst={
+          viralPhase !== null && vignetteColor
+            ? {
+                color: vignetteColor,
+                phase:
+                  viralPhase === 'build'
+                    ? 'entering'
+                    : viralPhase === 'decay'
+                      ? 'exiting'
+                      : 'peak',
+              }
+            : undefined
+        }
       />
-
-      {/* Viral edge vignette — platform-affinity color, pulses at 2s during
-          Peak. Shares a single CSS layer with the future algorithm-mood
-          vignette (proposals/draft/algorithm-mood-visibility.md). */}
-      {viralPhase !== null && vignetteColor && (
-        <div
-          className={`viral-vignette viral-vignette-${viralPhase}`}
-          style={{ '--vignette-color': vignetteColor } as React.CSSProperties}
-          aria-hidden
-        />
-      )}
 
       <main className={`game-screen${viralPhase === 'peak' ? ' viral-zoom-pulse' : ''}`}>
         <TopBar

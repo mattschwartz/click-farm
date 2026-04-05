@@ -158,7 +158,7 @@
 }
 :root[data-algorithm-state="engagement_bait"] {
   --mood-color-edge: var(--palette-mood-engagement-bait);
-  --mood-edge-opacity: 0.18;
+  --mood-edge-opacity: 0.22;
 }
 :root[data-algorithm-state="nostalgia_wave"] {
   --mood-color-edge: var(--palette-mood-nostalgia-wave);
@@ -166,5 +166,5 @@
 }
 :root[data-algorithm-state="corporate_takeover"] {
   --mood-color-edge: var(--palette-mood-corporate-takeover);
-  --mood-edge-opacity: 0.18;
+  --mood-edge-opacity: 0.14;
 }
