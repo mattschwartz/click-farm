@@ -1,5 +1,5 @@
 {
-  "next_id": 102,
+  "next_id": 103,
   "tasks": [
     {
       "id": 1,
@@ -3568,6 +3568,61 @@
       ],
       "blocked_on": [],
       "date_completed": "2026-04-05"
+    },
+    {
+      "id": 102,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Decompose Audience Mood into architecture spec + engineer build tasks",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The accepted Audience Mood proposal (proposals/accepted/audience-mood-retention.md) replaces the Scandals system with a continuous retention-multiplier mechanic. It has no architecture spec yet and no engineer build tasks filed. The architect's own review on the proposal (dated 2026-04-05) committed to writing architecture/audience-mood.md and decomposing the work once accepted. That commitment is this task.\n\nScope:\n1. Write architecture/audience-mood.md covering the data model delta (retention + per-generator content_fatigue map + neglect + algorithm_misalignment on Platform), pressure update cadences (event-driven for Content Fatigue and Algorithm Misalignment, tick-driven for Neglect), recovery formulas, the single integration point in the follower-distribution formula (core-systems.md ~line 388), save-schema migration (forward-only bump, drop scandal-era fields, initialize retention=1.0 and all accumulators to 0), and OQ#3 composition as dominant-display (multiplicative + argmax with fixed priority Content Fatigue > Algorithm Misalignment > Neglect).\n\n2. File the ux-designer follow-up task for ux/audience-mood.md (the ux-designer review flagged this as needed before build — the strip anatomy, copy pools, motion spec, and core-game-screen zone update). The ux task MUST land before the engineer build task starts.\n\n3. Decompose into engineer build tasks with explicit done-whens. Coordinate sequencing with scandal-removal task #100 per architect review OQ#4(e): 'Tear-out and rebuild MUST happen in the same engineering cycle... Deleting scandals before Audience Mood is playable leaves the game without negative pressure — a regression in design intent.' The plan needs to decide whether Audience Mood lands before, simultaneously with, or directly after #100 — and express that as explicit task ordering via blocked_on.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/audience-mood-retention.md",
+          "purpose": "the accepted proposal being decomposed; architect review at the bottom of this file already commits to the arch spec and lays out the migration plan (OQ#4)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/scandal-system.md",
+          "purpose": "superseded doc — mark as SUPERSEDED at top, do not delete; reference for the state-machine pattern being retired"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "single integration point lives here at ~line 388 (follower-distribution formula); the retention multiplier is one scalar in the existing per-platform formula"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "tick pipeline where retention multiplier applies to follower distribution; see computeFollowerDistribution call path"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "PlatformState lives here — the data model delta targets this file"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "the superseded proposal; its mechanics are being fully replaced"
+        }
+      ],
+      "acceptance_criteria": [
+        "architecture/audience-mood.md written with all sections from architect's OQ#4 migration plan (scope, data model, pressure cadences, recovery, integration point, save migration, composition rule)",
+        "architecture/scandal-system.md marked SUPERSEDED at top (full-doc banner pointing at new doc and the accepted proposal)",
+        "ux-designer task filed for ux/audience-mood.md with blocked_on set on the arch spec if sequencing demands it",
+        "Engineer build tasks filed with explicit done-whens covering: save-schema migration, PlatformState field additions, pressure update logic (event-driven + tick-driven paths), retention integration into follower distribution, mood strip UI rendering hookup (consuming the ux spec), removal sequencing with task #100",
+        "Task ordering expressed via blocked_on so the board reflects the real sequence; ux spec task must block the engineer UI task; arch spec should land before engineer work starts"
+      ],
+      "open_questions": [
+        {
+          "question": "Should Audience Mood engineer tasks block #100 (scandal removal), or should #100 complete first and Audience Mood land in a follow-up cycle? The architect's review said tear-out and rebuild MUST happen in the same cycle, but #100 is now a standalone task — does that invalidate the 'same cycle' constraint, or does it mean #100 should be re-scoped to include Audience Mood?",
+          "owner": "architect"
+        },
+        {
+          "question": "Does the dominant-display tie-breaking priority (Content Fatigue > Algorithm Misalignment > Neglect) need game-designer sign-off, or is it purely implementation detail?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
     }
   ]
 }
