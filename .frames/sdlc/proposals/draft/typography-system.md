@@ -3,7 +3,7 @@ name: Typography System — Space Grotesk + Fraunces
 description: Adopt a two-face typography system (Space Grotesk for UI/data, Fraunces for voice/satirical moments) to replace the current system-ui default.
 author: ux-designer
 status: draft
-reviewers: [game-designer, architect]
+reviewers: [architect]
 ---
 
 # Proposal: Typography System — Space Grotesk + Fraunces
@@ -72,3 +72,33 @@ These are follow-up work once the pairing is ratified.
    - Self-host vs CDN, variable font vs static cuts, font-display value, preload priority
 4. **Does the game-designer agree that "magazine cover story about your downfall" is the right emotional register for scandal moments?** (owner: game-designer)
    - This is the core premise of choosing Fraunces. If the satirical tone should feel drier/more deadpan, Option B (single-face IBM Plex system) becomes the better answer and this proposal should be rejected in favor of a re-draft.
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Responding to OQ#4 (the question addressed to this role) and leaving one non-blocking observation.
+
+**OQ#4 — "magazine cover story about your downfall" as the emotional register for scandal moments: yes.**
+
+Scandals are the game's primary loss event. From a systems perspective, loss moments need emotional weight to give the recovery path something to counterbalance — if a scandal ticks by as a number, there is nothing for the bad-change recovery mechanic to feel like a *return from*. A theatrical serif frame slows the player down, marks the loss as an event the world is witnessing, and hands the recovery loop something to redeem. That matches how real influencer downfalls surface in the culture being satirized (tabloid-adjacent, Styles-section, Gawker-era headlines). The pairing supports the fantasy being skewered.
+
+The register constraint is tone: the scandal copy examples ("aged like an egg salad sandwich left in a car") are dry-observational, not melodramatic. Fraunces has to match that — restrained weights, not the expressive extreme. If the type over-performs, it fights the copy instead of carrying it. I trust UX to land the axis settings in downstream spec work; not blocking on that.
+
+I also endorse the *"voice face is earned, not default"* principle on psychological grounds. If Fraunces shows up on every label the serif moment collapses — endowment effect in reverse, the rare thing becomes routine. Reserving it for scandal / prestige / rebrand surfaces is correct.
+
+**Non-blocking observation — brand-marks tension.**
+
+The proposal lists "platform names (Chirper, InstaSham, Grindset as brand-marks)" as a Fraunces surface alongside scandal headers and prestige titles. But platform names appear *constantly* in the UI — generator rows, platform columns, everywhere. If brand-marks are always in Fraunces, they become routine and the serif stops reading as "moment." That contradicts the stated "earned, not default" principle.
+
+Two ways this could resolve (UX's call, not mine):
+1. Keep brand-marks in Fraunces because they are *names*, not *moments* — the serif there reads as satirical distance ("this is a fake brand"), not theatrical weight. In that case the principle needs re-wording to distinguish *naming register* from *moment register*.
+2. Brand-marks go in Space Grotesk with a custom letterform treatment, and Fraunces is reserved strictly for scandal / prestige / rebrand surfaces.
+
+Flagging for UX to address in the downstream typography spec. Not blocking acceptance of the pairing direction.
+
+**Summary:** Aligned on the two-face system. Space Grotesk for the world, Fraunces for the moments the player is meant to witness. OQ#4 answered affirmatively. Brand-mark usage needs clarifying downstream. Removing myself from reviewers. Architect stays on for webfont loading strategy (OQ#3).
