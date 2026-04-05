@@ -2,8 +2,8 @@
 name: Typography System — Space Grotesk + Fraunces
 description: Adopt a two-face typography system (Space Grotesk for UI/data, Fraunces for voice/satirical moments) to replace the current system-ui default.
 author: ux-designer
-status: draft
-reviewers: [architect]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Typography System — Space Grotesk + Fraunces
@@ -102,3 +102,50 @@ Two ways this could resolve (UX's call, not mine):
 Flagging for UX to address in the downstream typography spec. Not blocking acceptance of the pairing direction.
 
 **Summary:** Aligned on the two-face system. Space Grotesk for the world, Fraunces for the moments the player is meant to witness. OQ#4 answered affirmatively. Brand-mark usage needs clarifying downstream. Removing myself from reviewers. Architect stays on for webfont loading strategy (OQ#3).
+
+---
+# Review: architect
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Typography is a client-bundle concern in this project — Vite SPA, localStorage persistence, no server boundary involved. No data-model, contract, or coupling implications. The architectural call is purely the loading strategy (OQ#3). Resolving it here.
+
+**OQ#3 — Webfont loading strategy: Google Fonts CDN with variable fonts, `display=swap`, preconnect, metric-adjusted fallbacks.**
+
+User direction is CDN over self-host. Recording the strategy and the tradeoffs that come with it.
+
+1. **Delivery: Google Fonts CSS v2 endpoint, single `<link>` stylesheet.** Pull both families in one request. Google's CSS returns `unicode-range`-scoped `@font-face` blocks that load only the Latin subset the page actually uses, which addresses the subsetting concern by default.
+
+2. **Variable fonts, not static cuts.** Request the full weight axis on Space Grotesk (`wght@300..700`) and the expressive axes on Fraunces (`opsz,wght,SOFT,WONK@9..144,100..900,0..100,0..1`). UX needs Fraunces to modulate across surfaces per the "voice face is earned" principle — that's what the variable axes are for. One file per family, many appearances.
+
+3. **`&display=swap` query param.** Text is visible from first paint using the system-ui fallback, swaps to the webfont when it arrives. Critical for a number-dense UI where invisible text (FOIT) would be a gameplay-affecting regression.
+
+4. **Preconnect hints in `index.html`:**
+   ```html
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   ```
+   Resolves DNS + TLS early so the font fetch starts ~100-300ms sooner on cold loads.
+
+5. **Metric-adjusted fallback faces.** Define `@font-face` blocks for the fallback stack with `size-adjust`, `ascent-override`, `descent-override`, `line-gap-override` tuned to Space Grotesk's metrics. This makes the `swap` near-invisible — no layout shift when the webfont arrives. Worth the 15 minutes to set up; the alternative is visible jank every cold load.
+
+6. **No preload for Fraunces.** It only appears on scandal / prestige / rebrand surfaces. Let the browser pick it up on first use rather than paying for it at boot. Space Grotesk loads via the shared stylesheet link, which is effectively on the critical path already — no separate preload needed beyond the preconnects.
+
+**Tradeoffs accepted with CDN choice (for the record):**
+
+- **Third-party runtime dependency.** If `fonts.googleapis.com` or `fonts.gstatic.com` is blocked (corporate networks, some privacy extensions, certain regions), the game falls back to system-ui. The metric-adjusted fallback stack is the mitigation — when the swap never happens, the fallback still reads correctly, just without the voice personality.
+- **No offline support.** An offline player (closed laptop, airplane, after caching TTL expires) sees the fallback. Acceptable for a browser game; flag if we ever ship as a PWA.
+- **Privacy surface.** Google Fonts requests carry referrer + IP. Not a concern for this project at current scope, but worth noting if we ever publish to EU audiences with strict privacy expectations.
+
+If any of these failure modes become real (analytics show significant fallback hit-rate, or we want PWA/offline), migrating to `@fontsource-variable/*` self-hosting is a contained change — one `index.html` edit + import statements, no architectural restructuring.
+
+**Status of the other open questions (not architect-owned):**
+
+- **OQ#1** (Fraunces reach) — author-scoped as downstream typography-spec work. Carries forward to the next UX spec. Not blocking.
+- **OQ#2** (Space Grotesk numerals at 12–14px) — author-scoped as verification work, owned by ux-designer + engineer during build. Non-blocking; the fallback plan (Space Grotesk chrome + Inter numerals) is already documented in the "Known risks" section if verification fails.
+- **OQ#4** — answered by game-designer above.
+
+**Summary:** Aligned on the pairing. OQ#3 resolved with Google Fonts CDN + variable fonts + swap + preconnect + metric-adjusted fallbacks. OQ#1/#2 carry forward as author-owned downstream work per the proposal's explicit scoping. Removing myself from reviewers; moving to accepted.
