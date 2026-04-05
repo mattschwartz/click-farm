@@ -3,7 +3,7 @@ name: Large Number Notation Ladder
 description: Extend the compact-number suffix ladder past Dc and define an overflow policy so late-game values never surface as raw `1.41e+151` exponential.
 author: architect
 status: draft
-reviewers: [game-designer, ux-designer, engineer]
+reviewers: [game-designer, ux-designer]
 ---
 
 # Proposal: Large Number Notation Ladder
@@ -94,5 +94,26 @@ The tier table IS the source of truth. No derived rule, no parallel config.
 3. **(game-designer)** If game-voice symbols are used, what are they? The architect suggests they should pair with the satirical late-game arc (Parasocial, Engagement Futures) but the naming is yours. Candidates to react to: `Viral`, `Slop`, `Doom`, `Feed`, `Grid`, `Algo`, `Meme`, `Rot`.
 4. **(ux-designer)** Maximum character budget for a compact number in the top bar and platform cards? Current Dc-era values top out at ~7 chars (`999.99Dc`). Game-voice symbols may be longer (`999.99Viral` = 11 chars). Does the existing layout absorb that, or does it need a width cap that forces shorter symbols (2–3 chars)?
 5. **(ux-designer)** Is unicode superscript (`×10⁵⁰`) acceptable in the current typography system, or does it clash with the game's font stack? Fallback would be `×10^50` with a caret.
-6. **(engineer)** JavaScript `Number` maxes out around 1.8×10^308. If game-designer's expected endgame range pushes past that, we need to migrate game-state numbers to BigInt or Decimal.js — which is a much larger change than this proposal. Is there any current or near-term path where values could exceed 1e300?
+6. **[RESOLVED] (engineer)** JavaScript `Number` maxes out around 1.8×10^308. If game-designer's expected endgame range pushes past that, we need to migrate game-state numbers to BigInt or Decimal.js — which is a much larger change than this proposal. Is there any current or near-term path where values could exceed 1e300?
+  - Answer (engineer): No. The codebase has two hard invariants that together bound all game-state values well below `Number.MAX_SAFE_INTEGER` (~9.007e15), five orders of magnitude below 1e300 and 292 orders of magnitude below `Number.MAX_VALUE`. **No BigInt/Decimal migration is needed or imminent.** (1) `clampEngagement` in `model/index.ts:194` pins every write to `player.engagement` at `Number.MAX_SAFE_INTEGER` — this is a permanent runtime invariant per `generator-level-growth-curves.md` Decision 3, enforced in the hot path and covered by tests in `model/`, `game-loop/`, `offline/`, and the V5→V6 save migration. (2) Generator levels are hard-capped at 10 and `levelMultiplier` clamps input to [1,20], with `Math.pow(2, 20²/5) = 2^80 ≈ 1.2e24` as the absolute ceiling of the multiplier term even in corrupted-state worst-case. Under the realistic max stack (`algorithmic_prophecy` base 20,000 × L=10 × 5× clout × 5× viral), per-unit rate is ~5.24e11/sec. Derived quantities inherit the bound: `total_followers` / per-platform `followers` are fed by engagement-converted-to-followers and bounded by its throughput; `lifetime_followers` is cumulative across rebrands but its growth rate is tick-bounded, giving a practical ceiling of ~1e20 over years of play; `clout = floor(sqrt(total_followers)/10)` is the square-root of a bounded value, capping around ~1e7. **Caveat for game-designer/architect:** if the answer to Open Question 1 puts expected endgame display values much above ~1e15, that creates a *design* tension with the existing engagement clamp (players would watch engagement pinned at MAX_SAFE_INTEGER) — that's a design-layer conversation, not a number-precision problem for this ladder proposal. The ladder can extend safely to whatever magnitude game-designer chooses; JS `Number` has the precision headroom.
 7. **(architect — self)** Should the ladder definition move out of `format.ts` into `static-data/` to match the pattern used for other player-facing content data? Leaning no — the ladder is presentational, not game content — but worth naming.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Reviewed from the engineering-constraint angle. The proposal is safe to adopt against the current codebase — no BigInt/Decimal migration is needed or imminent.
+
+**Q6 — can game-state values exceed 1e300?** No. Answer written inline at Open Question 6 with full mechanism trace. Short version: two hard invariants (the `clampEngagement` pin at `Number.MAX_SAFE_INTEGER` and the `max_level = 10` cap) keep every game-state value below ~9e15. Derived quantities (`total_followers`, `lifetime_followers`, `clout`) inherit the bound. JS `Number` has 292 orders of magnitude of headroom above the realistic game-state ceiling.
+
+**On the structural decisions.** The flat `TIERS` table extension (Decision 1), the single `MAX_TIER` cutoff with defined overflow policy (Decisions 2 & 3), and the unicode `×10⁵⁰` string output (Decision 3) are all implementable without touching any contract in `format.ts` — pure function signature stays `(n: number) => string`, callers are unaffected. Superscript via unicode is the correct call — it preserves formatter purity, stays JSX-free, and keeps the 10+ UI call sites in `GameScreen.tsx`, `TopBar.tsx`, etc. unchanged. Non-blocking: every new tier needs a corresponding threshold-boundary test case in `format.test.ts` (the proposal says this; flagging to make sure it lands).
+
+**On the "overflow is effectively dead code" observation.** Given the analysis above, the `×10⁵⁰` overflow branch will never fire in practice — no game-state value can reach the `MAX_TIER * 1000` threshold unless someone extends the ladder very short of `~10^18`, which nobody would. That does not mean remove it. Keep it as a defense-in-depth formatter guard for (a) direct formatter calls from tests/tooling with synthetic values, (b) future content that may introduce new currencies with different invariants, and (c) any hand-edited-save or corrupted-state code path that sneaks past the engagement clamp before the formatter sees it. A formatter that silently emits `1.41e+151` on malformed input is the bug the proposal exists to prevent; a formatter with an explicit overflow branch that never fires in production is a cheap invariant.
+
+**Caveat surfaced for game-designer / architect (non-blocking).** If game-designer's answer to Open Question 1 lands above ~1e15 for expected endgame display values, that creates a design-layer tension with the existing engagement clamp — the player would watch engagement sit pinned at `Number.MAX_SAFE_INTEGER`, which the ladder would correctly format but which is a *gameplay* concern, not a precision concern. Resolving that tension is a separate proposal (revisit the clamp, rescale the economy, or accept the ceiling). This ladder proposal does not block or depend on it.
+
+**Removing engineer from reviewers.** game-designer (Qs 1–3) and ux-designer (Qs 4–5) still own outstanding open questions.
