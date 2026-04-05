@@ -2,8 +2,8 @@
 name: Gigs System
 description: Reframes the "brand deal" Actions-column member as the Gigs system — one slot, one cadence, with multiple data-defined variants (Brand Deal, Livestream, Convention) that share the mechanic but carry distinct payoff shapes and unlock tiers.
 author: game-designer
-status: draft
-reviewers: [game-designer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Gigs System
@@ -117,8 +117,8 @@ No new engagement-line concerns beyond those already cleared in `brand-deal-boos
 
 ## Open Questions
 
-1. **Variant-specific follower unlock thresholds** — at what follower counts do Livestream and Convention unlock? Brand Deal threshold is already resolved to TBD in `brand-deal-boost.md`. **Owner: game-designer (balance pass, once progression curve is finalized)**
-2. **Selection weights** — are 60/30/10 the right starting weights, or should Convention be rarer (e.g., 70/25/5)? **Owner: game-designer (balance pass, after playtesting)**
+1. ~~**Variant-specific follower unlock thresholds** — at what follower counts do Livestream and Convention unlock? Brand Deal threshold is already resolved to TBD in `brand-deal-boost.md`. **Owner: game-designer (balance pass, once progression curve is finalized)**~~ **[DEFERRED — game-designer, 2026-04-05]** Formally deferred to the balance pass; depends on progression-curve lock. Captured as a forward task in `tasks.json` alongside OQ2.
+2. ~~**Selection weights** — are 60/30/10 the right starting weights, or should Convention be rarer (e.g., 70/25/5)? **Owner: game-designer (balance pass, after playtesting)**~~ **[DEFERRED — game-designer, 2026-04-05]** Formally deferred to a post-playtesting balance pass. Starting weights of 60/30/10 ship; tuning follows real play data. Captured as a forward task in `tasks.json` alongside OQ1.
 3. **Per-variant card visual treatment** — how do Brand Deal, Livestream, and Convention cards differ visually? Iconography, color accent, copy, animation? ~~Owner: ux-designer~~ **[RESOLVED — ux-designer, 2026-04-05]** Direction committed; full asset-level spec deferred to a follow-up UX task (`ux/gig-cards.md`). Direction:
   - **Duration is the loudest element on the card.** Variant recognition at tap-time is decision-critical — Convention's 10s window leaves no room for the player to misread and hesitate. Visual hierarchy: duration > variant name > icon > body copy. This inverts the conventional card reading order and is deliberate.
   - **Rarity signals through *arrival*, not static art.** The "Oh, a con!" moment the proposal names (§3) is produced by how the card enters, not how it looks once stationary. Brand Deal enters with the baseline motion (per existing `ux/brand-deal-card.md`). Livestream enters slower / heavier, signaling uptime. Convention enters fast + punchier, with a distinct audio/visual signature. Uniform entrance with different icons kills the emotional register.
@@ -127,7 +127,7 @@ No new engagement-line concerns beyond those already cleared in `brand-deal-boos
 4. **State model rename and variant discriminator** — `GameState.brandDeal` becomes `GameState.gig`. `BrandDealOffer` gains a `variant_id: string` field; `ActiveBrandDeal` also gains `variant_id`. Is this the right shape, or should variant config be inlined into the state rather than referenced by id? ~~Owner: architect~~ **[RESOLVED — architect, 2026-04-05]** Reference by `variant_id`, plus snapshot of mutable behavior parameters at activation. See architect review below for the full state model (`GigOffer` carries `variant_id` only; `ActiveGig` carries `variant_id` + snapshotted `duration_ms` and `boost_multiplier`, mirroring the existing `ActiveBrandDeal` precedent). The variant's *identity* is stable and small; its *parameters* snapshot to insulate a running effect from mid-session StaticData tuning.
 5. **Save migration** — the architect's plan in `brand-deal-boost.md` already required a v2→v3 bump for `brandDeal`. If this proposal accepts before the engineer implements v3, we can ship as v2→v3 with the Gigs shape directly (no v3→v4 needed). If implementation has already started, a second migration is required. ~~Owner: architect + engineer (coordinate on implementation sequence)~~ **[RESOLVED — architect, 2026-04-05]** v3 has already been consumed by the scandal system (`save/index.ts::migrateV2toV3` injects `accumulators`, `scandalStateMachine`, `scandalSessionSnapshot`). The brandDeal code was never implemented against v3. Therefore Gigs ships as **v3→v4**: a single `migrateV3toV4` that injects `{ ms_until_next_offer: 0, offer: null, active: null }` on `GameState.gig`. Only one migration step is required — the original v2→v3 concern is moot.
 6. **Naming of "Convention"** — "Convention" is formal; "Con" is shorter and vibier but can be misread. The data/code identifier should be `convention`; the player-facing card text is a UX/copy decision. ~~Owner: ux-designer (copy)~~ **[RESOLVED — ux-designer, 2026-04-05]** On-card label is **"Convention"** (full word). "Con" collides with the Scandal system's vocabulary — players are being trained to read "con" as scheme/fraud elsewhere in this game, and we must not leak that semantic into a positive offer card. Data id stays `convention`. Short nicknames may live in secondary copy ("You got invited to a con!" in acknowledgment toasts) but not on the primary card label.
-7. **Do variants have sub-mechanics beyond multiplier/duration?** e.g., does Convention cost something to accept (a follower dip for "traveling")? Does Livestream require the player to stay on screen? These would turn variants into distinct sub-systems and move us back toward Framing B. **Recommendation: no sub-mechanics at launch — variants are pure parameter differences.** **Owner: game-designer (confirm)**
+7. ~~**Do variants have sub-mechanics beyond multiplier/duration?** e.g., does Convention cost something to accept (a follower dip for "traveling")? Does Livestream require the player to stay on screen? These would turn variants into distinct sub-systems and move us back toward Framing B. **Recommendation: no sub-mechanics at launch — variants are pure parameter differences.** **Owner: game-designer (confirm)**~~ **[RESOLVED — game-designer, 2026-04-05]** Confirmed: **no sub-mechanics at launch**. Variants are pure parameter differences (multiplier, duration, weight, unlock threshold). Rationale: (a) sub-mechanics would fragment Gigs from one Actions-column citizen into three distinct systems — that is Framing B, which was explicitly rejected upstream; (b) the decision surface we want — *which kind of opportunity fits this moment?* — is already produced by payoff-shape differences alone, without requiring the variants to be distinct sub-systems; (c) YAGNI — if playtesting reveals the three-variant decision flattens, sub-mechanics become a candidate for a future proposal, not a speculative complication now. ux-designer's non-blocking observation (duration-as-loudest-element would need re-evaluation if sub-mechanics land later) is correctly parked as future-design work.
 
 ---
 # Review: architect
@@ -236,3 +236,23 @@ Key UX truths this proposal commits the card spec to honor:
 Non-blocking observation: if sub-mechanics land later per OQ7, the duration-as-loudest-element rule will need re-evaluation — a variant with a "stay on screen" requirement shifts the decision from timing to commitment, and the card hierarchy should shift accordingly.
 
 I am removing ux-designer from the reviewers list. Game-designer is added to the list to formally resolve OQ1, OQ2, and OQ7 (all game-designer-owned; two are deferred balance-pass items and one is a recommendation that needs author confirmation). Once game-designer parks those, this proposal can move to accepted.
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Final author review. Game-designer-owned OQs are now settled:
+
+- **OQ1 (variant unlock thresholds)** & **OQ2 (selection weights)** — both formally deferred to the balance pass and captured as a forward game-designer task in `tasks.json`. OQ1 depends on the progression curve; OQ2 depends on playtesting. Starting weights of 60/30/10 ship as the launch default so we are not blocked on tuning.
+- **OQ7 (sub-mechanics at launch?)** — confirmed **no**. Variants are pure parameter differences. Adding sub-mechanics (Livestream-requires-screen, Convention-costs-follower-dip, etc.) fragments Gigs from one Actions-column citizen into three distinct systems, which is Framing B — explicitly rejected upstream. The decision surface we want — *which kind of opportunity fits this moment?* — is already produced by payoff-shape differences alone. YAGNI holds: if playtesting reveals the three-variant decision flattens into habit, sub-mechanics become a future proposal, not speculative complication now. ux-designer's observation that duration-as-loudest-element would need re-evaluation if sub-mechanics land later is correct and correctly parked as future-design work.
+
+architect and ux-designer reviews are both Aligned with substantive additions:
+- architect's state model (`GigOffer` by `variant_id`, `ActiveGig` with snapshotted behavior params) is the right shape — it insulates running boosts from mid-session tuning and keeps StaticData-driven extensibility.
+- architect's v3→v4 save migration correction is important; the earlier v2→v3 plan was stale.
+- ux-designer's three card truths (duration-as-loudest, rarity-through-arrival, "Convention" not "Con") are the correct decisions on all three fronts.
+
+The mechanic is honest, the class holds, and the emergent decision layer (variant × viral-timing) is earned by a small surface. Removing game-designer from reviewers. Reviewers list empty. Moving proposal to accepted.

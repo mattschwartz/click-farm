@@ -1,5 +1,5 @@
 {
-  "next_id": 82,
+  "next_id": 85,
   "tasks": [
     {
       "id": 1,
@@ -2020,7 +2020,7 @@
       "alias": "E5",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Post-rebrand re-entry: RUN badge + first-rebrand ambient copy",
       "requester": "architect",
@@ -2044,7 +2044,8 @@
         "Component tests cover: badge absence at rebrand_count 0, badge appearance at rebrand_count 1, badge persistence at rebrand_count ≥ 2, first-rebrand ambient copy on rebrand_count 1, ambient copy absence at rebrand_count ≥ 2"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 67,
@@ -2562,7 +2563,7 @@
       "alias": "U1",
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "UX spec: creator-kit-panel (placement, peek signal, icons, copy)",
       "requester": "architect",
@@ -2590,7 +2591,8 @@
         "Spec references accepted-proposal OQ#6 and OQ#7 resolutions as the source of constraints"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 81,
@@ -2625,9 +2627,123 @@
       "blocked_on": [
         73,
         74,
-        75,
-        80
+        75
       ]
+    },
+    {
+      "id": 82,
+      "role": "architect",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Review generator-level-growth-curves proposal",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "Game-designer has authored a draft proposal to fix the Infinity-overflow bug in generator leveling. The proposal makes two balance calls (restore cost/reward parity per the already-accepted level-multiplier-curve.md, and introduce max_level=10 on all generators) plus belt-and-braces Infinity clamps. It flags two questions specifically for architect review: (1) whether adding a `max_level: number` field to GeneratorDefinition is acceptable as a data-contract change in the same PR that applies the fix, and (2) what migration shape to use for already-broken saves that hold Infinity values or levels above the new cap (silent clamp vs one-time repair notice). A third question — whether L=10 headroom is safe under the full multiplier stack — is engineer-owned and not your concern here. Leave your feedback written into the proposal document itself per the review state protocol. If the data-contract change and migration answers are concrete, mark the proposal accepted; if it needs a further round, leave it in draft with your questions written in.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/generator-level-growth-curves.md",
+          "purpose": "The proposal under review — read this first"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "The already-accepted curve decision that the cost formula drifted from"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "levelMultiplier at line 78 — the overflow site"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "generatorUpgradeCost at line 59 — the drift from accepted curve"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "GeneratorDefinition type — where max_level would be added"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "save schema + migration surface — context for the migration question"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the draft proposal end-to-end and the accepted level-multiplier-curve.md it references",
+        "Answer architect-owned question #1: is the GeneratorDefinition max_level field acceptable as a same-PR contract change, or must it ship separately?",
+        "Answer architect-owned question #2: migration strategy for saves holding Infinity engagement or generator levels > new cap (silent clamp vs one-time repair notice vs something else)",
+        "Record answers + any additional architectural feedback directly in the proposal document under a new review section",
+        "Decide proposal disposition: accepted (move to proposals/accepted/), rejected, or remain in draft with new open questions for a further round"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 83,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Balance pass: Badge Pro Shop milestone thresholds",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Forward work from Badge Pro Shop proposal OQ1, formally deferred on 2026-04-05. Once the progression curve is locked (follower scaling, rebrand cadence, viral frequency, brand-deal frequency), set concrete milestone thresholds for each of the five launch badges. Current launch set requires thresholds for: Micro-Influencer (1K followers — likely fine as-is), Main Character Energy (10K followers — likely fine as-is), Going Viral (first viral burst — already self-gating, no threshold needed), Sellout (first brand deal claimed — self-gating), New Me, Who Dis (first rebrand — self-gating). Most of the launch set is self-gated by first-occurrence triggers, so the real balance question is whether the follower thresholds (1K, 10K) feel right once the progression curve is set, and whether additional badges at higher follower tiers (100K, 1M per the category table) want to join the launch set or slot post-launch. Also: set the small clout cost per badge per §3 (affordable after any rebrand, ceremonial friction, not a real decision).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/badge-shop.md",
+          "purpose": "The accepted proposal — OQ1 is marked deferred and points here"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-to-follower-scaling-curve.md",
+          "purpose": "Follower scaling curve — input to threshold balancing"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "Level multiplier curve — input to progression pacing"
+        }
+      ],
+      "acceptance_criteria": [
+        "Concrete milestone thresholds set for each of the five launch badges, or confirmation that self-gating triggers are sufficient and no threshold tuning is needed",
+        "Clout cost per badge set per §3 (small, flat, affordable immediately after any rebrand)",
+        "Decision documented as a revision to badge-shop.md or as a balance-pass note attached to it"
+      ],
+      "open_questions": [
+        {
+          "question": "Does the progression curve require larger-follower badges (100K, 1M) to join the launch set, or do they slot post-launch?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 84,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Balance pass: Gigs variant unlock thresholds + selection weights",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Forward work from Gigs System proposal OQ1 and OQ2, both formally deferred on 2026-04-05. Two balance questions, grouped because they touch the same system and will likely be tuned in the same session. (1) OQ1 — variant-specific follower unlock thresholds for Livestream and Convention (Brand Deal inherits its threshold from the original brand-deal-boost.md). The diegetic progression is: small creators get brand deals, mid-tier creators go live, established creators get con invites. Concrete follower counts depend on the progression curve. (2) OQ2 — selection weights. Launch ships with 60/30/10 (Brand Deal / Livestream / Convention). After playtesting, evaluate whether Convention at 10% is rare enough to produce the 'Oh, a con!' feeling without becoming forgotten, or whether a 70/25/5 or similar split is better. Rarity carries emotional weight and weights are StaticData-tunable without code changes.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/gigs-system.md",
+          "purpose": "The accepted proposal — OQ1 and OQ2 are marked deferred and point here"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/brand-deal-boost.md",
+          "purpose": "Original Brand Deal threshold — Livestream and Convention calibrate against this"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-to-follower-scaling-curve.md",
+          "purpose": "Follower scaling — input to unlock threshold balancing"
+        }
+      ],
+      "acceptance_criteria": [
+        "Livestream and Convention follower unlock thresholds set against the finalized progression curve",
+        "Selection weights confirmed or revised from 60/30/10 starting values after playtesting",
+        "Decisions documented as a revision to gigs-system.md or as a balance-pass note attached to it"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }

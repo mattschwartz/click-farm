@@ -2,8 +2,8 @@
 name: Badge Pro Shop
 description: Cosmetic badges earned through gameplay milestones and claimed from a shop for a small clout fee — prestige through achievement, not purchase.
 author: game-designer
-status: draft
-reviewers: [game-designer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Badge Pro Shop
@@ -120,7 +120,7 @@ Both are valid reasons to spend clout. A player with excess clout after upgrades
 
 ## Open Questions
 
-1. **Milestone thresholds** — exact follower counts, rebrand counts, viral counts, etc. for each badge. **Owner: game-designer** (balance pass once progression curve is defined)
+1. ~~**Milestone thresholds** — exact follower counts, rebrand counts, viral counts, etc. for each badge. **Owner: game-designer** (balance pass once progression curve is defined)~~ **[DEFERRED — game-designer, 2026-04-05]** Formally deferred to the balance pass. Thresholds depend on the progression curve (follower scaling, rebrand cadence, viral frequency), which is not yet locked. A follow-up game-designer task captures this forward work so it is not lost. See `tasks.json`.
 2. ~~**Badge names and copy** — satirical names fitting the game's tone. **Owner: game-designer** (creative pass — can happen in parallel with build)~~ **[RESOLVED — game-designer, 2026-04-05]** Launch set of 5 badges written into §2a above, with milestone triggers, flavor copy, arc rationale, and voice-register notes for post-launch additions.
 3. **How many badges at launch?** ~~Too few and the collection feels thin. Too many and none feel special. **Owner: architect** (scoping question — what's buildable for a first pass?)~~ **[RESOLVED — architect, 2026-04-05]** 5 badges at launch. Enough for the collection to feel real without over-committing on milestone design before the progression curve is finalized.
 4. **Shop and collection screen design** — where does the shop live in the navigation? How are locked vs. claimed badges presented? How does the shine work visually? **Owner: ux-designer**
@@ -181,3 +181,24 @@ Architecturally this is clean. The model is small and the boundaries are obvious
 **On the mobile prestige row becoming 3 buttons:** ~112px wide at 44px tall is fine for a tap target. No architectural concern.
 
 **Remaining open question:** OQ1 (milestone thresholds) is owned by game-designer and deferred pending the progression balance pass. Removing architect from reviewers; adding game-designer back so OQ1 can be resolved (or formally deferred to a task) before acceptance.
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Final author review. All design-owned questions are now settled:
+
+- **OQ1 (milestone thresholds)** — formally deferred to the balance pass, captured as a forward game-designer task in `tasks.json`. Thresholds depend on the progression curve (follower scaling, rebrand cadence, viral frequency), which is not yet locked. Setting numbers now would either anchor the curve backward from badges (wrong causality) or produce values we'd have to re-tune twice. Deferral is the correct call.
+- **OQ2 (names/copy)** — resolved in §2a with the five-badge launch set. Voice register documented for post-launch additions.
+- **OQ3 (launch count)** — architect resolved at 5.
+- **OQ4 (shop/screen design)** & **OQ5 (main-screen visibility)** — both answered by ux-designer with full spec.
+
+ux-designer and architect reviews are both Aligned with additive value (UX spec for OQ4/OQ5, architect's note about `viral_bursts_total` and `brand_deals_claimed_total` counters for the engineer). No conflicts between reviews.
+
+The core model — earned-first-then-claimed, purely cosmetic, second clout drain that does not compete with meta-upgrades — is economically clean and psychologically right. Badges express prestige without becoming a parallel grind track.
+
+Removing game-designer from reviewers. Reviewers list empty. Moving proposal to accepted.
