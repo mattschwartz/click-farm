@@ -153,6 +153,12 @@ Polly's other thoughts on using vague directives intentionally
   - Polly:   The role signals what categories of work are real in this project. It's not just breadth awareness — it's a legitimacy signal. An agent without an architect in the room might produce something that works but never ask whether it's structured well. The architect's existence changes what questions are on the table.
   - It's almost like the team roster is a schema for the project's concerns. If a role doesn't exist, that domain of concern either doesn't exist or it falls into the gap between roles — and gaps are where things quietly rot.
 - [learning] we need something like plan -> work in progress -> **done** like we need to track when something was actually completed, too
+- [observation] just another example of respecting defined boundaries: "I need to flag this before touching code — what you're asking for was explicitly rejected in the accepted
+  UX spec."
+- [observation] i've noticed that agents will come up with workarounds for tools' output when they don't get what they want, or maybe because they get too much output (they think) or only want specific data. and if these things are their desires, but the tool doesn't support it like that, they will come up with clever python scripts or jq or w/e just to format it in the way they want.
+- [observation] "Stop - I need to surface something" it says as it flags a real contradiction in what it's trying to do vs what is existing (there was an existing proposal it didn't expect and it was contradictory so it stopped what it was doing and raised it to the user)
+- [principle] if an agent is misuing a tool, then the tool is not capturing the agent's needs. understand its desire and update the tool to accommodate
+- [theory] with some tweaking, this could be a tool for creating quick POCs for someone like a PM. i don't even know how the code is structured right now and it doesn't matter. i can guide it with NL
 - 
 
 SKills from polly
