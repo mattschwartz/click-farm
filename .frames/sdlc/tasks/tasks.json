@@ -2347,7 +2347,7 @@
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit static data: five item definitions with placeholder balance",
       "requester": "architect",
@@ -2380,7 +2380,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 75,
@@ -2410,9 +2411,7 @@
         "Unit tests cover: successful purchase, max-level rejection, insufficient-engagement rejection, engagement balance after purchase, level increment"
       ],
       "open_questions": [],
-      "blocked_on": [
-        74
-      ]
+      "blocked_on": []
     },
     {
       "id": 76,
@@ -2443,9 +2442,7 @@
         "Unit tests cover: Camera level 0/1/2 affects engagement rate correctly; Wardrobe level 0/1/2 affects follower distribution correctly; Camera × Clout engagement_multiplier stacks multiplicatively"
       ],
       "open_questions": [],
-      "blocked_on": [
-        74
-      ]
+      "blocked_on": []
     },
     {
       "id": 77,
@@ -2474,9 +2471,7 @@
         "Unit tests cover: laptop-only lookahead, clout-only lookahead, both stacked additively, clamp when sum exceeds available states"
       ],
       "open_questions": [],
-      "blocked_on": [
-        74
-      ]
+      "blocked_on": []
     },
     {
       "id": 78,
@@ -2512,7 +2507,6 @@
         }
       ],
       "blocked_on": [
-        74,
         75
       ]
     },
@@ -2549,9 +2543,7 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": [
-        74
-      ]
+      "blocked_on": []
     },
     {
       "id": 80,
@@ -2620,7 +2612,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        74,
         75
       ]
     },
