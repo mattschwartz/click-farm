@@ -279,12 +279,20 @@ describe('earnFollowers', () => {
     expect(state.platforms.grindset.followers).toBe(0);
   });
 
-  it('updates player.total_followers and lifetime_followers', () => {
+  it('updates lifetime_followers but not total_followers (derived)', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const result = earnFollowers(state.platforms.chirper, state.player, 50);
 
-    expect(result.player.total_followers).toBe(50);
+    // earnFollowers updates lifetime_followers
     expect(result.player.lifetime_followers).toBe(50);
+    // total_followers is derived — earnFollowers does not write it
+    expect(result.player.total_followers).toBe(0);
+    // To keep total_followers in sync, call syncTotalFollowers
+    const synced = syncTotalFollowers(result.player, {
+      ...state.platforms,
+      chirper: result.platform,
+    });
+    expect(synced.total_followers).toBe(50);
   });
 
   it('throws when platform is locked', () => {

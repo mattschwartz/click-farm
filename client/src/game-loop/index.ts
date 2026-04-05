@@ -370,16 +370,15 @@ export function tick(
     }
     platforms = next;
 
-    // 6. Sync derived totals on Player.
+    // 6. Update lifetime_followers. total_followers is derived; will be synced below.
     const totalGained = distribution.totalRate * deltaMs;
     player = {
       ...player,
-      total_followers: player.total_followers + totalGained,
       lifetime_followers: player.lifetime_followers + totalGained,
     };
   }
 
-  // Keep derived total_followers consistent with platforms (defensive).
+  // Sync derived total_followers from platforms (single source of truth).
   player = syncTotalFollowers(player, platforms);
 
   // 7. Check platform unlocks using the freshly-synced total.

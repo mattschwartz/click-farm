@@ -1552,7 +1552,7 @@
       "id": 56,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Consolidate total_followers to a purely derived field",
       "requester": "architect",
@@ -1580,7 +1580,8 @@
         "Existing tick tests still pass; add a unit test that asserts total_followers always equals the sum of platform followers after a tick"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 57,

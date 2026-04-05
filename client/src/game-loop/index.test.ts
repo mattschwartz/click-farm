@@ -344,6 +344,16 @@ describe('tick — followers', () => {
     expect(next.player.total_followers).toBe(0);
     expect(next.platforms.chirper.followers).toBe(0);
   });
+
+  it('maintains invariant: total_followers always equals sum of platform followers', () => {
+    // This test enforces that total_followers is a purely derived field.
+    // It must always equal the sum of platform.followers, never written directly.
+    const state = stateWithGenerator('selfies', 10, 2);
+    const next = tick(state, T0 + 5000, 5000, STATIC_DATA);
+
+    const platformSum = totalPlatformFollowers(next.platforms);
+    expect(next.player.total_followers).toBeCloseTo(platformSum, 6);
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -253,9 +253,10 @@ export function earnFollowers(
     ...platformState,
     followers: platformState.followers + amount,
   };
+  // Note: total_followers is derived and must be synced via syncTotalFollowers().
+  // This function only updates lifetime_followers.
   const newPlayer: Player = {
     ...player,
-    total_followers: player.total_followers + amount,
     lifetime_followers: player.lifetime_followers + amount,
   };
   return { platform: newPlatform, player: newPlayer };

@@ -70,7 +70,7 @@ export interface Player {
   engagement: number;
   /** Prestige currency. ≥ 0. Integer. */
   clout: number;
-  /** Sum of all platform follower counts. Derived field — keep in sync. ≥ 0. */
+  /** DERIVED — never write directly, use syncTotalFollowers(). Sum of all platform follower counts. ≥ 0. */
   total_followers: number;
   /** Total followers ever earned across all runs. Never resets. ≥ 0. */
   lifetime_followers: number;
