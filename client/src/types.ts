@@ -3,11 +3,8 @@
 
 // ---------------------------------------------------------------------------
 // ID types
-// Generator IDs match the accepted design proposal (Section 3), which lists
-// 7 base generators. The architecture spec mentions "6 base types" — that
-// count appears to be stale; the accepted proposal is authoritative.
-// NOTE: The architecture spec discrepancy (6 vs 7) has been flagged to the
-// architect.
+// 7 base generators per the accepted design proposal and the architecture
+// spec (core-systems.md §Data Model → Generator).
 // ---------------------------------------------------------------------------
 
 export type GeneratorId =

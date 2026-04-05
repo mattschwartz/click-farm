@@ -6,16 +6,12 @@
 //   "For each segment between shifts, apply the production rates for that
 //    Algorithm state. Sum the gains across all segments."
 //
-// Signature note: The spec sketches
-//   calculateOffline(snapshot, closeTime, openTime, seed, staticData)
-// using only the SnapshotState. That is insufficient for segment-aware
-// calculation because different generators have different trend_sensitivity,
-// so per-algorithm-state modifiers change the aggregate rate in ways the
-// snapshot cannot reconstruct. I extended the signature to take the full
-// GameState (which is available on open from the save) so rates can be
-// honestly recomputed per segment. The snapshot is still stored — reserved
-// for future use (e.g. server-side validation or a simpler offline path).
-// Flagged to architect via TODO below for contract update.
+// Signature: calculateOffline(state, closeTime, openTime, staticData) — takes
+// the full GameState, not just SnapshotState. Segment-aware calculation needs
+// per-generator trend_sensitivity to recompute rates under each algorithm
+// segment; an aggregate-rate snapshot cannot be re-weighted. See core-systems.md
+// §Interface Contracts → Offline Calculator for the rationale. SnapshotState
+// is retained on the save for forward compatibility but is not read here.
 //
 // Assumptions (per architecture spec §Assumptions #6):
 //   - Offline is approximation, not simulation. Rates are computed once per

@@ -290,13 +290,11 @@ export function evaluateViralTrigger(
 // ---------------------------------------------------------------------------
 
 /**
- * Execute one game loop tick.
+ * Execute one game loop tick. Pure state → state.
  *
- * NOTE(architect): The architecture spec declares
- *   `tick(state, deltaMs, staticData)` — but Algorithm shift advancement
- * requires an absolute `now` (shift_time is an epoch timestamp). This
- * signature extends the contract with `now` as a separate argument. Flag for
- * architect contract update.
+ * Contract: core-systems.md §Interface Contracts → Game Loop Tick.
+ * `now` is separate from `deltaMs` because Algorithm shift advancement is
+ * driven by absolute epoch timestamps (`shift_time`), not elapsed deltas.
  *
  * @param state      current game state
  * @param now        current epoch ms (for Algorithm shift advancement)
