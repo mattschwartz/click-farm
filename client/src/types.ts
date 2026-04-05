@@ -3,11 +3,8 @@
 
 // ---------------------------------------------------------------------------
 // ID types
-// Generator IDs match the accepted design proposal (Section 3), which lists
-// 7 base generators. The architecture spec mentions "6 base types" — that
-// count appears to be stale; the accepted proposal is authoritative.
-// NOTE: The architecture spec discrepancy (6 vs 7) has been flagged to the
-// architect.
+// 7 base generators per the accepted design proposal and the architecture
+// spec (core-systems.md §Data Model → Generator).
 // ---------------------------------------------------------------------------
 
 export type GeneratorId =
@@ -133,6 +130,38 @@ export interface AlgorithmState {
 }
 
 // ---------------------------------------------------------------------------
+// ViralBurst — transient state for the viral burst event
+// ---------------------------------------------------------------------------
+
+export interface ViralBurstState {
+  /** Active-play ticks accumulated since the last viral ended (or run start). */
+  active_ticks_since_last: number;
+  /** Non-null while a viral burst is in progress. Never persisted across saves. */
+  active: ActiveViralEvent | null;
+}
+
+export interface ActiveViralEvent {
+  source_generator_id: GeneratorId;
+  source_platform_id: PlatformId;
+  /** Epoch ms when the viral started. */
+  start_time: number;
+  /** Total duration of the event (ms). 5000–10000. */
+  duration_ms: number;
+  /** Total bonus engagement the event produces above normal production. */
+  magnitude: number;
+  /** Precomputed: magnitude / duration_ms. Applied per ms in tick. */
+  bonus_rate_per_ms: number;
+}
+
+/** Payload fired to UI subscribers at the moment of trigger. Internal fields stripped. */
+export interface ViralBurstPayload {
+  source_generator_id: GeneratorId;
+  source_platform_id: PlatformId;
+  duration_ms: number;
+  magnitude: number;
+}
+
+// ---------------------------------------------------------------------------
 // GameState — the complete in-memory state passed to the tick function
 // ---------------------------------------------------------------------------
 
@@ -141,6 +170,7 @@ export interface GameState {
   generators: Record<GeneratorId, GeneratorState>;
   platforms: Record<PlatformId, PlatformState>;
   algorithm: AlgorithmState;
+  viralBurst: ViralBurstState;
 }
 
 // ---------------------------------------------------------------------------
@@ -155,8 +185,31 @@ export interface GeneratorDef {
   follower_conversion_rate: number;
   /** How much Algorithm state affects output. [0, 1]. */
   trend_sensitivity: number;
-  /** Total followers required to unlock. */
+  /** Total followers required to unlock (appear in the shop). */
   unlock_threshold: number;
+  /**
+   * Engagement cost to buy the first unit.
+   * Subsequent units cost more: base_buy_cost × buy_cost_multiplier^count_owned.
+   * TODO(game-designer): provisional values — tune during balance pass.
+   */
+  base_buy_cost: number;
+  /**
+   * Cost multiplier per additional unit already owned.
+   * Industry standard for clicker games: 1.15 gives a gentle but compounding curve.
+   * TODO(game-designer): provisional — tune during balance pass.
+   */
+  buy_cost_multiplier: number;
+  /**
+   * Engagement cost to upgrade from level 1 → 2.
+   * Each subsequent level costs 4× the previous: base_upgrade_cost × 4^(currentLevel - 1).
+   *
+   * Note: the design proposal mentions three upgrade tracks (quality, frequency,
+   * platform optimization). The architecture spec consolidated these into a single
+   * `level` field and `levelMultiplier`. If distinct tracks are reinstated, this
+   * field will need to be replaced with per-track cost arrays.
+   * TODO(game-designer): provisional — tune during balance pass.
+   */
+  base_upgrade_cost: number;
 }
 
 export interface PlatformDef {
@@ -182,6 +235,29 @@ export interface CloutUpgradeDef {
   effect: UpgradeEffect;
 }
 
+export interface ViralBurstConfig {
+  /** Active-play ticks before a viral can fire again. At 100ms/tick, 9000 = 15 min. */
+  minCooldownTicks: number;
+  /** Per-tick fire probability before tutorials are unlocked (~45–60 min between virals). */
+  baseProbabilityEarly: number;
+  /** Per-tick fire probability mid-game (~20–30 min between virals). */
+  baseProbabilityMid: number;
+  /** Per-tick fire probability late-game (~15–20 min between virals). */
+  baseProbabilityLate: number;
+  /** If top generator's effective algorithm modifier exceeds this, p_viral is boosted. */
+  algorithmBoostThreshold: number;
+  /** Multiplier applied to p_viral when the algorithm boost threshold is met. */
+  algorithmBoostMultiplier: number;
+  /** Minimum viral burst duration in ms. */
+  durationMsMin: number;
+  /** Maximum viral burst duration in ms. */
+  durationMsMax: number;
+  /** Minimum engagement rate multiplier during viral (3× normal). */
+  magnitudeBoostMin: number;
+  /** Maximum engagement rate multiplier during viral (5× normal). */
+  magnitudeBoostMax: number;
+}
+
 export interface StaticData {
   generators: Record<GeneratorId, GeneratorDef>;
   platforms: Record<PlatformId, PlatformDef>;
@@ -197,6 +273,7 @@ export interface StaticData {
     generators: Record<GeneratorId, number>;
     platforms: Record<PlatformId, number>;
   };
+  viralBurst: ViralBurstConfig;
 }
 
 // ---------------------------------------------------------------------------

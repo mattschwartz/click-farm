@@ -20,6 +20,14 @@ The `task #<id>` is omitted when there is no associated task (e.g. human tweaks 
 | `test` | Tests added or updated with no other change |
 | `refactor` | Code restructured without behavior change |
 
+## How to commit
+
+Commit messages are a single line. Always use `-m` — never a heredoc or temp file:
+
+```bash
+git commit -m "feat(task #12): implement generator tick loop"
+```
+
 ## Examples
 
 ```

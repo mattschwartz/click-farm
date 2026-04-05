@@ -14,20 +14,24 @@
 // All functions are pure. State in → new state out. No mutation.
 
 import type {
+  ActiveViralEvent,
   GameState,
   GeneratorId,
   GeneratorState,
   PlatformId,
   PlatformState,
   Player,
+  SnapshotState,
   StaticData,
   UpgradeId,
+  ViralBurstState,
 } from '../types.ts';
 import { advanceAlgorithm, getAlgorithmModifier } from '../algorithm/index.ts';
 import {
   checkPlatformUnlocks,
   computeFollowerDistribution,
 } from '../platform/index.ts';
+import { checkGeneratorUnlocks } from '../generator/index.ts';
 import { syncTotalFollowers } from '../model/index.ts';
 
 // ---------------------------------------------------------------------------
@@ -168,17 +172,129 @@ export function computeAllGeneratorEffectiveRates(
 }
 
 // ---------------------------------------------------------------------------
+// Viral burst trigger — exported for deterministic unit testing
+// ---------------------------------------------------------------------------
+
+/**
+ * Evaluates whether a viral burst should fire this tick.
+ *
+ * All three gates must pass:
+ *   Gate 1 — cooldown: enough active-play ticks since the last viral.
+ *   Gate 2 — probability: random roll < p_viral (adjusted by Gate 3).
+ *   Gate 3 — algorithm affinity: top generator's effective modifier ≥ threshold
+ *             doubles p_viral.
+ *
+ * Returns a fully-constructed `ActiveViralEvent` on trigger, or null otherwise.
+ *
+ * @param state      current game state (viralBurst.active must be null — caller
+ *                   verifies this before calling)
+ * @param staticData balance config
+ * @param now        current epoch ms (becomes start_time on the event)
+ * @param random     injectable PRNG, defaults to Math.random — inject for tests
+ */
+export function evaluateViralTrigger(
+  state: GameState,
+  staticData: StaticData,
+  now: number,
+  random: () => number = Math.random,
+): ActiveViralEvent | null {
+  const config = staticData.viralBurst;
+  const { viralBurst, generators, platforms, algorithm } = state;
+
+  // Gate 1 — cooldown (hard floor, active-play ticks only)
+  if (viralBurst.active_ticks_since_last < config.minCooldownTicks) {
+    return null;
+  }
+
+  // Require at least one generator producing — no viral from empty content farm
+  const rates = computeAllGeneratorEffectiveRates(state, staticData);
+  const rateEntries = Object.entries(rates) as [GeneratorId, number][];
+  if (rateEntries.length === 0) return null;
+
+  // Determine phase-based p_viral
+  let p_viral: number;
+  if (!generators.tutorials.owned) {
+    p_viral = config.baseProbabilityEarly;
+  } else if (!generators.viral_stunts.owned) {
+    p_viral = config.baseProbabilityMid;
+  } else {
+    p_viral = config.baseProbabilityLate;
+  }
+
+  // Gate 3 — algorithm affinity boost (applied to p_viral before the roll)
+  let topGenId: GeneratorId = rateEntries[0][0];
+  let topRate = rateEntries[0][1];
+  for (const [id, rate] of rateEntries) {
+    if (rate > topRate) {
+      topRate = rate;
+      topGenId = id;
+    }
+  }
+  const rawMod = getAlgorithmModifier(algorithm, topGenId);
+  const topGenDef = staticData.generators[topGenId];
+  const effectiveMod = effectiveAlgorithmModifier(rawMod, topGenDef.trend_sensitivity);
+  if (effectiveMod > config.algorithmBoostThreshold) {
+    p_viral *= config.algorithmBoostMultiplier;
+  }
+
+  // Gate 2 — probability roll
+  if (random() >= p_viral) {
+    return null;
+  }
+
+  // All gates passed — select source platform
+  const unlockedPlatformIds = (Object.keys(platforms) as PlatformId[]).filter(
+    (id) => platforms[id].unlocked,
+  );
+  if (unlockedPlatformIds.length === 0) return null;
+
+  let sourcePlatformId = unlockedPlatformIds[0];
+  let maxAffinity =
+    staticData.platforms[sourcePlatformId].content_affinity[topGenId] ?? 0;
+  for (const id of unlockedPlatformIds) {
+    const affinity = staticData.platforms[id].content_affinity[topGenId] ?? 0;
+    if (affinity > maxAffinity) {
+      maxAffinity = affinity;
+      sourcePlatformId = id;
+    }
+  }
+
+  // Compute magnitude — amortized rate boost over the event window
+  // total_engagement_rate_per_ms = sum of all generator rates (per-sec) / 1000
+  const totalRatePerMs =
+    rateEntries.reduce((sum, [, r]) => sum + r, 0) / 1000;
+  const duration_ms = Math.floor(
+    config.durationMsMin +
+      random() * (config.durationMsMax - config.durationMsMin),
+  );
+  const boostFactor =
+    config.magnitudeBoostMin +
+    random() * (config.magnitudeBoostMax - config.magnitudeBoostMin);
+  // During the viral: effective rate = normal_rate × boostFactor
+  // Bonus = normal_rate × (boostFactor - 1) per ms
+  const bonus_rate_per_ms = totalRatePerMs * (boostFactor - 1);
+  const magnitude = bonus_rate_per_ms * duration_ms;
+
+  return {
+    source_generator_id: topGenId,
+    source_platform_id: sourcePlatformId,
+    start_time: now,
+    duration_ms,
+    magnitude,
+    bonus_rate_per_ms,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Tick — the core state → state function
 // ---------------------------------------------------------------------------
 
 /**
- * Execute one game loop tick.
+ * Execute one game loop tick. Pure state → state.
  *
- * NOTE(architect): The architecture spec declares
- *   `tick(state, deltaMs, staticData)` — but Algorithm shift advancement
- * requires an absolute `now` (shift_time is an epoch timestamp). This
- * signature extends the contract with `now` as a separate argument. Flag for
- * architect contract update.
+ * Contract: core-systems.md §Interface Contracts → Game Loop Tick.
+ * `now` is separate from `deltaMs` because Algorithm shift advancement is
+ * driven by absolute epoch timestamps (`shift_time`), not elapsed deltas.
  *
  * @param state      current game state
  * @param now        current epoch ms (for Algorithm shift advancement)
@@ -261,7 +377,14 @@ export function tick(
   // 7. Check platform unlocks using the freshly-synced total.
   platforms = checkPlatformUnlocks(platforms, player.total_followers, staticData);
 
-  // 8. Advance algorithm shifts up to `now`.
+  // 8. Check generator unlocks using the freshly-synced total.
+  const generators = checkGeneratorUnlocks(
+    state.generators,
+    player.total_followers,
+    staticData,
+  );
+
+  // 9. Advance algorithm shifts up to `now`.
   const algorithm = advanceAlgorithm(
     state.algorithm,
     player.algorithm_seed,
@@ -269,7 +392,91 @@ export function tick(
     staticData,
   );
 
-  return { player, generators: state.generators, platforms, algorithm };
+  // 10. Advance active_ticks_since_last by 1 (active-play tick counter).
+  let viralBurst: ViralBurstState = {
+    ...state.viralBurst,
+    active_ticks_since_last: state.viralBurst.active_ticks_since_last + 1,
+  };
+
+  // 11 / 12. Process active viral or evaluate trigger.
+  if (viralBurst.active !== null) {
+    if (now >= viralBurst.active.start_time + viralBurst.active.duration_ms) {
+      // 11a. Viral expired — clear it.
+      viralBurst = { ...viralBurst, active: null };
+    } else {
+      // 11b. Viral still running — apply bonus engagement on top of normal production.
+      player = {
+        ...player,
+        engagement: player.engagement + viralBurst.active.bonus_rate_per_ms * deltaMs,
+      };
+    }
+  } else {
+    // 12. No active viral — evaluate trigger with the state assembled this tick.
+    const triggerState: GameState = {
+      player,
+      generators,
+      platforms,
+      algorithm,
+      viralBurst,
+    };
+    const event = evaluateViralTrigger(triggerState, staticData, now);
+    if (event !== null) {
+      viralBurst = { active_ticks_since_last: 0, active: event };
+    }
+  }
+
+  return { player, generators, platforms, algorithm, viralBurst };
+}
+
+// ---------------------------------------------------------------------------
+// Snapshot
+// ---------------------------------------------------------------------------
+
+/**
+ * Produce a SnapshotState from the current GameState. Aggregates the current
+ * per-second engagement/follower rates and captures the algorithm index so
+ * the offline calculator can walk the schedule from this point.
+ *
+ * Used by the driver when saving on close, and by the offline calculator on
+ * the next open.
+ */
+export function computeSnapshot(
+  state: GameState,
+  staticData: StaticData,
+): SnapshotState {
+  const ratesPerSec = computeAllGeneratorEffectiveRates(state, staticData);
+  let total_engagement_rate = 0;
+  for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
+    total_engagement_rate += ratesPerSec[id] ?? 0;
+  }
+
+  // Convert to per-ms, compute distribution, scale back to per-sec.
+  const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
+  for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
+    ratesPerMs[id] = (ratesPerSec[id] ?? 0) / 1000;
+  }
+  const distribution = computeFollowerDistribution(
+    ratesPerMs,
+    state.platforms,
+    staticData,
+  );
+
+  // distribution rates are per-ms. Convert to per-sec for the snapshot.
+  const platform_rates = Object.fromEntries(
+    (Object.keys(state.platforms) as PlatformId[]).map((id) => [
+      id,
+      distribution.perPlatformRate[id] * 1000,
+    ]),
+  ) as Record<PlatformId, number>;
+
+  const total_follower_rate = distribution.totalRate * 1000;
+
+  return {
+    total_engagement_rate,
+    total_follower_rate,
+    algorithm_state_index: state.algorithm.current_state_index,
+    platform_rates,
+  };
 }
 
 // ---------------------------------------------------------------------------

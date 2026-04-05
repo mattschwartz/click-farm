@@ -1,0 +1,320 @@
+// Core game screen — the main surface the player interacts with during a
+// normal session. Implements UX spec §§2–8, §9, and §11.
+//
+// Zones (per UX §2):
+//   - Top bar (80px): Algorithm state + Engagement + Followers
+//   - Post zone (left, 320px): click-to-post button
+//   - Generators (center, flex): ledger with category dividers
+//   - Platforms (right, 280px): 3 cards with follower counts
+//
+// Viral burst choreography (UX §9): phase is derived from
+// GameState.viralBurst.active at render time — no duplicate state. Visual
+// effects (gold counter, generator halo, platform illumination, particle
+// drift, vignette pulse, zoom) are driven by CSS classes.
+//
+// Not yet wired:
+//   - Sound design (click cue, shift swell, viral signature) — no audio
+//     pipeline exists yet.
+//   - Upgrade drawer with 3-level preview (UX §6.3) — follow-up UX task.
+
+import { useMemo, useRef, useState, useEffect } from 'react';
+import { useGame } from './useGame.ts';
+import { STATIC_DATA } from '../static-data/index.ts';
+import {
+  CLICK_BASE_ENGAGEMENT,
+  cloutBonus,
+  computeAllGeneratorEffectiveRates,
+  effectiveAlgorithmModifier,
+} from '../game-loop/index.ts';
+import { getAlgorithmModifier } from '../algorithm/index.ts';
+import { cloutForRebrand } from '../prestige/index.ts';
+import type { ActiveViralEvent, GeneratorId } from '../types.ts';
+import { AlgorithmBackground } from './AlgorithmBackground.tsx';
+import { TopBar } from './TopBar.tsx';
+import { PostZone } from './PostZone.tsx';
+import { GeneratorList } from './GeneratorList.tsx';
+import { PlatformPanel } from './PlatformPanel.tsx';
+import { OfflineGainsModal } from './OfflineGainsModal.tsx';
+import { GENERATOR_DISPLAY, PLATFORM_DISPLAY } from './display.ts';
+import { fmtCompactInt } from './format.ts';
+import './GameScreen.css';
+
+// ---------------------------------------------------------------------------
+// Viral burst phase helpers (UX §9.2)
+// ---------------------------------------------------------------------------
+
+/** Visual phases for the viral burst event. */
+type ViralPhase = 'build' | 'peak' | 'decay' | null;
+
+/**
+ * Derives the current viral phase from the active event. Called at render
+ * time — game ticks at 10Hz ensure phase transitions resolve within 100ms.
+ *
+ * Phase boundaries:
+ *   Build:  0–1500ms
+ *   Peak:   1500ms – (duration_ms − 1000ms)
+ *   Decay:  last 1000ms
+ */
+function getViralPhase(active: ActiveViralEvent | null): ViralPhase {
+  if (!active) return null;
+  const elapsed = Date.now() - active.start_time;
+  const decayStart = active.duration_ms - 1000;
+  if (elapsed < 1500) return 'build';
+  if (elapsed < decayStart) return 'peak';
+  return 'decay';
+}
+
+// Pre-computed particle layout — deterministic positions so we don't call
+// Math.random() inside a component body. Particles start in the generator
+// zone (~35–52% from left on a 1280px canvas) and drift rightward toward
+// the platform panel. Vary vertically to fill the screen height.
+const VIRAL_PARTICLES = Array.from({ length: 18 }, (_, i) => ({
+  id: i,
+  x: 35 + (i % 5) * 4,          // 35, 39, 43, 47, 51 (generator zone)
+  y: 15 + Math.round((i * 37) % 64), // 15–79% vertically
+  delay: Math.round((i * 13) % 150) / 100,  // 0–1.49s stagger
+  duration: 85 + (i % 4) * 20,  // 85–145 (÷100 = 0.85–1.45s)
+}));
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
+export function GameScreen() {
+  const {
+    state,
+    click,
+    buy,
+    upgrade,
+    offlineResult,
+    clearOfflineResult,
+    rebrand,
+  } = useGame();
+
+  // Render-time derived values --------------------------------------------
+  const engagementRate = useMemo(() => {
+    const rates = computeAllGeneratorEffectiveRates(state, STATIC_DATA);
+    let total = 0;
+    for (const id of Object.keys(rates) as GeneratorId[]) {
+      total += rates[id] ?? 0;
+    }
+    return total;
+  }, [state]);
+
+  // Per-click engagement yield, accounting for algorithm state + clout.
+  const perClick = useMemo(() => {
+    const def = STATIC_DATA.generators.selfies;
+    const raw = getAlgorithmModifier(state.algorithm, 'selfies');
+    const algoMod = effectiveAlgorithmModifier(raw, def.trend_sensitivity);
+    const clout = cloutBonus(state.player.clout_upgrades, STATIC_DATA);
+    return CLICK_BASE_ENGAGEMENT * algoMod * clout;
+  }, [state.algorithm, state.player.clout_upgrades]);
+
+  // Derive the context sub-label: "Selfie → Chirper" or "+ auto".
+  // The "default" here is heuristic: the player's first-unlocked platform
+  // and the generator whose current contribution would land most followers
+  // on that platform. Auto-posting is active once any generator has count ≥ 1.
+  const contextLabel = useMemo(() => {
+    const anyActive = (Object.keys(state.generators) as GeneratorId[]).some(
+      (id) => state.generators[id].owned && state.generators[id].count > 0,
+    );
+    const firstPlatform = (['chirper', 'instasham', 'grindset'] as const).find(
+      (id) => state.platforms[id].unlocked,
+    );
+    const label = firstPlatform
+      ? `${GENERATOR_DISPLAY.selfies.name} → ${PLATFORM_DISPLAY[firstPlatform].name}`
+      : GENERATOR_DISPLAY.selfies.name;
+    return anyActive ? `${label}  ·  + auto` : label;
+  }, [state.generators, state.platforms]);
+
+  // ---------------------------------------------------------------------------
+  // Viral burst orchestration (UX §9)
+  // ---------------------------------------------------------------------------
+
+  const viralActive = state.viralBurst.active;
+  // Phase is derived at render time — no extra state needed.
+  const viralPhase = getViralPhase(viralActive);
+
+  // Summary badge: capture magnitude when the event ends (active → null).
+  // This is UI-only state — the magnitude is no longer accessible from the
+  // engine state once active is cleared.
+  const prevViralRef = useRef<ActiveViralEvent | null>(null);
+  const [summaryBadge, setSummaryBadge] = useState<{
+    magnitude: number;
+    fading: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    const prev = prevViralRef.current;
+    const curr = viralActive;
+    prevViralRef.current = curr;
+    if (prev !== null && curr === null) {
+      // Burst just ended — show the summary badge.
+      setSummaryBadge({ magnitude: prev.magnitude, fading: false });
+      const t1 = window.setTimeout(
+        () => setSummaryBadge((b) => (b ? { ...b, fading: true } : null)),
+        1500,
+      );
+      const t2 = window.setTimeout(() => setSummaryBadge(null), 1900);
+      return () => {
+        window.clearTimeout(t1);
+        window.clearTimeout(t2);
+      };
+    }
+  }, [viralActive]);
+
+  // Effective engagement rate: base generator rate + viral bonus.
+  // This drives the tick-rate drama — useInterpolatedValue in TopBar sees the
+  // full rate and extrapolates at 60fps, producing the counter acceleration
+  // described in UX §9.3.
+  const viralBonusRatePerSec = viralActive
+    ? viralActive.bonus_rate_per_ms * 1000
+    : 0;
+  const effectiveEngagementRate = engagementRate + viralBonusRatePerSec;
+
+  // Vignette color for the edge glow during viral (UX §9.2 Phase 2).
+  const vignetteColor = viralActive
+    ? PLATFORM_DISPLAY[viralActive.source_platform_id].accent
+    : null;
+
+  // ---------------------------------------------------------------------------
+  // Modal visibility — only show if meaningful time elapsed (> 60s per §11).
+  const [showOffline, setShowOffline] = useState(
+    () => offlineResult !== null && offlineResult.durationMs > 60_000,
+  );
+  useEffect(() => {
+    if (offlineResult && offlineResult.durationMs > 60_000) {
+      setShowOffline(true);
+    }
+  }, [offlineResult]);
+
+  // Approximate algorithm interval from static schedule — used for
+  // instability scaling (we don't have the exact current-interval value
+  // available; base ± variance is close enough for visual intent).
+  const intervalMs = STATIC_DATA.algorithmSchedule.baseIntervalMs;
+
+  // Live `now` for the instability computation. Tick once a second — we
+  // only need coarse resolution to scale animation speed.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(t);
+  }, []);
+
+  // Rebrand affordance — minimal corner button; the full prestige screen
+  // is a separate task. Disabled when no followers have been earned.
+  const rebrandPreview = cloutForRebrand(state.player.total_followers);
+  const lastRebrandRef = useRef<number | null>(null);
+  const handleRebrand = () => {
+    if (state.player.total_followers <= 0) return;
+    if (!window.confirm(
+      `Rebrand for ${rebrandPreview} Clout? This wipes your current run.`,
+    )) return;
+    const r = rebrand();
+    lastRebrandRef.current = r.cloutEarned;
+  };
+
+  return (
+    <>
+      <AlgorithmBackground
+        algorithm={state.algorithm}
+        now={now}
+        intervalMs={intervalMs}
+        viralActive={viralPhase !== null}
+      />
+
+      {/* Viral edge vignette — platform-affinity color, pulses at 2s during
+          Peak. Shares a single CSS layer with the future algorithm-mood
+          vignette (proposals/draft/algorithm-mood-visibility.md). */}
+      {viralPhase !== null && vignetteColor && (
+        <div
+          className={`viral-vignette viral-vignette-${viralPhase}`}
+          style={{ '--vignette-color': vignetteColor } as React.CSSProperties}
+          aria-hidden
+        />
+      )}
+
+      <main className={`game-screen${viralPhase === 'peak' ? ' viral-zoom-pulse' : ''}`}>
+        <TopBar
+          algorithm={state.algorithm}
+          engagement={state.player.engagement}
+          engagementRate={effectiveEngagementRate}
+          totalFollowers={state.player.total_followers}
+          viralGold={viralPhase !== null}
+          summaryBadge={summaryBadge}
+        />
+
+        <div className="game-body">
+          <PostZone
+            onClick={click}
+            perClick={perClick}
+            contextLabel={contextLabel}
+          />
+          <GeneratorList
+            state={state}
+            staticData={STATIC_DATA}
+            onBuy={buy}
+            onUpgrade={upgrade}
+            viralGeneratorId={viralActive?.source_generator_id ?? null}
+          />
+          <PlatformPanel
+            state={state}
+            staticData={STATIC_DATA}
+            viralPlatformId={viralActive?.source_platform_id ?? null}
+          />
+        </div>
+      </main>
+
+      {/* Viral particle burst — Phase 2 (Peak) only. Particles drift from the
+          generator zone (~35–52% left) toward the platform panel (~75%+).
+          Disabled under prefers-reduced-motion and the in-game Reduce Motion
+          toggle when settings (#48) ships. */}
+      {viralPhase === 'peak' && (
+        <div className="viral-particles-overlay" aria-hidden>
+          {VIRAL_PARTICLES.map((p) => (
+            <div
+              key={p.id}
+              className="viral-particle"
+              style={{
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                '--pd': `${p.delay}s`,
+                '--pdur': `${(p.duration / 100).toFixed(2)}s`,
+              } as React.CSSProperties}
+            />
+          ))}
+        </div>
+      )}
+
+      {showOffline && offlineResult && (
+        <OfflineGainsModal
+          result={offlineResult}
+          onDismiss={() => {
+            setShowOffline(false);
+            clearOfflineResult();
+          }}
+        />
+      )}
+
+      <div className="rebrand-corner">
+        <button
+          className="rebrand-btn"
+          onClick={handleRebrand}
+          disabled={state.player.total_followers <= 0}
+          title={
+            state.player.total_followers > 0
+              ? `Rebrand for ${fmtCompactInt(rebrandPreview)} Clout (${fmtCompactInt(state.player.total_followers)} followers this run)`
+              : 'Earn followers first'
+          }
+        >
+          Rebrand · +{fmtCompactInt(rebrandPreview)} Clout
+        </button>
+        {state.player.clout > 0 && (
+          <div className="rebrand-tooltip">
+            {fmtCompactInt(state.player.clout)} Clout · {state.player.rebrand_count} rebrands
+          </div>
+        )}
+      </div>
+    </>
+  );
+}

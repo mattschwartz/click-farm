@@ -1,5 +1,5 @@
 {
-  "next_id": 36,
+  "next_id": 58,
   "tasks": [
     {
       "id": 1,
@@ -296,7 +296,7 @@
       "alias": "E4",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Generator System",
       "requester": "architect",
@@ -322,7 +322,8 @@
         "Tests cover: generator output calculation, upgrade effects, trend sensitivity modification, unlock thresholds"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 24,
@@ -397,7 +398,7 @@
       "alias": "E7",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Economy & Systems Integration",
       "requester": "architect",
@@ -422,16 +423,15 @@
         "Integration tests verify multi-system interactions with realistic play scenarios"
       ],
       "open_questions": [],
-      "blocked_on": [
-        23
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 27,
       "alias": "E8",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Offline Calculation",
       "requester": "architect",
@@ -456,16 +456,15 @@
         "Tests verify offline calculation accuracy for various durations and algorithm state configurations"
       ],
       "open_questions": [],
-      "blocked_on": [
-        26
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 28,
       "alias": "E9",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Prestige: The Rebrand",
       "requester": "architect",
@@ -491,16 +490,15 @@
         "Tests verify: reset completeness, Clout calculation accuracy, meta-upgrade persistence and effects"
       ],
       "open_questions": [],
-      "blocked_on": [
-        26
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 29,
       "alias": "E10",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Core Game UI",
       "requester": "architect",
@@ -513,6 +511,10 @@
         },
         {
           "ref": "proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Core loop, generator roster, algorithm visualization intent, going viral moment"
+        },
+        {
+          "ref": "ux/core-game-screen.md",
           "purpose": "Core loop, generator roster, algorithm visualization intent, going viral moment"
         }
       ],
@@ -527,9 +529,8 @@
         "UI communicates with backend per the interface contracts in the architecture spec"
       ],
       "open_questions": [],
-      "blocked_on": [
-        26
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 30,
@@ -566,10 +567,7 @@
         "Tests cover: each trigger type, empire scaling, magnitude bounds, offline freeze/resume, stacking suppression"
       ],
       "open_questions": [],
-      "blocked_on": [
-        17,
-        26
-      ]
+      "blocked_on": []
     },
     {
       "id": 31,
@@ -731,6 +729,903 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-04"
+    },
+    {
+      "id": 36,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-04",
+      "title": "Upgrade Curve Drawer Spec",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "The generator row upgrade interaction (§6.3 of core-game-screen.md) gestures at a drawer that slides out from the right of a row, showing the next 3 upgrade levels, cost, and effect delta. This spec was flagged as needing its own pass alongside the balance curves. Define the full layout, interaction, and motion for the upgrade drawer.",
+      "related_items": [
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "§6.3 defines the upgrade interaction trigger and confirm behavior — this task specifies the drawer content and design in full"
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "Data contracts — what upgrade/cost/delta data is available to render"
+        }
+      ],
+      "acceptance_criteria": [
+        "Drawer layout fully specified: content zones, upgrade path display (next 3 levels), cost, effect delta",
+        "Interaction states defined: open, confirm, insufficient funds, max level",
+        "Motion brief written: open/close animation, confirm pulse, error state",
+        "Spec is self-contained enough for engineer to implement without follow-up questions"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 37,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-04",
+      "title": "Prestige / Rebrand Screen Spec",
+      "requester": "ux-designer",
+      "complexity": "opus",
+      "overview": "The Prestige/Rebrand screen is where the player spends Clout to reset their run and carry bonuses forward. It is the only surface on which Clout is displayed (per core-game-screen.md §5.3). It needs a full UX spec covering layout, information hierarchy, the rebrand confirmation flow, Clout display, and the emotional arc of the prestige moment.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Defines the prestige/rebrand mechanic — Clout currency, what resets, what carries forward"
+        },
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "§5.3 establishes that Clout is not shown on the main screen — prestige screen is its home. Also defines the rebrand button affordance and Clout preview tooltip."
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "Data contracts for Clout, run state, and what persists across resets"
+        }
+      ],
+      "acceptance_criteria": [
+        "Full screen layout specified with zone map",
+        "Clout display and earned-this-run breakdown specified",
+        "Rebrand confirmation flow defined: affordance, confirmation step, irreversibility communication",
+        "Emotional arc of the prestige moment addressed — this is a milestone beat, not a utility screen",
+        "Transition in/out of prestige screen specified (how does the player get here, how do they return post-rebrand)",
+        "Motion brief written for the rebrand moment",
+        "Accessibility requirements met per role standards"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 38,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-04",
+      "title": "Mobile Layout Pass",
+      "requester": "ux-designer",
+      "complexity": "opus",
+      "overview": "The core game screen spec is desktop-first (1280×800). §14 sketches a mobile layout but explicitly defers it. This task produces the full mobile UX spec: thumb-reach-optimized post zone at bottom, vertical scroll generators, horizontal platform strip, algorithm mood in background. Must also resolve the open question of whether the algorithm state name + mood can be combined into a single top-strip element on mobile.",
+      "related_items": [
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "§14 contains the rough sketch this task must formalize into a full spec. All sections of the desktop spec have mobile equivalents to specify or explicitly defer."
+        }
+      ],
+      "acceptance_criteria": [
+        "Full mobile zone map defined (reference canvas size specified)",
+        "Post zone placement and size resolved for thumb reach",
+        "Generator list scroll behavior specified",
+        "Platform display resolved — horizontal strip layout or alternative",
+        "Algorithm state name + mood combination question resolved (OQ from §14)",
+        "All motion and interaction patterns from desktop spec assessed for mobile — carried, adapted, or deferred with rationale",
+        "Viral event design confirmed or adapted for mobile",
+        "Accessibility requirements met on mobile (hit areas, contrast, motion)"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 39,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-04",
+      "title": "Settings Screen Spec",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "The core game screen spec references a Settings screen for Reduce Motion, audio toggles, and save management but explicitly defers it. This task produces that spec. It is a utility screen — the emotional bar is low, but the Reduce Motion toggle has accessibility implications that must be fully specified.",
+      "related_items": [
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "§12 defines what Reduce Motion must affect: disables particle bursts, replaces background drift with static gradients, replaces viral zoom pulse with static glow. Tick-rate drama is preserved."
+        }
+      ],
+      "acceptance_criteria": [
+        "Layout specified for settings screen",
+        "Reduce Motion toggle specified — exactly what it disables and what it preserves (per §12 of core-game-screen.md)",
+        "Audio toggle specified",
+        "Save management options specified (export, reset, any cloud sync if applicable)",
+        "Access point from main screen defined (where does the player find settings?)",
+        "Accessibility requirements met"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 40,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-04",
+      "title": "Purchase Feedback & Rate Visibility",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Every button press in the game — buying generators, purchasing upgrades — feels imperceptible. The player can't tell if anything happened.\n\nThis has been verified by directly observing the running game at localhost:5173. The economy is working correctly — one selfies generator produces ~6.8 engagement/sec passively, which is meaningful. But the UI is completely silent: no rate indicator, no button feedback, no animation on numbers, no indication that a generator is running after purchase.\n\nThe root cause is a visibility problem: the player watches a raw total accumulate with no rate surfaced, so they can never perceive that their rate changed. The numbers are fine. This is a pure UX problem.\n\nSpecific gaps observed:\n- No rate indicator (e.g. +6.8/sec) anywhere in the UI\n- No visual feedback on Buy or Post Content button press\n- Stat numbers silently increment with no tick animation\n- Generator row looks identical before and after purchase — nothing signals it is running",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Core game feel target — what the player experience is supposed to be"
+        }
+      ],
+      "acceptance_criteria": [
+        "Spec where and how the current engagement rate (+X/sec) is displayed — it must be prominent enough to read at a glance",
+        "Spec how the rate display reacts at the moment of purchase — the player must be able to see the delta without reading a number carefully (e.g. the rate jumps, flashes, or animates)",
+        "Spec button feedback on Buy and Post Content — press state, confirmation flash, or equivalent",
+        "Spec how a generator row communicates 'this is actively running' after purchase",
+        "The target feeling at purchase is: 'Something just changed. I did that. I can see it working.'"
+      ],
+      "open_questions": [
+        {
+          "question": "If the UX treatment doesn't resolve the feel problem, the numbers themselves may need tuning — game-designer should revisit the upgrade delta curve after this ships.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 41,
+      "role": "architect",
+      "state": "review",
+      "status": "complete",
+      "date_assigned": "2026-04-04",
+      "title": "Review: Clout Upgrade Menu & Costs",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The Clout Upgrade Menu & Costs proposal is ready for architect review. It defines the full permanent meta-upgrade menu purchased with Clout — the prestige currency. Review from an architectural standpoint: data model fit, static data structure, and the post-prestige generator unlock wiring question.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/clout-upgrade-menu.md",
+          "purpose": "The proposal to review. You are listed as a reviewer in the frontmatter."
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "CloutUpgrade data model and UpgradeEffect tagged union — the contracts this proposal must fit within."
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-to-follower-scaling-curve.md",
+          "purpose": "Companion proposal — confirms divisor 10 and Clout supply curve."
+        }
+      ],
+      "acceptance_criteria": [
+        "Review the proposal per the review state behavior (states/review.md)",
+        "Confirm or raise concerns on: CloutUpgrade cost[] array shape fits the tiered costs defined; UpgradeEffect tagged union covers all upgrade types in the menu; post-prestige generator unlock_threshold: 0 wiring is correct (game-designer flagged this as needing architect confirmation)",
+        "Append your review to the proposal file and update frontmatter",
+        "Commit the updated proposal file"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 42,
+      "role": "engineer",
+      "state": "review",
+      "status": "complete",
+      "date_assigned": "2026-04-04",
+      "title": "Review: Clout Upgrade Menu & Costs",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The Clout Upgrade Menu & Costs proposal is ready for engineer review. It defines the full permanent meta-upgrade menu purchased with Clout, including post-prestige generator stats and the upgrade cost table. Review from an implementation standpoint: are the upgrade effects implementable as defined, are the stat values well-specified, and are there any edge cases or ambiguities that would cause a silent implementation assumption.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/clout-upgrade-menu.md",
+          "purpose": "The proposal to review. You are listed as a reviewer in the frontmatter."
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "CloutUpgrade data model, UpgradeEffect tagged union, Generator data model — the contracts this proposal must implement against."
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "Defines levelMultiplier() — relevant to post-prestige generator upgrade cost scaling."
+        }
+      ],
+      "acceptance_criteria": [
+        "Review the proposal per the review state behavior (states/review.md)",
+        "Confirm all UpgradeEffect types in the menu are implementable against the existing tagged union; flag any missing effect types",
+        "Confirm post-prestige generator stats (base_engagement_rate as multiplier relative to Viral Stunts, follower_conversion_rate, trend_sensitivity) are well-specified enough to implement without ambiguity",
+        "Flag any implementation concerns on the Engagement Boost stacking model (cumulative multiplier across levels)",
+        "Append your review to the proposal file and update frontmatter",
+        "Commit the updated proposal file"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 43,
+      "role": "engineer",
+      "state": "review",
+      "status": "complete",
+      "date_assigned": "2026-04-04",
+      "title": "Review: Generator Balance & Algorithm States",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The game designer has formalised the provisional generator balance values and algorithm state definitions. The engineer needs to review this proposal and flag anything that doesn't match actual runtime behaviour or that would be impractical to implement as specified.\n\nKey things to verify:\n- Generator rates, trend sensitivities, and costs match what's currently in static-data/index.ts (or flag discrepancies)\n- The clout upgrade open question is noted: once clout-upgrade-menu.md is accepted, static-data must be updated to match that proposal's values (replacing the current placeholders)\n- Algorithm state characters match how they feel in practice\n- Nothing in the proposal contradicts a contract defined in core-systems.md",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/generator-balance-and-algorithm-states.md",
+          "purpose": "The proposal to review"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Current provisional values — compare against proposal"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Data contracts the proposal must be consistent with"
+        }
+      ],
+      "acceptance_criteria": [
+        "Proposal reviewed and a review section added per PROPOSALS.md format",
+        "Any discrepancies between proposal values and current code flagged as open questions in the proposal",
+        "Clout upgrade discrepancy acknowledged — noted as a follow-up action when clout-upgrade-menu.md is accepted",
+        "Decision: Aligned or Not Aligned stated with rationale"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 44,
+      "role": "architect",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-04",
+      "title": "Viral burst event signal — engine contract + trigger",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "The Core Game UI (task #29) implements the visual choreography for the 'going viral' peak moment per UX spec §9 — counter acceleration, screen energy, sustained 5–10s cascade. The UX spec §9.1 explicitly states: 'Viral triggers are determined by the game loop, not this spec. The UX assumes the engine signals a viral burst event with source_generator_id, source_platform_id, duration_ms (5000–10000), magnitude (total bonus engagement).' No such signal exists in the current game loop. The UI has a dormant viralEvent hook ready to be driven — this task decides what fires it and how.\n\nArchitect needs to answer: (1) what in the simulation triggers a viral burst? (e.g., follower-rate spike threshold, algorithm state × generator combo, random-chance-on-post gated by state), (2) where in the tick pipeline does it emit, (3) how is the signal surfaced to the UI — is it persisted state on GameState, a transient event queue on the driver, or a one-shot callback? Game-designer owns the frequency target (UX spec §9.5 notes 15–40 minutes between virals per active play session; open question owned by game-designer).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§9 defines the visual contract the engine signal must satisfy (fields: source_generator_id, source_platform_id, duration_ms, magnitude)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Current game loop and tick contract — the viral event mechanism must fit within the existing state→state pipeline or extend it cleanly"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "§4 establishes viral moments as the game's peak emotional beat; Q5 resolution describes the UX cascade"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "Where tick pipeline lives — the emission point will go here"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "The driver is the UI's contact point; event surfacing from tick→UI passes through here"
+        }
+      ],
+      "acceptance_criteria": [
+        "Architect proposal defines trigger condition(s) for a viral burst — what simulation state fires it",
+        "Architect proposal defines the signal transport: persisted on GameState vs transient driver event vs other",
+        "Architect proposal defines the payload shape matching UX spec §9.1 (source_generator_id, source_platform_id, duration_ms, magnitude)",
+        "Architect proposal defines engagement application — is magnitude applied instantaneously or distributed across duration_ms",
+        "Game-designer signs off on trigger frequency target (default 15–40 min between virals per UX §9.5)",
+        "Document notes what changes in tick() / driver.ts / types.ts to implement"
+      ],
+      "open_questions": [
+        {
+          "question": "What gameplay condition should trigger a viral burst? (rate spike, algorithm×generator combo, seeded rare-event, player action?)",
+          "owner": "architect"
+        },
+        {
+          "question": "Target frequency — is 15–40 min of active play between virals the right tuning?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Does viral magnitude apply all at once or amortized over duration_ms? Tick-rate drama (UX §9.3) suggests amortized so the counter visibly accelerates.",
+          "owner": "architect"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 45,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Prestige: Clout Shop modal & Rebrand Ceremony",
+      "requester": "engineer",
+      "complexity": "opus",
+      "overview": "The core game screen (task #29) is live but players currently have no way to purchase Clout upgrades — the spec intentionally keeps Clout off the core screen (§5.3), so Clout lives on the prestige surface. This task implements the two prestige surfaces defined in the UX spec: (1) the persistent Clout Shop modal accessible during a run via the Upgrades affordance, and (2) the theatrical 4-phase Rebrand Ceremony (Threshold → Eulogy → Commit → Dissolution→Rebirth, 6–10s). The underlying simulation — calculateRebrand, applyRebrand, purchaseCloutUpgrade, the clout_upgrades map — is already built (task #28). This task wires the UI to it.\n\nEntry points to add to the core game screen: an 'Upgrades' button that opens the shop modal, and a Rebrand affordance that replaces the minimal corner button already in place. The shop modal must not pause the running game (core-game-screen.md §7.4 — the ticker keeps moving). Post-rebrand re-entry is silent (§1 / §6) — no welcome modal.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/prestige-rebrand-screen.md",
+          "purpose": "Full UX spec for both surfaces: Clout Shop modal + Rebrand Ceremony choreography"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§5.3 defines Clout visibility rules; the corner Rebrand affordance lives here"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Upgrade roster, costs, and effect shapes — the shop's content"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "purchaseCloutUpgrade, calculateRebrand, applyRebrand, cloutForRebrand, cloutUpgradeCost — all simulation APIs already exist and are tested"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Host screen — add the Upgrades entry point and replace the minimal rebrand corner button with the full affordance"
+        },
+        {
+          "ref": "client/src/ui/useGame.ts",
+          "purpose": "Already exposes rebrand() and buyCloutUpgrade(id) — no new driver API needed"
+        }
+      ],
+      "acceptance_criteria": [
+        "Clout Shop modal renders with the upgrade roster per ux/prestige-rebrand-screen.md §2–§4, grouped and ordered as specified",
+        "Upgrades show current level, next cost, max level, and effect delta; disabled state is perceptible when player can't afford or is at max",
+        "Purchasing an upgrade spends Clout, updates the upgrade's level, and reflects in per-upgrade state with the spec's feedback motion",
+        "Game loop continues ticking behind the modal (not paused)",
+        "Rebrand Ceremony plays the 4 phases (Threshold → Eulogy → Commit → Dissolution→Rebirth) per §5, honoring the skip rule (Eulogy skippable after first rebrand)",
+        "Commit tap is irreversible with no second confirmation (§7 / spec decision #7)",
+        "Post-rebrand: main screen returns in cleared state, no welcome modal (§6)",
+        "Core game screen's minimal corner Rebrand button is replaced by the spec's affordance, with Clout balance visible on the Upgrades button and Clout-on-rebrand preview on the Rebrand affordance (§5.3 extension)"
+      ],
+      "open_questions": [
+        {
+          "question": "Does the ceremony need sound/audio to hit the emotional arc, and should it block on audio asset availability?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 46,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Generator upgrade drawer",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "The core game screen currently exposes generator level-ups via a terse inline 'Lvl ↑' button with cost in a tooltip. The UX spec calls for a proper drawer that opens when the player taps the upgrade affordance — showing the current level, next 3 levels, per-level costs, and rate deltas. This is the surface the player uses to commit to level upgrades thoughtfully rather than reflexively. Replaces the inline Lvl ↑ affordance on generator rows.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/upgrade-curve-drawer-spec.md",
+          "purpose": "Full UX spec for the drawer — layout, content, interaction states, motion"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§6.3 gestures at this drawer; this task replaces the inline Lvl ↑ button with it"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Host component — the row currently renders the inline button that this task replaces"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "levelMultiplier formula (2^(L²/5)) — needed for computing rate deltas across next 3 levels"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "generatorUpgradeCost — needed for per-level cost display"
+        }
+      ],
+      "acceptance_criteria": [
+        "Tapping a generator row's upgrade affordance opens the drawer per ux/upgrade-curve-drawer-spec.md",
+        "Drawer shows current level, next 3 levels, per-level costs, and rate delta per level",
+        "Confirming an upgrade in the drawer spends engagement, updates the generator's level, triggers the spec's feedback motion, and keeps the drawer open for potential further upgrades",
+        "Insufficient-engagement state is shown per spec (not hidden)",
+        "Drawer dismisses on outside-tap or explicit close; game loop keeps ticking behind it"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 47,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Purchase feedback & rate visibility sharpening",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "The core game screen is functional but a specific feel gap exists: purchases feel imperceptible, rate is under-surfaced, generators don't clearly communicate 'I'm running'. The Purchase Feedback & Rate Visibility UX spec sharpens these patterns as extensions to the existing core screen — it does not replace core-game-screen.md, it intensifies it. Key decisions in the spec: promote rate to full P0 weight alongside the count, add per-generator 'running' state indicators, and give purchase moments stronger feedback (visual delta on the rate, pulse choreography, etc).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/purchase-feedback-and-rate-visibility.md",
+          "purpose": "Full UX spec"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "The surface being sharpened — this task extends §§5, 6, 8 rather than replacing them"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/generator-badge-breathing.md",
+          "purpose": "Refines the per-generator running state indicator (AC #2) — specifies staggered phase offset, unified 2.5s cadence, amplitude 1.025. Read this before implementing badge breathing so the result is consistent with this design decision."
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "Engagement + rate display lives here; rate promotion to P0 lands here"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Per-generator 'running' state indicator + purchase-moment feedback lands here"
+        },
+        {
+          "ref": "client/src/ui/PostZone.tsx",
+          "purpose": "Click feedback; align with the sharpened feedback language"
+        }
+      ],
+      "acceptance_criteria": [
+        "Engagement rate is promoted to P0 weight per the spec — visible alongside count, not deferred as sub-label",
+        "Each owned generator row shows a 'running' state indicator per the spec",
+        "Purchase and upgrade moments carry the sharpened feedback choreography (pulse, rate-delta flash, etc) per the spec",
+        "Click-to-post feedback is consistent with the sharpened language"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 48,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Settings screen modal",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "A low-emotional-bar utility surface: Reduce Motion toggle, audio toggles, save management (export/import/reset). Reduce Motion has real accessibility weight and must propagate into the game's motion language — viral cascade, algorithm background drift, instability intensification, shift transitions, click feedback, and ceremony all respect it. Settings is a modal layered over the running game, matching the Clout Shop surface grammar.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/settings-screen.md",
+          "purpose": "Full UX spec for the modal"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§12 specifies Reduce Motion expectations on this surface"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Host screen — add the Settings entry point and propagate reduce-motion state"
+        },
+        {
+          "ref": "client/src/ui/AlgorithmBackground.tsx",
+          "purpose": "Motion surface that Reduce Motion disables/replaces"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Save module — needed for export/import/reset"
+        }
+      ],
+      "acceptance_criteria": [
+        "Settings modal opens from an entry point on the core game screen; game keeps ticking behind it",
+        "Reduce Motion toggle persists and is read by all motion surfaces: algorithm background, instability intensification, shift transitions, click/purchase feedback, viral cascade, ceremony",
+        "Audio toggles persist (even if audio pipeline is not yet wired — the toggle state persists for future use)",
+        "Save management: export save to clipboard/file, import save from clipboard/file, reset save with a clear destructive-action confirmation",
+        "Settings state is persisted in localStorage alongside the save"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 49,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Fix affinity chip glow animation selector",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "The affinity chip glow animation on platform cards is broken due to a CSS selector mismatch. The animation is designed and implemented correctly but never fires.\n\nThe CSS selector is `.affinity-chip .glow` (descendant combinator) but the React code applies the `glow` class to the `.affinity-chip` element itself, not a child element. The selector should be `.affinity-chip.glow` (compound selector, no space).\n\nFile: `client/src/ui/GameScreen.css`\nCurrent: `.affinity-chip .glow { animation: affinity-glow 1.5s ease-in-out infinite; }`\nFix: `.affinity-chip.glow { animation: affinity-glow 1.5s ease-in-out infinite; }`\n\nThe animation keyframes and React logic are correct — this is a one-character fix.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Line with broken .affinity-chip .glow selector"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "React code applying the glow class to the chip element"
+        }
+      ],
+      "acceptance_criteria": [
+        "CSS selector changed from `.affinity-chip .glow` to `.affinity-chip.glow`",
+        "Affinity chip glow animation fires visibly in-browser on the heaviest-contributing generator chip for each platform card"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 50,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Viral burst engine — trigger, signal transport, magnitude",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Implements the game-loop and driver side of the viral burst event per the accepted signal spec. The UI choreography is a separate task blocked on this one.\n\nConcretely:\n- Add `ViralBurstState`, `ActiveViralEvent`, `ViralBurstPayload` to `types.ts`; extend `GameState` and `StaticData`\n- Add tick pipeline steps 10–12 to `game-loop/index.ts` (cooldown counter, probability gates, algorithm affinity boost, active burst amortization). Export trigger logic as a testable pure helper with injectable PRNG (`() => number`, defaulting to `Math.random()`)\n- Add `onViralBurst(listener)` to `GameDriver` interface and `createDriver`. Detection: capture `state.viralBurst.active` before calling `tick()`, check null→non-null transition on the result, fire listeners synchronously before calling `applyState()` (see engineer review note in signal spec)\n- Add `viralBurst` section to `static-data/` with tunable starting values per spec §4\n- Save migration: bump `CURRENT_VERSION` 1→2, implement `migrateV1toV2` in save chain injecting `{ active_ticks_since_last: 0, active: null }` as default. Clear `active` in migration, not in `load()` directly",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/viral-burst-event-signal.md",
+          "purpose": "Full spec — trigger model, state shape, tick pipeline, driver contract, static data"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Add ViralBurstState, ActiveViralEvent, ViralBurstPayload; extend GameState and StaticData"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "Add steps 10–12 to tick(); export trigger helper"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Add onViralBurst to GameDriver interface and createDriver"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Bump version, add migrateV1toV2, clear active on load via migration"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Add viralBurst tuning section"
+        }
+      ],
+      "acceptance_criteria": [
+        "ViralBurstState, ActiveViralEvent, ViralBurstPayload types exist in types.ts; GameState.viralBurst field present",
+        "tick() correctly advances active_ticks_since_last each tick and evaluates all three trigger gates (cooldown, probability, algorithm affinity) when no viral is active",
+        "When a viral fires, ActiveViralEvent is constructed with correct source_generator_id, source_platform_id, duration_ms (random 5000–10000), and magnitude per the boost formula",
+        "During an active viral, bonus_rate_per_ms is added to engagement each tick on top of normal production",
+        "Viral clears correctly when now >= start_time + duration_ms",
+        "onViralBurst fires once per event, synchronously before notify(), with the correct ViralBurstPayload",
+        "Trigger helper is exported and unit-tested: each gate can be exercised deterministically via injectable PRNG",
+        "Save version bumped to 2; migrateV1toV2 injects viralBurst defaults; active is never persisted across saves",
+        "All existing tests pass"
+      ],
+      "open_questions": [
+        {
+          "question": "OQ2 from signal spec: the `now` argument contract update to core-systems.md is still pending. Does this implementation require resolving that first, or is the existing tick signature sufficient?",
+          "owner": "architect"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 51,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Viral burst visual choreography",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Implements the full 3-phase visual choreography for the viral burst event on the core game screen. Requires task #50 (viral burst engine) to be complete first — this task wires the UI to the `onViralBurst` driver callback and drives the visual sequence from `GameState.viralBurst.active`.\n\nThe choreography has three phases per UX spec §9.2:\n\nPhase 1 — Build (0–1500ms): counter accelerates and shifts to viral gold; source generator row gains pulsing halo; source platform card edges illuminate; background saturation bumps +20%; rising sweep sound begins.\n\nPhase 2 — Peak (1500–end): counter ticks at 3–5× normal rate (real — the engine is producing it); particle burst emits from source generator row drifting toward source platform card (sustained); screen-edge vignette pulses in platform-affinity color at 2s cycle; subtle ±1% zoom pulse on the screen.\n\nPhase 3 — Decay (last 1000–1500ms): tick rate decelerates to baseline; counter color returns to baseline (400ms fade); particles dissipate; edge glow fades; summary badge 'VIRAL +N' appears near counter for 1.5s then fades.\n\nThe counter tick-rate drama is the star. All other effects frame it. Per spec §9.3: easing the tick rate across the 3 phases (accelerate → sustain → decelerate) is essential — a flat burst feels cheap.\n\nNote: the edge vignette during viral override uses the source platform's affinity color, not the mood color. This is a state on the same vignette layer as the algorithm mood — they do not stack. See algorithm-mood-visibility.md proposal for the vignette layer architecture.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§9 full choreography spec — phases, timing, motion, sound direction"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/viral-burst-event-signal.md",
+          "purpose": "Engine contract — ViralBurstPayload shape, onViralBurst callback, GameState.viralBurst.active"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/algorithm-mood-visibility.md",
+          "purpose": "Vignette layer architecture — viral burst takes over the edge vignette color during the event"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Root component — viral state and onViralBurst subscription wire in here"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Source generator row halo during viral"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "Source platform card edge illumination + particle arrival target"
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "Counter color shift to viral gold + tick-rate drama"
+        }
+      ],
+      "acceptance_criteria": [
+        "Phase 1 (0–1500ms): engagement counter numerals crossfade to viral gold over 300ms; source generator row gains pulsing glow halo; source platform card border illuminates",
+        "Phase 2 (peak): particle burst emits continuously from source generator row and arrives at source platform card for the duration of the event; screen-edge vignette pulses in platform-affinity color at 2s cycle",
+        "Phase 3 (decay): counter color returns to baseline over 400ms; particles dissipate; summary badge 'VIRAL +N' (formatted) appears near the engagement counter, persists 1.5s, then fades",
+        "Counter tick-rate drama is eased: visibly accelerates in Phase 1, sustains in Phase 2, decelerates in Phase 3 — not a flat rate change",
+        "All effects respect the Reduce Motion toggle: particle burst replaced with static glow, zoom pulse disabled, counter color shift and summary badge preserved (they are informational, not decorative)",
+        "Viral state is derived from GameState.viralBurst.active — no duplicate state in the UI layer",
+        "All effects clean up correctly if the component unmounts mid-event"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 52,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Brand deal card UX spec",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "The brand-deal-boost proposal (proposals/draft/brand-deal-boost.md) has been reviewed and aligned by ux-designer. The review provides high-level UX direction for the deal card, but a full screen spec is needed before the engineer can build it. This task produces that spec.",
+      "related_items": [
+        {
+          "ref": "proposals/draft/brand-deal-boost.md",
+          "purpose": "The approved proposal — review section contains the UX direction that this spec must flesh out"
+        },
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "Screen layout and zone map — deal card lives at bottom of screen; §9 viral burst choreography — deal activation must feel distinct"
+        },
+        {
+          "ref": "ux/purchase-feedback-and-rate-visibility.md",
+          "purpose": "§5.1 rate flare spec — deal activation triggers this; §6.2 breathing pulse — interaction context"
+        },
+        {
+          "ref": "proposals/accepted/viral-burst-event-signal.md",
+          "purpose": "Viral burst model — compound moment (deal + viral) is a key design target"
+        }
+      ],
+      "acceptance_criteria": [
+        "Card anatomy defined: dimensions, position on screen, content hierarchy (deal name, multiplier, duration), appearance animation",
+        "Expiry feedback specified: slow opacity fade in final 33% of window, no countdown text, final fade-out timing",
+        "Activation choreography specified: snap animation, stamp sound direction, corporate green color lane, rate flare integration",
+        "Deal-active badge spec: position near engagement counter, anatomy, progress bar, 20s depletion",
+        "Compound moment signal specified: deal badge pulses viral gold during overlap",
+        "Reduce Motion variant specified",
+        "Spec written to ux/brand-deal-card.md and committed"
+      ],
+      "open_questions": [
+        {
+          "question": "OQ3 from the proposal (architect) — how does brandDeal.active state live in GameState, and how does the driver expose the offer and activation callback? Card spec needs this to define the data the card renders.",
+          "owner": "architect"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 53,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Visual identity spec — platforms, generators, scandal icons",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Several specs reference visual identity elements that don't yet exist: platform icons and accent colors (Chirper, InstaSham, Grindset), generator icons (up to 12 types with semantic color lanes), and scandal card icons (6 types). These are all player-facing visual assets that need to be specified before the engineer can implement them. This task produces a single visual identity spec covering all three.",
+      "related_items": [
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "OQ3 — platform visual identity pass owned by ux-designer; §6.1 — generator four-differentiator system (semantic colors, badge shapes)"
+        },
+        {
+          "ref": "ux/scandal-system.md",
+          "purpose": "OQ6 — scandal card icons, one per scandal type; satirical icon direction"
+        },
+        {
+          "ref": "proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Platform names and satire tone; generator categories and names"
+        },
+        {
+          "ref": "proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Full generator list with categories for icon assignment"
+        },
+        {
+          "ref": "proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "Six scandal types for icon assignment"
+        }
+      ],
+      "acceptance_criteria": [
+        "Each platform (Chirper, InstaSham, Grindset) has a defined icon direction, accent color, and satire-tone note",
+        "Each generator type has an icon direction and is assigned to a semantic color lane (images warm, text cool, video saturated, prestige metallic)",
+        "Each scandal type has an icon direction with satirical framing",
+        "All defined colors pass CVD simulation (protanopia, deuteranopia, tritanopia) and meet the 3:1 UI component contrast minimum",
+        "Spec written to ux/visual-identity.md and committed"
+      ],
+      "open_questions": [
+        {
+          "question": "What is the full generator list at launch? Need names and categories to assign icons.",
+          "owner": "game-designer",
+          "answer": "[RESOLVED] Seven generators at launch: selfies, memes, hot_takes, tutorials, livestreams, podcasts, viral_stunts. Source: proposals/accepted/generator-balance-and-algorithm-states.md. Post-prestige generators (AI Slop, Deepfakes, Algorithmic Prophecy) deferred."
+        },
+        {
+          "question": "Are platform accent colors expected to influence any game mechanic visuals (e.g., affinity chip colors on platform cards), or are they purely decorative identity?",
+          "owner": "architect",
+          "answer": "[RESOLVED] Yes — platform accent colors appear in the screen-edge vignette during viral bursts, per algorithm-mood-visibility §6. Architect should ensure platform color tokens are available to the vignette layer. No new design required; mechanism already specced."
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 54,
+      "role": "architect",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Sync core-systems.md with implementation reality",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "The architecture doc at .frames/sdlc/architecture/core-systems.md has drifted from the code in three documented ways. The engineer annotated each drift in the source. Update the doc to match reality — this is architect-owned hygiene and does not require proposal-stage deliberation.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "the doc to update"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "annotation at line 8 — 6 generators vs 7"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "annotation at line 295 — tick signature extended with `now`"
+        },
+        {
+          "ref": "client/src/offline/index.ts",
+          "purpose": "annotation at line 18 — calculateOffline takes full GameState, not just snapshot"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/core-systems-architecture-review.md",
+          "purpose": "proposal that surfaced this finding (item #4)"
+        }
+      ],
+      "acceptance_criteria": [
+        "core-systems.md generator list updated to 7 members matching the accepted design proposal (selfies, memes, hot_takes, tutorials, livestreams, podcasts, viral_stunts)",
+        "core-systems.md tick() contract updated to tick(state, now, deltaMs, staticData) with a one-line rationale: absolute `now` required for algorithm shift advancement",
+        "core-systems.md calculateOffline() contract updated to take full GameState rather than SnapshotState, with a rationale explaining per-segment rate recomputation needs per-generator trend_sensitivity",
+        "Three TODO/NOTE annotations in the source code removed after the doc is updated (types.ts:8, game-loop/index.ts:295, offline/index.ts:18) — architect verifies they are resolved before closing"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 55,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Harden save/load error reporting",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The driver currently swallows two error classes silently: corrupt save on load (driver:158) and quota-exceeded on save (driver:222). A transient JSON parse bug wipes the save with no trace. Add a typed error channel on the driver so the UI can surface these to the player, and distinguish 'no save exists' from 'save exists but failed to load'. Blocked on acceptance of the core-systems-architecture-review proposal (finding #3).",
+      "related_items": [
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "catch blocks at lines 158 and 222-226"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "load() currently returns null for both 'no save' and 'corrupt save'"
+        },
+        {
+          "ref": "client/src/ui/useGame.ts",
+          "purpose": "hook that needs to expose the error stream to React state"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/core-systems-architecture-review.md",
+          "purpose": "proposal finding #3 — resolution details the driver channel shape"
+        }
+      ],
+      "acceptance_criteria": [
+        "load() returns a discriminated result — { kind: 'none' } | { kind: 'loaded', state } | { kind: 'corrupt', error } — rather than null-overloading both cases",
+        "driver exposes onSaveError(listener) channel emitting { kind: 'load_corrupt' | 'save_quota' | 'save_unknown', details?: string }",
+        "driver no longer contains bare catch {} blocks — every caught error either emits an event or logs with context",
+        "useGame hook subscribes to the error channel and exposes a saveError state field that UI components can render",
+        "tests cover: corrupt JSON triggers load_corrupt event; mocked quota-exceeded triggers save_quota event; normal operation emits nothing"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 56,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Consolidate total_followers to a purely derived field",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Player.total_followers is labelled 'derived field' but is written via two paths inside the same tick: an incremental update at game-loop/index.ts:371 and an immediate syncTotalFollowers() call at line 377. The incremental write is redundant and creates drift risk for future follower-earning code paths. Make total_followers purely derived — single source of truth is syncTotalFollowers. Blocked on acceptance of the core-systems-architecture-review proposal (finding #5).",
+      "related_items": [
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "tick() lines 365-377 — both write paths"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "syncTotalFollowers() + earnFollowers() also does dual-write"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/core-systems-architecture-review.md",
+          "purpose": "proposal finding #5"
+        }
+      ],
+      "acceptance_criteria": [
+        "Remove the incremental total_followers update in tick() — rely on syncTotalFollowers as the single source of truth",
+        "Either remove earnFollowers() or change it to no longer write total_followers directly (since it's derived)",
+        "Add a JSDoc comment to the Player.total_followers field in types.ts: 'DERIVED — never write directly, use syncTotalFollowers'",
+        "lifetime_followers stays incremental (it has no derivation source since it survives rebrand) — do not change its write path",
+        "Existing tick tests still pass; add a unit test that asserts total_followers always equals the sum of platform followers after a tick"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 57,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Revise algorithm-mood-visibility for light-mode base",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The user has committed to light mode as the v1 visual identity (see proposals/draft/visual-identity-light-mode.md OQ3 resolution). This invalidates the currently-accepted algorithm-mood-visibility proposal, which was built against a dark base (#0b0d12 with rgba(18,21,28,0.82) panels). Every per-state edge-color value, the Corporate Takeover 'darkest' design logic, and the panel opacity calibration need to be re-derived against the warm near-white base (#FAF8F5) and white surface panels (#FFFFFF). This is your proposal originally — you own the revision.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "the proposal to revise — currently dark-mode, needs light-mode derivation"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/visual-identity-light-mode.md",
+          "purpose": "the light-mode commitment driving this revision; see §1 base palette and game-designer review"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§4.2-4.4 (mood library, instability motion, shift transitions) likely need revision in the same pass — scope during this task"
+        }
+      ],
+      "acceptance_criteria": [
+        "Reopen algorithm-mood-visibility proposal (move back to draft or write a superseding revision — your call)",
+        "Re-derive all five mood edge colors against the warm near-white base — saturations and opacities may need to invert since we're tinting a light surface, not a dark one",
+        "Rethink the Corporate Takeover signature — on a light base, it cannot be 'the darkest' state; decide what its cool/muted identity becomes (cool pale grey wash? low-saturation neutral?)",
+        "Recalibrate panel opacity for white surfaces (the 82% dark opacity token is no longer authoritative)",
+        "Confirm whether core-game-screen.md §4.2-4.4 also needs revision and flag to the team if so",
+        "Loop in engineer for implementation impact (they are mid-flight on dark-mode builds for the affected surfaces)"
+      ],
+      "open_questions": [
+        {
+          "question": "Does the base #FAF8F5 shift slightly per algorithm state, or stay fixed while only the accent layer shifts? (This is OQ2 on visual-identity-light-mode — resolve here as part of the revision.)",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "Should Corporate Takeover be reframed entirely on a light base (e.g., cool pale grey wash to read 'corporate sterility')?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": []
     }
   ]
 }

@@ -97,10 +97,11 @@ describe('createInitialGameState', () => {
     expect(state.platforms.grindset.unlocked).toBe(false);
   });
 
-  it('starts all generators unowned', () => {
+  it('starts threshold-0 generators owned, others unowned', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     for (const gen of Object.values(state.generators)) {
-      expect(gen.owned).toBe(false);
+      const threshold = STATIC_DATA.unlockThresholds.generators[gen.id];
+      expect(gen.owned).toBe(threshold === 0);
     }
   });
 

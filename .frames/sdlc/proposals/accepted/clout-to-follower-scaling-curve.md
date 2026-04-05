@@ -2,8 +2,8 @@
 name: Clout-to-Follower Scaling Curve
 description: Defines the formula mapping total_followers at rebrand → Clout awarded, determining prestige pacing.
 author: game-designer
-status: draft
-reviewers: [engineer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Clout-to-Follower Scaling Curve
@@ -83,7 +83,8 @@ The formula above assumes first-tier Clout upgrades cost approximately 10 Clout,
 
 ## Open Questions
 
-1. **Clout upgrade costs.** The formula is calibrated against an assumed first-tier cost of ~10 Clout. If upgrade costs are defined at a significantly different scale, the divisor needs to adjust. **Owner: game-designer** (cost calibration is a balance decision, requires knowing the upgrade menu)
+1. [RESOLVED] **Clout upgrade costs.** The formula is calibrated against an assumed first-tier cost of ~10 Clout. If upgrade costs are defined at a significantly different scale, the divisor needs to adjust. **Owner: game-designer** (cost calibration is a balance decision, requires knowing the upgrade menu)
+   - **Answer:** The ~10 Clout first-tier assumption is confirmed. First-tier Clout upgrades cost exactly 10 Clout. The divisor `10` in the rebrand formula stands. Full upgrade menu with all costs is defined in `.frames/sdlc/proposals/accepted/clout-upgrade-menu.md`.
 
 ---
 # Review: architect
@@ -98,3 +99,33 @@ Architecturally clean. `floor(sqrt(total_followers) / 10)` requires no new field
 The clarification on `total_followers` vs. `lifetime_followers` is correct and necessary. The `calculateRebrand` comment in `core-systems.md` was referencing `lifetime_followers` — I have updated that comment in the architecture spec to match this proposal. The corrected wording: "computes Clout earned from `total_followers` (sum of current platform follower counts, resets on rebrand — not `lifetime_followers`, which compounds across runs)."
 
 Open question on upgrade costs is a balance decision owned by game-designer. It does not affect the formula or architecture — the divisor is a single constant and can be adjusted when upgrade costs are defined. This does not block acceptance.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-04
+**Decision**: Aligned
+
+**Comments**
+
+The formula is implementable without ambiguity. `Math.floor(Math.sqrt(total_followers) / 10)` maps directly to standard JavaScript — no special-casing, no library dependencies.
+
+Edge cases are handled:
+- `total_followers = 0`: evaluates to `floor(0 / 10) = 0`. Defined behavior, no crash, no NaN. A zero-follower rebrand awards 0 Clout. That's correct.
+- `total_followers` is always a non-negative integer (sum of follower counts), so no negative or fractional inputs are possible under normal operation.
+
+The `total_followers` field name is consistent with the architecture spec as corrected by the architect. No naming ambiguity. The formula uses a single field with a clear definition — straightforward to wire into `calculateRebrand`.
+
+The single tuning knob (divisor `10`) is a plain numeric constant. Adjusting it during balance doesn't touch structure.
+
+One protocol note: the open question on upgrade costs (owned by game-designer) is unresolved. I agree with the architect that it doesn't affect the formula itself — the divisor is independent of cost definitions. However, per the proposals protocol, I've added game-designer to the reviewers list so this question is formally resolved before the proposal is accepted. This is a process requirement, not a technical one.
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-04
+**Decision**: Aligned
+
+**Comments**
+
+Open question resolved. The ~10 Clout first-tier assumption is confirmed — the divisor `10` stands. The full Clout upgrade menu is defined in a companion proposal. The calibration holds: 10,000 followers → 10 Clout → one tier-1 upgrade. That's the designed "good first rebrand" moment and the formula delivers it cleanly.

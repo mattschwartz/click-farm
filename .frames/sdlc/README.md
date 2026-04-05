@@ -41,18 +41,25 @@ Creates, completes, and queries tasks. All task data lives in `tasks/tasks.json`
 ### Reading tasks
 
 ```bash
-# List all open tasks
+# List all open tasks (JSON)
 bash .frames/sdlc/tools/task.sh list
 
-# List open tasks for a role
+# List open tasks for a role (JSON)
 bash .frames/sdlc/tools/task.sh list --role <role>
 
-# List all tasks including completed
+# List all tasks including completed (JSON)
 bash .frames/sdlc/tools/task.sh list --all
 
-# Get a single task by ID
+# Get a single task by ID (JSON)
 bash .frames/sdlc/tools/task.sh get <id>
+
+# Human-readable output — use --pretty-print when presenting tasks to the user
+bash .frames/sdlc/tools/task.sh get <id> --pretty-print
+bash .frames/sdlc/tools/task.sh list --pretty-print
+bash .frames/sdlc/tools/task.sh list --role <role> --pretty-print
 ```
+
+Default output is JSON — use it for machine processing and decision-making. Use `--pretty-print` when you want to present task details to the user. Do NOT pipe JSON through Python or shell tools to reformat it — `--pretty-print` is the sanctioned alternative.
 
 ### Creating a task
 
@@ -83,6 +90,25 @@ EOF
 **Optional fields:** `related_items`, `open_questions`, `blocked_on` (array of task IDs that must complete first)
 
 The script assigns an integer ID automatically and returns the full task object.
+
+### Editing a task
+
+Update one or more fields on an existing task. Pass only the fields you want to change — everything else stays as-is. Arrays are replaced, not merged.
+
+```bash
+bash .frames/sdlc/tools/task.sh edit <id> <<'EOF'
+{
+  "title": "Updated title",
+  "overview": "Updated description",
+  "acceptance_criteria": ["Updated criterion 1", "Updated criterion 2"]
+}
+EOF
+```
+
+**Editable fields:** `title`, `requester`, `complexity`, `state`, `role`, `overview`, `related_items`, `open_questions`, `blocked_on`
+**Protected fields:** `id`, `status`, `date_assigned`, `date_completed` — these cannot be edited
+
+Returns the full updated task object.
 
 ### Completing a task
 

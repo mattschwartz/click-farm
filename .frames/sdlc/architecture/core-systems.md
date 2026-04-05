@@ -34,7 +34,7 @@ Content types that produce Engagement. Unlocked progressively by follower thresh
 
 | Field | Type | Constraints | Where | Notes |
 |-------|------|-------------|-------|-------|
-| `id` | `string (enum)` | one of defined generator types | both | e.g. `selfies`, `memes`, `hot_takes`, etc. |
+| `id` | `string (enum)` | one of defined generator types | both | 7 at launch: `selfies`, `memes`, `hot_takes`, `tutorials`, `livestreams`, `podcasts`, `viral_stunts` |
 | `owned` | `bool` | | both | Whether the player has unlocked this generator |
 | `level` | `int` | ≥ 1 when owned | both | Upgrade level. Increases base rates |
 | `count` | `int` | ≥ 0 | both | Number of this generator purchased (quantity) |
@@ -76,6 +76,7 @@ The shifting modifier that changes which strategies perform best.
 | `current_state_index` | `int` | ≥ 0 | both | Position in the seeded shift schedule |
 | `shift_time` | `timestamp` | | both | When the next shift occurs |
 | `state_modifiers` | `map<generator_id, float>` | values typically in [0.5, 2.0], from static data | client | Per-generator multiplier for the current state |
+| `upcoming_states` | `AlgorithmStateId[]` | length = player's algorithm_insight lookahead value; empty if upgrade not owned | client | Upcoming Algorithm state IDs in order. Populated by the game loop after each shift using the player's `algorithm_insight` Clout upgrade level. Consumed by UI only — not persisted. |
 
 **The shift schedule is deterministic.** Given a seed, the full sequence of (state, duration) pairs is reproducible. See Technology Decisions for the PRNG spec.
 
@@ -102,10 +103,12 @@ Static definition of a permanent meta-upgrade purchased with Clout.
 | `effect` | `UpgradeEffect` | | client | What the upgrade does (typed union, see below) |
 
 **UpgradeEffect** is a tagged union:
-- `{ type: "engagement_multiplier", value: float }` — multiplies all engagement rates
-- `{ type: "generator_unlock", generator_id: string }` — unlocks a post-prestige generator
-- `{ type: "algorithm_insight", lookahead: int }` — reveals upcoming Algorithm shifts
-- `{ type: "platform_headstart", platform_id: string }` — platform starts unlocked on new runs
+- `{ type: "engagement_multiplier", values: float[] }` — multiplies all engagement rates; each entry is the cumulative multiplier at that level (indexed by `level - 1`)
+- `{ type: "generator_unlock", generator_id: string }` — unlocks a post-prestige generator (max_level: 1)
+- `{ type: "algorithm_insight", lookaheads: int[] }` — reveals upcoming Algorithm shifts; each entry is the lookahead count at that level (indexed by `level - 1`)
+- `{ type: "platform_headstart", platform_id: string }` — platform starts unlocked on new runs (max_level: 1)
+
+**Post-prestige generators and unlock wiring:** Generators unlocked via `generator_unlock` Clout effects must NOT have a follower-based `unlock_threshold`. Their entry in `StaticData.unlockThresholds.generators` must be absent or set to `Infinity` — a threshold of `0` would cause follower-based auto-unlock for all players. `applyRebrand` is responsible for re-owning these generators after the generator reset: it must iterate `player.clout_upgrades` and for each upgrade whose effect is `generator_unlock`, set `generators[generator_id].owned = true`. On first purchase of a `generator_unlock` upgrade mid-run, the same re-application runs immediately so the generator is available in the current run.
 
 ---
 
@@ -199,8 +202,15 @@ interface GameState {
 }
 
 // Pure function. No side effects.
-function tick(state: GameState, deltaMs: number, staticData: StaticData): GameState;
+function tick(
+  state: GameState,
+  now: number,        // epoch ms — absolute clock
+  deltaMs: number,
+  staticData: StaticData,
+): GameState;
 ```
+
+**Why `now` is separate from `deltaMs`.** Algorithm shift advancement is driven by `shift_time` (an epoch timestamp), so the tick needs the absolute clock to decide whether the next shift has fired. `deltaMs` alone is insufficient — the driver could have been paused, and reconstructing `now` inside the tick from `state + deltaMs` couples the tick to the driver's internal clock. Passing `now` explicitly keeps the tick pure and makes the clock injectable for tests.
 
 The tick function:
 1. Computes effective engagement rate per generator (base × level × count × algorithm modifier × clout bonus × platform affinity)
@@ -208,7 +218,7 @@ The tick function:
 3. Adds engagement to `player.engagement`
 4. Computes follower conversion (engagement × conversion rates, distributed across platforms by affinity weighting)
 5. Checks unlock conditions (generators, platforms)
-6. Advances Algorithm if `shift_time` has passed — computes next state from seed
+6. Advances Algorithm if `shift_time` has passed — computes next state from seed using `now`
 
 ### Save Module
 
@@ -236,20 +246,23 @@ interface OfflineResult {
 }
 
 function calculateOffline(
-  snapshot: SnapshotState,
+  state: GameState,
   closeTime: number,
   openTime: number,
-  seed: number,
-  staticData: StaticData
-): OfflineResult;
+  staticData: StaticData,
+): { result: OfflineResult; newState: GameState };
 ```
+
+**Why the signature takes full `GameState`, not just `SnapshotState`.** An earlier sketch of this contract passed only the snapshot (aggregate rates at close + algorithm index + seed). That is insufficient because production rates must be recomputed **per algorithm segment** while walking the schedule, and the per-segment rate depends on each generator's `trend_sensitivity` against the current segment's algorithm-state modifier. A pre-summed `total_engagement_rate` cannot be re-weighted once the algorithm shifts — the snapshot throws away the per-generator detail the calculator needs. Passing the full `GameState` gives the calculator the inputs it actually needs (per-generator `count`, `level`, `trend_sensitivity`, and the player's `algorithm_seed`) to honestly recompute rates per segment.
+
+**`SnapshotState` is retained as a save field for forward compatibility** (server-side validation, a cheaper approximation path, debug tooling) but is not read by the offline calculator.
 
 **Offline calculation is segmented by Algorithm shifts.** The production rates change when the Algorithm shifts, so the calculator must:
 1. Walk the shift schedule from `closeTime` to `openTime`
-2. For each segment between shifts, apply the production rates for that Algorithm state
+2. For each segment between shifts, recompute per-generator rates under that segment's algorithm state and apply them for the segment duration
 3. Sum the gains across all segments
 
-This is why the snapshot includes `algorithm_state_index` — it tells the calculator where to start walking the schedule.
+The algorithm starting point comes from `state.algorithm.current_state_index` — the calculator walks the seeded schedule forward from there.
 
 ### Prestige (Rebrand)
 
@@ -264,6 +277,14 @@ function applyRebrand(state: GameState, result: RebrandResult): GameState;
 ```
 
 `calculateRebrand` computes Clout earned from `total_followers` (sum of current platform follower counts, resets on rebrand — not `lifetime_followers`, which compounds across runs). `applyRebrand` resets engagement, generators (to unowned), platforms (to locked, minus headstarts), follower counts to zero, increments `rebrand_count`, applies new seed, preserves `clout` and `clout_upgrades`.
+
+**`applyRebrand` post-reset Clout re-application order:**
+1. Reset all generators to `owned: false`
+2. Iterate `player.clout_upgrades`; for each upgrade with effect `generator_unlock`, set `generators[generator_id].owned = true`
+3. Reset all platforms to `unlocked: false`
+4. Iterate `player.clout_upgrades`; for each upgrade with effect `platform_headstart`, set `platforms[platform_id].unlocked = true`
+
+This order ensures Clout-unlocked content is available from the first tick of the new run.
 
 ### Client → Server (future)
 

@@ -17,12 +17,21 @@ import type {
   AlgorithmStateId,
   CloutUpgradeDef,
   UpgradeId,
+  ViralBurstConfig,
 } from '../types.ts';
 
 // ---------------------------------------------------------------------------
 // Generators — 7 base content types (selfies through viral_stunts)
 // Unlock thresholds create a progressive arc. Balance values are provisional.
 // ---------------------------------------------------------------------------
+
+// Generator buy/upgrade costs follow two provisional formulas:
+//   buy:     base_buy_cost × buy_cost_multiplier^count_owned   (rounds up)
+//   upgrade: base_upgrade_cost × 4^(currentLevel - 1)          (rounds up)
+//
+// Base buy costs are set so early-game payback is ~10s at level 1, matching
+// the genre convention. Each generator tier costs ~10× the previous.
+// TODO(game-designer): all cost values are provisional — tune during balance pass.
 
 const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   selfies: {
@@ -31,6 +40,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.10,
     trend_sensitivity: 0.3,  // low — always somewhat relevant
     unlock_threshold: 0,
+    base_buy_cost: 10,
+    buy_cost_multiplier: 1.15,
+    base_upgrade_cost: 100,
   },
   memes: {
     id: 'memes',
@@ -38,6 +50,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.08,
     trend_sensitivity: 0.8,  // high — very trend-sensitive
     unlock_threshold: 50,
+    base_buy_cost: 100,
+    buy_cost_multiplier: 1.15,
+    base_upgrade_cost: 1_000,
   },
   hot_takes: {
     id: 'hot_takes',
@@ -45,6 +60,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.05,
     trend_sensitivity: 0.9,  // very high — peaks hard, tanks hard
     unlock_threshold: 200,
+    base_buy_cost: 1_100,
+    buy_cost_multiplier: 1.15,
+    base_upgrade_cost: 11_000,
   },
   tutorials: {
     id: 'tutorials',
@@ -52,6 +70,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.07,
     trend_sensitivity: 0.1,  // nearly immune — steady, reliable, boring
     unlock_threshold: 1_000,
+    base_buy_cost: 12_000,
+    buy_cost_multiplier: 1.15,
+    base_upgrade_cost: 120_000,
   },
   livestreams: {
     id: 'livestreams',
@@ -59,6 +80,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.09,
     trend_sensitivity: 0.6,  // moderate — benefits from trending but survives without
     unlock_threshold: 5_000,
+    base_buy_cost: 130_000,
+    buy_cost_multiplier: 1.15,
+    base_upgrade_cost: 1_300_000,
   },
   podcasts: {
     id: 'podcasts',
@@ -66,6 +90,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.11,
     trend_sensitivity: 0.2,  // low — slow build, compounding returns
     unlock_threshold: 20_000,
+    base_buy_cost: 1_400_000,
+    buy_cost_multiplier: 1.15,
+    base_upgrade_cost: 14_000_000,
   },
   viral_stunts: {
     id: 'viral_stunts',
@@ -73,6 +100,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.06,
     trend_sensitivity: 1.0,  // maximum — massive spikes, algorithm-dependent
     unlock_threshold: 100_000,
+    base_buy_cost: 20_000_000,
+    buy_cost_multiplier: 1.15,
+    base_upgrade_cost: 200_000_000,
   },
 };
 
@@ -231,6 +261,26 @@ const CLOUT_UPGRADE_DEFS: Record<UpgradeId, CloutUpgradeDef> = {
 };
 
 // ---------------------------------------------------------------------------
+// Viral burst tuning
+// Probabilities target: early 45-60 min, mid 20-30 min, late 15-20 min
+// between events at 10 ticks/sec (100ms tick interval).
+// All values are starting points — tune during balance pass without code changes.
+// ---------------------------------------------------------------------------
+
+const VIRAL_BURST_CONFIG: ViralBurstConfig = {
+  minCooldownTicks: 9_000,       // 15 min at 100ms/tick (active-play only)
+  baseProbabilityEarly: 0.000037, // ~1 viral / 45-60 min before tutorials
+  baseProbabilityMid:   0.000067, // ~1 viral / 20-30 min after tutorials
+  baseProbabilityLate:  0.000095, // ~1 viral / 15-20 min after viral_stunts
+  algorithmBoostThreshold: 1.5,  // effective modifier required to boost
+  algorithmBoostMultiplier: 2.0, // doubles frequency when algorithm is hot
+  durationMsMin: 5_000,
+  durationMsMax: 10_000,
+  magnitudeBoostMin: 3.0,        // 3–5× normal engagement rate during viral
+  magnitudeBoostMax: 5.0,
+};
+
+// ---------------------------------------------------------------------------
 // Exported static data
 // ---------------------------------------------------------------------------
 
@@ -259,4 +309,5 @@ export const STATIC_DATA: StaticData = {
       grindset: PLATFORM_DEFS.grindset.unlock_threshold,
     },
   },
+  viralBurst: VIRAL_BURST_CONFIG,
 };

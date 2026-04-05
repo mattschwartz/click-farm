@@ -143,6 +143,7 @@ Polly's other thoughts on using vague directives intentionally
   That matches what the engineer will expect to find.
 - [observation] agent flagged an implicitly defined rule (but didn't prevent itself from doing it, so..): "Task is assigned to architect with state: build, but build is engineer-only. Per protocol I must stop and flag this."
 - [observation] unit tests help the agent orient when it breaks things that previously worked, which is why they're still useful even if they're the ones writing them
+- [theory] agents learn to recognize frictions with tools and can come up with workarounds, sometimes unintentionally like piping output from a tool into a python script so it can pretty-print the results for the user or pull fewer fields out
 - 
 
 SKills from polly

@@ -4,6 +4,7 @@
 #
 # Usage:
 #   task.sh add --role <role>        Create a task (reads JSON from stdin)
+#   task.sh edit <id>                Update fields on a task (reads partial JSON from stdin)
 #   task.sh plan                     Batch create from a plan (reads JSON array from stdin)
 #   task.sh complete <id>            Mark a task as complete
 #   task.sh get <id>                 Get a single task by ID
@@ -142,6 +143,49 @@ cmd_add() {
   echo "$task"
 }
 
+cmd_edit() {
+  local id="$1"
+
+  if [[ -z "$id" ]]; then
+    echo "Error: task ID is required" >&2
+    exit 1
+  fi
+
+  # Check task exists
+  local exists
+  exists="$(jq --argjson id "$id" '[.tasks[] | select(.id == $id)] | length' "$TASKS_FILE")"
+  if [[ "$exists" == "0" ]]; then
+    echo "Error: task #$id not found" >&2
+    exit 1
+  fi
+
+  # Read patch from stdin
+  local patch
+  patch="$(cat)"
+
+  if [[ -z "$patch" ]]; then
+    echo "Error: expected JSON patch on stdin" >&2
+    exit 1
+  fi
+
+  # Reject attempts to modify system-managed fields
+  local protected=("id" "status" "date_assigned" "date_completed")
+  for field in "${protected[@]}"; do
+    if echo "$patch" | jq -e ".$field" > /dev/null 2>&1; then
+      echo "Error: '$field' is system-managed and cannot be edited" >&2
+      exit 1
+    fi
+  done
+
+  # Merge patch into existing task (patch fields replace; unmentioned fields stay)
+  jq --argjson id "$id" --argjson patch "$patch" '
+    .tasks |= [.[] | if .id == $id then . + $patch else . end]
+  ' "$TASKS_FILE" > "${TASKS_FILE}.tmp" && mv "${TASKS_FILE}.tmp" "$TASKS_FILE"
+
+  # Return updated task
+  jq --argjson id "$id" '.tasks[] | select(.id == $id)' "$TASKS_FILE"
+}
+
 cmd_complete() {
   local id="$1"
 
@@ -186,8 +230,49 @@ cmd_complete() {
     '{completed: $completed, unblocked: $unblocked}'
 }
 
+pretty_print_task() {
+  local task="$1"
+  local id title status role state complexity blocked_on overview criteria
+
+  id="$(echo "$task" | jq -r '.id')"
+  title="$(echo "$task" | jq -r '.title')"
+  status="$(echo "$task" | jq -r '.status')"
+  role="$(echo "$task" | jq -r '.role')"
+  state="$(echo "$task" | jq -r '.state')"
+  complexity="$(echo "$task" | jq -r '.complexity')"
+  blocked_on="$(echo "$task" | jq -r '.blocked_on | if length > 0 then map("#\(.)") | join(", ") else "none" end')"
+  overview="$(echo "$task" | jq -r '.overview // ""')"
+  criteria="$(echo "$task" | jq -r '.acceptance_criteria | to_entries[] | "  \(.key + 1). \(.value)"')"
+
+  echo "#${id} [${status}] ${title}"
+  echo "Role: ${role} | State: ${state} | Complexity: ${complexity}"
+  echo "Blocked on: ${blocked_on}"
+  echo ""
+  if [[ -n "$overview" ]]; then
+    echo "Overview:"
+    echo "$overview"
+    echo ""
+  fi
+  echo "Acceptance Criteria:"
+  echo "$criteria"
+}
+
 cmd_get() {
-  local id="$1"
+  local id=""
+  local pretty=false
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --pretty-print|-p)
+        pretty=true
+        shift
+        ;;
+      *)
+        id="$1"
+        shift
+        ;;
+    esac
+  done
 
   if [[ -z "$id" ]]; then
     echo "Error: task ID is required" >&2
@@ -202,12 +287,17 @@ cmd_get() {
     exit 1
   fi
 
-  echo "$task"
+  if $pretty; then
+    pretty_print_task "$task"
+  else
+    echo "$task"
+  fi
 }
 
 cmd_list() {
   local role=""
   local show_all=false
+  local pretty=false
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -217,6 +307,10 @@ cmd_list() {
         ;;
       --all|-a)
         show_all=true
+        shift
+        ;;
+      --pretty-print|-p)
+        pretty=true
         shift
         ;;
       *)
@@ -242,10 +336,22 @@ cmd_list() {
     fi
   fi
 
+  local tasks
   if [[ -n "$role" ]]; then
-    jq --arg role "$role" "[.tasks[] | $filter]" "$TASKS_FILE"
+    tasks="$(jq --arg role "$role" "[.tasks[] | $filter]" "$TASKS_FILE")"
   else
-    jq "[.tasks[] | $filter]" "$TASKS_FILE"
+    tasks="$(jq "[.tasks[] | $filter]" "$TASKS_FILE")"
+  fi
+
+  if $pretty; then
+    local count
+    count="$(echo "$tasks" | jq 'length')"
+    for i in $(seq 0 $((count - 1))); do
+      pretty_print_task "$(echo "$tasks" | jq ".[$i]")"
+      echo "---"
+    done
+  else
+    echo "$tasks"
   fi
 }
 
@@ -451,6 +557,9 @@ case "$COMMAND" in
   add)
     cmd_add "$@"
     ;;
+  edit)
+    cmd_edit "$@"
+    ;;
   complete)
     cmd_complete "$@"
     ;;
@@ -471,6 +580,7 @@ case "$COMMAND" in
     echo ""
     echo "Commands:"
     echo "  add --role <role>        Create a task (reads JSON from stdin)"
+    echo "  edit <id>                Update task fields (reads partial JSON from stdin)"
     echo "  complete <id>            Mark a task as complete"
     echo "  get <id>                 Get a single task by ID"
     echo "  list [--role r] [--all]  List tasks (default: open only)"
