@@ -1,5 +1,5 @@
 {
-  "next_id": 115,
+  "next_id": 122,
   "tasks": [
     {
       "id": 1,
@@ -4192,7 +4192,7 @@
       "id": 114,
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Plan manual-action-ladder implementation",
       "requester": "game-designer",
@@ -4251,7 +4251,428 @@
         "When done, file the tasks via task.sh add per the SDLC frame's tooling discipline — do not edit tasks.json directly"
       ],
       "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 115,
+      "alias": "D1",
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Resolve manual-action-ladder Unlock-phase balance gaps",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Two balance/data questions surfaced during architectural planning of the manual-action-ladder that the accepted proposal does not answer. Both block the engineer's implementation of the ladder's Unlock phase.\n\n**Q1 — Threshold unit: followers or engagement?** OQ5's resolution text says 'engagement thresholds' and rationalizes '100 engagement ≈ 40s of tapping' for chirps→selfies pacing. But the existing code (`client/src/generator/index.ts` checkGeneratorUnlocks, `client/src/types.ts` GeneratorDef.unlock_threshold comment 'Total followers required to unlock') reads `unlock_threshold` against `total_followers`, and the numbers in proposal §14d (50/100/200/1k/5k/20k/100k) are IDENTICAL to the existing follower thresholds. Either (a) the rationale text was a slip and thresholds stay follower-based (simplest — no code change); or (b) the ladder semantics genuinely require flipping to engagement-gated unlocks (which needs a new code path and probably a new `lifetime_engagement` or similar field, since `player.engagement` fluctuates with spends and can't be the gate). Please confirm which one you want, and if (b), name what the gate reads — current balance, lifetime earned, or something else.\n\n**Q2 — Unlock cost per ladder verb.** §2 names Unlock as a 'one-time cost' purchase distinct from Automate (count) and Upgrade (level). §14c gives chirps' `base_buy_cost: 2`, but no Unlock cost is authored for selfies / livestreams / podcasts / viral_stunts. Two options: (a) reuse the existing `base_buy_cost` field as the Unlock cost (first Automate purchase would then also cost `base_buy_cost × 1.15^0` = same number, which is fine since count=0→1 is the first Automate level); (b) add a new `unlock_cost` field to GeneratorDef. Architect leans (a) for zero data-model cost — please confirm, and if (a), confirm the existing base_buy_cost values (selfies 10, livestreams 130_000, podcasts 1_400_000, viral_stunts 20_000_000) are the intended Unlock costs; if (b), author the per-verb unlock_cost numbers.\n\nThese are small balance/data-model decisions — expect ≤30 min of design thought, then integrate back into manual-action-ladder.md §14 or a short addendum. The engine-refactor engineer task (E2) is NOT blocked on this; the lifecycle-expansion engineer task (E3) IS.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "Accepted proposal — §14 balance cells, OQ5 resolution, §2 lifecycle, §14d threshold table"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Existing threshold spec — reference for what 'consistent with existing generator-balance spec' means"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "checkGeneratorUnlocks — current implementation reads unlock_threshold against total_followers"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "GeneratorDef.unlock_threshold field (currently commented as 'Total followers required to unlock')"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Current numeric threshold values per generator — verify they match your intent"
+        }
+      ],
+      "acceptance_criteria": [
+        "Q1 resolved: unlock_threshold unit is named (followers OR engagement OR other) with a one-sentence rationale",
+        "If Q1 resolves as 'engagement', the gate source is named (current balance, lifetime earned, etc.)",
+        "Q2 resolved: unlock-cost field approach is named (reuse base_buy_cost OR new unlock_cost field)",
+        "If a new field is added, per-verb unlock_cost numbers are authored for all 5 ladder verbs (chirps, selfies, livestreams, podcasts, viral_stunts)",
+        "Resolutions are written back into manual-action-ladder.md (appended revision note OR inline in §14) so the engineer can read a single source of truth"
+      ],
+      "open_questions": [],
       "blocked_on": []
+    },
+    {
+      "id": 116,
+      "alias": "A1",
+      "role": "architect",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Author manual-action-ladder architecture spec",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The accepted manual-action-ladder proposal locks the user-facing mechanics and the engine-level contracts (yield/rate split, postClick(verbId), last_manual_click_at field), but several data-model and component-boundary decisions the engineer needs are not in the proposal and must be formalized in an architecture doc at `.frames/sdlc/architecture/manual-action-ladder.md` before engineer tasks E2/E3 start. This is the architect (self) authoring that doc.\n\n**Decisions to formalize (architect's call):**\n\n1. **Post-prestige generator resolution.** Proposal names an 8-generator roster (5 ladder + 3 passive) but the codebase has 3 additional post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) unlocked via Clout upgrades. Resolution: `manual_clickable: false` for all three; their base_engagement_rate splits backward-compatibly (yield=1.0, rate=existing). Document this so the engineer seeds static-data correctly.\n\n2. **Three-state lifecycle → existing data model mapping.** Proposal §2 defines Unlock → Upgrade → Automate as three distinct purchases. Existing GeneratorState has {owned, level, count} with two purchase actions. Resolution: repurpose `owned` as the 'unlocked by purchase' gate for manual-clickable generators (NOT an automatic flip on threshold-met). For passive-only generators, owned-flip-on-threshold-met stays as today. Document the checkGeneratorUnlocks behavioral split: for manual-clickable, threshold-met → ghost-slot-eligible (UI surface) but NOT auto-owned; for passive-only, threshold-met → owned (unchanged). Document the new driver action `unlockGenerator(verbId)` that pays the Unlock cost and flips owned=true.\n\n3. **Engine-refactor landing strategy.** driver.click() → click(verbId) is a signature break affecting 20+ call sites across UI + tests. Resolution: E2 keeps a temporary `driver.click()` shim that routes to `click('chirps')`, preserving main on green. E4 (UI wiring) removes the shim when it rips out PostZone.tsx for the per-verb ladder. Document this contract and name the removal point explicitly.\n\n4. **Migration must seed generators.chirps.** Adding 'chirps' to the GeneratorId union means existing saves' `Record<GeneratorId, GeneratorState>` is missing a key. migrateV8toV9 must seed BOTH `player.last_manual_click_at = {}` AND `state.generators.chirps = createGeneratorState('chirps', true)` (owned=true since threshold=0). Document.\n\n5. **CLICK_BASE_ENGAGEMENT consumer in GameScreen.tsx.** GameScreen.tsx L24/L138 imports CLICK_BASE_ENGAGEMENT to compute the per-click preview. Document the replacement path: E2 removes the import and passes a per-verb yield to PostZone (stub with chirps yield during the shim window).\n\n6. **Scope of formula change to computeGeneratorEffectiveRate.** Formula becomes `count × base_event_rate × base_event_yield × level_multiplier × algoMod × clout × kit`. Mathematically identical for seeded existing generators. Document the required equivalence test.\n\n**What the spec should include (per architect role required doc structure):**\n- **Scope** — one-sentence what this architecture owns, what it does NOT own\n- **Data model delta** — every field change (base_engagement_rate split, manual_clickable flag, last_manual_click_at, semantic change to owned for manual-clickable gens, chirps entry in all Record<GeneratorId,...> static-data)\n- **Interface contracts** — postClick signature, unlockGenerator signature (new), checkGeneratorUnlocks split behavior\n- **Coupling analysis** — where UI, driver, save, static-data, and game-loop couple against these contracts; what breaks if each changes\n- **Migration contract** — v8→v9 seed list + invariants\n- **Open questions** — any remaining ambiguities (should be ~zero after this spec if D1 resolves cleanly)\n- **Assumptions** — load-bearing assumptions flagged (e.g., 'D1 resolves threshold unit to followers — if engagement, checkGeneratorUnlocks needs rework')\n\nThe architect SHOULD reference D1's resolution if it's landed by the time this is written; otherwise the spec can note D1 as the load-bearing assumption and be revised once D1 lands.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "The accepted proposal being decomposed — §12 locks, §14 balance, architect's OQ11/12/13 review + re-review"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Existing Generator entity spec — reference point for the data-model delta"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Current GeneratorDef, GeneratorState, Player shapes — the before-state of the data-model delta"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "computeGeneratorEffectiveRate (L156-177), postClick (L575-597) — the refactor sites"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "checkGeneratorUnlocks (L90-111), buyGenerator, upgradeGenerator — the actions whose contracts are expanding"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Migration chain pattern (L422-448 migrateV7toV8) — reference for v8→v9 structure"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "GENERATOR_DEFS, PLATFORM_DEFS content_affinity, ALGORITHM_STATE_DEFS state_modifiers — every Record<GeneratorId,...> that needs a chirps entry"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "L24/L138 CLICK_BASE_ENGAGEMENT consumer + L134-154 selfies hardcode — UI coupling sites"
+        },
+        {
+          "ref": "client/src/ui/useGame.ts",
+          "purpose": "L128 click-action exposure — shim surface for the driver"
+        }
+      ],
+      "acceptance_criteria": [
+        "A new architecture doc exists at .frames/sdlc/architecture/manual-action-ladder.md",
+        "The doc has Scope, Data Model, Interface Contracts, Coupling Analysis, Migration Contract, Open Questions, Assumptions sections",
+        "Post-prestige generators' manual_clickable status is explicitly documented",
+        "The three-state lifecycle → existing-data-model mapping is named (owned-as-unlocked or new field) with rationale",
+        "The driver.click() shim strategy and its removal point are documented",
+        "The v8→v9 migration contract lists ALL seeded fields (last_manual_click_at AND generators.chirps)",
+        "GameScreen.tsx CLICK_BASE_ENGAGEMENT replacement path is documented",
+        "The doc's Open Questions section either has zero entries or names load-bearing assumptions tied to D1's outcome",
+        "The doc is stageable in the same commit as the plan (this task's output is the arch spec file, not new tasks)"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 117,
+      "alias": "A2",
+      "role": "architect",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Supersession edits to 4 accepted proposals per manual-action-ladder",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "The accepted manual-action-ladder proposal's 'Supersession Notes' section names edits that need to be applied to previously-accepted (and one draft) proposal documents in place. This is bookkeeping — edit each target doc, add a one-line back-reference to manual-action-ladder.md, and preserve historical context.\n\n**Four edits required:**\n\n1. **`.frames/sdlc/proposals/accepted/actions-column.md` §2 'Post Is the Baseline Member'** — the baseline Actions member changes from Post to Chirp (first rung of the ladder). The 'always available' and 'diegetic anchor' properties transfer to Chirp. Edit §2 in place with a reference back to manual-action-ladder.md.\n\n2. **`.frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md` §Manual Click Value** — the flat `CLICK_BASE_ENGAGEMENT = 1.0` assumption does not survive. Manual click value becomes per-verb, each calibrated to the verb's yield (base_event_yield). Supersede the flat-value directive; preserve the 'generators take over' spirit as 'automators take over *per verb*, while manual hands retain meaningful contribution via any verb tapped.' Add back-reference.\n\n3. **`.frames/sdlc/proposals/accepted/core-game-identity-and-loop.md` §2 Core Loop** — the 'Click to post. Watch likes come in. Buy your first auto-poster.' early-game beat is extended: the 'auto-poster' becomes a per-verb automator, and the 'click to post' becomes a rotating ladder of click verbs. Edit §2 Core Loop with the updated framing and back-reference.\n\n4. **`.frames/sdlc/proposals/draft/post-button-rate-scaled-clicks.md`** — mark as SUPERSEDED per OQ7 resolution (the manual-action-ladder's fresh-calibration-per-verb story substantively solves what rate-scaled-clicks was reaching for). Add a 'Superseded by' header near the top referencing manual-action-ladder.md. This is a draft, not accepted — do not move it to accepted/ or rejected/; just mark the status in-frontmatter and add a notice.\n\nEach edit MUST include a back-reference to `manual-action-ladder.md` at the point of edit so future readers can trace the decision.\n\nThis task is pure bookkeeping — no new design decisions. It runs independent of D1, A1, or any build task and can be completed in a short session.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "Source proposal with Supersession Notes section defining each edit"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/actions-column.md",
+          "purpose": "Target 1 — edit §2 baseline member"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Target 2 — edit §Manual Click Value"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Target 3 — edit §2 Core Loop"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/post-button-rate-scaled-clicks.md",
+          "purpose": "Target 4 — mark as superseded"
+        }
+      ],
+      "acceptance_criteria": [
+        "actions-column.md §2 updated with Chirp as baseline member and back-reference to manual-action-ladder.md",
+        "generator-balance-and-algorithm-states.md §Manual Click Value superseded with the per-verb framing and back-reference",
+        "core-game-identity-and-loop.md §2 Core Loop updated with per-verb automator + rotating ladder framing and back-reference",
+        "post-button-rate-scaled-clicks.md marked as superseded (status change + notice + back-reference), remaining in draft/ directory",
+        "Each edit preserves historical context (do not delete superseded text; mark it superseded inline or alongside)"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 118,
+      "alias": "U1",
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Author Actions-column manual-action-ladder UX spec",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The accepted manual-action-ladder proposal replaces the single Post button with a per-verb ladder in the Actions column. The ux-designer's review (proposal lines 546-551) committed to authoring a full Actions-column ladder UX spec as a follow-up task. This is that task.\n\n**What the spec must cover:**\n\n1. **Ghost-slot anatomy** — per OQ6 resolution: one ghost slot at a time (next verb in sequence), silhouette icon + unlock-condition text, 0.35 opacity, ~60px height, not tappable until condition met; on condition-met it opacifies, shows unlock cost, becomes tappable. Spec full visual treatment: typography, spacing, silhouette style, condition-text format ('100 followers' vs '500 engagement' — resolve in concert with D1's threshold-unit resolution), opacity-transition animation on condition-met.\n\n2. **Live-verb-button anatomy** — the permanent, tappable button that replaces the current PostZone for each unlocked verb. Spec: pulse indicator (tied to cooldown), cooldown ring visualization (circular progress indicating time since last tap vs verb's current cooldownMs), automate-level badge (shows count), per-verb iconography (chirps/selfies/livestreams/podcasts/viral_stunts visual identity — may need icon proposals), 80px height (per existing Actions-column standard), yield-per-tap number display. Spec the interaction states (idle, pulse-ready, mid-cooldown, just-tapped).\n\n3. **Spotlight-slot transition animation** — per OQ3 resolution, the most-recently-unlocked verb pins to the top of the scroll region on desktop, to the bottom-anchor position on mobile. Spec the transition when a new verb unlocks: how the previous spotlight demotes, how the new verb animates in, timing + easing.\n\n4. **Mobile anchor dynamics** — the Actions column lives in a bottom-anchor position on mobile. With 5 live verbs + ghost + brand-deal strip, the density exceeds the 4-cap soft limit and triggers internal scroll. Spec how the bottom-anchor slot interacts with scroll (does it stay fixed? does the ghost slot sit above it per OQ6?), and define the scroll affordance (rubber-banding, scroll-gradient, etc).\n\n5. **Empty/edge states** — what does the Actions column look like at session start (only chirps unlocked)? What does it look like at full ladder unlocked (5 live + ghost-disappears-or-gets-replaced-by-end-state)? What's the transition UI when a verb's Automate purchase crosses the cooldown floor (0.01s)?\n\n6. **Accessibility** — 44px iOS tap minimum (proposal references 80px floor); per-verb iconography must meet color-independence contrast targets; cooldown ring must be legible for color-blind users.\n\nThis spec feeds directly into engineer task E4 (Actions-column ladder UI wiring). E4 is blocked on this spec — engineer needs visual + interaction detail, not just data contracts, to implement the ladder.\n\nThe UX designer can consult game-designer or architect via subagent for any questions about mechanics binding, but the visual/interaction decisions are ux-designer's call.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "Source proposal — §3 verb cooldown/yield differentiation, §4 parallel actor model, §10 aesthetic target, ux-designer's review at lines 502-553 (OQ3 + OQ6 resolutions, spotlight-slot refinement)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/actions-column.md",
+          "purpose": "Existing Actions column taxonomy (soft cap 4, diegetic anchor, touch targets)"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "Existing core-game-screen UX spec — the Actions zone description must be updated here post-acceptance (noted by ux-designer as a follow-up edit, lines 548-549 of proposal)"
+        },
+        {
+          "ref": ".frames/sdlc/ux/mobile-layout.md",
+          "purpose": "Existing mobile layout spec — Actions-zone description must be updated post-acceptance"
+        },
+        {
+          "ref": "client/src/ui/PostZone.tsx",
+          "purpose": "Existing single-button component being replaced — reference for what the current anatomy looks like"
+        }
+      ],
+      "acceptance_criteria": [
+        "A UX spec document exists at .frames/sdlc/ux/ (name: manual-action-ladder.md or actions-column-ladder.md)",
+        "Ghost-slot anatomy fully specified: dimensions, typography, silhouette style, condition-text format, opacity states, tap-affordance transition",
+        "Live-verb-button anatomy fully specified: pulse indicator, cooldown ring, automate-level badge, per-verb iconography, yield display, interaction states",
+        "Spotlight-slot transition animation specified (demote + promote timing/easing)",
+        "Mobile anchor dynamics specified (bottom-anchor behavior under scroll, ghost-slot placement)",
+        "Empty state (chirps-only) and full state (ladder complete) UI named",
+        "Accessibility spec satisfies 44px minimum + 80px Actions-column floor + color-independence",
+        "Spec is implementation-ready — engineer (E4) should not need to make visual/interaction judgment calls"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 119,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Engine refactor: yield/rate split, postClick(verbId), chirps seed, v8→v9 migration, click() shim",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the engine skeleton for the manual-action-ladder per architect's 5-step refactor spec (proposal §12, architect's OQ13 review lines 471-481, architect's re-review cooldown-gate snippet lines 375-383) and the architecture spec authored in A1. This is the pure engine refactor — it does NOT implement the Unlock/Automate lifecycle expansion (E3 does that) or the per-verb UI ladder (E4 does that). After this task lands, main is green with a click-on-chirps shim preserving existing behavior while the lifecycle + UI land incrementally.\n\n**Scope (per architect + engineer's re-review agreement):**\n\n1. **types.ts changes:**\n   - Add `'chirps'` as first entry in GeneratorId union (before 'selfies')\n   - Add `manual_clickable: boolean` field to GeneratorDef\n   - Split GeneratorDef.base_engagement_rate into `base_event_yield: number` + `base_event_rate: number`. May optionally keep base_engagement_rate as a computed getter for grep-insurance during deprecation (engineer's call per proposal line 645).\n   - Add `last_manual_click_at: Record<GeneratorId, number>` to Player\n\n2. **static-data/index.ts changes:**\n   - Split all 10 existing generator defs' base_engagement_rate into base_event_yield + base_event_rate per proposal §14a (5 ladder verbs — specific yield/rate pairs to hit cooldown targets) and §14b (3 passive-only — yield=1.0, rate=existing). For the 3 post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy), use the backward-compatible seed yield=1.0, rate=existing base_engagement_rate (per A1 architecture spec).\n   - Add `manual_clickable` to every generator: true for the 5 ladder verbs (chirps, selfies, livestreams, podcasts, viral_stunts); false for memes, hot_takes, tutorials, ai_slop, deepfakes, algorithmic_prophecy.\n   - Add chirps entry to GENERATOR_DEFS with all cells per proposal §14c.\n   - Add chirps entries to every PLATFORM_DEFS[platformId].content_affinity (chirper=1.5, instasham=1.0, grindset=0.6 per §14c).\n   - Add chirps entries to every ALGORITHM_STATE_DEFS[stateId].state_modifiers per §14c table (short_form_surge=1.7, authenticity_era=0.8, engagement_bait=1.5, nostalgia_wave=1.0, corporate_takeover=0.7).\n   - Add chirps to unlockThresholds.generators with value 0.\n   - DO NOT change selfies' unlock_threshold numeric value in this task — the threshold semantics decision comes from D1, lifecycle change comes from E3.\n\n3. **game-loop/index.ts changes:**\n   - Delete CLICK_BASE_ENGAGEMENT (L55) and CLICK_GENERATOR_ID (L62)\n   - Update computeGeneratorEffectiveRate (L156-177) multiplication to: `count × base_event_rate × base_event_yield × level_multiplier × algoMod × clout × kit` — mathematically identical output for seeded existing generators (add a regression test asserting equivalence)\n   - Refactor postClick signature: `postClick(state, staticData, verbId: GeneratorId) → GameState`\n   - Inside postClick per architect's formula of record (proposal line 635): `earned = def.base_event_yield × level_multiplier(genState.level) × algoMod × clout_bonus × kit_bonus`. No platform affinity term.\n   - Add cooldown gate per architect's snippet: `const cooldownMs = 1000 / (Math.max(1, genState.count) * def.base_event_rate); if (now - (state.player.last_manual_click_at[verbId] ?? 0) < cooldownMs) return state;`\n   - On success, write `last_manual_click_at[verbId] = now` in the returned state.\n   - Reject if generator is not manual_clickable: return state unchanged (don't throw — silent no-op matches click() error model).\n\n4. **driver/index.ts changes:**\n   - Expand interface: add `click(verbId: GeneratorId): void` method.\n   - Preserve existing `click(): void` as a shim that routes to `click('chirps')` — temporary, removed by E4. Document with a TODO comment referencing E4.\n   - `runAction` wrapper unchanged.\n\n5. **save/index.ts changes:**\n   - Add migrateV8toV9 that seeds BOTH:\n     - `player.last_manual_click_at = {}`\n     - `state.generators.chirps = { id: 'chirps', owned: true, level: 1, count: 0 }` (owned=true since chirps threshold=0)\n   - Bump CURRENT_VERSION to 9 and add migrateV8toV9 to the chain at L477-479.\n\n6. **model/index.ts changes:**\n   - createInitialGameState's existing logic already seeds `owned=threshold===0`. With chirps at threshold=0, it gets owned=true automatically. Verify no code change needed here beyond type update.\n\n7. **ui/display.ts changes:**\n   - Add chirps to GENERATOR_ORDER (position 0, before 'selfies')\n   - Add chirps entry to GENERATOR_DISPLAY with name/icon/category/color/tagline (placeholder values are fine; UX may update in E4)\n\n8. **ui/GameScreen.tsx changes:**\n   - Remove CLICK_BASE_ENGAGEMENT import (L24)\n   - Replace the perClick computation (L138) with a per-verb yield lookup stubbed to chirps' yield during the shim window (to be refactored in E4 for the full ladder). Implementation note: compute `def.base_event_yield * levelMultiplier(genState.level) * algoMod * clout` for verbId='chirps'.\n   - Update L134-154 context-label code so it uses 'chirps' (or keeps the 'selfies' hardcode during the shim — E4 will rewrite this code path).\n\n9. **Tests:**\n   - Update all existing `postClick(state, STATIC_DATA)` call sites in game-loop/index.test.ts to pass a verbId (most will use 'chirps' or 'selfies').\n   - Add new tests: cooldown-gate accept/reject paths, verb dispatch by id, yield/rate formula equivalence across existing generators (regression — identical output to pre-split), last_manual_click_at write-back, manual_clickable=false rejection.\n   - Update CLICK_BASE_ENGAGEMENT assertion at L524/L532 to express the new per-verb formula.\n   - driver.click() shim tests: verify the zero-arg call routes through to click('chirps').\n   - All integration.test.ts and driver.test.ts call sites of driver.click() continue working via the shim — no test rewrites required for those.\n\n**Acceptance:** existing generators produce mathematically identical passive output; existing `click()` call sites continue to work via shim; new `click(verbId)` dispatches correctly per verb; save v8 → v9 migration preserves existing state + seeds new fields; all tests pass.\n\n**Not in scope (deferred to E3/E4):**\n- Unlock-as-purchase action (E3)\n- checkGeneratorUnlocks split behavior for manual-clickable generators (E3)\n- selfies threshold change 0 → 100 (E3, because it's tied to the lifecycle change and D1's balance resolution)\n- Per-verb UI ladder rendering (E4)\n- Removing the click() shim (E4)",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "Source proposal — §12 locked-in list, §14 balance cells, architect's OQ13 5-step spec (lines 471-481), architect's re-review cooldown-gate snippet (lines 375-383), engineer's re-review scope confirmation (lines 611-659)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/manual-action-ladder.md",
+          "purpose": "Architecture spec (from A1) — the canonical data-model + contracts reference. READ THIS FIRST."
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Types to update: GeneratorDef split + manual_clickable; GeneratorId add chirps; Player add last_manual_click_at"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "Primary refactor site: L55 CLICK_BASE_ENGAGEMENT, L62 CLICK_GENERATOR_ID, L156-177 computeGeneratorEffectiveRate, L575-597 postClick"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "click() signature expansion + shim; L108 interface, L356-360 implementation"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Migration site — L20 CURRENT_VERSION, L422-448 migrateV7toV8 (pattern reference), L477-479 migration chain"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "All generator/platform/algorithm records to update with chirps + yield/rate split"
+        },
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "GENERATOR_ORDER L115, GENERATOR_DISPLAY L37 — add chirps entry"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "L24 CLICK_BASE_ENGAGEMENT import, L134-154 selfies hardcode, L138 perClick computation — temporary chirps stub"
+        },
+        {
+          "ref": "client/src/game-loop/index.test.ts",
+          "purpose": "L514-598 postClick tests, L517/L524/L532 specific assertions to update, L977-984 Kit tests"
+        }
+      ],
+      "acceptance_criteria": [
+        "TypeScript compiles cleanly with 'chirps' added to GeneratorId union",
+        "GeneratorDef has base_event_yield + base_event_rate fields (plus optional base_engagement_rate getter)",
+        "GeneratorDef has manual_clickable: boolean field, set correctly per A1 spec (true for 5 ladder verbs, false for 3 passive + 3 post-prestige)",
+        "Player has last_manual_click_at: Record<GeneratorId, number> field",
+        "static-data/index.ts contains complete chirps GeneratorDef, content_affinity cells on all 3 platforms, state_modifiers across all 5 algorithm states, unlock_threshold entry",
+        "computeGeneratorEffectiveRate uses the new 6-term formula with mathematically identical output for existing generators (new regression test asserts this)",
+        "postClick signature is postClick(state, staticData, verbId: GeneratorId) and returns unchanged state if verb is not manual_clickable or cooldown gate rejects",
+        "postClick applies the cooldown gate per architect's snippet with Math.max(1, count) floor and ?? 0 missing-key guard",
+        "postClick writes last_manual_click_at[verbId] = now on successful dispatch",
+        "driver.click() shim routes to driver.click('chirps') and is documented as temporary",
+        "driver.click(verbId) interface method is added and dispatches through postClick",
+        "migrateV8toV9 seeds last_manual_click_at AND generators.chirps; CURRENT_VERSION is bumped to 9",
+        "GameScreen.tsx no longer imports CLICK_BASE_ENGAGEMENT; perClick preview uses a chirps-verb yield stub",
+        "GENERATOR_ORDER and GENERATOR_DISPLAY include chirps",
+        "All existing tests pass (via shim for click() zero-arg call sites)",
+        "New tests cover: cooldown-gate accept/reject, verb dispatch by id, yield/rate formula equivalence (regression), last_manual_click_at write-back, manual_clickable=false silent-rejection",
+        "npm run build succeeds; no TypeScript errors"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        116
+      ]
+    },
+    {
+      "id": 120,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Unlock-as-purchase lifecycle: new unlock action, checkGeneratorUnlocks split, selfies threshold change",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Extend the engine (post-E2) to implement the three-state lifecycle (Unlock → Upgrade → Automate) per proposal §2. This adds a distinct Unlock purchase action for manual-clickable generators, splits checkGeneratorUnlocks behavior, and applies D1's balance resolution for threshold unit + unlock-cost values. After this task lands, the data model supports the full lifecycle; E4 wires the UI.\n\n**Scope (per A1 architecture spec + D1 balance resolution):**\n\n1. **checkGeneratorUnlocks split behavior:**\n   - For `manual_clickable: false` generators: threshold-met → `owned = true` (today's behavior, unchanged).\n   - For `manual_clickable: true` generators: threshold-met → the generator becomes *eligible* for Unlock purchase, but `owned` stays false. A separate player action flips owned=true.\n   - The UI uses owned-flag + manual_clickable + threshold-met to decide: show live-verb-button (owned=true), show ghost-slot (manual_clickable && threshold-met && !owned), hide entirely (!threshold-met).\n\n2. **New action: unlockGenerator(state, verbId, staticData) → GameState** (in `generator/index.ts`):\n   - Throw if generator is not manual_clickable (passive-only gens use buyGenerator).\n   - Throw if threshold not met (gate check).\n   - Throw if already owned.\n   - Throw if insufficient engagement.\n   - Deduct unlock cost (field to use determined by D1 — `base_buy_cost` if D1 resolves to 'reuse', or new `unlock_cost` field if D1 resolves to 'new field').\n   - Set `generators[verbId].owned = true`.\n\n3. **buyGenerator contract change for manual-clickable gens:**\n   - Today: requires owned=true before count++ (and owned auto-flips on threshold-met).\n   - Under the new lifecycle: still requires owned=true, but owned now only flips via explicit unlockGenerator action (for manual-clickable). Error message must be updated to point at 'this verb needs to be unlocked first' vs today's 'not yet unlocked — check follower thresholds'.\n   - For passive-only (manual_clickable=false): behavior unchanged.\n\n4. **New driver action: driver.unlock(verbId: GeneratorId): void:**\n   - Add to GameDriver interface.\n   - Route through runAction wrapper with context `{ verbId }` and action name `'unlock'`.\n   - Add 'unlock' to the ActionName union.\n\n5. **Static-data threshold change:**\n   - selfies unlock_threshold: 0 → 100 (per proposal §14d). The unit (followers vs engagement) is D1's call; the numeric value is locked per the proposal.\n   - If D1 resolves to engagement-based thresholds, checkGeneratorUnlocks is further extended to gate on the named source (current engagement vs. lifetime engagement vs. other). A new Player.lifetime_engagement field may be required.\n\n6. **Initial-state seeding:**\n   - createInitialGameState today sets `owned = (threshold === 0)`. With selfies at threshold=100, selfies is no longer owned at start. Chirps (threshold=0) is owned. Verify this is the intended new-player starting state per the proposal's aesthetic (§10): player starts with chirps only, unlocks selfies at 100 followers (or engagement per D1).\n\n7. **Tests:**\n   - unlockGenerator: success path (deducts cost, flips owned=true); reject if passive-only, not threshold-met, already owned, insufficient engagement.\n   - checkGeneratorUnlocks split: passive-only still auto-flips owned; manual-clickable does NOT auto-flip owned.\n   - buyGenerator error message change for manual-clickable gens needing unlock first.\n   - driver.unlock wiring: runAction wrapping, error surface.\n   - Initial-state: fresh game has chirps owned, selfies not owned.\n   - Migration doesn't retroactively un-own selfies for existing saves — players who had selfies owned under old rules keep it (migrateV8toV9 does not touch owned flags).\n\n**Not in scope (deferred to E4):**\n- UI rendering of ghost-slot, unlock-cost display, unlock button.\n- UX ladder replacement of PostZone.\n- Removing the driver.click() shim.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "Source proposal — §2 three-state lifecycle, §14d threshold table, §14c chirps cells, OQ16 phantom-hand floor resolution"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/manual-action-ladder.md",
+          "purpose": "Architecture spec (from A1) — data-model mapping decision (owned-as-unlocked or new field), unlockGenerator contract. READ THIS FIRST."
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "checkGeneratorUnlocks (L90-111) split, buyGenerator contract change, new unlockGenerator implementation"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Add unlock method to GameDriver interface + implementation via runAction"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "createInitialGameState — verify fresh-state seeding with new thresholds"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Apply selfies threshold 0 → 100 change"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Add 'unlock' to ActionName union; possibly add unlock_cost field to GeneratorDef if D1 resolves that way; possibly add lifetime_engagement to Player if D1 resolves to engagement thresholds"
+        },
+        {
+          "ref": "client/src/generator/index.test.ts",
+          "purpose": "Existing checkGeneratorUnlocks + buyGenerator test sites"
+        },
+        {
+          "ref": "client/src/driver/index.test.ts",
+          "purpose": "Existing runAction + click action tests — reference pattern for new unlock action"
+        }
+      ],
+      "acceptance_criteria": [
+        "D1 and A1 have both been read before starting implementation",
+        "checkGeneratorUnlocks splits behavior: manual_clickable=true gens do NOT auto-flip owned on threshold-met; manual_clickable=false gens do (unchanged)",
+        "New unlockGenerator action exists in generator/index.ts with correct error surface (not manual-clickable, not threshold-met, already owned, insufficient engagement)",
+        "buyGenerator error message for manual-clickable-not-yet-unlocked gens is updated",
+        "driver.unlock(verbId) is added to GameDriver interface and routes through runAction; 'unlock' is added to ActionName",
+        "selfies unlock_threshold value is 100 in static-data",
+        "If D1 resolves to engagement-based thresholds, the gate source is implemented (lifetime_engagement or named alternative); if followers-based, no additional field needed",
+        "createInitialGameState produces chirps owned=true, selfies owned=false for a fresh game",
+        "Existing saves (migration path) do NOT retroactively un-own selfies for players who had it owned under old rules",
+        "All existing tests pass (adjusted for the behavior changes)",
+        "New tests cover: unlockGenerator success + all error paths, checkGeneratorUnlocks split behavior, buyGenerator error-message update, driver.unlock wiring, initial-state new-player starting set",
+        "npm run build succeeds; no TypeScript errors"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        115,
+        116,
+        119
+      ]
+    },
+    {
+      "id": 121,
+      "alias": "E4",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Actions-column ladder UI wiring: per-verb ladder + ghost slot + spotlight + remove click() shim",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Replace the single-button PostZone with the per-verb Actions-column ladder per U1's UX spec, bound to the engine surfaces delivered by E2 (postClick(verbId), click(verbId) driver action) and E3 (unlockGenerator, ghost-slot eligibility via manual_clickable + threshold-met + !owned). Remove the driver.click() shim as part of this task — all call sites migrate to click(verbId).\n\n**Scope:**\n\n1. **Replace PostZone.tsx with a ladder component** (or refactor it into one) rendering per U1's spec:\n   - Live verb buttons: one per owned && manual_clickable generator, with pulse indicator (tied to cooldown), cooldown ring (time since last tap vs verb's current cooldownMs), automate-level badge (count), per-verb iconography.\n   - Ghost slot: one slot at a time, showing the next manual-clickable verb that is threshold-met && !owned (from E3's split). Opacity 0.35 until condition-met, then opacifies and becomes tappable. Tap invokes driver.unlock(verbId).\n   - Spotlight slot: most-recently-unlocked verb pinned to top on desktop, bottom-anchor on mobile. Requires tracking 'most recently unlocked' — either derive from existing state (order of first-owned events, possibly via last_manual_click_at timestamp or new Player field) OR add a minimal Player.last_unlocked_verb_id field. Engineer's call after reading U1.\n   - Empty state: chirps-only ladder + selfies ghost slot.\n   - Mobile: scroll region + bottom-anchor interaction per U1.\n\n2. **Per-verb tap handler → driver.click(verbId):**\n   - Each live-verb-button's onClick routes to `driver.click(verbId)`.\n   - useGame.ts 'click' export becomes `click: (verbId) => driver.click(verbId)` (typed).\n\n3. **Per-verb yield preview:**\n   - GameScreen.tsx L138's perClick computation is now per-button, computed per-verb using the same formula as postClick's earned: `def.base_event_yield × levelMultiplier(genState.level) × algoMod × clout × kit`. Extract this as a shared helper (or import from game-loop if already exposed) to keep parity with postClick.\n\n4. **GameScreen.tsx L134-154 context-label rework:**\n   - The hardcoded 'Selfies → Chirper' context label presumed a single click target. Under the ladder, either (a) remove the single context label (each button carries its own yield/platform hint), (b) show context for the verb most recently tapped, or (c) show context for the spotlight verb. Engineer's call — consult U1 for the UX intent.\n\n5. **Remove driver.click() shim:**\n   - Delete the zero-arg click() method from GameDriver interface and implementation.\n   - Update all call sites across: useGame.ts, DebugApp.tsx, integration.test.ts, driver/index.test.ts, game-loop/index.test.ts. TypeScript compiler will surface every site. Most tests should pass a verbId like 'chirps' or 'selfies'; production UI call sites should pass the verbId from the button context.\n\n6. **Cooldown display state:**\n   - Cooldown ring animation requires a per-verb reactive render. Options: (a) subscribe to state and recompute remaining cooldown per render (driver already notifies state changes on every tick); (b) use a local requestAnimationFrame loop inside each verb button. Performance note: the UI re-renders ~10× per second already (tick notifies state subscribers). Option (a) is simplest, no extra render loop.\n\n7. **Tests:**\n   - Component tests for the ladder: ghost-slot rendering, live-verb-button rendering, tap → driver dispatch, cooldown-ring visualization.\n   - Update all test call sites of driver.click() to pass a verbId.\n   - Snapshot or screenshot tests if the project uses them (check existing PostZone tests).\n\nThis task unblocks the full player experience for the manual-action-ladder feature.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "Source proposal — §3 verb differentiation, §4 parallel actor model, §10 aesthetic target"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/manual-action-ladder.md",
+          "purpose": "Architecture spec (from A1) — data-model + contracts + shim removal point. READ THIS FIRST."
+        },
+        {
+          "ref": ".frames/sdlc/ux/manual-action-ladder.md",
+          "purpose": "UX ladder spec (from U1) — visual + interaction target. READ THIS FIRST."
+        },
+        {
+          "ref": "client/src/ui/PostZone.tsx",
+          "purpose": "Existing single-button component being replaced"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "L134-154 context-label rework, L138 perClick → per-verb helper"
+        },
+        {
+          "ref": "client/src/ui/useGame.ts",
+          "purpose": "L128 click export → (verbId) =>"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Remove zero-arg click() shim — interface + implementation"
+        },
+        {
+          "ref": "client/src/ui/DebugApp.tsx",
+          "purpose": "L134 click call site — update to pass verbId"
+        },
+        {
+          "ref": "client/src/integration.test.ts",
+          "purpose": "Multiple driver.click() call sites need verbId"
+        },
+        {
+          "ref": "client/src/driver/index.test.ts",
+          "purpose": "Multiple driver.click() call sites need verbId"
+        },
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "GENERATOR_DISPLAY — engineer may refine chirps entry with final icon/color/tagline in concert with U1"
+        }
+      ],
+      "acceptance_criteria": [
+        "A1 architecture spec and U1 UX spec have both been read before implementation",
+        "Per-verb live-verb-button is rendered for each owned && manual_clickable generator with pulse, cooldown ring, automate-level badge per U1",
+        "Ghost slot renders for the next manual-clickable verb that is threshold-met && !owned; tap routes to driver.unlock(verbId)",
+        "Spotlight slot pins most-recently-unlocked verb per U1 (desktop top / mobile bottom-anchor)",
+        "Empty state (chirps-only + selfies ghost) renders correctly for fresh players",
+        "Each live-verb-button's onClick calls driver.click(verbId) with the correct verbId",
+        "Per-verb yield preview is computed from the same formula as postClick's earned, reusing a shared helper",
+        "GameScreen.tsx context-label refactor resolves per U1 UX intent (removed or per-verb)",
+        "driver.click() zero-arg shim is REMOVED from GameDriver interface and implementation",
+        "All call sites (useGame.ts, DebugApp.tsx, integration.test.ts, driver.test.ts, game-loop test.ts) updated to pass verbId",
+        "Cooldown ring animates correctly on each verb, driven by state subscription",
+        "npm run build succeeds; no TypeScript errors; all tests pass"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        118,
+        119,
+        120
+      ]
     }
   ]
 }
