@@ -1,6 +1,7 @@
 ---
 name: Creator Kit Upgrades (Per-Run)
 description: Introduces a themed per-run upgrade menu — Camera, Laptop, Phone, Wardrobe, Mogging — purchased with Engagement and wiped on rebrand, giving players a diegetic "invest in yourself as a creator" layer between generator-buying and prestige.
+created: 2026-04-05
 author: game-designer
 status: accepted
 reviewers: []

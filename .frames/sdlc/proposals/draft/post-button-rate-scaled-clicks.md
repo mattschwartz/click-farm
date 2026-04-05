@@ -1,6 +1,7 @@
 ---
 name: Post Button Rate-Scaled Clicks
 description: Scales the Post button's click value as a fraction of current engagement rate, keeping the core verb alive across all progression stages.
+created: 2026-04-05
 author: game-designer
 status: superseded
 superseded_by: proposals/accepted/manual-action-ladder.md

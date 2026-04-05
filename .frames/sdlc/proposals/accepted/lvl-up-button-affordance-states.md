@@ -1,6 +1,7 @@
 ---
 name: Lvl ↑ Button — Three Affordance States
 description: Specify three distinct visual states for the per-row Lvl ↑ button so affordability is legible without opening the drawer.
+created: 2026-04-05
 author: ux-designer
 status: accepted
 reviewers: []

@@ -1,6 +1,7 @@
 ---
 name: Manual Action Ladder
 description: Replaces the single Post button with a ladder of content verbs (Chirp, Selfie, Livestream, …) where each verb follows a three-step lifecycle — unlock, upgrade, automate — and every verb stays permanently manual-clickable. Automators are parallel actors that press each verb on their own cooldowns, not replacements for the player's hand.
+created: 2026-04-05
 author: game-designer
 status: implementation
 reviewers: []

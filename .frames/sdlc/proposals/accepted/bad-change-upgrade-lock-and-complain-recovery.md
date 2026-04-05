@@ -1,6 +1,7 @@
 ---
 name: Bad Change — Upgrade Lock & Complain Recovery
 description: The bad algorithm state locks upgrades instead of penalising output, and is resolved by mashing a complain action that generates engagement.
+created: 2026-04-05
 author: game-designer
 status: accepted
 reviewers: []

@@ -1,6 +1,7 @@
 ---
 name: Generator Badge Breathing
 description: Owned generator badges should pulse with a slow ambient breath animation, staggered by unlock order, so the generator list feels like a running machine rather than a static menu.
+created: 2026-04-05
 author: ux-designer
 status: accepted
 reviewers: []

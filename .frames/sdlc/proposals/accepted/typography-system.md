@@ -1,6 +1,7 @@
 ---
 name: Typography System — Space Grotesk + Fraunces
 description: Adopt a two-face typography system (Space Grotesk for UI/data, Fraunces for voice/satirical moments) to replace the current system-ui default.
+created: 2026-04-05
 author: ux-designer
 status: accepted
 reviewers: []

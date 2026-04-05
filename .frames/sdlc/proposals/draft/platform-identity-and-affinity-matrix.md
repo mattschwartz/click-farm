@@ -1,6 +1,7 @@
 ---
 name: Platform Identity & Affinity Matrix
 description: Names each of the 3 launch platforms, defines their satirical voice and audience character, specifies the platform × generator affinity matrix, and sets follower-based unlock thresholds.
+created: 2026-04-05
 author: game-designer
 status: draft
 reviewers: [game-designer, architect]

@@ -1,6 +1,7 @@
 ---
 name: Core Systems Architecture Review
 description: Eight fragilities surfaced by an architect walk-through of the client core modules — schema-evolution risk, swallowed errors, stale architecture doc, dual-write fields, unused persistent fields, scattered polymorphism, and event-emission shape.
+created: 2026-04-05
 author: architect
 status: accepted
 reviewers: []

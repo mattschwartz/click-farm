@@ -1,6 +1,7 @@
 ---
 name: Tension Audit — Post-Audience-Mood Felt Stakes
 description: Assesses whether the game has sufficient felt stakes after Audience Mood replaced Scandals, and takes a written position on whether to add a consented-risk mechanic.
+created: 2026-04-05
 author: game-designer
 status: draft
 reviewers: [game-designer]

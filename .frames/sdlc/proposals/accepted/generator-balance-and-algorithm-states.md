@@ -1,6 +1,7 @@
 ---
 name: Generator Balance & Algorithm States
 description: Formalises the generator rate table, trend sensitivities, and algorithm state definitions as official design targets, replacing the provisional values in static-data/index.ts.
+created: 2026-04-04
 author: game-designer
 status: accepted
 reviewers: []

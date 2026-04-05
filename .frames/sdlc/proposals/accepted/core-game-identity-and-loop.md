@@ -1,6 +1,7 @@
 ---
 name: Core Game Identity & Loop
 description: Defines the fantasy, tone, core loop, progression arc, economy, and prestige mechanic for Click Farm as a satirical social media clicker game.
+created: 2026-04-04
 author: game-designer
 status: accepted
 reviewers: []

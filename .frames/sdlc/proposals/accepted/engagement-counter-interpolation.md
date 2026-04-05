@@ -1,6 +1,7 @@
 ---
 name: Engagement Counter Interpolation
 description: The engagement counter should update at 60fps via predictive interpolation rather than jumping on 100ms game loop ticks.
+created: 2026-04-05
 author: ux-designer
 status: accepted
 reviewers: []

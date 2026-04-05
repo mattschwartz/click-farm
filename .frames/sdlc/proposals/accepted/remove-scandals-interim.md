@@ -1,6 +1,7 @@
 ---
 name: Remove Scandals From Build (Interim)
 description: Rip the live Scandals system out of the client immediately; game runs with no negative-pressure system until Audience Mood is implemented.
+created: 2026-04-05
 author: game-designer
 status: accepted
 reviewers: []

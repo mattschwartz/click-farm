@@ -1,6 +1,7 @@
 ---
 name: Clout Upgrade Menu & Costs
 description: Defines the complete Clout upgrade menu — what permanent meta-upgrades exist, what they cost, and how they pace across runs.
+created: 2026-04-04
 author: game-designer
 status: accepted
 reviewers: []

@@ -1,6 +1,7 @@
 ---
 name: Brand Deal Boost
 description: Defines the appearance, activation, duration, and economy integration of brand deals — a randomly-appearing, player-triggered engagement rate boost that rewards timed activation during viral bursts.
+created: 2026-04-05
 author: game-designer
 status: accepted
 reviewers: []

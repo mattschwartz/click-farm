@@ -1,6 +1,7 @@
 ---
 name: Badge Pro Shop
 description: Cosmetic badges earned through gameplay milestones and claimed from a shop for a small clout fee — prestige through achievement, not purchase.
+created: 2026-04-05
 author: game-designer
 status: accepted
 reviewers: []

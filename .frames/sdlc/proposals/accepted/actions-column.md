@@ -1,6 +1,7 @@
 ---
 name: Actions Column
 description: Reframes the Post column as the Actions zone — a named class of discrete active player taps. Post is the baseline member; brand deals are the second; the column grows as progression adds siblings, and Post's visual prominence shrinks proportionally.
+created: 2026-04-05
 author: game-designer
 status: accepted
 reviewers: []

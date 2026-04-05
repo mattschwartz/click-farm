@@ -1,6 +1,7 @@
 ---
 name: Late-Game Content Arc — Generators 8–12 and the Satirical Voice Ladder
 description: Specifies generators 8 through 12 with fiction, mechanical character, Clout costs, and the voice ladder for how satirical tone escalates from relatable to absurd across the prestige arc.
+created: 2026-04-05
 author: game-designer
 status: draft
 reviewers: [game-designer, architect, ux-designer]

@@ -1,6 +1,7 @@
 ---
 name: Clout-to-Follower Scaling Curve
 description: Defines the formula mapping total_followers at rebrand → Clout awarded, determining prestige pacing.
+created: 2026-04-04
 author: game-designer
 status: accepted
 reviewers: []
