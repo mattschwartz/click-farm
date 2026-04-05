@@ -39,6 +39,17 @@ export interface UseGameResult {
   confirmPR: (engagementSpent: number) => void;
   /** Dismiss the aftermath resolution display. */
   dismissScandalResolution: () => void;
+  /**
+   * Pause the game loop (stop tick + save timers). Used by the Rebrand
+   * Ceremony modal per §4.1 — production halts while the ceremony is open.
+   */
+  pauseLoop: () => void;
+  /**
+   * Resume the game loop after a pause. Counterpart to pauseLoop. The driver
+   * resets its tick clock on start() so time spent in the modal is not
+   * counted as offline time.
+   */
+  resumeLoop: () => void;
 }
 
 /**
@@ -113,6 +124,8 @@ export function useGame(): UseGameResult {
       clearActionError: () => setLastActionError(null),
       confirmPR: (engagementSpent: number) => driver.confirmPR(engagementSpent),
       dismissScandalResolution: () => driver.dismissScandalResolution(),
+      pauseLoop: () => driver.stop(),
+      resumeLoop: () => driver.start(),
     }),
     [driver],
   );

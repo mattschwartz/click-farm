@@ -1,5 +1,5 @@
 {
-  "next_id": 71,
+  "next_id": 72,
   "tasks": [
     {
       "id": 1,
@@ -1731,7 +1731,7 @@
       "id": 60,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "UX spec: Gigs variant cards (Brand Deal / Livestream / Convention)",
       "requester": "ux-designer",
@@ -1770,7 +1770,8 @@
           "owner": "ux-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 61,
@@ -1823,7 +1824,7 @@
       "alias": "E1",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Prestige cluster (Upgrades + Rebrand buttons) + Phase 1 rebrand modal",
       "requester": "architect",
@@ -1864,7 +1865,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 63,
@@ -1962,9 +1964,7 @@
         "Component tests cover: category ordering, row rendering per state, purchase flow (successful and insufficient), empty/partial/all-maxed states, Reduce Motion variant"
       ],
       "open_questions": [],
-      "blocked_on": [
-        62
-      ]
+      "blocked_on": []
     },
     {
       "id": 65,
@@ -2011,9 +2011,7 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": [
-        62
-      ]
+      "blocked_on": []
     },
     {
       "id": 66,
@@ -2211,6 +2209,58 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-05"
+    },
+    {
+      "id": 71,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Wire up typography system — Space Grotesk + Fraunces via Google Fonts",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The typography-system proposal is accepted. This task installs the infrastructure: load both webfonts from Google Fonts CDN, swap the current system-ui declarations to Space Grotesk (the UI face), and make Fraunces available for downstream application. Fraunces is NOT applied to any surface yet — that belongs to a future task once UX ships the downstream typography spec defining which surfaces get the voice face. The goal here is: the whole app reads in Space Grotesk after this lands, with Fraunces loaded and ready but unused.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/typography-system.md",
+          "purpose": "Accepted proposal — see architect review for the loading strategy contract"
+        },
+        {
+          "ref": "client/index.html",
+          "purpose": "Add preconnect links + Google Fonts stylesheet link here"
+        },
+        {
+          "ref": "client/src/index.css",
+          "purpose": "Replace system-ui on line 2; add metric-adjusted @font-face fallback blocks here"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Replace system-ui on line 70 with the shared var(--font-ui) or equivalent"
+        },
+        {
+          "ref": "client/src/ui/DebugApp.tsx",
+          "purpose": "Replace inline fontFamily system-ui on line 86"
+        }
+      ],
+      "acceptance_criteria": [
+        "client/index.html has <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"> and <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin> in <head>",
+        "client/index.html loads both families in a single Google Fonts stylesheet link: Space Grotesk wght@300..700 and Fraunces with opsz,wght,SOFT,WONK axes, with &display=swap",
+        "client/src/index.css defines CSS custom properties for the two faces (e.g. --font-ui and --font-voice) so downstream CSS can reference them without hard-coding names",
+        "client/src/index.css defines metric-adjusted @font-face fallback blocks for the UI face (size-adjust, ascent-override, descent-override, line-gap-override tuned against Space Grotesk's metrics) so the swap is near-invisible",
+        "All existing system-ui declarations are replaced: client/src/index.css line 2, client/src/ui/GameScreen.css line 70, client/src/ui/DebugApp.tsx line 86",
+        "The fallback stack in every declaration ends in the metric-adjusted system-ui fallback, then generic sans-serif",
+        "Fraunces is loaded via the stylesheet link but NOT applied to any surface in this task — it is available via --font-voice for future tasks",
+        "Running the dev server and loading GameScreen shows Space Grotesk rendering throughout (verify in DevTools Network tab that the Google Fonts CSS loaded and at least one Space Grotesk woff2 file was fetched)",
+        "No layout shift visible on cold load (metric-adjusted fallbacks working) — verify by throttling network in DevTools and reloading",
+        "All existing tests still pass"
+      ],
+      "open_questions": [
+        {
+          "question": "What size-adjust / ascent-override / descent-override values should be used for the Space Grotesk fallback? If you cannot find authoritative values, use values generated by Fontsource's fallback metrics generator or Malte Ubl's fallback font generator tool and document the source in a comment above the @font-face block.",
+          "owner": "engineer"
+        }
+      ],
+      "blocked_on": []
     }
   ]
 }

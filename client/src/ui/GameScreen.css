@@ -832,44 +832,279 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* --- Rebrand corner affordance (minimal, full UI is separate screen) ---- */
+/* --- Prestige cluster — two-button bottom-right affordance (spec §2.1–2.3) */
 
-.rebrand-corner {
+.prestige-cluster {
   position: fixed;
   bottom: 16px;
   right: 16px;
   z-index: 3;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.rebrand-corner .rebrand-btn {
-  font-family: inherit;
-  font-size: 12px;
+  flex-direction: row;
+  gap: 12px;  /* spec §2.1: ~12px spacing */
+  align-items: center;
   padding: 8px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(18, 21, 28, 0.82);
-  color: var(--text-p2);
-  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 24px;
   backdrop-filter: blur(4px);
 }
 
-.rebrand-corner .rebrand-btn:hover:not(:disabled) {
+.prestige-btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: var(--text-p1);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.prestige-btn:hover:not(:disabled):not(.prestige-btn-locked) {
   color: var(--text-p0);
-  border-color: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.36);
 }
 
-.rebrand-corner .rebrand-btn:disabled {
+/* Locked state — 3:1 contrast per spec §2.1. --text-p3 = rgba(255,255,255,0.42) ≈ 3:1 */
+.prestige-btn-locked {
   color: var(--text-p3);
-  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.10);
+  cursor: default;
 }
 
-.rebrand-corner .rebrand-tooltip {
+.prestige-btn-rebrand:not(.prestige-btn-locked):not(:disabled) {
+  color: var(--accent-gold);
+  border-color: rgba(255, 214, 107, 0.28);
+}
+
+.prestige-btn-rebrand:not(.prestige-btn-locked):not(:disabled):hover {
+  border-color: rgba(255, 214, 107, 0.48);
+}
+
+/* --- Clout Shop modal (shell — full purchase UI is task #64) -------------- */
+
+.shop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* ~30% opacity backdrop — game loop continues, spec §3.1. */
+  background: rgba(0, 0, 0, 0.70);
+  animation: fade-in 200ms ease-out;
+}
+
+.shop-modal {
+  background: rgba(18, 21, 28, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  width: 720px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  color: var(--text-p0);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+}
+
+.shop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.shop-title {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.shop-close-btn {
+  font-family: inherit;
+  font-size: 20px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-p2);
+  cursor: pointer;
+  line-height: 1;
+  transition: color 120ms, border-color 120ms;
+}
+
+.shop-close-btn:hover {
+  color: var(--text-p0);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.shop-balance {
+  padding: 20px 24px 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--accent-gold);
+}
+
+.shop-body-placeholder {
+  padding: 24px;
+  font-size: 14px;
+  color: var(--text-p2);
+  font-style: italic;
+}
+
+/* --- Rebrand Ceremony modal (Phase 1 — Threshold Review, spec §4.2) ------- */
+
+.ceremony-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* ~80% opacity — main screen dims to ~20% per spec §4.1. */
+  background: rgba(0, 0, 0, 0.82);
+  animation: fade-in 300ms ease-out;
+}
+
+.ceremony-modal {
+  background: rgba(14, 16, 22, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 36px 40px 32px;
+  width: 520px;
+  max-width: calc(100vw - 40px);
+  color: var(--text-p0);
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.7);
+}
+
+.ceremony-headline {
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
+  margin: 0 0 24px;
+  color: var(--text-p1);
+  letter-spacing: 0.01em;
+}
+
+/* Stat box — "the math is shown" per spec §4.2 */
+.ceremony-stat-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.ceremony-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 5px 0;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ceremony-stat-row-final {
+  border-bottom: none;
+  padding-top: 9px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.ceremony-stat-label {
+  color: var(--text-p2);
+}
+
+.ceremony-stat-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--text-p0);
+}
+
+.ceremony-stat-positive {
+  color: var(--accent-gold);
+}
+
+/* Reset / Persist columns */
+.ceremony-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.ceremony-column-header {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-p2);
+  margin: 0 0 10px;
+}
+
+.ceremony-column-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 13px;
+}
+
+.ceremony-col-bullet {
+  color: var(--text-p3);
   font-size: 10px;
-  color: var(--text-p3);
+  flex-shrink: 0;
+}
+
+.ceremony-col-label {
+  color: var(--text-p1);
+  flex: 1;
+}
+
+.ceremony-col-value {
+  color: var(--text-p2);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+
+/* Actions */
+.ceremony-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.ceremony-btn {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms, color 120ms;
+}
+
+.ceremony-btn-cancel {
+  background: transparent;
+  color: var(--text-p2);
+}
+
+.ceremony-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-p0);
+}
+
+.ceremony-btn-continue {
+  background: rgba(255, 214, 107, 0.12);
+  border-color: rgba(255, 214, 107, 0.32);
+  color: var(--accent-gold);
+}
+
+.ceremony-btn-continue:hover {
+  background: rgba(255, 214, 107, 0.20);
+  border-color: rgba(255, 214, 107, 0.50);
 }
 
 /* ==========================================================================
