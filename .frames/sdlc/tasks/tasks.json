@@ -2704,7 +2704,7 @@
       "id": 84,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Balance pass: Gigs variant unlock thresholds + selection weights",
       "requester": "game-designer",
@@ -2730,7 +2730,8 @@
         "Decisions documented as a revision to gigs-system.md or as a balance-pass note attached to it"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 85,
