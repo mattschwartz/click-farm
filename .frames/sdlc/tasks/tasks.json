@@ -3627,7 +3627,7 @@
       "alias": "UX1",
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Write ux/audience-mood.md UX spec (mood strip, copy pools, motion)",
       "requester": "architect",
@@ -3667,7 +3667,8 @@
         "Content Fatigue flavor text rendering specified: when dominant pressure is content_fatigue, the flavor line must name the specific generator type (from dominant_generator in the contract)"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 104,
@@ -3781,9 +3782,7 @@
         "Full test suite passes"
       ],
       "open_questions": [],
-      "blocked_on": [
-        103
-      ]
+      "blocked_on": []
     },
     {
       "id": 106,
