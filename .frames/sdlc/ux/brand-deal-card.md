@@ -120,16 +120,33 @@ The card is live for 90 seconds after appearance.
 
 ### 2.5 Flavor text copy direction
 
-The flavor text should read as a corporate solicitation — dry, satirical, slightly too enthusiastic.
+The flavor text reads as a corporate solicitation — dry, satirical, slightly too enthusiastic. One line per offer, drawn at random from the rotation pool.
 
-Example lines (one shown per deal):
-- *"SponsoredContent™ is interested."*
-- *"A brand noticed you."*
-- *"Partnership opportunity detected."*
-- *"Your metrics are attractive."*
-- *"Algorithmic synergy confirmed."*
+**Voice targets:** straight-corporate, corporate jargon, AI-era tells, meta-satirical. Mix across the pool so consecutive deals don't feel like one note.
 
-**Owner:** game-designer (write the full copy pool — minimum 10 variants for rotation). Format is one line, ~40 characters max.
+**Launch copy pool (game-designer, 2026-04-05):**
+
+| # | Line | Voice register |
+|---|---|---|
+| 1 | *"SponsoredContent™ is interested."* | straight-corporate |
+| 2 | *"A brand noticed you."* | straight-corporate |
+| 3 | *"Partnership opportunity detected."* | straight-corporate |
+| 4 | *"Your metrics are attractive."* | slightly-uncomfortable |
+| 5 | *"Algorithmic synergy confirmed."* | jargon |
+| 6 | *"You're on our radar."* | straight-corporate |
+| 7 | *"Our AI flagged your vibes."* | AI-era tell |
+| 8 | *"Let's circle back on leverage."* | jargon |
+| 9 | *"Your reach aligns with our KPIs."* | jargon |
+| 10 | *"A deck with your name exists."* | meta-satirical |
+| 11 | *"VibeShift™ sees potential."* | fictional-brand |
+| 12 | *"You tested well with our AI."* | AI-era tell |
+| 13 | *"Brand-safe and ready to activate."* | jargon |
+| 14 | *"Synergistic fit identified."* | jargon |
+| 15 | *"Your aesthetic is on-trend."* | straight-corporate |
+
+**Format constraint:** one line, ≤40 characters. Engineers can treat this as a static rotation array in `StaticData.brandDeal.flavorLines`. Selection: uniform random per offer. No "don't repeat" logic required — the pool is large enough and the cadence slow enough that occasional repeats read as natural, not broken.
+
+**What to preserve on future additions:** lines should read as *solicitations* (someone reaching out), not as *awards* (the player being recognized). The player should feel noticed, not celebrated. The joke is that you are a unit of attention the market has identified, not a person with merit. Affectionate, not cruel — the satire is on the corporate voice, not the player.
 
 ### 2.6 Only one card at a time
 
@@ -290,7 +307,7 @@ Same position as desktop — below the rate sub-label in the top bar. Top bar he
 ## 10. Open Questions
 
 1. **Data contract for the offer card.** The card needs: boost multiplier, boost duration, a flavor text key or string, and the current expiry timestamp (or remaining ms). OQ3 from `proposals/draft/brand-deal-boost.md` was resolved by the game-designer — the state model has two sub-states: `offer` (visible, untapped) and `active` (tapped, running). The architect implements this model. The UI subscribes to `GameState.brandDeal.offer` to render the card, and `GameState.brandDeal.active` to render the badge. **Owner: architect (implement the state model per game-designer's OQ3 resolution)**
-2. **Flavor text copy pool.** Minimum 10 satirical-corporate one-liners needed for rotation. **Owner: game-designer (copy pass)**
+2. ~~**Flavor text copy pool.** Minimum 10 satirical-corporate one-liners needed for rotation. **Owner: game-designer (copy pass)**~~ **[RESOLVED — game-designer, 2026-04-05]** 15-line launch pool written into §2.5 above, with voice-register labels for tonal balance and a guideline for future additions.
 3. **Top bar height expansion on mobile.** Expanding the top bar from 72px to 100px may cause a reflow in the zone stack. Engineer to test — if reflow is jarring, the badge can instead overlay the post zone area rather than expanding the top bar. **Owner: engineer (implementation call)**
 4. **Multiple simultaneous deal offers (future).** This spec and the proposal both state one deal at a time. If multi-tier deals are introduced post-launch (e.g., a "mega deal" at higher follower counts), this spec would need revision. Not a current concern. **Owner: game-designer / ux-designer (post-launch, if needed)**
 

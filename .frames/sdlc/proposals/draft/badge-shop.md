@@ -47,6 +47,31 @@ Names should fit the game's satirical tone — not "Achievement Unlocked" but so
 
 ---
 
+### 2a. Launch Badge Set (5 badges)
+
+Per architect resolution on OQ3 — 5 badges at launch. These are the launch set, chosen for category spread, arc coverage (early-achievable through aspirational), and independence from stretch systems (no scandal-dependent badge, since scandals are a stretch goal).
+
+| # | Badge name | Milestone trigger | Flavor copy | Category |
+|---|---|---|---|---|
+| 1 | **Micro-Influencer** | 1,000 followers (total) | *"You crossed one thousand. Statistically, someone cares."* | Followers |
+| 2 | **Going Viral (for real this time)** | First viral burst fires | *"You made the algorithm's day."* | Virals |
+| 3 | **Main Character Energy** | 10,000 followers (total) | *"Ten thousand people are waiting to see what you do next."* | Followers |
+| 4 | **Sellout (affectionate)** | First brand deal claimed | *"A brand transacted with you. This is growth."* | Brand Deals |
+| 5 | **New Me, Who Dis** | First rebrand completed | *"You deleted yourself. Everyone will understand."* | Rebrands |
+
+**Arc coverage:**
+- **Micro-Influencer** is the first earned badge most players will see — hit in the first 10-20 minutes. Teaches the collection mechanic exists.
+- **Going Viral** is the first "peak moment" badge — tied to the game's biggest emotional beat. Earning it is a memory.
+- **Main Character Energy** is mid-grind — an affirming checkpoint when the follower number becomes satirically large.
+- **Sellout (affectionate)** ties to brand deal unlock — rewards progression past the early game into the active-action layer.
+- **New Me, Who Dis** is the first prestige badge — rewards the conceptual leap of rebranding for the first time.
+
+**Voice register:** each badge is a small joke at the expense of the corporate/influencer frame, never at the player's expense. The affectionate-satire tone from Core Game Identity holds — the badge celebrates the player while skewering the culture around what they just did.
+
+**No scandal-dependent launch badge.** If scandals ship at launch, a sixth badge (*"Canceled (temporarily)"* — first scandal survived) can be added without re-doing the set. Post-launch additions follow the same voice rules.
+
+---
+
 ### 3. Clout Cost
 
 Each badge costs a small, flat clout fee to claim. The fee should be:
@@ -96,7 +121,7 @@ Both are valid reasons to spend clout. A player with excess clout after upgrades
 ## Open Questions
 
 1. **Milestone thresholds** — exact follower counts, rebrand counts, viral counts, etc. for each badge. **Owner: game-designer** (balance pass once progression curve is defined)
-2. **Badge names and copy** — satirical names fitting the game's tone. **Owner: game-designer** (creative pass — can happen in parallel with build)
+2. ~~**Badge names and copy** — satirical names fitting the game's tone. **Owner: game-designer** (creative pass — can happen in parallel with build)~~ **[RESOLVED — game-designer, 2026-04-05]** Launch set of 5 badges written into §2a above, with milestone triggers, flavor copy, arc rationale, and voice-register notes for post-launch additions.
 3. **How many badges at launch?** ~~Too few and the collection feels thin. Too many and none feel special. **Owner: architect** (scoping question — what's buildable for a first pass?)~~ **[RESOLVED — architect, 2026-04-05]** 5 badges at launch. Enough for the collection to feel real without over-committing on milestone design before the progression curve is finalized.
 4. **Shop and collection screen design** — where does the shop live in the navigation? How are locked vs. claimed badges presented? How does the shine work visually? **Owner: ux-designer**
    - **Answer (ux-designer, 2026-04-05):** See full spec below. Summary: Trophy icon at bottom-right of desktop screen (prestige corner, adjacent to Rebrand affordance); third button "Badges" in the mobile prestige row alongside Upgrades and Rebrand. Three badge states: claimed (full color + ambient shine), unlocked-unclaimed (full color + "Claim" CTA + clout cost + pulsing border), locked (silhouette + milestone description at 3:1 contrast). Shine is a left-to-right gradient shimmer overlay — intense one-time version on first view after claiming (600ms), ambient 8s cycle thereafter.
