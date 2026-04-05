@@ -3,7 +3,7 @@ name: Manual Action Ladder
 description: Replaces the single Post button with a ladder of content verbs (Chirp, Selfie, Livestream, …) where each verb follows a three-step lifecycle — unlock, upgrade, automate — and every verb stays permanently manual-clickable. Automators are parallel actors that press each verb on their own cooldowns, not replacements for the player's hand.
 author: game-designer
 status: draft
-reviewers: [ux-designer, engineer]
+reviewers: [engineer]
 ---
 
 # Proposal: Manual Action Ladder
@@ -292,3 +292,56 @@ The revised target — "automators take over *per verb*; manual hands stay meani
 4. *No performance concern.* I verified the 0.01s cooldown floor against the tick model: because cooldown is a derived view on continuous rate (not discrete event-ticks), the underlying tick loop does not scale with cooldown floor. The "100 events/sec" is display cadence for the button pulse, not loop frequency.
 
 Removing myself from reviewers. Architecture is resolved pending the game-designer integrating these resolutions into §7, §12, §13 and the OQ list, and pending ux-designer + engineer reviews.
+
+---
+# Review: ux-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Reviewed from a layout-composition, information-hierarchy, and interaction-pattern perspective. The instrument-panel metaphor is structurally strong and the Unlock → Upgrade → Automate lifecycle maps cleanly onto the existing Actions taxonomy. No blocking concerns. Answers to the UX-owned OQs follow.
+
+**OQ3 — Actions Column soft cap tension → soft cap of 4 stands; internal scroll at 5+ stands; no new compaction model.**
+
+I considered auto-compacting fully-automated verbs to a 40px "ensemble" row and rejected it for two reasons:
+
+1. **§3 explicitly wants interleaved manual tapping** — "spam Chirp between Selfie cooldowns" is a design target, so a Chirp that is fully automated is still the player's rhythm verb. Auto-compacting based on automate-level contradicts the design intent that every verb stays a live instrument in the player's hand.
+2. **Tap-target math.** 40px is below the 44px iOS minimum and below the 80px floor I committed to in `actions-column.md` OQ4. Halving is an accessibility regression.
+
+One refinement tied to the ladder's texture, added on top of the existing answer:
+
+- **Spotlight slot (sticky top).** The most-recently-unlocked verb pins to the top of the scroll region on desktop, and to the bottom-anchor position on mobile. This carries the progression signal — the player sees the newest instrument without scrolling for it. Older verbs scroll.
+
+The instrument-panel aesthetic holds at 5+ tap targets because the screen never asks the player to scan-compare all verbs simultaneously. Hierarchy emerges from motion (which cooldown is pulsing right now), recency (which just fired), and touch (which the hand is on). The eye goes to what is moving and what the hand is on — not to a wall of equal buttons.
+
+**OQ6 — Unlock purchase surface placement → Actions column ghost slot (option a).**
+
+The ghost slot is zero-tutorial. The player learns the ladder exists simply by looking at the column — silhouetted next verb, unlock threshold printed, teasing what's next. Cookie Clicker's dimmed-locked-buildings pattern has proven this pattern works. Placing Unlock as an Upgrades-column line item buries the progression signal inside a list and weakens the diegetic receipt of unlock (a depleting list item vs. a silhouette lighting up and becoming tappable).
+
+Concrete ghost-slot spec (starting direction — full spec in the follow-up UX task):
+
+- One ghost slot at a time (the next verb in sequence).
+- Anatomy: verb name, silhouette icon, unlock condition ("100 followers" or "500 engagement"), 0.35 opacity, no tap affordance until unlock condition is met.
+- When condition is met: slot fully opacifies, shows unlock cost, becomes tappable. One tap consumes cost, verb unlocks, slot is replaced by the live verb button, next ghost appears below.
+- Slot height ~60px — shorter than the 80px live-verb height, because it is a promise, not an instrument.
+- Mobile: ghost slot sits directly above the current bottom-anchor verb, below any active brand-deal strip.
+
+**Density check:** at 3 live verbs + ghost = 4 visual items (within cap); at 4 live + ghost = 5 items and the ghost scrolls with the rest. No cap revision required.
+
+**§2 supersession (Chirp as baseline Actions member) — confirmed.**
+
+The diegetic anchor moves cleanly from "pressing Post is being a poster" to "whatever manual verb is currently in the player's hand" (§6, §10). Chirp inherits the "I am a creator" fantasy intact — a tweet-poster is a poster. The visual grammar of the Actions column survives the supersession: single tap, immediate effect, meaningful for life.
+
+**Instrument-panel aesthetic at 5+ simultaneous tap targets — holds.**
+
+As laid out under OQ3, the aesthetic survives because hierarchy comes from motion, recency, and touch — not from all slots screaming for equal attention. The design's target feeling ("I am conducting an orchestra") is served by visible-but-not-equal verbs, and that is achievable within the existing soft-cap + internal-scroll model plus the spotlight-slot refinement.
+
+**Non-blocking flags (for the record, not blocking acceptance):**
+
+1. A full **Actions-column ladder UX spec** is needed before engineer builds — covering ghost-slot anatomy, live-verb-button anatomy (pulse indicator, cooldown ring, automate-level badge, per-verb iconography), spotlight-slot transition animation, and mobile anchor-dynamics. I will open this as a follow-up task after acceptance.
+2. `ux/core-game-screen.md` and `ux/mobile-layout.md` will need updates after acceptance — the Actions zone description changes from "Post + brand-deal slot" to "ladder + ghost slot + brand-deal strip." UX owns that edit.
+3. OQ4 (verb-to-platform coupling) has visual consequences for per-verb iconography once platforms are locked in, but this is downstream of game-designer's OQ4 resolution and fits into the follow-up ladder UX spec. Not blocking here.
+
+Removing myself from reviewers. Engineer review remains.
