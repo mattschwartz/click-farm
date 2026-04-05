@@ -32,6 +32,7 @@ import {
   CATEGORY_ORDER,
   GENERATOR_DISPLAY,
   GENERATOR_ORDER,
+  POST_PRESTIGE_GENERATORS,
   type GeneratorCategory,
 } from './display.ts';
 import { fmtCompact } from './format.ts';
@@ -105,9 +106,13 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGenera
   }, [openDrawerId, onDrawerOpenChange]);
 
   // Build rows grouped by category in stable order.
+  // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
+  // excluded from the main list — they render in the Clout Shop modal instead.
+  // Task #70: filter out post-prestige generators until Clout Shop ships.
   const byCategory = new Map<GeneratorCategory, GeneratorId[]>();
   for (const cat of CATEGORY_ORDER) byCategory.set(cat, []);
   for (const id of GENERATOR_ORDER) {
+    if (POST_PRESTIGE_GENERATORS.includes(id)) continue;
     const display = GENERATOR_DISPLAY[id];
     byCategory.get(display.category)?.push(id);
   }

@@ -138,6 +138,16 @@ export const CATEGORY_LABEL: Record<GeneratorCategory, string> = {
   late: 'LATE',
 };
 
+/**
+ * Post-prestige generators — unlocked only via Clout upgrades, displayed in
+ * the Clout Shop modal (not in the main generator list). Task #70.
+ */
+export const POST_PRESTIGE_GENERATORS: readonly GeneratorId[] = [
+  'ai_slop',
+  'deepfakes',
+  'algorithmic_prophecy',
+];
+
 // ---------------------------------------------------------------------------
 // Platform display
 // ---------------------------------------------------------------------------
