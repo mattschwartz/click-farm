@@ -7,6 +7,14 @@
 // Modifier chips reflect the effective algorithm multiplier (raw state
 // modifier folded with the generator's trend_sensitivity — this is the
 // number the player actually feels in their rates).
+//
+// Per purchase-feedback-and-rate-visibility.md:
+// - §2.2: Generator rate text weight promoted to 500.
+// - §4.2: Unowned buy button is full-width with name + cost sub-label (≥180×64px).
+// - §4.2: Buy button border glows on press; shake on insufficient funds.
+// - §6.1: Owned badge filled + breathing glow at tick cadence.
+// - §6.3: First-purchase transition: badge fill + sparkle + breathing begins.
+// - §6.4: Count numeral pulses on additional purchases.
 
 import { useEffect, useRef, useState } from 'react';
 import type { GameState, GeneratorId, StaticData } from '../types.ts';
@@ -40,6 +48,13 @@ const BADGE_SHAPE: Record<GeneratorCategory, string> = {
   mid: 'shape-hexagon',
   late: 'shape-diamond',
 };
+
+// Breathing animation constants (per generator-badge-breathing proposal).
+// Uniform 2.5s cadence, staggered by generator index so badges breathe
+// organically rather than in sync. Rate-coupled cadence was considered and
+// rejected — competing rhythms across 7 generators read as noise, not life.
+const BREATHE_CYCLE_MS = 2500;
+const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
 export function GeneratorList({ state, staticData, onBuy, onUpgrade }: Props) {
   // Track modifier pulses — when the algorithm state index changes, each
@@ -111,10 +126,6 @@ function GeneratorRow({
   const display = GENERATOR_DISPLAY[id];
   const threshold = staticData.unlockThresholds.generators[id] ?? 0;
 
-  // Does the player know this generator exists at all? We show owned rows
-  // at full opacity, and rows whose threshold has not been met at 3:1.
-  // Rows whose threshold has been met but not yet bought appear at full
-  // opacity so the "buy" affordance is unmistakable.
   const thresholdMet = state.player.total_followers >= threshold;
   const isDiscovered = g.owned || thresholdMet;
 
@@ -125,6 +136,37 @@ function GeneratorRow({
 
   const badgeShape = BADGE_SHAPE[display.category];
   const style = { '--gen-color': display.color } as React.CSSProperties;
+
+  // First-purchase animation — fires once when owned transitions false → true.
+  const prevOwned = useRef(g.owned);
+  const [firstBuyAnim, setFirstBuyAnim] = useState(false);
+  useEffect(() => {
+    if (g.owned && !prevOwned.current) {
+      setFirstBuyAnim(true);
+      const t = window.setTimeout(() => setFirstBuyAnim(false), 600);
+      prevOwned.current = true;
+      return () => window.clearTimeout(t);
+    }
+    prevOwned.current = g.owned;
+  }, [g.owned]);
+
+  // Count numeral pulse — fires when count increases on an owned generator.
+  const prevCount = useRef(g.count);
+  const [countPulsing, setCountPulsing] = useState(false);
+  useEffect(() => {
+    if (g.owned && g.count > prevCount.current) {
+      setCountPulsing(true);
+      const t = window.setTimeout(() => setCountPulsing(false), 400);
+    }
+    prevCount.current = g.count;
+  }, [g.owned, g.count]);
+
+  // Breathing phase offset: stagger each badge so they don't all peak together.
+  // Negative delay starts each badge mid-cycle immediately on mount.
+  const generatorIndex = GENERATOR_ORDER.indexOf(id);
+  const breatheDelayMs = generatorIndex >= 0
+    ? -Math.round((generatorIndex / BREATHE_TOTAL) * BREATHE_CYCLE_MS)
+    : 0;
 
   if (!isDiscovered) {
     return (
@@ -138,27 +180,22 @@ function GeneratorRow({
   }
 
   if (!g.owned) {
-    // Threshold met but not bought yet → show buy affordance.
+    // Unowned, threshold met — show a full buy affordance per spec §4.2.
     const buyCost = generatorBuyCost(id, 0, staticData);
     const canBuy = state.player.engagement >= buyCost;
     return (
-      <div className="generator-row" style={style}>
+      <div className="generator-row generator-row-unowned" style={style}>
         <div className={`badge hollow ${badgeShape}`}>{display.icon}</div>
-        <div className="generator-name">{display.name}</div>
-        <div className="generator-count">×0</div>
-        <div className="generator-rate">—</div>
-        <ModifierChip value={effMod} pulseKey={pulseKey} />
-        <div className="row-actions">
-          <button
-            className="row-btn"
-            onClick={() => onBuy(id)}
-            disabled={!canBuy}
-            title={`Buy for ${fmtCompact(buyCost)} engagement`}
-          >
-            <span className="label">Buy</span>
-            {fmtCompact(buyCost)}
-          </button>
+        <div className="unowned-info">
+          <div className="generator-name">{display.name}</div>
+          <ModifierChip value={effMod} pulseKey={pulseKey} />
         </div>
+        <BuyButton
+          label={`Buy ${display.name}`}
+          costLabel={`cost: ${fmtCompact(buyCost)} engagement`}
+          canBuy={canBuy}
+          onBuy={() => onBuy(id)}
+        />
       </div>
     );
   }
@@ -169,24 +206,30 @@ function GeneratorRow({
   const canUpgrade = state.player.engagement >= upgradeCost;
 
   return (
-    <div className="generator-row" style={style}>
-      <div className={`badge ${badgeShape}`}>{display.icon}</div>
-      <div className="generator-name">
-        {display.name} <span style={{ opacity: 0.55, fontSize: 11 }}>L{g.level}</span>
+    <div
+      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}`}
+      style={style}
+    >
+      <div
+        className={`badge ${badgeShape}${g.owned ? ' badge-owned' : ''}`}
+        style={g.owned ? { '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties : undefined}
+      >
+        {display.icon}
       </div>
-      <div className="generator-count">×{g.count}</div>
+      <div className="generator-name">
+        {display.name} <span className="generator-level">L{g.level}</span>
+      </div>
+      <div className={`generator-count${countPulsing ? ' count-pulse' : ''}`}>
+        ×{g.count}
+      </div>
       <div className="generator-rate">{fmtCompact(rate)}/s</div>
       <ModifierChip value={effMod} pulseKey={pulseKey} />
       <div className="row-actions">
-        <button
-          className="row-btn"
-          onClick={() => onBuy(id)}
-          disabled={!canBuy}
-          title={`Buy 1 unit for ${fmtCompact(buyCost)} engagement`}
-        >
-          <span className="label">Buy</span>
-          {fmtCompact(buyCost)}
-        </button>
+        <CompactBuyButton
+          costLabel={fmtCompact(buyCost)}
+          canBuy={canBuy}
+          onBuy={() => onBuy(id)}
+        />
         <button
           className="row-btn"
           onClick={() => onUpgrade(id)}
@@ -198,6 +241,83 @@ function GeneratorRow({
         </button>
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Buy button — full-spec anatomy for first purchase (§4.2).
+
+interface BuyButtonProps {
+  label: string;
+  costLabel: string;
+  canBuy: boolean;
+  onBuy: () => void;
+}
+
+function BuyButton({ label, costLabel, canBuy, onBuy }: BuyButtonProps) {
+  const [shaking, setShaking] = useState(false);
+  const [glowing, setGlowing] = useState(false);
+
+  const handleClick = () => {
+    if (!canBuy) {
+      setShaking(true);
+      window.setTimeout(() => setShaking(false), 200);
+      return;
+    }
+    setGlowing(true);
+    window.setTimeout(() => setGlowing(false), 200);
+    onBuy();
+  };
+
+  return (
+    <button
+      className={`buy-btn${!canBuy ? ' buy-btn-disabled' : ''}${shaking ? ' buy-btn-shake' : ''}${glowing ? ' buy-btn-glow' : ''}`}
+      onClick={handleClick}
+      aria-disabled={!canBuy}
+      // Not using `disabled` so we can intercept click for shake feedback.
+    >
+      <span className="buy-btn-label">{label}</span>
+      <span className={`buy-btn-cost${!canBuy ? ' buy-btn-cost-amber' : ''}`}>
+        {costLabel}
+      </span>
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Compact buy button — for owned rows (additional purchase, §6.4).
+
+interface CompactBuyButtonProps {
+  costLabel: string;
+  canBuy: boolean;
+  onBuy: () => void;
+}
+
+function CompactBuyButton({ costLabel, canBuy, onBuy }: CompactBuyButtonProps) {
+  const [shaking, setShaking] = useState(false);
+  const [glowing, setGlowing] = useState(false);
+
+  const handleClick = () => {
+    if (!canBuy) {
+      setShaking(true);
+      window.setTimeout(() => setShaking(false), 200);
+      return;
+    }
+    setGlowing(true);
+    window.setTimeout(() => setGlowing(false), 200);
+    onBuy();
+  };
+
+  return (
+    <button
+      className={`row-btn${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${!canBuy ? ' row-btn-disabled' : ''}`}
+      onClick={handleClick}
+      aria-disabled={!canBuy}
+      title={`Buy 1 unit for ${costLabel} engagement`}
+    >
+      <span className="label">Buy</span>
+      {costLabel}
+    </button>
   );
 }
 

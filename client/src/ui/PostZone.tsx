@@ -4,6 +4,10 @@
 // floating +N number rising from the button (500ms), and the engagement
 // counter tick itself (handled upstream in TopBar). Rapid clicks stack by
 // offsetting floaters horizontally so they don't overlap.
+//
+// Per purchase-feedback-and-rate-visibility.md §4.1:
+// - Confirmation flash: on release, the button's background briefly brightens
+//   (10% lightness bump) then fades out over 150ms.
 
 import { useCallback, useRef, useState } from 'react';
 import { fmtCompact } from './format.ts';
@@ -24,15 +28,22 @@ interface Props {
 
 const FLOAT_TTL_MS = 500;
 const STACK_OFFSET_MAX_PX = 40;
+const CONFIRM_FLASH_MS = 150;
 
 export function PostZone({ onClick, perClick, contextLabel }: Props) {
   const [floats, setFloats] = useState<FloatItem[]>([]);
   const nextId = useRef(0);
+  const [confirmFlash, setConfirmFlash] = useState(false);
 
   const handleClick = useCallback(() => {
     onClick();
+
+    // Confirm flash — brightens then fades (§4.1).
+    setConfirmFlash(true);
+    window.setTimeout(() => setConfirmFlash(false), CONFIRM_FLASH_MS);
+
+    // Floating delta number.
     const id = nextId.current++;
-    // Stack by offsetting each new float a bit horizontally when spammed.
     const offsetX = (Math.random() - 0.5) * STACK_OFFSET_MAX_PX;
     setFloats((prev) => [...prev, { id, value: perClick, offsetX }]);
     window.setTimeout(() => {
@@ -43,7 +54,7 @@ export function PostZone({ onClick, perClick, contextLabel }: Props) {
   return (
     <section className="post-zone">
       <button
-        className="post-button"
+        className={`post-button${confirmFlash ? ' post-confirm-flash' : ''}`}
         onClick={handleClick}
         aria-label="Post content"
       >

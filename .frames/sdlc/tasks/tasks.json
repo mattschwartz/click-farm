@@ -1148,7 +1148,7 @@
       "id": 47,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Purchase feedback & rate visibility sharpening",
       "requester": "engineer",
@@ -1187,7 +1187,8 @@
         "Click-to-post feedback is consistent with the sharpened language"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 48,
