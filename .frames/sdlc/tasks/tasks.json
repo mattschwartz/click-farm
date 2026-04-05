@@ -1,5 +1,5 @@
 {
-  "next_id": 100,
+  "next_id": 101,
   "tasks": [
     {
       "id": 1,
@@ -2898,7 +2898,9 @@
         "Validate that the ten named phases from level-multiplier-curve.md still map onto the felt pacing"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [
+        100
+      ]
     },
     {
       "id": 89,
@@ -3179,7 +3181,9 @@
         "A 'felt stakes' statement that balance tuners (game-designer on task #88 and beyond) can test against"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [
+        100
+      ]
     },
     {
       "id": 95,
@@ -3218,7 +3222,9 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [
+        100
+      ]
     },
     {
       "id": 96,
@@ -3290,7 +3296,7 @@
       "id": 98,
       "role": "engineer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Review: large-number notation ladder — precision ceiling check",
       "requester": "architect",
@@ -3326,7 +3332,8 @@
         "Update reviewers list at top of the proposal per review protocol"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 99,
@@ -3377,6 +3384,132 @@
           "owner": "architect / producer"
         }
       ],
+      "blocked_on": []
+    },
+    {
+      "id": 100,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Remove Scandals system from client + supersede historical docs",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Rip the Scandals & Follower Loss system out of the client per proposals/accepted/remove-scandals-interim.md. The game will run with no negative-pressure system until Audience Mood is implemented (separate future work). Surface area has been fully traced at the line level by the architect and engineer during proposal review — see their review sections for the exact file/line map. Work is mechanical but large (~1 day, ~2450 LOC). Ship as a single atomic change: the save migration, hydration-block removal, types deletion, and driver-interface change cannot be split without leaving the build in a typecheck-red intermediate state. This task also bundles the three superseded-banner edits on historical docs (architect-written and ux-written language already provided in the proposal reviews — no authoring decisions required).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/remove-scandals-interim.md",
+          "purpose": "Source of truth — scope, rationale, and reviews with line-level surface trace"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/scandal-system.md",
+          "purpose": "Architecture doc requiring superseded banner (architect-written language in review §4)"
+        },
+        {
+          "ref": ".frames/sdlc/ux/scandal-system.md",
+          "purpose": "UX spec requiring full-doc superseded banner (ux-designer-written guidance in OQ7)"
+        },
+        {
+          "ref": ".frames/sdlc/ux/visual-identity.md",
+          "purpose": "§3 'Scandal Visual Identity' requires section-scoped superseded banner (ux-designer-written guidance in OQ7)"
+        },
+        {
+          "ref": "client/src/scandal/",
+          "purpose": "Module to delete (index.ts 990 lines + index.test.ts 1215 lines)"
+        },
+        {
+          "ref": "client/src/ui/ScandalModal.tsx",
+          "purpose": "Component to delete (+ ScandalModal.test.ts)"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Bump CURRENT_VERSION to 6, add migrateV5toV6 that deletes accumulators/scandalStateMachine/scandalSessionSnapshot, remove load-path scandal hydration block (lines 100–121), drop scandal type imports"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Delete scandal type definitions (lines 223–379) + four scandal fields on GameState + StaticData.scandal key"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Remove dismissScandalResolution and confirmScandalSpend from Driver interface, plus scandal session-snapshot and Trend-Chasing hook wiring"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "Delete §13 scandal accumulator advancement block (lines 475–577) + return-payload fields"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "Remove scandal init in createInitialGameState (lines 147–159) and imports (lines 18–21)"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "Remove scandal-field passthrough across rebrand (lines 197–207)"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Delete SCANDAL_TYPE_DEFS + SCANDAL_STATIC_DATA + scandal: key on export (lines 21–23, 391–473, 591)"
+        },
+        {
+          "ref": "client/src/ui/useGame.ts",
+          "purpose": "Remove computeScandalUIState, scandalUIState hook output, dismissScandalResolution action"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Remove modal rendering, aftermath card, riskLevels props to generator/platform components"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Remove optional riskLevels prop + RiskLevel import + per-row rendering path"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "Remove optional riskLevels prop + RiskLevel import (parallel edit to GeneratorList)"
+        },
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "Delete SCANDAL_DISPLAY map and ScandalDisplay type"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Delete 26 scandal-scoped CSS rules (all .scandal-* prefixed, starting ~line 1749, zero selector-collision risk)"
+        },
+        {
+          "ref": "client/src/ui/SettingsModal.tsx",
+          "purpose": "Hide (delete) the 'Reduce Time Pressure' toggle row (line 205) — keep settings.reduceTimePressure schema field dormant per OQ5/OQ6 resolution"
+        },
+        {
+          "ref": "client/src/settings/index.ts",
+          "purpose": "Keep reduceTimePressure field; update line-22 comment to remove scandal reference"
+        },
+        {
+          "ref": "client/src/index.css",
+          "purpose": "Update/delete line-5 comment mentioning scandals (trivial)"
+        }
+      ],
+      "acceptance_criteria": [
+        "client/src/scandal/ directory fully deleted (index.ts + index.test.ts)",
+        "client/src/ui/ScandalModal.tsx and ScandalModal.test.ts deleted",
+        "All scandal type definitions removed from client/src/types.ts, including accumulators/scandalStateMachine/scandalSessionSnapshot fields on GameState and scandal: key on StaticData — no scandal symbol references remain anywhere in client/src/ (verified via grep for 'scandal|Scandal|accumulator|RiskLevel|RiskAccumulator|ScandalStateMachine|ScandalSessionSnapshot|ScandalTypeId|ScandalTypeDef|ScandalStaticData|ScandalEvent' returning zero matches across client/src/)",
+        "client/src/save/index.ts: CURRENT_VERSION bumped to 6, migrateV5toV6 function added that deletes the three scandal fields from state, load-path scandal hydration block (lines 100–121) removed in the same commit, scandal-type imports dropped",
+        "A new test case for migrateV5toV6 is added that loads a V5 fixture containing scandal fields and asserts they are stripped in the resulting V6 state",
+        "Driver interface no longer exposes dismissScandalResolution or confirmScandalSpend methods",
+        "game-loop/index.ts §13 scandal accumulator advancement block fully removed; return payload no longer carries scandal fields",
+        "createInitialGameState in model/index.ts no longer constructs scandal state",
+        "prestige/index.ts no longer carries scandal fields across rebrand",
+        "static-data/index.ts no longer exports SCANDAL_TYPE_DEFS, SCANDAL_STATIC_DATA, or a scandal: key",
+        "UI cleanup complete: useGame.ts, GameScreen.tsx, GeneratorList.tsx, PlatformPanel.tsx, display.ts no longer reference scandal state, RiskLevel, or risk meters",
+        "GameScreen.css scandal block (26 .scandal-* rules) deleted; .risk-building and .risk-high CSS rules and reduce-motion override deleted",
+        "SettingsModal.tsx 'Reduce Time Pressure' toggle row and its wiring deleted — the reduceTimePressure schema field in settings/index.ts is RETAINED (dormant), and its scandal-referencing comment is updated to remove the scandal reference",
+        "index.css line-5 scandal comment updated or removed",
+        ".frames/sdlc/architecture/scandal-system.md has a full-doc superseded banner inserted above the first blockquote, using the exact language given in the architect's review §4 of proposals/accepted/remove-scandals-interim.md",
+        ".frames/sdlc/ux/scandal-system.md has a full-doc superseded banner inserted at the top of the document, matching the architect's wording pattern and pointing at proposals/accepted/remove-scandals-interim.md and proposals/accepted/audience-mood-retention.md",
+        ".frames/sdlc/ux/visual-identity.md §3 'Scandal Visual Identity' has a section-scoped '> **SUPERSEDED (2026-04-05):**' banner at its top with the same pointers (other sections remain unmarked and current)",
+        "Full typecheck (tsc --noEmit or equivalent) passes with zero errors",
+        "Full test suite passes with zero failures or skips introduced by this change",
+        "Manual smoke-test verified: a new save loads, generators purchase, rebrand works, settings modal renders without the Reduce Time Pressure row and with a legitimate MOTION section containing only Reduce Motion"
+      ],
+      "open_questions": [],
       "blocked_on": []
     }
   ]
