@@ -537,7 +537,7 @@
       "alias": "E11",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Risk Accumulators & Scandal Events [stretch]",
       "requester": "architect",
@@ -567,7 +567,8 @@
         "Tests cover: each trigger type, empire scaling, magnitude bounds, offline freeze/resume, stacking suppression"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 31,
@@ -602,9 +603,7 @@
         "Tests cover: state machine transitions, slider damage reduction calculation, timer behavior, risk indicator thresholds"
       ],
       "open_questions": [],
-      "blocked_on": [
-        30
-      ]
+      "blocked_on": []
     },
     {
       "id": 32,

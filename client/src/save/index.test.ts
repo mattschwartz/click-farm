@@ -139,16 +139,16 @@ describe('clearSave', () => {
 // ---------------------------------------------------------------------------
 
 describe('migrate', () => {
-  it('passes through current-version (v2) data unchanged', () => {
+  it('passes through current-version (v3) data unchanged', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const data: SaveData = {
-      version: 2,
+      version: 3,
       state,
       lastCloseTime: 0,
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(2);
+    expect(result.version).toBe(3);
     expect(result.state.player.id).toBe(state.player.id);
   });
 

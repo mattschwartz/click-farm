@@ -2,10 +2,16 @@
 // Responsibility: serialize/deserialize game state to/from localStorage,
 // with versioned migrations. See core-systems.md — "Save Module".
 
-import type { GameState, SaveData, ViralBurstState } from '../types.ts';
+import type {
+  GameState,
+  RiskAccumulator,
+  SaveData,
+  ScandalStateMachine,
+  ViralBurstState,
+} from '../types.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -63,6 +69,18 @@ export function load(): GameState | null {
   return {
     ...gameState,
     viralBurst: { ...viralBurst, active: null },
+    // Ensure scandal fields are present. Driver sets real values on open.
+    accumulators: gameState.accumulators ?? [],
+    scandalStateMachine: gameState.scandalStateMachine ?? {
+      state: 'normal' as const,
+      activeScandal: null,
+      suppressedNotification: null,
+      timerStartTime: null,
+      timerDuration: 13_500,
+      readBeatDuration: 1_500,
+      pendingEngagementSpend: 0,
+    },
+    scandalSessionSnapshot: null, // always reset — driver repopulates on open
   };
 }
 
@@ -95,11 +113,48 @@ export function migrateV1toV2(data: SaveData): SaveData {
   };
 }
 
+/**
+ * Migrate a V2 save (no scandal fields) to V3.
+ * Injects empty accumulators and a default state machine. The driver will
+ * populate accumulators via ensureAccumulators on the first tick.
+ */
+export function migrateV2toV3(data: SaveData): SaveData {
+  const oldState = data.state as GameState & {
+    accumulators?: RiskAccumulator[];
+    scandalStateMachine?: ScandalStateMachine;
+  };
+  // Default state machine: normal state, no active scandal, timer config 0
+  // (driver will set real values from staticData on first open).
+  const defaultSm: ScandalStateMachine = {
+    state: 'normal',
+    activeScandal: null,
+    suppressedNotification: null,
+    timerStartTime: null,
+    timerDuration: 13_500, // readBeatMs + decisionWindowMs defaults
+    readBeatDuration: 1_500,
+    pendingEngagementSpend: 0,
+  };
+  return {
+    ...data,
+    version: 3,
+    state: {
+      ...oldState,
+      accumulators: oldState.accumulators ?? [],
+      scandalStateMachine: oldState.scandalStateMachine ?? defaultSm,
+      scandalSessionSnapshot: null, // driver always overwrites on open
+    },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
   if (current.version === 1) {
     current = migrateV1toV2(current);
+  }
+
+  if (current.version === 2) {
+    current = migrateV2toV3(current);
   }
 
   if (current.version !== CURRENT_VERSION) {
