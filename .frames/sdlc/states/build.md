@@ -53,6 +53,16 @@ Write the code.
 
 Write tests and verify the implementation.
 
+**Commands** (run from the repo root or from `client/`):
+
+| Command | What it does |
+|---|---|
+| `cd client && npm test` | One-shot run of the full suite. Same as `vitest run`. |
+| `npx vitest run path/to/file.test.ts` | Run a single test file. |
+| `npx vitest run -t "part of name"` | Filter by test name. |
+
+`npm test` is the script defined in `client/package.json`. The `npx vitest` commands work from either the repo root or `client/` — vitest finds the config automatically.
+
 **Constraints:**
 - You MUST write tests for any code that touches core game state, money, progression, or player-facing behavior, because these are the areas where bugs have consequences
 - You MUST run the full test suite and verify all tests pass — not just the new tests, because a change that passes its own tests but breaks existing ones is not complete
