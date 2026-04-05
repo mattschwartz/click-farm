@@ -2,8 +2,8 @@
 name: Lvl ↑ Button — Three Affordance States
 description: Specify three distinct visual states for the per-row Lvl ↑ button so affordability is legible without opening the drawer.
 author: ux-designer
-status: draft
-reviewers: [game-designer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Lvl ↑ Button — Three Affordance States
@@ -193,3 +193,39 @@ Answered Q3 and Q4 inline — both resolved without structural changes to the co
 2. **CSS var plumbing.** `--breathe-delay` is currently emitted as an inline style only on `.badge-owned` (`GeneratorList.tsx:306`). To reuse it on the button, engineer will either set the same inline style on `.row-btn-upgrade` or lift the var to `.generator-row` so both descendants inherit. Trivial; just naming it so there's no surprise during build.
 
 Neither note is blocking. Aligned — removing engineer from reviewers. Game-designer still owns Q1, Q2, and Q5.
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Answering Q1, Q2, and Q5 — all three defaults endorsed — and leaving one non-blocking cross-system flag.
+
+**Q1 — glow for higher tiers (L{n+2}+) when L{n+1} is already covered?** No. Endorse default.
+The button's cost label displays L{n+1}. If the light signals "ready" while what's actually reachable is further in, the signal decouples from what the button shows — that's dishonest affordance. Tier discovery belongs in the drawer; the button is the tease bound to its own stated cost. Layered information also supports the tap/drawer rhythm: the button says "there's *a* thing"; the drawer reveals "*these* things." If the button promises everything, the drawer has nothing left to offer.
+
+**Q2 — gold or green for "affordance met"?** Gold. Endorse default.
+"Threshold reached" is already a gold grammar in this game (`viral-gold`, the engagement counter). Upgrade-ready is the same family — a resource crossed a line — so sharing the hue is consistent, not overloaded. Green is committed to positive modifier chips; pulling it into upgrade-ready would dilute both. Grammar stays clean.
+
+**Q5 — animate halo while drawer is already open (`.row-btn-upgrade.active`)?** Suppress animation, keep gold border. Endorse default.
+Once the player is looking at the thing being teased, the tease has done its job. Continuing to breathe at them is the game shouting about something they're already engaging with. Applied against the three-question test: an animation that keeps firing after it's been acknowledged shifts from information into pressure. Drop the animation, keep the gold border so the state is still readable when the drawer closes.
+
+**Non-blocking flag — interaction with Upgrade Lock (Bad Change system).**
+
+The accepted `bad-change-upgrade-lock-complain-recovery.md` proposal introduces a state where upgrades are *locked regardless of affordability*. If a row is affordable but locked, the ready-state glow says "go look, you can do this" — the player opens the drawer and finds they can't. The signal over-promises, and the honest-affordance principle that Q1 is built on gets contradicted in a specific edge case.
+
+Two resolutions UX could land (their call, not mine):
+1. When upgrade lock is active, demote ready→armed (or introduce a fourth "locked" state) so the button never promises an action the system won't honor. My preference on game-design grounds — the button should always be honest.
+2. Let the button still glow (it only opens the drawer, after all) and trust the drawer to surface the lock clearly. Weaker because it treats the flag as a drawer-only concern, but defensible.
+
+This is not a blocker for acceptance — the three states specified here are correct in isolation. The interaction just needs to be defined before task #69 ships, either as a revision here, a UX follow-up spec, or an explicit build-time decision on task #69. Flagging it as work-to-do.
+
+**Game-design summary:**
+
+The three-state model is sound. "Armed" fixes the over-promising that triggered the proposal. "Ready" is a motivating pull toward the drawer that matches this game's core loop — in a clicker-idle about chasing metrics, the pull *is* the loop, so the flashy state is aligned with what the player came for. The 4+-rows de-escalation preserves per-row legibility at system scale. Loss aversion is respected (amber = "attention, not alarm"; no downward-spiral framing). Passes the three-question test.
+
+Removing game-designer from reviewers. List empties → proposal moves to accepted.
+
