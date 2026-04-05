@@ -1,5 +1,5 @@
 {
-  "next_id": 85,
+  "next_id": 86,
   "tasks": [
     {
       "id": 1,
@@ -2741,6 +2741,47 @@
         "Livestream and Convention follower unlock thresholds set against the finalized progression curve",
         "Selection weights confirmed or revised from 60/30/10 starting values after playtesting",
         "Decisions documented as a revision to gigs-system.md or as a balance-pass note attached to it"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 85,
+      "role": "engineer",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Review generator-level-growth-curves proposal",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Game-designer has authored a draft proposal to fix the Infinity-overflow bug in generator leveling. The proposal makes two balance calls (restore cost/reward parity per the already-accepted level-multiplier-curve.md, and introduce max_level=10 on all generators) plus belt-and-braces Infinity clamps. It flags one question specifically for engineer review: whether the L=10 headroom is safe under the full multiplier stack at runtime (interaction of per-level multiplier × generator base rate × clout upgrades × viral burst × brand-deal/gig boost, etc.). Architect is reviewing in parallel (task #82) for the data-contract and save-migration questions; those are out of scope for engineer review. Leave your feedback written into the proposal document itself per the review state protocol. If L=10 is safe, mark Aligned; if there is a realistic multiplier-stack path that still overflows or loses precision at L=10, state the path concretely and leave yourself in the reviewers list.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/generator-level-growth-curves.md",
+          "purpose": "The proposal under review — read this first"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-multiplier-curve.md",
+          "purpose": "The already-accepted curve decision — input to the headroom math"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "levelMultiplier at line 78 — the overflow site and the tick path where multipliers stack"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "generatorUpgradeCost at line 59 — context for the cost/reward parity call"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "GeneratorDefinition type — sees the proposed max_level field"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the draft proposal end-to-end and the accepted level-multiplier-curve.md it references",
+        "Answer engineer-owned question: under the full runtime multiplier stack (generator base × level multiplier × clout × viral × gigs, etc.), is L=10 safe from Infinity/precision loss? Show the upper-bound math or name the concrete failure path.",
+        "Record findings directly in the proposal document under a new Review section with Decision: Aligned / Not Aligned / Request for Comment",
+        "If Aligned and you are the last reviewer, move proposal to proposals/accepted/ per the review state protocol; otherwise leave in draft with yourself listed in reviewers"
       ],
       "open_questions": [],
       "blocked_on": []
