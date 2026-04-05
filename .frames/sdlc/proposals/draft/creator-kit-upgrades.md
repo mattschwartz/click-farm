@@ -3,7 +3,7 @@ name: Creator Kit Upgrades (Per-Run)
 description: Introduces a themed per-run upgrade menu — Camera, Laptop, Phone, Wardrobe, Mogging — purchased with Engagement and wiped on rebrand, giving players a diegetic "invest in yourself as a creator" layer between generator-buying and prestige.
 author: game-designer
 status: draft
-reviewers: [architect, ux-designer]
+reviewers: [architect]
 ---
 
 # Proposal: Creator Kit Upgrades (Per-Run)
@@ -170,5 +170,34 @@ Three-question test:
 3. **Mogging cap.** Should the total viral burst magnitude be capped regardless of Mogging level, to prevent compound-moment absurdity (Mogging × Brand Deal × Viral Burst × Engagement Boost)? **Owner: game-designer** (balance pass) — flag only, resolve with numbers once all inputs are defined.
 4. **Cost curves.** What does each tier cost in Engagement? Curve should be calibrated against generator production rates so that kit upgrades feel achievable on a first run but the top tiers are a commitment. **Owner: game-designer** (balance pass) — separate task after progression curve is defined.
 5. **Level counts per item.** How many levels does each item have? Clout uses 2–3 per item. Creator Kit may want more (since it's wiped and re-earned every run, a deeper track is more replayable). Leaning toward 3–5 levels per item, but this is a balance pass question. **Owner: game-designer** (balance pass).
-6. **Menu UI placement.** Where does the Creator Kit menu live in the UI? Inline with the generator list? A separate tab? A dedicated strip? This affects player attention and flow. **Owner: ux-designer**.
-7. **Icons and copy.** Each kit item needs an icon and flavor copy that lands the satirical creator-culture tone without drifting into mean-spirited. **Owner: ux-designer** (visual direction) with **game-designer** collaboration on copy.
+6. **Menu UI placement.** Where does the Creator Kit menu live in the UI? Inline with the generator list? A separate tab? A dedicated strip? This affects player attention and flow. ~~Owner: ux-designer~~ **[RESOLVED — ux-designer, 2026-04-05]** Direction: **dedicated collapsible panel**, not inline with the generator list. Rationale:
+  - **Inline competes with the primary loop.** Kit items share the shape of generator upgrades (multi-level, Engagement-priced, stack). Putting them in the same scroll as generators forces the player to parse "is Camera L3 a generator peer, or a modifier on generators?" at a glance. Separating the shelves preserves the generator list's role as the first-glance primary loop.
+  - **Hiding entirely re-creates the Engagement-spend competition problem.** Engagement is already contested between "more Tutorials" and "more kit." If kit lives behind a closed drawer, the player won't see the tradeoff at the moment they're about to spend. So the collapsed panel must carry a **peek-visible spend signal**: when the player's Engagement balance crosses the next affordable kit tier, a subtle affordance surfaces at the decision point (near the currency readout, not inside the panel). Exact treatment → follow-up spec.
+  - **Visual weight is secondary.** The kit panel lives in the interface but must not compete with the generator list for first-glance attention. Weight budget: smaller type scale than generator rows, receded color treatment, clear "shelf" divider.
+  - Full placement, panel behavior, peek-signal affordance, and open/close interaction go in a follow-up UX spec (`ux/creator-kit-panel.md`), filed as a separate task.
+7. **Icons and copy.** Each kit item needs an icon and flavor copy that lands the satirical creator-culture tone without drifting into mean-spirited. ~~Owner: ux-designer~~ **[RESOLVED — ux-designer, 2026-04-05]** Approach committed; asset set and copy drafts deferred to the follow-up spec.
+  - **One icon per item.** Single, legible glyph at list-row scale (Camera, Laptop, Phone, Wardrobe, Mogging). Icons carry recognition; the label carries the name. No icon does double duty.
+  - **Flavor copy: satirical-but-warm, never sneering.** The tone the game already lives in (per `core-game-identity-and-loop.md`) is parody-with-affection. A Mogging flavor line laughs *with* the creator-economy culture it names, not *at* it. Copy drafts will be written jointly with game-designer.
+  - Final icon set, colors, copy drafts → follow-up UX spec.
+
+---
+# Review: ux-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Structurally sound proposal. My concerns are non-blocking and resolvable in the UX spec that follows. OQ6 (menu placement) and OQ7 (icons and copy) are resolved in the Open Questions section above with direction; detailed spec goes in a follow-up task (`ux/creator-kit-panel.md`).
+
+Key non-blocking observations the follow-up spec must carry:
+
+1. **Screen real estate is getting dense.** The core screen now carries: generator list, Actions column (Gigs + future citizens), algorithm mood, scandal indicators, currency readouts, rebrand prompt, and five always-visible kit items. First-run cognitive load rises with every simultaneous system. The "no tutorial" test gets measurably harder when the first-run player sees this much surface at once. The kit panel's collapsible/peek treatment is specifically how we protect first-run cognitive load — not a style preference.
+
+2. **Kit items shape-clone generator rows.** Multi-level, Engagement-priced, stackable. That visual collision is the most important problem to avoid. The follow-up spec will differentiate through placement, type scale, and color — not through competing for the same visual weight as generators.
+
+3. **Engagement-spend competition must be legible at the decision point.** When a player has enough Engagement for both "next Tutorials unit" and "Camera L2," the tradeoff belongs in front of them, not buried inside a closed panel. The peek-signal affordance is the mechanism for this (see OQ6 resolution).
+
+4. **Kit wipe on rebrand is a ceremony beat.** The rebrand ceremony already carries gravitas (per the prestige flow in progress). "Your kit falls away as you pivot" is a natural diegetic addition — no extra ceremony length, just a kit-clearing moment folded into the existing sequence. Flagged for the rebrand ceremony spec, not this proposal.
+
+Architect still needs to review (OQ1 Phone ceiling, OQ2 Wardrobe application point). I'm removing ux-designer from the reviewers list.

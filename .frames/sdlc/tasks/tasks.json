@@ -1,5 +1,5 @@
 {
-  "next_id": 59,
+  "next_id": 62,
   "tasks": [
     {
       "id": 1,
@@ -1663,6 +1663,157 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-05"
+    },
+    {
+      "id": 59,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Decompose prestige/rebrand system into build tasks",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "The prestige/rebrand system is fully designed across proposal, UX spec, and architecture docs, but has not been decomposed into buildable engineering tasks. Engineering currently ships a placeholder single-button stub (GameScreen.tsx ~line 322) with a window.confirm dialog and no Upgrades button, which leaves 'Clout' as an undefined currency with no surface that teaches what it does. Players see 'Rebrand · +78 Clout' with zero context. The fix is to ship the real spec. This task is the plan step: break the accepted design+UX+architecture into discrete, assignable chunks an engineer can pick up. Likely chunks include: prestige cluster (two-button affordance + locked states + tooltips), Clout Shop modal (layout, upgrade rows, purchase flow, states), Rebrand Ceremony phases 1-4 (threshold review, eulogy, commit, dissolution/rebirth), post-rebrand re-entry (silent return, rebrand count badge, first-rebrand ambient copy), Reduce Motion variants, and replacement of window.confirm with in-app Phase 1 modal. Sequencing matters: the two-button cluster should land before or with the Rebrand Ceremony so Clout gains meaning from the visible Upgrades button.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "§7 Prestige — original design proposal for the mechanic, Clout economy, narrative framing"
+        },
+        {
+          "ref": "proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Clout Shop design — upgrade categories, effects, purchase model"
+        },
+        {
+          "ref": "proposals/accepted/clout-to-follower-scaling-curve.md",
+          "purpose": "Balance curve for Clout earned on rebrand"
+        },
+        {
+          "ref": "ux/prestige-rebrand-screen.md",
+          "purpose": "Full UX spec — two-button cluster, Clout Shop modal, 4-phase ceremony, motion briefs, accessibility, post-rebrand re-entry"
+        },
+        {
+          "ref": "architecture/core-systems.md",
+          "purpose": "Contracts: CloutUpgrade, calculateRebrand, applyRebrand, clout_upgrades map, what persists vs resets"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Current placeholder button implementation (~line 322) to be replaced; also uses window.confirm which violates the SOP on dialogs and must be removed"
+        }
+      ],
+      "acceptance_criteria": [
+        "A set of discrete build tasks created and assigned to engineer, each with its own overview, acceptance criteria, and related_items",
+        "Tasks are sequenced with explicit blocked_on relationships so engineering can pick them up in the intended order",
+        "The two-button prestige cluster (Upgrades + Rebrand) is scoped before or concurrent with the Rebrand Ceremony, so Clout has a visible spending surface from first encounter",
+        "Replacement of the current window.confirm dialog is explicitly tasked — no build chunk leaves it in place as an interim",
+        "Reduce Motion variants (per ux/prestige-rebrand-screen.md §7) are either included in each relevant chunk or carried as a dedicated follow-up task",
+        "Any ambiguities discovered during decomposition are surfaced as open_questions on the created tasks with the correct owner role (game-designer for tuning values, ux-designer for UX clarifications)"
+      ],
+      "open_questions": [
+        {
+          "question": "Rebrand eligibility threshold — at what total_followers value does the Rebrand button first unlock? Listed as open in ux/prestige-rebrand-screen.md §9.1. Architect should either resolve via existing proposals or flag to game-designer before engineering starts on the locked-state affordance.",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Initial Clout upgrade cost/cap values — affects Clout Shop empty-state readability per ux/prestige-rebrand-screen.md §9.4. May or may not be a blocker depending on whether shop chunk can ship with a minimal tuned set and expand later.",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Eulogy stanza template library — Phase 2 pulls from data-driven templates. Needed for the ceremony chunk. Per ux/prestige-rebrand-screen.md §9.3.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 60,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "UX spec: Gigs variant cards (Brand Deal / Livestream / Convention)",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Write the per-variant card spec for the Gigs system. Three variants share the core Gig card grammar (corporate-green lane, tap-to-activate, expiry fade) but must be recognizable at a glance because duration determines the player's decision window (Brand Deal 20s, Livestream 60s, Convention 10s). The gigs-system proposal (accepted/draft) resolved the direction: duration is the loudest element on the card, rarity signals through arrival motion (not static art), and 'Convention' is the on-card label (not 'Con', to avoid scandal-vocabulary collision). This task produces the full asset-level spec the engineer can build against.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/gigs-system.md",
+          "purpose": "parent proposal with direction in OQ3 and ux-designer review log"
+        },
+        {
+          "ref": ".frames/sdlc/ux/brand-deal-card.md",
+          "purpose": "existing single-card spec this extends/supersedes per-variant"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/brand-deal-boost.md",
+          "purpose": "original card mechanic and ux review (slow fade, corporate-green lane, stamp/snap activation)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/viral-burst-event-signal.md",
+          "purpose": "compound-moment visual when a Gig overlaps a viral burst"
+        }
+      ],
+      "acceptance_criteria": [
+        "Visual hierarchy spec per variant: duration > variant name > icon > body copy (inverted from conventional card order, deliberate)",
+        "Per-variant entrance motion spec: Brand Deal baseline, Livestream slower/heavier, Convention faster/punchier with distinct audio-visual signature — sufficient to produce the 'Oh, a con!' emotional register without relying on static art",
+        "Per-variant color accent specified within the corporate-green lane (Brand Deal baseline, Livestream warm-toward-amber, Convention cooled-toward-teal), all passing WCAG 1.4.11 3:1 UI-component contrast against card background",
+        "Per-variant icon: phone/handshake (Brand Deal), broadcast dot / go-live badge (Livestream), crowd / badge-lanyard (Convention) — single glyph at card-header scale",
+        "Copy: on-card label is 'Convention' (full word); short forms like 'Con' permitted only in secondary/acknowledgment copy",
+        "Expiry fade and activation stamp/snap behavior carried forward from brand-deal-card.md — any per-variant deltas called out explicitly",
+        "Spec written to .frames/sdlc/ux/gig-cards.md"
+      ],
+      "open_questions": [
+        {
+          "question": "Should Convention's distinct entrance have a dedicated SFX, or is visual signature enough given current audio scope?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 61,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "UX spec: Creator Kit panel placement and peek-signal",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Write the UX spec for the Creator Kit per-run upgrade menu. The creator-kit-upgrades proposal (draft) resolved direction in OQ6: dedicated collapsible panel (not inline with generators), with a peek-visible spend signal near the currency readout that surfaces when the player can afford the next kit tier. This task produces the full placement, panel behavior, open/close interaction, spend-signal affordance, icon set, and copy drafts. Core screen is getting dense (generators, Actions column, algorithm mood, scandals, currency, rebrand prompt, now kit) — the kit panel must live in the interface without competing with the generator list for first-glance attention.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/creator-kit-upgrades.md",
+          "purpose": "parent proposal with direction in OQ6, OQ7, and ux-designer review log"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "structural template for a flat multi-level upgrade menu (shape the kit items mirror)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "parody-with-affection tone for flavor copy"
+        }
+      ],
+      "acceptance_criteria": [
+        "Panel placement specified: dedicated collapsible shelf, not inline with generator list; position relative to generator list and Actions column called out",
+        "Panel open/close interaction specified: trigger, transition, collapsed vs. open footprint, default state on first run and subsequent runs",
+        "Peek-signal affordance specified: surfaces near currency readout when Engagement balance crosses next-affordable kit tier; subtle enough not to compete with generator list; clears on purchase",
+        "Visual weight spec: kit rows use smaller type scale and more receded color treatment than generator rows — explicit numbers/tokens",
+        "Icon set drafted for all five items (Camera, Laptop, Phone, Wardrobe, Mogging) at list-row scale",
+        "Flavor copy drafted per item, satirical-but-warm tone (parody-with-affection, not sneering) — written jointly with game-designer",
+        "First-run cognitive load called out explicitly: how the panel defaults behave for a brand-new player so the 'no tutorial' test survives introducing five simultaneous kit items",
+        "Spec written to .frames/sdlc/ux/creator-kit-panel.md"
+      ],
+      "open_questions": [
+        {
+          "question": "Should the panel default to collapsed or open on first-ever run (pre-first-rebrand)?",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "Does the peek-signal affordance also fire for generator-unit affordability, or is it kit-exclusive to preserve signal strength?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": []
     }
   ]
 }

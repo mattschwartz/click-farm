@@ -3,7 +3,7 @@ name: Gigs System
 description: Reframes the "brand deal" Actions-column member as the Gigs system — one slot, one cadence, with multiple data-defined variants (Brand Deal, Livestream, Convention) that share the mechanic but carry distinct payoff shapes and unlock tiers.
 author: game-designer
 status: draft
-reviewers: [ux-designer, architect]
+reviewers: [game-designer]
 ---
 
 # Proposal: Gigs System
@@ -119,8 +119,120 @@ No new engagement-line concerns beyond those already cleared in `brand-deal-boos
 
 1. **Variant-specific follower unlock thresholds** — at what follower counts do Livestream and Convention unlock? Brand Deal threshold is already resolved to TBD in `brand-deal-boost.md`. **Owner: game-designer (balance pass, once progression curve is finalized)**
 2. **Selection weights** — are 60/30/10 the right starting weights, or should Convention be rarer (e.g., 70/25/5)? **Owner: game-designer (balance pass, after playtesting)**
-3. **Per-variant card visual treatment** — how do Brand Deal, Livestream, and Convention cards differ visually? Iconography, color accent, copy, animation? **Owner: ux-designer**
-4. **State model rename and variant discriminator** — `GameState.brandDeal` becomes `GameState.gig`. `BrandDealOffer` gains a `variant_id: string` field; `ActiveBrandDeal` also gains `variant_id`. Is this the right shape, or should variant config be inlined into the state rather than referenced by id? **Owner: architect**
-5. **Save migration** — the architect's plan in `brand-deal-boost.md` already required a v2→v3 bump for `brandDeal`. If this proposal accepts before the engineer implements v3, we can ship as v2→v3 with the Gigs shape directly (no v3→v4 needed). If implementation has already started, a second migration is required. **Owner: architect + engineer (coordinate on implementation sequence)**
-6. **Naming of "Convention"** — "Convention" is formal; "Con" is shorter and vibier but can be misread. The data/code identifier should be `convention`; the player-facing card text is a UX/copy decision. **Owner: ux-designer (copy)**
+3. **Per-variant card visual treatment** — how do Brand Deal, Livestream, and Convention cards differ visually? Iconography, color accent, copy, animation? ~~Owner: ux-designer~~ **[RESOLVED — ux-designer, 2026-04-05]** Direction committed; full asset-level spec deferred to a follow-up UX task (`ux/gig-cards.md`). Direction:
+  - **Duration is the loudest element on the card.** Variant recognition at tap-time is decision-critical — Convention's 10s window leaves no room for the player to misread and hesitate. Visual hierarchy: duration > variant name > icon > body copy. This inverts the conventional card reading order and is deliberate.
+  - **Rarity signals through *arrival*, not static art.** The "Oh, a con!" moment the proposal names (§3) is produced by how the card enters, not how it looks once stationary. Brand Deal enters with the baseline motion (per existing `ux/brand-deal-card.md`). Livestream enters slower / heavier, signaling uptime. Convention enters fast + punchier, with a distinct audio/visual signature. Uniform entrance with different icons kills the emotional register.
+  - **Shared lane, divergent accent.** All three cards live inside the existing corporate-green lane (distinct from viral gold) so the class reads as "Gig." Within that lane, each variant carries a secondary accent tone (Brand Deal: baseline green, Livestream: warm green-toward-amber, Convention: cooled green-toward-teal) sufficient to pass 3:1 UI-component contrast against the card background. Specifics go in the follow-up spec.
+  - **Iconography:** phone/handshake (Brand Deal), broadcast dot / go-live badge (Livestream), crowd / badge-lanyard (Convention). Final icon set in the follow-up spec.
+4. **State model rename and variant discriminator** — `GameState.brandDeal` becomes `GameState.gig`. `BrandDealOffer` gains a `variant_id: string` field; `ActiveBrandDeal` also gains `variant_id`. Is this the right shape, or should variant config be inlined into the state rather than referenced by id? ~~Owner: architect~~ **[RESOLVED — architect, 2026-04-05]** Reference by `variant_id`, plus snapshot of mutable behavior parameters at activation. See architect review below for the full state model (`GigOffer` carries `variant_id` only; `ActiveGig` carries `variant_id` + snapshotted `duration_ms` and `boost_multiplier`, mirroring the existing `ActiveBrandDeal` precedent). The variant's *identity* is stable and small; its *parameters* snapshot to insulate a running effect from mid-session StaticData tuning.
+5. **Save migration** — the architect's plan in `brand-deal-boost.md` already required a v2→v3 bump for `brandDeal`. If this proposal accepts before the engineer implements v3, we can ship as v2→v3 with the Gigs shape directly (no v3→v4 needed). If implementation has already started, a second migration is required. ~~Owner: architect + engineer (coordinate on implementation sequence)~~ **[RESOLVED — architect, 2026-04-05]** v3 has already been consumed by the scandal system (`save/index.ts::migrateV2toV3` injects `accumulators`, `scandalStateMachine`, `scandalSessionSnapshot`). The brandDeal code was never implemented against v3. Therefore Gigs ships as **v3→v4**: a single `migrateV3toV4` that injects `{ ms_until_next_offer: 0, offer: null, active: null }` on `GameState.gig`. Only one migration step is required — the original v2→v3 concern is moot.
+6. **Naming of "Convention"** — "Convention" is formal; "Con" is shorter and vibier but can be misread. The data/code identifier should be `convention`; the player-facing card text is a UX/copy decision. ~~Owner: ux-designer (copy)~~ **[RESOLVED — ux-designer, 2026-04-05]** On-card label is **"Convention"** (full word). "Con" collides with the Scandal system's vocabulary — players are being trained to read "con" as scheme/fraud elsewhere in this game, and we must not leak that semantic into a positive offer card. Data id stays `convention`. Short nicknames may live in secondary copy ("You got invited to a con!" in acknowledgment toasts) but not on the primary card label.
 7. **Do variants have sub-mechanics beyond multiplier/duration?** e.g., does Convention cost something to accept (a follower dip for "traveling")? Does Livestream require the player to stay on screen? These would turn variants into distinct sub-systems and move us back toward Framing B. **Recommendation: no sub-mechanics at launch — variants are pure parameter differences.** **Owner: game-designer (confirm)**
+
+---
+# Review: architect
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+The proposal is structurally a clean extension of the brand-deal-boost architecture rather than a redesign. The core tick pipeline, driver contract, and save-behavior model all carry over with only per-variant parameter substitutions. Two of my OQs (4 and 5) are answered below. I'm aligned and removing myself from the reviewers list.
+
+---
+
+## OQ4 — State model and variant discriminator
+
+**Decision: reference variants by `variant_id`; snapshot mutable behavior params at activation.**
+
+State model for the Gigs system:
+
+```typescript
+interface GigState {
+  ms_until_next_offer: number;
+  offer: GigOffer | null;
+  active: ActiveGig | null;
+}
+
+interface GigOffer {
+  /** Which variant was drawn from the weighted random roll. */
+  variant_id: string;           // "brand_deal" | "livestream" | "convention" (string, not enum, for StaticData-driven extensibility)
+  appeared_at: number;
+  expires_at: number;
+}
+
+interface ActiveGig {
+  variant_id: string;           // carried through from the offer that spawned it
+  start_time: number;
+  duration_ms: number;          // snapshot from StaticData.gigs.variants[variant_id] at activation
+  boost_multiplier: number;     // snapshot from StaticData.gigs.variants[variant_id] at activation
+}
+```
+
+Rationale:
+
+- **`variant_id` in `GigOffer`**: the offer is a pointer to a variant config. The UI resolves variant_id → StaticData to render the right card. State stays small.
+- **Snapshot in `ActiveGig`**: mirrors the existing `ActiveBrandDeal` precedent (duration_ms and boost_multiplier are already snapshotted). This insulates a running boost from mid-session StaticData tuning — if the balance pass nudges Convention from 5× to 4.5× mid-session, an already-running Convention finishes at 5× rather than jumping. The snapshot cost is ~16 bytes per active gig; the stability gain is worth it.
+- **String ids, not an enum**: StaticData-driven extensibility. A new variant is a StaticData entry plus a card asset; no type-system change required. This matches the proposal's §5 "weights are StaticData values and tunable without code changes" posture.
+
+Consequence for the tick pipeline: step 14c (spawn) runs the weighted-random roll against unlocked variants and writes the chosen `variant_id` into `offer`. Step 15 (boost) reads `active.boost_multiplier` directly — no StaticData lookup needed at tick time.
+
+---
+
+## OQ5 — Save migration
+
+**Decision: Gigs ships as v3→v4. A single new migration step.**
+
+The assumption in this OQ — that the architect's prior plan of v2→v3 for brandDeal might still be available — is stale. v3 has already been consumed:
+
+- `client/src/save/index.ts::migrateV2toV3` injects `accumulators`, `scandalStateMachine`, and `scandalSessionSnapshot`.
+- `CURRENT_VERSION = 3`.
+- No brandDeal code ever landed against v3.
+
+So: bump `CURRENT_VERSION` 3 → 4, implement `migrateV3toV4` that injects `{ ms_until_next_offer: 0, offer: null, active: null }` as `GameState.gig` default. On `load()`, clear any persisted `offer` and `active` before returning (transient; same rule as the original brand-deal-boost save-behavior table). Only one migration step is needed — not two.
+
+Naming note: `GameState.brandDeal` (in the original plan) was never implemented, so there is no rename to worry about in save data. The first time the field enters the save schema, it enters as `GameState.gig`.
+
+---
+
+## Architecture delta from `brand-deal-boost.md`
+
+For the planner/engineer who picks this up, here is what changes from the architect review inside brand-deal-boost.md:
+
+| Concern | brand-deal-boost.md | gigs-system |
+|---|---|---|
+| `GameState` field name | `brandDeal` | `gig` |
+| Offer type | `BrandDealOffer` | `GigOffer` (+ `variant_id`) |
+| Active type | `ActiveBrandDeal` | `ActiveGig` (+ `variant_id`) |
+| Driver offer event | `onBrandDealOffer` | `onGigOffer` |
+| Driver activation fn | `activateBrandDeal()` | `activateGig()` |
+| StaticData root | `StaticData.brandDeal` | `StaticData.gigs` (with `variants` map) |
+| Spawn rule | unconditional if threshold met | weighted-random over *unlocked* variants; no spawn if pool empty |
+| Unlock gating | single top-level threshold array | per-variant threshold (pool membership driven by thresholds) |
+| Save migration | v2→v3 (planned, never shipped) | v3→v4 (single step) |
+
+The tick pipeline steps themselves (13 expiry, 14 countdown+spawn, 15 engagement boost) remain structurally identical. Step 14c gains the weighted-random variant roll against the unlocked pool; step 15 is unchanged (reads snapshotted `boost_multiplier` from `active`).
+
+**No new architecture doc required.** When this proposal is accepted, a planner can write tasks directly against this review + the brand-deal-boost.md architect review. If an architecture doc becomes warranted (e.g., if variants later grow sub-mechanics per OQ7), one can be added at `.frames/sdlc/architecture/gigs-system.md` at that time.
+
+---
+# Review: ux-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+The three-variant card shape is workable. OQ3 and OQ6 are resolved in the Open Questions section above with direction; detailed per-variant card specs belong in a follow-up UX spec (`ux/gig-cards.md`), filed as a separate task alongside this review.
+
+Key UX truths this proposal commits the card spec to honor:
+
+1. **Duration is the decision-critical fact, not the variant name.** Convention at 10s leaves no slack — if a player misreads a Convention as a Brand Deal (20s) and hesitates 3 seconds, they've burned a third of the window. The card's visual hierarchy must put duration above the variant name and above the icon. This inverts conventional card reading order and is deliberate.
+
+2. **Rarity produces feeling through *arrival*, not static art.** The proposal explicitly names the emotion ("Oh, a con!" §3). That emotion comes from how the rare card *enters*, not from a different icon on an identical entrance. Uniform approach animation with different icons kills the emotional register even if every static element is individually correct. The follow-up spec will define distinct entrance motion per variant.
+
+3. **Copy: "Convention" on-card, not "Con."** The Scandal system trains players to read "con" as scheme/fraud. We do not want that semantic leak on a positive offer card. Data id `convention`; card label "Convention"; short forms allowed only in secondary copy.
+
+Non-blocking observation: if sub-mechanics land later per OQ7, the duration-as-loudest-element rule will need re-evaluation — a variant with a "stay on screen" requirement shifts the decision from timing to commitment, and the card hierarchy should shift accordingly.
+
+I am removing ux-designer from the reviewers list. Game-designer is added to the list to formally resolve OQ1, OQ2, and OQ7 (all game-designer-owned; two are deferred balance-pass items and one is a recommendation that needs author confirmation). Once game-designer parks those, this proposal can move to accepted.
