@@ -3,7 +3,7 @@ name: Late-Game Content Arc — Generators 8–12 and the Satirical Voice Ladder
 description: Specifies generators 8 through 12 with fiction, mechanical character, Clout costs, and the voice ladder for how satirical tone escalates from relatable to absurd across the prestige arc.
 author: game-designer
 status: draft
-reviewers: [game-designer]
+reviewers: [game-designer, architect, ux-designer]
 ---
 
 # Proposal: Late-Game Content Arc — Generators 8–12 and the Satirical Voice Ladder
@@ -215,7 +215,9 @@ Both generators pass the three-question test. Neither introduces variable-ratio 
 ## Open Questions
 
 1. **Is Parasocial Bonds' lifetime_followers scaling the right mechanical novelty, or does it invite runaway late-late-game numbers?** Log-scaled specifically to prevent runaway; a 1B lifetime_followers player sees roughly 3× base vs. a 1M player, not 1000×. But this is a balance concern worth explicit playtest. **Owner: game-designer (balance)**
-2. **Should G11 or G12 introduce a *second* novel mechanic, or is one-novel-one-pure-escalation the right rhythm?** Recommendation: stop at one. The punchline at G12 lands cleaner without mechanical novelty competing with it. **Owner: game-designer / user**
+2. **[RESOLVED] Should G11 or G12 introduce a *second* novel mechanic, or is one-novel-one-pure-escalation the right rhythm?** Recommendation: stop at one. The punchline at G12 lands cleaner without mechanical novelty competing with it. **Owner: game-designer / user**
+  - Answer (game-designer): **One novel mechanic, not two.** The G12 punchline ("you have commoditized the absence of content") is the load-bearing satirical beat of the late-game arc and it needs to land clean. A second novel mechanic at G12 would split the player's attention between decoding the new mechanic and registering the punchline — the joke would arrive muted. Beyond that: one-novel-then-pure-escalation is a known good rhythm because it gives the player time to *learn* the G11 mechanic (lifetime_followers scaling) before the next thing changes, and the contrast between G11's mechanical weirdness and G12's brute-force stat escalation is itself part of the satire — "you learned a clever trick, then the system outgrew cleverness."
 3. **Do the added generators push `clout_cost` calibration (divisor = 10 in the rebrand formula) out of range?** The rebrand formula was calibrated against a 10-Clout first tier. The 400-Clout G12 is 40× that. The formula's sqrt curve handles this (a 16M-follower run yields 400 Clout) but it assumes late-game players can reach 16M followers per run. **Owner: game-designer (balance) / architect (sanity)**
-4. **Should the narrative beats be designer-written one-offs, or should they be templated to allow post-launch additions?** Recommendation: one-offs. Six specific moments hand-crafted beats a templated system at this count. **Owner: game-designer / user**
+4. **[RESOLVED] Should the narrative beats be designer-written one-offs, or should they be templated to allow post-launch additions?** Recommendation: one-offs. Six specific moments hand-crafted beats a templated system at this count. **Owner: game-designer / user**
+  - Answer (game-designer): **Hand-crafted one-offs, not a templated system.** At n=6 narrative beats, the infrastructure cost of a templating system outweighs the benefit. Each beat is tied to a specific fiction moment ("the first piece of slop," "the audience becomes the product") and its copy wants to be written, not filled in. YAGNI applies. Revisit only if post-launch G13+ additions create pressure for another ~6 beats — at n=12 the templating math starts to make sense. Until then, one-offs are the right call.
 5. **Does the "soft ceiling at G12" position need revisiting if playtest reveals players reaching G12 completion faster than R25?** Yes, trivially — but the answer is "tune Clout costs up, don't add G13." **Owner: game-designer (post-launch)**
