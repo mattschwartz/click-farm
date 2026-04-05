@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import {
   classifyLvlBtnState,
   shouldApplyManyReady,
+  shouldFireMaxedArrival,
   MANY_READY_THRESHOLD,
 } from './GeneratorList.tsx';
 
@@ -52,6 +53,36 @@ describe('classifyLvlBtnState', () => {
 
   it('max check precedes affordability — fully leveled stays maxed even if affordable', () => {
     expect(classifyLvlBtnState(1, 10, 10, 0, 50)).toBe('maxed');
+  });
+});
+
+describe('shouldFireMaxedArrival (task #101)', () => {
+  it('does not fire on mount — prev is null (save-loaded maxed row)', () => {
+    // Mount guard: a generator that loaded from save already at max must
+    // NOT celebrate — the player did not achieve the transition this session.
+    expect(shouldFireMaxedArrival('maxed', null)).toBe(false);
+  });
+
+  it('fires on the live ready→maxed transition', () => {
+    expect(shouldFireMaxedArrival('maxed', 'ready')).toBe(true);
+  });
+
+  it('fires on armed→maxed and dormant→maxed (defensive — would require a level jump)', () => {
+    // Not expected in normal play, but the function should behave
+    // consistently: any non-maxed prev → maxed triggers the celebration.
+    expect(shouldFireMaxedArrival('maxed', 'armed')).toBe(true);
+    expect(shouldFireMaxedArrival('maxed', 'dormant')).toBe(true);
+  });
+
+  it('does not re-fire when already maxed', () => {
+    expect(shouldFireMaxedArrival('maxed', 'maxed')).toBe(false);
+  });
+
+  it('does not fire when current state is not maxed', () => {
+    expect(shouldFireMaxedArrival('ready', 'armed')).toBe(false);
+    expect(shouldFireMaxedArrival('armed', 'ready')).toBe(false);
+    expect(shouldFireMaxedArrival('dormant', null)).toBe(false);
+    expect(shouldFireMaxedArrival('ready', 'maxed')).toBe(false);
   });
 });
 

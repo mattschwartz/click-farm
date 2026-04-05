@@ -3518,7 +3518,7 @@
       "id": 101,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Redo maxed-state visual on Lvl ↑ row button — platinum plaque + arrival celebration",
       "requester": "ux-designer",
@@ -3566,7 +3566,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     }
   ]
 }

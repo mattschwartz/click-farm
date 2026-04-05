@@ -18,6 +18,11 @@
   --accent-green: #5fd692;
   --accent-amber: #ffb347;
   --accent-red: #ff6b6b;
+  /* Reserved for maxed / completed states only (ux/generator-max-level-state.md).
+     Positioned as "the tier above gold"; cool-temperature so it never
+     competes with the warm affordance signals (gold-ready, amber-armed). */
+  --accent-platinum: #d9dee8;
+  --accent-platinum-deep: #a6b0c2;
 }
 
 /* --- Ambient background layer (Algorithm mood) -------------------------- */
@@ -2303,16 +2308,101 @@
   color: var(--text-p3);
 }
 
-/* Maxed — cap reached, no further upgrade. Static gold-dim treatment
-   mirrors Clout shop MAX state. Task #89. */
+/* Maxed — cap reached. Platinum plaque, inset, unpressable-looking.
+   Spec: ux/generator-max-level-state.md §3.2. --accent-gold is reserved
+   for the ready-to-buy signal on this same button, so maxed MUST use a
+   distinct, cooler token. No animation here — arrival celebration is
+   one-shot via .lvl-maxed-arrival (see §4.2). */
 .row-btn-upgrade.row-btn-lvl-maxed {
-  color: color-mix(in srgb, var(--accent-gold) 70%, transparent);
-  border-color: color-mix(in srgb, var(--accent-gold) 40%, transparent);
+  cursor: default;
+  border: 1px solid var(--accent-platinum-deep);
+  background: linear-gradient(
+    to bottom,
+    rgba(217, 222, 232, 0.14) 0%,
+    rgba(217, 222, 232, 0.06) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),   /* top-edge highlight */
+    inset 0 0 0 1px rgba(11, 13, 18, 0.25);       /* inset depth */
+  color: var(--accent-platinum);
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 .row-btn-upgrade.row-btn-lvl-maxed .label {
-  color: var(--text-p2);
+  color: var(--accent-platinum);
+}
+
+/* Crown glyph replaces the ↑ chevron at max. Inline in the .label span
+   before "LVL" text. Mirrors the .lvl-chevron pattern used for ready. */
+.row-btn-upgrade.row-btn-lvl-maxed .lvl-crown {
+  display: inline-block;
+  font-size: 10px;
+  margin-right: 3px;
+  color: var(--accent-platinum);
+  /* Slight vertical nudge to optically center the crown with caps. */
+  transform: translateY(-0.5px);
+}
+
+/* No hover affordance — the button is not actionable at max. Override
+   :hover to match the non-hover appearance (no scale, no glow). */
+.row-btn-upgrade.row-btn-lvl-maxed:hover {
+  background: linear-gradient(
+    to bottom,
+    rgba(217, 222, 232, 0.14) 0%,
+    rgba(217, 222, 232, 0.06) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(11, 13, 18, 0.25);
+}
+
+/* Arrival celebration — one-shot, fires on live ready→maxed transition.
+   600ms: scale 1→1.08→0.98→1, platinum halo pops and retracts. Cleared
+   by the React timer; never persists. Mount guard lives in GeneratorRow. */
+.row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
+  animation: lvl-maxed-arrival 600ms ease-out;
+}
+
+@keyframes lvl-maxed-arrival {
+  0% {
+    transform: scale(1);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+      inset 0 0 0 1px rgba(11, 13, 18, 0.25),
+      0 0 0 0 rgba(217, 222, 232, 0);
+  }
+  30% {
+    transform: scale(1.08);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
+      inset 0 0 0 1px rgba(11, 13, 18, 0.25),
+      0 0 20px 4px rgba(217, 222, 232, 0.55);
+  }
+  60% {
+    transform: scale(0.98);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+      inset 0 0 0 1px rgba(11, 13, 18, 0.25),
+      0 0 12px 2px rgba(217, 222, 232, 0.30);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+      inset 0 0 0 1px rgba(11, 13, 18, 0.25),
+      0 0 0 0 rgba(217, 222, 232, 0);
+  }
+}
+
+/* Reduce Motion — arrival celebration is removed entirely. The static
+   platinum-plaque visual still communicates the state change. */
+@media (prefers-reduced-motion: reduce) {
+  .row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
+    animation: none;
+  }
+}
+html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
+  animation: none;
 }
 
 /* Armed — stronger border than dormant, amber deficit glyph, no motion. */

@@ -94,6 +94,31 @@ export function classifyLvlBtnState(
 export const MANY_READY_THRESHOLD = 4;
 
 /**
+ * Decide whether the one-shot maxed arrival celebration should fire on the
+ * current render.
+ *
+ * Fires only on a live, in-session transition INTO 'maxed'. Specifically:
+ *   - current state must be 'maxed'
+ *   - prev state must be non-null (null = first render; mount guard — we
+ *     do NOT celebrate generators that loaded from save already at max)
+ *   - prev state must be something other than 'maxed'
+ *
+ * See ux/generator-max-level-state.md §4.1. Task #101.
+ */
+export function shouldFireMaxedArrival(
+  current: LvlBtnState,
+  prev: LvlBtnState | null,
+): boolean {
+  if (current !== 'maxed') return false;
+  if (prev === null) return false;       // mount guard
+  if (prev === 'maxed') return false;    // already maxed, no re-fire
+  return true;
+}
+
+/** Duration of the arrival celebration, in ms (matches CSS keyframes). */
+export const LVL_MAXED_ARRIVAL_MS = 600;
+
+/**
  * Returns true when the generator-list should de-escalate ready-state
  * breathing because too many rows would flash at once. Threshold from spec.
  */
@@ -362,6 +387,23 @@ function GeneratorRow({
   );
   const lvlDeficit = Math.max(0, upgradeCost - state.player.engagement);
 
+  // Maxed arrival celebration — one-shot (600ms) on the live ready→maxed
+  // transition within a session. Mount guard: prevLvlState is null on the
+  // first render, so generators loaded from save already at max do NOT fire.
+  // Spec: ux/generator-max-level-state.md §4.
+  const prevLvlState = useRef<LvlBtnState | null>(null);
+  const [maxedArrival, setMaxedArrival] = useState(false);
+  useEffect(() => {
+    const prev = prevLvlState.current;
+    if (shouldFireMaxedArrival(lvlState, prev)) {
+      setMaxedArrival(true);
+      const t = window.setTimeout(() => setMaxedArrival(false), LVL_MAXED_ARRIVAL_MS);
+      prevLvlState.current = lvlState;
+      return () => window.clearTimeout(t);
+    }
+    prevLvlState.current = lvlState;
+  }, [lvlState]);
+
   const openDrawer = () => {
     if (!canOpenDrawer) return;
     if (!onOpenDrawer) return;
@@ -418,14 +460,14 @@ function GeneratorRow({
               ready   (owned, affordable): gold breathing halo pulling eye
                                            toward the drawer */}
         <button
-          className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${isDrawerOpen ? ' active' : ''}`}
+          className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${isDrawerOpen ? ' active' : ''}${maxedArrival ? ' lvl-maxed-arrival' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             if (!canOpenDrawer || !onOpenDrawer) return;
             const rect = rowRef.current?.getBoundingClientRect();
             onOpenDrawer(id, rect?.top ?? 100);
           }}
-          disabled={lvlState === 'dormant'}
+          disabled={lvlState === 'dormant' || lvlState === 'maxed'}
           style={{ '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties}
           title={
             lvlState === 'dormant'
@@ -441,6 +483,9 @@ function GeneratorRow({
           <span className="label">
             {lvlState === 'ready' && (
               <span className="lvl-chevron" aria-hidden>▲</span>
+            )}
+            {lvlState === 'maxed' && (
+              <span className="lvl-crown" aria-hidden>♛</span>
             )}
             Lvl ↑
           </span>
