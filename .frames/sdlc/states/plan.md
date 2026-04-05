@@ -101,17 +101,27 @@ Write your plan as a JSON array to a temp file, then submit it via the task tool
 
 The tool validates that all aliases resolve, assigns real integer IDs, and writes all tasks atomically. If any alias in `blocked_on` doesn't match a task in the plan, the entire batch is rejected.
 
-### 5. Commit the Plan
+### 5. Update Proposal Status
 
-Commit `tasks.json` so the new tasks are in version history.
+Update the source proposal's `status` field to `implementation` so that other agents know tasks have already been created for it and do not plan against it again.
+
+**Constraints:**
+- You MUST update the `status` field in the proposal's frontmatter from `accepted` to `implementation`
+- You MUST do this for every proposal that was used as source material in this planning session
+- If the source was a conversation rather than a proposal file, skip this step
+
+### 6. Commit the Plan
+
+Commit `tasks.json` and any updated proposal files so the new tasks and status change are in version history together.
 
 **Constraints:**
 - You MUST stage `tasks/tasks.json` explicitly — do not use `git add -A` or `git add .`
+- You MUST also stage any proposal files you updated in step 5
 - You MUST verify with `git status` before committing
 - You MUST write a commit message following the project commit format (see `context/COMMITS.md`)
 - If you created any architecture specs in this session, stage and commit those files in the same commit
 
-### 6. Update Architecture (if needed)
+### 7. Update Architecture (if needed)
 
 If planning reveals the need for architecture specs, create them.
 
