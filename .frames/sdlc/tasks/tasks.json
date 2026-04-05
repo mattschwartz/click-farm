@@ -1632,7 +1632,7 @@
       "id": 58,
       "role": "ux-designer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Reconcile core-game-screen.md §4.2 mood library with light-mode edge colors",
       "requester": "ux-designer",
@@ -1660,7 +1660,8 @@
         "Do not edit §4.3 or §4.4 — only their specific color values belong downstream of the proposal; the logic and timing stand"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     }
   ]
 }
