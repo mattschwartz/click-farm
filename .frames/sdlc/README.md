@@ -84,6 +84,25 @@ EOF
 
 The script assigns an integer ID automatically and returns the full task object.
 
+### Editing a task
+
+Update one or more fields on an existing task. Pass only the fields you want to change — everything else stays as-is. Arrays are replaced, not merged.
+
+```bash
+bash .frames/sdlc/tools/task.sh edit <id> <<'EOF'
+{
+  "title": "Updated title",
+  "overview": "Updated description",
+  "acceptance_criteria": ["Updated criterion 1", "Updated criterion 2"]
+}
+EOF
+```
+
+**Editable fields:** `title`, `requester`, `complexity`, `state`, `role`, `overview`, `related_items`, `open_questions`, `blocked_on`
+**Protected fields:** `id`, `status`, `date_assigned`, `date_completed` — these cannot be edited
+
+Returns the full updated task object.
+
 ### Completing a task
 
 When all acceptance criteria have been addressed and the user is happy with the output, mark the task complete. If you only completed some acceptance criteria, do NOT mark the task complete — discuss with the user what remains.
