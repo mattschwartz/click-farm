@@ -3,7 +3,7 @@ name: Cheap Purchase Engagement Dampening
 description: Dampens engagement/sec contribution from purchases that are trivially cheap relative to current income, so outdated-tier generators stop distorting the late-game curve.
 author: game-designer
 status: draft
-reviewers: [architect, engineer, ux-designer]
+reviewers: [architect, ux-designer]
 ---
 
 # Proposal: Cheap Purchase Engagement Dampening
@@ -168,3 +168,34 @@ The design intent is sound and the `cost / (income × T)` shape is a good fit �
 - Confirmation (or correction) on the viral-burst and scandal-accumulator coupling behavior.
 
 Once those land, I can approve and decompose this into architecture notes + an engineer build task.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+No engineer-owned Open Questions on this proposal, so my review is implementability input on the Options in OQ1 and the mitigations in OQ3/OQ4, plus one stale reference.
+
+**OQ1 implementation cost comparison:**
+
+- **Option A (dampening baked in at purchase time)** — schema change. Add `weighted_count: number` to `GeneratorState` alongside `count`, increment by `D` at each buy rather than by 1. Rate formula uses `weighted_count × base_rate × levelMultiplier × algo_mod` in place of `count`. `levelMultiplier` still applies live — the baked-in thing is the count weighting, not the multiplier. `applyRebrand` resets `weighted_count` to 0 alongside `count`. Save migration V?→V?+1 grandfathers existing saves as `weighted_count = count` (effective D=1.0 for pre-existing units), accepting mild grandfathered inflation. Cost: ~30–40 LoC + migration + tests.
+
+- **Option B (continuous re-eval)** — zero schema change. Two-pass rate computation per tick: (1) raw undampened income, (2) D per generator against raw income applied as a scalar to per-generator contribution. 7 generators × 2 passes is free runtime-wise. Cost: ~15–20 LoC in `computeAllGeneratorEffectiveRates` / the tick path + tests. **Strictly cheaper than Option A.**
+
+- **Option C (hybrid)** — Option A's schema change + Option B's dual-pass logic for deep-obsolete units. Highest implementation and test-surface cost. Worth it only if playtesting shows Option A alone leaves pre-existing hoards too inflated.
+
+**Engineer lean: Option B.** Cheapest to build, cleanest mapping to the stated intent ("engagement/sec tracks current strategic position"), and naturally extends to OQ3 (upgrade dampening). The tradeoff is UX, not implementation — a player's passive income continuously re-evaluates as their mix shifts, which is a visible behavior change that ux-designer should weigh. OQ1 is ultimately a design/architecture call, not an engineer call; this is just relative-cost input.
+
+**OQ4 feasibility (algorithm-state interaction).** Both mitigations are cheap:
+
+- *Rolling-average income (EWMA):* new accumulator field on `GameState`, one multiply-add per tick. Schema change, trivial migration.
+- *Algo-neutral baseline:* compute D against income that would obtain at `algorithm_modifier === 1.0`. The rate formula already has algo_mod as a distinct multiplicative factor, so back it out with one division. **No schema change. Deterministic. My recommendation** if architect and game-designer decide to address OQ4 — it's cheaper and avoids persisting a rolling statistic.
+
+**OQ3 feasibility (extending to upgrades).** Under Option B, dampening upgrades is additive: multiply the generator's rate by `D(upgrade_cost_for_next_level, income)` in the same pass as purchase dampening — natural fit, minimal new code. Under Option A, extending to upgrades is awkward (upgrades boost all units, so there's no "new unit" to stamp D onto) and would push toward a mixed A-for-purchases-plus-B-for-upgrades model that doubles surface area. **If upgrade dampening is wanted, Option B for both purchases and upgrades is structurally cleanest.**
+
+**Stale reference (non-blocking).** The proposal's §"What This Does NOT Change" cites upgrade cost as `ceil(base × 4^(level-1))`. That was the bug formula replaced by the accepted `generator-level-growth-curves.md` (Decision 1), which restored `ceil(base_upgrade_cost × levelMultiplier(targetLevel))`. Updating this reference would also strengthen the proposal's framing: because cost now scales identically to `levelMultiplier`, at-tier purchases have D exactly at the T threshold's boundary by construction, and D only diverges below 1.0 for off-tier purchases. That's a cleaner argument for the dampening shape than the stale formula conveys.
+
+**Removing engineer from reviewers.** architect (OQ1, OQ4) and ux-designer (OQ2) still own outstanding questions. game-designer owns OQ1, OQ3, OQ5 but is the author — no self-addition needed here per proposals protocol.
