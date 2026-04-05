@@ -3,7 +3,7 @@ name: Manual Action Ladder
 description: Replaces the single Post button with a ladder of content verbs (Chirp, Selfie, Livestream, …) where each verb follows a three-step lifecycle — unlock, upgrade, automate — and every verb stays permanently manual-clickable. Automators are parallel actors that press each verb on their own cooldowns, not replacements for the player's hand.
 author: game-designer
 status: draft
-reviewers: [architect, ux-designer, engineer]
+reviewers: [ux-designer, engineer]
 ---
 
 # Proposal: Manual Action Ladder
@@ -90,7 +90,9 @@ Both the Actions Column soft cap of 4 members and the mobile bottom-bar-anchor c
 
 ### 7. Relationship to the Existing Generator / Platform / Algorithm Systems
 
-This proposal overlaps significantly with three accepted systems. Surfacing every interaction here so reviewers can make informed calls.
+**[RESOLVED by architect, 2026-04-05 — see review log.]** The ladder **consolidates** with the existing Generator entity: ladder verbs ARE generators, and the Actions column becomes a new view onto existing generator state rather than a new entity class. The `base_engagement_rate` field splits into `base_event_yield × base_event_rate` to decouple Upgrade (yield) from Automate (cadence) — see OQ12 resolution. Migration is backward-compatible: seed existing generators with `base_event_yield=1.0, base_event_rate=base_engagement_rate` and their effective rate is unchanged.
+
+The discussion of options below is retained for historical context.
 
 **Generator system collision (`generator-balance-and-algorithm-states.md` §Generator Rate Table).** The accepted generator roster is: `selfies`, `memes`, `hot_takes`, `tutorials`, `livestreams`, `podcasts`, `viral_stunts`. The user's example verbs — **Chirp, Selfie, Livestream** — directly collide with `selfies` and `livestreams`. Possible resolutions:
 
@@ -137,20 +139,22 @@ No concerns.
 
 - The Actions Column starts with Chirp, not Post.
 - Manual verbs follow a three-state lifecycle: unlock, upgrade, automate.
+- **Ladder verbs ARE generators** (OQ11 resolved). The Actions column is a view onto the existing Generator entity; no new entity class.
+- **`base_engagement_rate` splits into `base_event_yield × base_event_rate`** (OQ12 resolved). Upgrade scales yield via `level_multiplier(level)`; Automate scales rate via `count`. Backward-compatible for existing generators (seed `base_event_yield=1.0`).
 - Every unlocked verb remains permanently manual-clickable — no button is ever retired.
 - Automators are parallel actors with their own independent cooldown timers; manual and auto stack by construction.
-- A verb's cooldown **value** is shared between automator and manual — upgrading the Automate track speeds up both, giving the player a tactile feel of the upgrade through their own tap rate. Cooldown floor is ~0.01s.
-- Every verb starts with some cooldown (even Chirp) so that every verb's Automate track has dual payoff.
+- **Cooldown is a derived view:** `cooldown = 1 / (count × base_event_rate)`. Upgrading Automate (count) shrinks the cooldown for both automator and manual tap. Cooldown floor is ~0.01s.
+- Every verb starts with some cooldown so that every verb's Automate track has dual payoff (passive rate + manual tap rate).
 - Verbs are differentiated by starting yield and starting cooldown, not reskinned.
+- `postClick()` becomes `postClick(state, staticData, verbId)`; new `Player.last_manual_click_at: Record<GeneratorId, timestamp>` field gates per-verb manual cooldowns.
 
 ### 13. What This Leaves Open
 
-- Whether the ladder runs parallel to the existing generator roster or consolidates with it (major OQ11).
-- The full sequence, count, and final naming of ladder rungs (given the Selfie / Livestream name collision with existing generators).
-- The unlock-threshold formula (engagement milestones vs. follower thresholds vs. prior-verb prerequisites).
-- How verb production model resolves against the existing continuous-rate generator model (cooldown vs. rate/sec).
-- The per-verb platform-affinity and algorithm-modifier assignments (auto-resolved under consolidation, newly-authored under parallel).
-- Whether rate-scaled clicks remain needed for non-top-rung verbs.
+- The verb-to-generator roster mapping: which existing generators become manual-clickable, and where Chirp maps (OQ14).
+- The unlock-threshold formula for new verbs (engagement milestones vs. follower thresholds vs. prior-verb prerequisites, OQ5).
+- `base_event_yield` tuning so manual taps stay "meaningfully supplementary" at late-game Automate levels (OQ15).
+- Whether rate-scaled clicks remain needed for non-top-rung verbs (OQ7).
+- Per-verb platform affinity under the 3-platform matrix (OQ4).
 
 ## Supersession Notes
 
@@ -187,14 +191,104 @@ This proposal modifies or extends several accepted decisions. On acceptance, the
 
 7. **Does this supersede `post-button-rate-scaled-clicks.md`, or compose with it?** The top-rung manual verb may not need rate-scaling because it's freshly calibrated. Older verbs (which the player may still manually click) may still need rate-scaling to stay meaningful. Note that rate-scaled-clicks is currently unaccepted (draft, architect and engineer reviews pending), so this is a resolution-before-acceptance question, not a supersession of an accepted decision. Three options: (a) accept this proposal *and* rate-scaled clicks, applying rate-scaling only to non-top-rung manual taps; (b) accept this proposal and reject rate-scaled clicks, relying on fresh calibration of new verbs; (c) accept this proposal and refactor rate-scaled clicks into a "stale-verb boost" mechanism keyed to non-top-rung verbs. **Owner: game-designer + architect.**
 
-8. **How does this land against the `generator-balance-and-algorithm-states.md` §Manual Click Value directive?** That section explicitly says "The value should not be raised — that would undermine the 'generators take over' arc." Adding multiple manual verbs with yield upgrades and shared cooldown reductions directly modifies this. The spirit is preserved if automators remain the dominant passive engine — but the letter is superseded. Architect + game-designer should confirm the new balance target: "*automators* take over per verb; manual hands stay meaningfully supplementary at every rung." **Owner: game-designer + architect.**
+8. ~~**How does this land against the `generator-balance-and-algorithm-states.md` §Manual Click Value directive?**~~ **[RESOLVED — architect, 2026-04-05]** Defensible supersession. The flat `CLICK_BASE_ENGAGEMENT = 1.0` is subsumed by per-verb `base_event_yield`. At the 0.01s cooldown floor, human peak tap rate (~10/sec) is bounded at <10% of automator throughput (~100/sec), so "automators take over *per verb*" holds numerically. Revised balance target — "automators take over per verb; manual hands stay meaningfully supplementary at every rung" — is architecturally sound. See architect's review for full reasoning.
 
 9. **How does this interact with offline progression?** Automated verbs produce offline; manual verbs do not. A player who quits before automating a verb gets zero contribution from that verb while away. Is that fine (natural incentive to automate before logging off), or does offline need a "ghost manual" contribution? **Owner: game-designer + architect.**
 
 10. ~~**Is there a separate Upgrade path for manual cooldown, or does Upgrade only affect yield-per-click?**~~ **[RESOLVED — game-designer, 2026-04-05]** No separate manual-cadence path. The Automate track *is* the cooldown track: each Automate level reduces the verb's shared cooldown, which applies to both the automator's timer and the player's manual tap rate. One purchase, dual payoff. See §2, §4.
 
-11. **[LOAD-BEARING] Does the ladder run PARALLEL to the existing 7-generator roster, or CONSOLIDATE with it?** This is the structural question this proposal cannot resolve alone. Options per §7: (a) parallel systems with renamed verbs to avoid collision; (b) consolidation — verbs ARE generators; (c) parallel with colliding names (not recommended). **Lean: (b) consolidation**, because it inherits all existing balance (unlocks, levels, platform affinity, algorithm modifiers, follower-distribution routing) and avoids two parallel engagement economies. But (b) is a structural refactor of the Upgrades column's identity and the tick pipeline. **Owner: architect + game-designer** (architect assesses feasibility; game-designer confirms the consolidated model still delivers the instrument-panel feel).
+11. ~~**[LOAD-BEARING] Does the ladder run PARALLEL to the existing 7-generator roster, or CONSOLIDATE with it?**~~ **[RESOLVED — architect, 2026-04-05]** **Consolidate (option b).** Ladder verbs ARE generators. The Actions column becomes a new *view* onto the existing Generator entity, not a new entity class. The existing 7-generator roster absorbs the ladder's verbs by renaming/reusing entries rather than duplicating the data model. Parallel systems would be a shared-state-in-two-places antipattern — rejected. See architect's review for full reasoning.
 
-12. **How does the cooldown production model resolve against the existing continuous-rate generator model?** Existing generators produce continuously (`base_engagement_rate` eng/sec). Ladder verbs have discrete cooldowns. Under consolidation (OQ11-b), the two models must reconcile. Options: (a) add a `cooldown_ms` field to Generator and switch production to discrete event-ticks; (b) treat `base_engagement_rate` as `1 / cooldown_seconds` and multiply per-event yield accordingly, keeping continuous-rate semantics under the hood; (c) keep both models, letting some generators be rate-based and others event-based. **Owner: architect.**
+12. ~~**How does the cooldown production model resolve against the existing continuous-rate generator model?**~~ **[RESOLVED — architect, 2026-04-05]** **Split `base_engagement_rate` into `base_event_yield × base_event_rate`.** Yield (engagement per event) scales with `level_multiplier(level)` → Upgrade track. Rate (events/sec) scales with `count` → Automate track. Mathematically identical to today's formula (`count × base_event_rate × base_event_yield × level_multiplier × algorithm_modifier × clout_bonus`). Backward-compatible migration: seed existing generators with `base_event_yield=1.0, base_event_rate=base_engagement_rate`. Displayed cooldown = `1 / (count × base_event_rate)` — a derived view, not a new production mode. Continuous-rate semantics preserved end-to-end; no tick-pipeline changes required. See architect's review for full reasoning and the new `last_manual_click_at: Record<GeneratorId, timestamp>` Player field.
 
-13. **Per-verb algorithm-modifier binding.** Today's `postClick()` hard-codes `CLICK_GENERATOR_ID = 'selfies'` for algorithm-modifier lookup on manual clicks. Per-verb manual clicks each need their own algorithm-modifier mapping. Under consolidation: each verb-as-generator already has its own trend_sensitivity and per-state modifiers — solved for free. Under parallel: each verb needs new trend_sensitivity and per-state modifier assignments (5 verbs × 5 algorithm states = 25 new cells). **Owner: game-designer (assignments) + engineer (binding).**
+13. ~~**Per-verb algorithm-modifier binding.**~~ **[RESOLVED — architect, 2026-04-05]** `postClick()` takes `verbId: GeneratorId` as a parameter. Delete the `CLICK_GENERATOR_ID` and `CLICK_BASE_ENGAGEMENT` constants; look up the verb's generator def for yield, trend_sensitivity, and state_modifiers. Add a per-verb cooldown gate: reject if `now - state.player.last_manual_click_at[verbId] < 1 / (genState.count × def.base_event_rate)`. Under consolidation, every verb-as-generator already has trend_sensitivity and state_modifiers — no new balance cells for algorithm binding. See architect's review for the 5-step refactor spec.
+
+14. **Verb-to-generator roster mapping.** Under consolidation, ladder verbs ARE entries in the existing generator roster (selfies, memes, hot_takes, tutorials, livestreams, podcasts, viral_stunts). Two sub-questions: (a) which existing generators become manual-clickable (all 7, or a subset)?; (b) does Chirp map to an existing generator (rename `selfies` → `chirps`?), become a new generator at threshold 0 that precedes selfies, or fold into the roster some other way? The architect notes: "the existing 7-generator roster can absorb the ladder's verbs by renaming/reusing entries." **Owner: game-designer** (determines which generators are manual-clickable and authors the Chirp mapping).
+
+15. **`base_event_yield` tuning to preserve "meaningfully supplementary" feel.** At the 0.01s cooldown floor, manual contribution is bounded at ~10% of automator throughput. For the "I feel my hand matters" target (§10) to hold at late-game levels, the per-tap yield (`base_event_yield × level_multiplier × algo_mod × …`) must be tuned so that 10% of a verb's automated output is still a visible number jump per tap. Balance-pass concern. **Owner: game-designer** (post-implementation tuning, in collaboration with UX's click-feedback spec).
+
+---
+## Revision: 2026-04-05 — game-designer
+
+Integrated architect's OQ11/12/13/8 resolutions. §7 opens with a [RESOLVED] callout pointing to consolidation + the yield/rate split; historical context retained below. OQs 8, 11, 12, 13 marked RESOLVED inline with summaries of the architect's answers. Added OQ14 (verb-to-generator roster mapping — game-designer to author) and OQ15 (`base_event_yield` tuning to preserve "meaningfully supplementary" feel — from architect's non-blocking flag). §12 "What This Locks In" updated with the new architectural commitments (verbs-are-generators, yield/rate split, derived cooldown, `postClick(verbId)` signature, `last_manual_click_at` field). §13 "What This Leaves Open" trimmed to remove resolved items.
+
+---
+# Review: architect
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Reviewed from a data-model, component-boundary, and coupling perspective. Providing concrete resolutions to the load-bearing architectural OQs so the game-designer can integrate them and move the proposal forward.
+
+**OQ11 — Parallel vs. consolidation → CONSOLIDATE (option b).**
+
+Consolidation wins decisively on architectural grounds. The Generator entity already solves every structural question the ladder needs: `unlock_threshold`, `level`, `count`, `trend_sensitivity`, `state_modifiers`, `content_affinity`, and follower-distribution routing. Running parallel (option a) is a shared-state-in-two-places antipattern — two engagement economies riding the same tick pipeline, coupled implicitly through `player.engagement`. That is distributed-monolith shape at the module level and we should not sign up for it.
+
+Under consolidation, the Actions column becomes a new *view* onto the existing Generator entity, not a new entity class. Cheap, clean, and the existing 7-generator roster can absorb the ladder's verbs by renaming/reusing entries rather than duplicating the data model.
+
+**OQ12 — Cooldown vs. continuous-rate reconciliation → SPLIT `base_engagement_rate` into `base_event_yield × base_event_rate`. Keep continuous-rate as the canonical production model; cooldown is a derived view.**
+
+This is the load-bearing architectural move. Today's effective-rate formula (see `core-systems.md` §Generator L53) conflates yield and cadence:
+
+```
+effective_rate = count × base_engagement_rate × level_multiplier(level) × algorithm_modifier × clout_bonus
+```
+
+The ladder needs them separable: Upgrade track scales yield, Automate track scales cadence. Decompose as:
+
+- `base_event_yield` (engagement per event) ← scaled by `level_multiplier(level)` → Upgrade track
+- `base_event_rate` (events/sec) ← scaled by `count` → Automate track
+
+Substitute and the effective-rate output is mathematically identical:
+
+```
+effective_rate = count × base_event_rate × base_event_yield × level_multiplier(level) × algorithm_modifier × clout_bonus
+```
+
+**Migration is backward-compatible by construction.** For the existing 7 generators, seed `base_event_yield = 1.0` and `base_event_rate = base_engagement_rate`. Product unchanged, existing balance preserved exactly. Only manual-clickable generators (ladder verbs) read the split as independent fields.
+
+**Displayed cooldown (for the button pulse and the manual-click cooldown gate) = `1 / (count × base_event_rate)`** — unaffected by Upgrade purchases, shrinks with Automate purchases. Matches designer intent in §2 and §4 exactly.
+
+**Per manual tap, engagement earned = `base_event_yield × level_multiplier(level) × algo_mod × platform_affinity × clout_bonus × kit_bonus`** — grows with Upgrade, does not shrink cooldown.
+
+One new Player field is required to gate per-verb manual cooldowns:
+
+```
+last_manual_click_at: Record<GeneratorId, timestamp>
+```
+
+Cheap addition. Fits the existing Player save root.
+
+This resolution rejects the designer's options (a) and (c) from §7. Option (a) (discrete-tick production) is a rewrite of the tick pipeline — destructive and unnecessary. Option (c) (dual production models) is implicit coupling at the data-model level; architecturally disqualified.
+
+**OQ13 — Per-verb algorithm-modifier binding → `postClick()` takes a `verbId: GeneratorId` parameter.**
+
+Concrete changes to `client/src/game-loop/index.ts`:
+
+1. Delete the `CLICK_GENERATOR_ID = 'selfies'` hardcode (L62).
+2. Delete the `CLICK_BASE_ENGAGEMENT = 1.0` constant (L55); yield now comes from the verb's generator def.
+3. Change signature to `postClick(state, staticData, verbId: GeneratorId) → GameState`.
+4. Inside `postClick`: look up the verb's generator def, compute `algoMod = effectiveAlgorithmModifier(getAlgorithmModifier(state.algorithm, verbId), def.trend_sensitivity)`, then `earned = def.base_event_yield × level_multiplier(genState.level) × algoMod × clout × kit × platform_affinity_if_applicable`.
+5. Add a cooldown gate: reject (or return unchanged state) if `now - state.player.last_manual_click_at[verbId] < 1 / (genState.count × def.base_event_rate)`. On success, update `last_manual_click_at[verbId] = now`.
+
+Under consolidation every verb-as-generator already has trend_sensitivity and state_modifiers in static data — no new balance cells need to be authored for algorithm binding. (Content affinity on platforms still applies; see below.)
+
+**OQ8 — Manual Click Value supersession → DEFENSIBLE. Accept the revised balance target.**
+
+The flat `CLICK_BASE_ENGAGEMENT = 1.0` is subsumed by per-verb `base_event_yield`. The *spirit* of `generator-balance-and-algorithm-states.md` §Manual Click Value — "generators take over" — holds under the new framing, because at late-game Automate levels (cooldown floor ~0.01s → 100 events/sec per verb), human peak tap rate (~10/sec) is bounded at <10% of automator throughput. Automators dominate numerically, per verb. Manual clicks add a tactile feel layer, not a throughput layer.
+
+The revised target — "automators take over *per verb*; manual hands stay meaningfully supplementary at every rung" — is structurally sound. I support supersession of the §Manual Click Value directive with this language.
+
+**Non-blocking observations (for the record):**
+
+1. *Tuning flag to game-designer (non-blocking):* at the 0.01s cooldown floor, manual contribution is bounded at ~10% of automator output. For "meaningfully supplementary" to *feel* true, per-tap `base_event_yield × level_multiplier` must be tuned high enough that 10% still feels like the hand matters. Balance-pass concern, not architecture.
+
+2. *Static data shape:* ladder verbs that don't map to an existing generator id (e.g. Chirp, if not renamed from a current generator) need new entries in `staticData.generators` with seeded `base_event_yield`, `base_event_rate`, `trend_sensitivity`, `follower_conversion_rate`, `unlock_threshold`, plus content_affinity cells on each platform. This is authoring work for game-designer (per OQ4 and the roster decision), not architecture.
+
+3. *No tick-pipeline changes required.* The yield/rate split is purely a data-model refinement. `computeEffectiveRate` inside the tick loop becomes `count × base_event_rate × base_event_yield × level_multiplier × algo × clout × kit`, which is mathematically identical to today's formula for existing generators. The continuous-rate production model is preserved end-to-end.
+
+4. *No performance concern.* I verified the 0.01s cooldown floor against the tick model: because cooldown is a derived view on continuous rate (not discrete event-ticks), the underlying tick loop does not scale with cooldown floor. The "100 events/sec" is display cadence for the button pulse, not loop frequency.
+
+Removing myself from reviewers. Architecture is resolved pending the game-designer integrating these resolutions into §7, §12, §13 and the OQ list, and pending ux-designer + engineer reviews.
