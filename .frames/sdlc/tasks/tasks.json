@@ -4303,7 +4303,7 @@
       "alias": "A1",
       "role": "architect",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Author manual-action-ladder architecture spec",
       "requester": "architect",
@@ -4359,7 +4359,8 @@
         "The doc is stageable in the same commit as the plan (this task's output is the arch spec file, not new tasks)"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 117,
@@ -4410,7 +4411,7 @@
       "alias": "U1",
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Author Actions-column manual-action-ladder UX spec",
       "requester": "architect",
@@ -4449,7 +4450,8 @@
         "Spec is implementation-ready — engineer (E4) should not need to make visual/interaction judgment calls"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 119,
@@ -4524,9 +4526,7 @@
         "npm run build succeeds; no TypeScript errors"
       ],
       "open_questions": [],
-      "blocked_on": [
-        116
-      ]
+      "blocked_on": []
     },
     {
       "id": 120,
@@ -4593,7 +4593,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        116,
         119
       ]
     },
@@ -4670,7 +4669,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        118,
         119,
         120
       ]
