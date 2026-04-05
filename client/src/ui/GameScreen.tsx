@@ -17,7 +17,7 @@
 //     pipeline exists yet.
 //   - Upgrade drawer with 3-level preview (UX §6.3) — follow-up UX task.
 
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useGame } from './useGame.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import {
@@ -268,23 +268,23 @@ export function GameScreen() {
     setShowCeremonyModal(true);
   };
 
-  const handleCeremonyCancel = () => {
+  const handleCeremonyCancel = useCallback(() => {
     setShowCeremonyModal(false);
     resumeLoop();
     rebrandBtnRef.current?.focus();
-  };
+  }, [resumeLoop]);
 
-  const handleCeremonyConfirm = () => {
+  const handleCeremonyConfirm = useCallback(() => {
     // Phase 3 commit — perform the rebrand. Modal stays open for Phase 4.
     rebrand();
-  };
+  }, [rebrand]);
 
-  const handleCeremonyComplete = () => {
+  const handleCeremonyComplete = useCallback(() => {
     // Phase 4 finished — close modal, resume loop, return focus.
     setShowCeremonyModal(false);
     resumeLoop();
     rebrandBtnRef.current?.focus();
-  };
+  }, [resumeLoop]);
 
   return (
     <>
