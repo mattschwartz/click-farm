@@ -23,7 +23,7 @@ import { purchaseKitItem } from '../creator-kit/index.ts';
 import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
 import { buyGenerator, upgradeGenerator } from '../generator/index.ts';
 import { createInitialGameState } from '../model/index.ts';
-import { load, save } from '../save/index.ts';
+import { clearSave, load, save } from '../save/index.ts';
 import { calculateOffline, type OfflineResult } from '../offline/index.ts';
 import {
   calculateRebrand,
@@ -112,6 +112,13 @@ export interface GameDriver {
   step(deltaMs?: number): void;
   /** Persist to storage now (also captures current-rate snapshot). */
   saveNow(): void;
+  /**
+   * Clear the persisted save and disable all future writes from this driver.
+   * Used by the reset-game flow: after calling resetGame(), the caller should
+   * reload the page so a fresh driver can initialise from empty storage.
+   * Idempotent. Stops tick and save timers.
+   */
+  resetGame(): void;
   /** Stop all timers. Idempotent. */
   stop(): void;
   /** Start the tick + auto-save timers. Idempotent. */
@@ -234,6 +241,10 @@ export function createDriver(options: DriverOptions): GameDriver {
   }
   let tickHandle: number | null = null;
   let saveHandle: number | null = null;
+  // Set by resetGame(). Once true, doSave() becomes a no-op so that
+  // late-firing saves (periodic timer, beforeunload, useEffect cleanup)
+  // cannot resurrect the save we just cleared.
+  let dead = false;
 
   /**
    * Wrap a player action in try/catch. If the model throws, log to console
@@ -293,6 +304,7 @@ export function createDriver(options: DriverOptions): GameDriver {
 
   function doSave(): void {
     if (!persistToStorage) return;
+    if (dead) return;
     // Update last_close_state snapshot from current rates before saving so
     // offline calc has fresh data on next open. Also stamp last_close_time
     // from the driver's clock so it matches what save() serialises.
@@ -368,6 +380,24 @@ export function createDriver(options: DriverOptions): GameDriver {
 
     saveNow() {
       doSave();
+    },
+
+    resetGame() {
+      // Mark the driver dead BEFORE clearing storage so any concurrent
+      // timer callback or beforeunload handler that races with us finds
+      // the dead flag and bails out of doSave().
+      dead = true;
+      if (clearIntervalImpl) {
+        if (tickHandle !== null) {
+          clearIntervalImpl(tickHandle);
+          tickHandle = null;
+        }
+        if (saveHandle !== null) {
+          clearIntervalImpl(saveHandle);
+          saveHandle = null;
+        }
+      }
+      if (persistToStorage) clearSave();
     },
 
     start() {

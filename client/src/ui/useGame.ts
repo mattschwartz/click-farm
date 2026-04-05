@@ -53,6 +53,8 @@ export interface UseGameResult {
    * counted as offline time.
    */
   resumeLoop: () => void;
+  /** Wipe the current save and restart the driver with a fresh GameState. */
+  resetGame: () => void;
 }
 
 /**
@@ -138,6 +140,7 @@ export function useGame(): UseGameResult {
       clearSaveError: () => setSaveError(null),
       pauseLoop: () => driver.stop(),
       resumeLoop: () => driver.start(),
+      resetGame: () => driver.resetGame(),
     }),
     [driver],
   );

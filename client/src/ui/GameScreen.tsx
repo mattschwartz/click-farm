@@ -108,6 +108,7 @@ export function GameScreen() {
     buyKitItem,
     saveError,
     clearSaveError,
+    resetGame,
   } = useGame();
 
   // Settings — persisted separately from GameState, propagates reduceMotion
@@ -506,8 +507,10 @@ export function GameScreen() {
           rebrandCount={state.player.rebrand_count}
           onClose={() => setShowSettingsModal(false)}
           onResetRequested={() => {
-            // Hard reload — the driver re-initialises from a fresh
-            // localStorage on reload, avoiding stale in-memory state.
+            // Clear the save and stop the driver (disables any late-firing
+            // save from timers / beforeunload / effect cleanup), then hard
+            // reload — the driver re-initialises from empty localStorage.
+            resetGame();
             if (typeof window !== 'undefined') window.location.reload();
           }}
           onImportApplied={() => {
