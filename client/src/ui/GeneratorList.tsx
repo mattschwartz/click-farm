@@ -149,7 +149,6 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGenera
         <UpgradeDrawer
           id={openDrawerId}
           generatorState={state.generators[openDrawerId]}
-          def={staticData.generators[openDrawerId]}
           display={GENERATOR_DISPLAY[openDrawerId]}
           staticData={staticData}
           engagement={state.player.engagement}
@@ -288,7 +287,7 @@ function GeneratorRow({
   // generator_unlock head-start grants owned=true without any units.
   const canOpenDrawer = g.count > 0;
 
-  const handleRowClick = (e: React.MouseEvent) => {
+  const openDrawer = () => {
     if (!canOpenDrawer) return;
     if (!onOpenDrawer) return;
     const rect = rowRef.current?.getBoundingClientRect();
@@ -302,10 +301,15 @@ function GeneratorRow({
       ref={rowRef}
       className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}${viralHalo ? ' viral-halo' : ''}${riskClass}${drawerOpenClass}`}
       style={style}
-      onClick={handleRowClick}
+      onClick={openDrawer}
       role={canOpenDrawer ? 'button' : undefined}
       tabIndex={canOpenDrawer ? 0 : undefined}
-      onKeyDown={canOpenDrawer ? (e) => { if (e.key === 'Enter') handleRowClick(e as unknown as React.MouseEvent); } : undefined}
+      onKeyDown={canOpenDrawer ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openDrawer();
+        }
+      } : undefined}
       aria-expanded={canOpenDrawer ? isDrawerOpen : undefined}
       aria-label={canOpenDrawer ? `${display.name} — tap to view upgrade options` : undefined}
     >

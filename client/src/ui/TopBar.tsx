@@ -33,6 +33,21 @@ type TransitionPhase = 'idle' | 'exiting' | 'entering';
 // Minimum rate delta that triggers a flare — filters floating-point noise.
 const RATE_FLARE_THRESHOLD = 0.005;
 
+/**
+ * Whether the RUN badge should be visible.
+ * Shown after the first rebrand (rebrand_count >= 1). Task #66, UX §5.
+ */
+export function shouldShowRunBadge(rebrandCount: number): boolean {
+  return rebrandCount > 0;
+}
+
+/**
+ * Format the RUN badge text — displays the current run number (rebrand_count + 1).
+ */
+export function formatRunBadge(rebrandCount: number): string {
+  return `RUN ${rebrandCount + 1}`;
+}
+
 export function TopBar({
   algorithm,
   engagement,
@@ -111,9 +126,9 @@ export function TopBar({
   const displayedEngagement = useInterpolatedValue(engagement, engagementRate);
 
   // RUN badge fade-in on first appearance (task #66, UX §5).
-  const [badgeShown, setBadgeShown] = useState(rebrandCount > 0);
+  const [badgeShown, setBadgeShown] = useState(shouldShowRunBadge(rebrandCount));
   useEffect(() => {
-    if (rebrandCount > 0 && !badgeShown) {
+    if (shouldShowRunBadge(rebrandCount) && !badgeShown) {
       setBadgeShown(true);
     }
   }, [rebrandCount, badgeShown]);
@@ -128,7 +143,7 @@ export function TopBar({
             {mood?.name ?? displayedStateId}
           </span>
           {badgeShown && (
-            <span className="run-badge">RUN {rebrandCount + 1}</span>
+            <span className="run-badge">{formatRunBadge(rebrandCount)}</span>
           )}
         </div>
         <div className="tagline">{mood?.tagline ?? ''}</div>

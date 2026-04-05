@@ -1,16 +1,11 @@
 // Tests for GameScreen pure helpers (task #66).
 //
-// Tests the ambient copy logic for post-rebrand re-entry surfaces.
+// Covers the ambient-copy visibility predicate for post-rebrand re-entry
+// surfaces. Helper is imported from GameScreen.tsx so regressions in
+// production code are caught.
 
 import { describe, it, expect } from 'vitest';
-
-/**
- * Determine whether the first-rebrand ambient copy should be shown.
- * Only appears on the first rebrand (rebrand_count === 1).
- */
-function shouldShowAmbientCopy(rebrandCount: number): boolean {
-  return rebrandCount === 1;
-}
+import { shouldShowAmbientCopy } from './GameScreen.tsx';
 
 describe('GameScreen ambient surfaces (task #66)', () => {
   describe('First-rebrand ambient copy visibility', () => {

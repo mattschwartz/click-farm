@@ -1,26 +1,10 @@
 // Tests for TopBar pure logic (task #66).
 //
-// Note: TopBar is a React component with animations and state. Testing the
-// rendering of elements with jsdom is not supported by this project's vitest
-// setup. These tests cover the pure logic of when the RUN badge should appear.
+// Covers the RUN badge visibility predicate and text formatter. These helpers
+// are imported from TopBar.tsx so a regression in production code is caught.
 
 import { describe, it, expect } from 'vitest';
-
-/**
- * Determine whether the RUN badge should be visible.
- * Badge appears when rebrandCount > 0 (i.e., rebrand_count >= 1).
- * Used for test coverage of the badge visibility logic.
- */
-function shouldShowRunBadge(rebrandCount: number): boolean {
-  return rebrandCount > 0;
-}
-
-/**
- * Format the RUN badge text.
- */
-function formatRunBadge(rebrandCount: number): string {
-  return `RUN ${rebrandCount + 1}`;
-}
+import { shouldShowRunBadge, formatRunBadge } from './TopBar.tsx';
 
 describe('TopBar RUN badge logic', () => {
   it('hides badge when rebrand_count === 0', () => {

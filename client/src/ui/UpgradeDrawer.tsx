@@ -10,9 +10,9 @@
 // Backdrop: a full-screen transparent overlay handles outside-tap dismiss.
 // Escape key also closes the drawer.
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { GeneratorId, GeneratorState, GeneratorDef } from '../types.ts';
+import type { GeneratorId, GeneratorState } from '../types.ts';
 import type { StaticData } from '../types.ts';
 import { generatorUpgradeCost } from '../generator/index.ts';
 import { levelMultiplier } from '../game-loop/index.ts';
@@ -26,7 +26,6 @@ import { fmtCompact } from './format.ts';
 export interface UpgradeDrawerProps {
   id: GeneratorId;
   generatorState: GeneratorState;
-  def: GeneratorDef;
   display: GeneratorDisplay;
   staticData: StaticData;
   engagement: number;
@@ -46,7 +45,6 @@ const DRAWER_CLOSE_DELAY_MS = 150;
 export function UpgradeDrawer({
   id,
   generatorState,
-  def,
   display,
   staticData,
   engagement,
@@ -63,25 +61,25 @@ export function UpgradeDrawer({
     Math.min(anchorTop, window.innerHeight - DRAWER_HEIGHT - 16),
   );
 
-  // Dismiss on Escape key.
+  const triggerClose = useCallback(() => {
+    setClosing(true);
+    window.setTimeout(onClose, DRAWER_CLOSE_DELAY_MS);
+  }, [onClose]);
+
+  // Dismiss on Escape key. Registered once per open (dep: triggerClose).
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') triggerClose();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  });
+  }, [triggerClose]);
 
   // Focus the primary action button on open.
   const primaryBtnRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     primaryBtnRef.current?.focus();
   }, []);
-
-  function triggerClose() {
-    setClosing(true);
-    window.setTimeout(onClose, DRAWER_CLOSE_DELAY_MS);
-  }
 
   const currentLevel = generatorState.level;
   const currentMulti = levelMultiplier(currentLevel);
@@ -157,7 +155,7 @@ export function UpgradeDrawer({
         style={style}
         role="dialog"
         aria-label={`Upgrade ${display.name}`}
-        aria-modal="false"
+        aria-modal="true"
       >
         {/* Header */}
         <div className="upgrade-drawer-header">

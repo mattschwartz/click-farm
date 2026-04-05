@@ -79,6 +79,14 @@ const VIRAL_PARTICLES = Array.from({ length: 18 }, (_, i) => ({
   duration: 85 + (i % 4) * 20,  // 85–145 (÷100 = 0.85–1.45s)
 }));
 
+/**
+ * Whether the first-rebrand ambient copy should be shown.
+ * Only appears on the first rebrand (rebrand_count === 1). Task #66, UX §5.
+ */
+export function shouldShowAmbientCopy(rebrandCount: number): boolean {
+  return rebrandCount === 1;
+}
+
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
@@ -234,7 +242,7 @@ export function GameScreen() {
   const ambientCopyShownRef = useRef(false);
 
   useEffect(() => {
-    if (state.player.rebrand_count === 1 && !ambientCopyShownRef.current) {
+    if (shouldShowAmbientCopy(state.player.rebrand_count) && !ambientCopyShownRef.current) {
       ambientCopyShownRef.current = true;
       setShowAmbientCopy(true);
       // Hold for 4s, then fade out for 600ms
