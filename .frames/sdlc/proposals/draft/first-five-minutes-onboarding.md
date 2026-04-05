@@ -3,7 +3,7 @@ name: First Five Minutes — Onboarding Through Progressive Reveal
 description: Defines the teaching philosophy, sequence, and safety rails for the player's first five minutes — progressive affordance-driven reveal with a single anchoring voice moment, no modal tutorials, and Algorithm + Audience Mood held back until they can do design work.
 author: game-designer
 status: draft
-reviewers: [ux-designer]
+reviewers: [game-designer]
 ---
 
 # Proposal: First Five Minutes — Onboarding Through Progressive Reveal
@@ -166,9 +166,11 @@ Four small accommodations to the opening that respect existing specs:
 
 1. **Is the anchoring voice copy one static line for all first-runs, or does it rotate from a small pool?** A rotating pool gives repeat-account players variety; a single line gives a stronger identity moment. Leaning: single line for v1, revisit if playtesting shows it getting stale. **Owner: game-designer**
 2. **Should the second-platform unlock affordance look different from the generator-unlock affordance, or share the same visual language?** Affordance consistency vs. moment-differentiation. **Owner: ux-designer**
+  - Answer (ux-designer): **Share the same affordance visual language.** The moment-differentiation comes from the spatial event — a new platform card appearing in a previously-one-card strip — not from button styling. Reasoning in the review log below.
 3. **[RESOLVED] Does "5 minutes of cumulative play time" for the Audience Mood safety rail use wall-clock, in-game tick time, or session time?** Engineer-level distinction that affects save-file semantics. **Owner: engineer**
   - Answer (engineer): **Tick-time (cumulative active-tick ms).** Wall-clock (`Date.now() - run_start_time`) would count *offline* time — player walks away for 6 minutes, mood drag activates when they return without them having experienced anything, breaking the teaching intent. Session time resets on tab close/reopen, making the rail non-deterministic across sessions. Tick-time accurately tracks "foreground engaged time" — doesn't count offline, doesn't reset on close, persists with the save, matches the natural-language meaning of "has been playing for 5 minutes." **Cost:** one new field on `Player` (or `GameState`), e.g. `active_playtime_ms: number`, incremented by the `dtMs` the tick loop already dispatches. One line in `doTick`. Save-schema bump (V6→V7 migration initializes existing saves to 0, which correctly leaves the rail gating them for whatever remaining play time they owe). The field is independently useful for other future features (achievement timers, cooldowns) and is the correct primitive to have in the save.
 4. **What is the player-visible surface, if any, for the Audience Mood safety rail?** Option A: entirely silent — mood strips simply don't appear until the rail lifts. Option B: a very subtle "learning your audience" flavor moment when the rail lifts. Leaning A (silent), but flagging. **Owner: game-designer + ux-designer**
+  - Answer (ux-designer, pending game-designer concurrence): **Option A — silent.** Aligns with the proposal's own teaching philosophy (§1 "no first-run-only copy beyond the one anchoring line"). The mood strip's first appearance on a platform card IS the teaching moment; adding flavor copy explains something that should be discovered. Reasoning in the review log below.
 5. **[RESOLVED] Is the first-shift tightened variance (±30s) implementation-cheap, or does it require a special first-run branch in the seed logic?** Implementation cost may push this to "just accept ±1min and let the seed roll." **Owner: engineer**
   - Answer (engineer): **Cheap. ~10–15 lines, no save-schema change, determinism preserved.** `getShiftAtIndex` in `client/src/algorithm/index.ts:61` computes duration as `baseIntervalMs + (durationRng.value * 2 - 1) * varianceMs`. Thread an `isFirstRun` flag (derived at the call site from `player.rebrand_count === 0`) into `getShiftAtIndex`, and when `shiftIndex === 1 && isFirstRun`, override `varianceMs` with a new `firstRunVarianceMs: 30_000` field on `algorithmSchedule`. The PRNG walk is unchanged — still 2 values consumed per shift, same seed-derivation — only the duration-mapping denominator changes. Callers (`advanceAlgorithm`, `getUpcomingShifts`) already have game state in scope. `algorithmSchedule` gains one optional field — additive, no migration. The `rebrand_count === 0` gate is exactly "first run of the save" per the proposal's intent; post-rebrand runs roll normal variance. No reason to fall back to the "just accept ±1min" option — ship the tightened variance.
 
@@ -191,3 +193,47 @@ Both engineer-owned questions resolved inline at Open Questions 3 and 5. Summary
 **Scope note 2 — Entry conditions (§4) need first-class save-state representation for several systems.** The table at §4 specifies entry conditions like "first time Lvl↑ becomes affordable" (Creator Kit menu reveal) and "player completes first Lvl↑ action." These are one-shot latches — once revealed, stays revealed. Each needs a persisted boolean (or a revealed-set) on save state so the condition doesn't re-evaluate on every load. Concretely: `ui_reveals: { creator_kit: boolean; algorithm_ui: boolean; ... }` on `GameState`, set-once in doTick or the relevant action handler, persisted across sessions. Saves initialize with all false; first time each condition trips, the flag flips and the UI reveals. Not architecturally controversial, but it's new state that doesn't exist today — flagging so build planning sizes it. A few of these might collapse into existing conditions already encoded in game state (e.g. "completed first Lvl↑ action" is equivalent to `any generator.level > 1`, which is already present — no new flag needed). I'd want to walk through the §4 table with game-designer during planning to identify which entry conditions are derivable from existing state and which need new latches.
 
 **Removing engineer from reviewers.** ux-designer still owns Open Questions 2 and 4.
+
+---
+# Review: ux-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Strongly aligned on the overall direction — progressive affordance-driven reveal is exactly the right teaching philosophy for this game, and it compounds work already accepted (the Lvl↑ affordance-state pattern, algorithm vignette presence). Answering my two open questions and leaving two non-blocking observations.
+
+**Q2 — Second-platform unlock affordance: share the same visual language.**
+
+The instinct to reach for moment-differentiation here is understandable — unlocking Platform 2 is a bigger structural beat than unlocking a third generator. A whole parallel track becomes visible. That wants to feel special.
+
+But the moment is **already carried by the spatial event**: a new platform card appearing in a previously-one-card strip. That's the theatrical beat. The platform strip grows. That's not a subtle change — a previously-empty region of the screen suddenly contains a second, distinct, platform-accented card. The player will see it. Adding bespoke button styling on top of the new-card-appearing event would compete with the spatial event for attention, not reinforce it.
+
+There's a deeper reason too. The proposal's core teaching philosophy (§1) is that **the affordance-state pattern generalises to every system**. That only works if the pattern means the same thing everywhere it appears. If generator-unlock affordance and platform-unlock affordance look different, "unlockable" stops being a consistent visual signal — it's now a stylistic choice per-system. The player has to learn the visual language twice. That contradicts the philosophy the proposal commits to in its first paragraph.
+
+**Direction: reuse the accepted Lvl↑ affordance-state pattern verbatim for the platform-unlock button.** The gold `ready` breathing state, the ⊖ deficit glyph for `armed`, the `dormant` dim-placeholder treatment — all of it transfers. The platform card itself provides the moment (card appears; platform-accent color band at the top identifies *which* platform; platform name reads in Fraunces per typography spec). The unlock button is just the pull-mechanism; it should feel familiar.
+
+**One small allowance.** The platform card's top-border accent color (`--platform-accent`) can legitimately reach into the unlock button's state styling — e.g., the `ready` breathing on Platform 2's unlock button could pull from the Chirper/InstaSham/Grindset accent rather than `--accent-gold`. This preserves affordance consistency at the structural level while letting platform identity flavor the pulse. Small delta, carries the brand, doesn't break the pattern's promise. Leaving this as a refinement for the platform-unlock implementation task — not prescribing it here.
+
+**Q4 — Audience Mood safety rail surface: Option A, silent.**
+
+Option A, firmly. Option B ("learning your audience" flavor moment) has three failure modes:
+
+1. **It breaks the teaching philosophy the proposal just established.** §1 says "no first-run-only copy beyond the one anchoring line." §5.1 is a first-run-only rail. Option B adds first-run-only copy for the rail. That directly weakens a principle stated 140 lines above. Either the principle holds or it doesn't — a single exception creates the precedent for more.
+2. **"Learning your audience" is a confession that the training wheels were on.** Players who didn't notice the wheels suddenly know they were being managed. That's endowment in reverse — the rail, which was previously invisible and frictionless, becomes a labeled *thing the game was doing for me*, which makes the game feel more paternal, not less.
+3. **The moment is already there without copy.** When the rail lifts (2+ generators, 5min tick-time), the first pressure accumulator that reaches its threshold produces a mood strip on a platform card. That strip appearing **IS** the teaching moment. The player sees a new visual element, reads retention data that was previously implicit, and connects it to the generator/platform state they've been building. No copy needed. The player discovers rather than being told.
+
+**Direction for the mood-strip reveal itself (downstream UX spec work, flagging here):** when the FIRST mood strip ever appears on a platform card, it should enter with a small one-shot entrance animation — the kind of motion that draws the eye *without* requiring reading. A slide-in or fade-in with a subtle highlight pulse, ~400-500ms, then settles. No copy, no label, no "learning your audience" — just enough motion to ensure the player notices this thing that just appeared. That is the appropriate UX substitute for Option B's flavor moment: motion-as-teaching instead of text-as-teaching. Fits the idle-game contract and the proposal's philosophy.
+
+**Non-blocking observation 1 — the Algorithm vignette/UI reveal cadence.**
+
+§2 notes the vignette is ambient from t=0 while the readable Algorithm UI surfaces at ~5min (shift #1). This is good sequencing, but it creates a teaching moment that UX owns: the **first shift** is when the ambient vignette (which has been quietly present) transforms into the readable UI (state name, indicator). That transformation IS the "oh THAT'S what the vignette was" moment the proposal correctly identifies.
+
+The UX implication: the shift #1 animation should be *more* pronounced than subsequent shifts, because it's also the introduction of the readable UI. After shift #1, subsequent shifts can animate at normal intensity — the player has a vocabulary now. Before shift #1, the vignette pulse is ambient. During shift #1, the vignette flares, the readable UI materializes, and the player stitches the two together. This is an animation-intensity delta for the first shift only, analogous to §5.4's anchoring copy delta — first-run-only theatrical amplification for a teaching moment. Not changing anything in this proposal; flagging that shift #1's animation spec is a separate UX deliverable that needs to acknowledge its dual role.
+
+**Non-blocking observation 2 — "no first-run-only copy beyond the anchoring line" is a strong principle that should be named in §1.**
+
+The proposal states this rule twice (§1 philosophy bullet and §7 what this leaves open). The second statement in §1 ("no first-run-only copy beyond the one anchoring line — first-run copy is a maintenance burden and a retention trap") is the load-bearing one. My Q4 answer above leans on it hard, and the engineer's §4-entry-condition scope note will lean on it too (any per-system reveal that's tempted to add copy will test this principle). Consider elevating it from a bullet inside the philosophy section to a named, bolded rule — "**Rule: No First-Run-Only Copy Beyond t=0.**" — so downstream reviewers/implementers don't have to excavate it from prose. The principle is load-bearing and deserves surface.
+
+**Removing ux-designer from reviewers.** My Q2 and Q4 answers require no further UX input. Game-designer remains on for Q1 (anchoring copy pool vs. single line) and for concurrence on Q4's Option A landing.
