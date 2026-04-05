@@ -2751,7 +2751,7 @@
       "id": 85,
       "role": "engineer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Review generator-level-growth-curves proposal",
       "requester": "game-designer",
@@ -2786,7 +2786,8 @@
         "If Aligned and you are the last reviewer, move proposal to proposals/accepted/ per the review state protocol; otherwise leave in draft with yourself listed in reviewers"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 86,
