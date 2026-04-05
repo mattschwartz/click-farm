@@ -1,0 +1,171 @@
+---
+name: First Five Minutes — Onboarding Through Progressive Reveal
+description: Defines the teaching philosophy, sequence, and safety rails for the player's first five minutes — progressive affordance-driven reveal with a single anchoring voice moment, no modal tutorials, and Algorithm + Audience Mood held back until they can do design work.
+author: game-designer
+status: draft
+reviewers: [ux-designer, engineer]
+---
+
+# Proposal: First Five Minutes — Onboarding Through Progressive Reveal
+
+## Problem
+
+Click Farm has 6–7 interlocking systems (generators, platforms, algorithm, gigs, creator kit, audience mood, clout) and an explicit rule against modal tutorials. No artifact currently defines what the player does in their first 60 seconds, what they understand by minute 5, or how each system first appears.
+
+Clicker games live or die on whether the player feels agency within ~5 minutes. Every system added since the core identity spec raises the teaching burden. Without a sequenced onboarding design, each system will surface "whenever its threshold hits," which in aggregate risks producing an overwhelming opening or a mechanically thin one.
+
+This proposal defines the philosophy, the sequence, and the specific first-run accommodations that make the opening legible.
+
+## Proposal
+
+### 1. Philosophy: Progressive Reveal With a Whisper of Voice
+
+**Core commitment:** Systems appear in the UI **only when they become relevant to the player**. The screen grows with the player. No system is pre-rendered as "locked and dimmed" aspiration scaffolding; no system is explained via modal. The existing Lvl↑ affordance-state pattern is generalised to **every system**.
+
+**The single exception:** one line of anchoring voice copy at t=0, on the empty feed, that fades out on first click. Purpose — land the satirical tone before any mechanic engages, so the numbers-going-up that follows has a fictional home. Everything after that is evergreen; no first-run-only copy reappears.
+
+**Why this philosophy:**
+- It honours the "no modal tutorials" rule from `core-game-identity-and-loop.md` §8
+- It compounds the affordance-state work already accepted in `lvl-up-button-affordance-states.md`
+- It produces the Discovery aesthetic continuously rather than front-loading it
+- It matches Cookie Clicker's proven pattern — buildings appear as you can afford them, not before
+
+**What this philosophy rejects:**
+- Full-canvas dimmed scaffolding at t=0 — hostile to skill floor; fights information hierarchy from minute one
+- Scripted multi-beat tutorials — fragile, breaks the idle-game contract, and ages badly
+- First-run-only copy beyond the one anchoring line — first-run copy is a maintenance burden and a retention trap (players on second accounts feel the rails)
+
+---
+
+### 2. Minute-By-Minute Sequence
+
+This sequence is a **design target**, not a hard schedule. Timings are approximate — actual timing depends on click rate and generator balance. What matters is the **order** of reveals and the **relative** timing.
+
+| ~Time | What appears | What the player learns |
+|---|---|---|
+| t=0 | Empty feed, Post button, Selfies row at base cost, one line of anchoring voice copy | This game has a voice. Clicking is the verb. |
+| ~t=0 (first click) | Voice copy fades. Engagement counter begins visibly accumulating. | Click → Engagement. |
+| ~t=10s | First follower conversion visible. | Engagement → Followers. Two currencies, two cadences. |
+| ~t=20–30s | First Selfies unit becomes affordable; Lvl↑ row enters affordable state. | Spending produces production. |
+| ~t=2–3min | Memes unlock (at 50 followers). Selfies→Memes reveal is the player's first generator-tier jump. | There is more than one kind of content. |
+| ~t=4.5–5.5min | **First Algorithm shift fires.** Readable Algorithm UI element surfaces for the first time (state name, indicator). | The environment changes. Memes' output just shifted visibly — **so THAT'S what the vignette was.** |
+| ~t=5min+ | Platform 2 becomes unlockable; affordance prompts its unlock. | Parallel tracks exist. |
+| ~t=5–7min | First Gig offer eligible to fire (once player has meaningful empire to boost). | Timed opportunity is a layer. |
+
+**Deferred past the first five minutes (see §4):**
+- **Audience Mood** — silent until the player can produce mood drift with real agency
+- **Creator Kit menu** — surfaced after player has demonstrated they understand per-run spending (first Lvl↑, first unit-buy loop completed)
+- **Clout** — structurally unreachable until first Rebrand
+
+---
+
+### 3. The First Meaningful Decision
+
+Clicking is not a decision — it's a motor action. The first *decision* with a real tradeoff is:
+
+> **"Should I buy a second Selfies unit, or save for Memes?"**
+
+This is the first fork where both options are legitimate and the player has to read the state of the game to choose. It should land **~t=45s–2min**, once the player has enough Engagement on the table to feel the choice.
+
+Everything before this moment is motor-loop bootstrap (click, watch numbers, click again). Everything after is strategy. The transition from "playing the animation" to "playing the game" happens here, and the game should be tuned so this fork is crisp and unavoidable — not hidden behind a dominant-strategy.
+
+Design ask: **the cost curve of Selfies units vs the unlock threshold of Memes must produce a real tension at this fork.** If Selfies-stacking is strictly dominant until after Memes unlock, the decision is fake. If Memes are strictly dominant the moment they're visible, the decision is fake the other way. Balance passes (task #88 and successors) should test against this fork explicitly.
+
+---
+
+### 4. System Introduction Rules
+
+Each system has an **entry condition** that governs when its UI first appears. No modal. No announcement. The entry condition trips, the UI element reveals, the player discovers it.
+
+| System | Entry condition | Teaching mechanism |
+|---|---|---|
+| Selfies (generator) | t=0 | Present from start; only clickable thing besides Post button |
+| Lvl↑ button | First time it becomes affordable | Affordance-state pattern (accepted) — button lights up |
+| Second+ generator | Follower threshold crossed | Generator row appears in list with cost display; affordance lights up if affordable |
+| Platform 2/3 | Follower threshold crossed | Platform card appears in platform strip, visibly "unlockable" |
+| Algorithm (readable UI) | First algorithm shift fires (~5min) | Shift animation is the teaching moment; state name and indicator surface together |
+| Algorithm (vignette) | t=0 | Already ambient per `algorithm-mood-visibility.md` — no UI change, just presence |
+| Gigs | Follower threshold crossed AND first Gig offer actually fires | The offer card itself is the introduction |
+| Audience Mood | 2+ generators owned AND t > 5 min (see safety rail §5) | First mood strip appears on a platform card when retention drops below 0.95 |
+| Creator Kit menu | Player completes first Lvl↑ action | Menu reveal as reward for demonstrating mastery of per-run spending |
+| Clout / Rebrand | First Rebrand completed | Unreachable during first run; inherently deferred |
+
+---
+
+### 5. Safety Rails (First-Run Accommodations)
+
+Four small accommodations to the opening that respect existing specs:
+
+#### 5.1 Audience Mood safety rail
+
+**Rule:** Audience Mood's retention drag does not activate until the player has **2+ generators owned AND has been playing for more than 5 minutes** (cumulative play time, not wall-clock).
+
+**Rationale:** Retention drag without context feels like the game is broken. The player has no frame of reference for "×0.8 retention on Platform A" if they've never seen ×1.0 feel normal. Audience Mood's diagnostic register ("my audience is telling me something") requires an audience the player knows they built — which takes at least a few minutes.
+
+**Mechanical implementation (engineer scope):** pressure accumulators (content fatigue, neglect, algorithm misalignment) remain frozen at 0 until the entry condition is satisfied. After that, they behave exactly per `audience-mood-retention.md`. No special rules post-entry.
+
+**This does not modify the accepted Audience Mood proposal** — it is a first-run-only freeze on the pressure accumulators, consistent with the "no negative events offline" rule that already freezes them in other contexts.
+
+#### 5.2 Starter Algorithm state pinned to `short_form_surge`
+
+**Rule:** Fresh saves begin with Algorithm state = `short_form_surge`. After the first shift, normal seeded timing and state selection take over.
+
+**Rationale:** The balance proposal (`generator-balance-and-algorithm-states.md`) already describes `short_form_surge` as "the most natural starting state — the player's first experience of the algorithm feeling like a puzzle to solve." This rule formalises that intent as a hard guarantee. Selfies under `short_form_surge` receive a mild +6% effective boost — positive framing, no penalty, and the eventual shift away from it produces maximum contrast for teaching.
+
+**This modifies `generator-balance-and-algorithm-states.md` slightly** — it pins the starter state where the existing proposal only describes preference. First-run-only; zero impact on balance after shift #1.
+
+#### 5.3 Tightened variance on first shift
+
+**Rule:** Shift #1 on a fresh save fires at **5 min ± 30 seconds** (tighter than the normal ±1 min variance). After shift #1, normal variance (±1 min) resumes.
+
+**Rationale:** The onboarding window is narrow. A 4-min shift risks firing before the player has Memes unlocked (teaching moment wasted). A 6-min shift risks firing after the player has mentally checked the Algorithm as "just weather" (teaching moment missed). The tighter window guarantees shift #1 lands in the sweet spot where Memes are present and the player is still actively decoding the game.
+
+**This modifies `generator-balance-and-algorithm-states.md` slightly** — first-run-only variance tightening. Zero impact on balance after shift #1.
+
+#### 5.4 Anchoring voice copy at t=0
+
+**Rule:** One line of satirical flavor copy appears on the empty feed at t=0. It fades on first click and does not reappear for the rest of that run or any subsequent run.
+
+**Rationale:** The game's voice is its biggest differentiator; landing it before mechanics engage pre-loads the fiction. Fading on first click means the player never feels pinned by the copy. Not reappearing means no maintenance burden and no "skip intro" irritation for returning players.
+
+**Copy direction (not final line — game-designer to write):** Something in the register of *"It's time to become someone,"* or *"Post your first post. Change nothing. Watch what happens."* — voice is dry, self-aware, implicating. Final copy drafted at build time.
+
+---
+
+### 6. What This Locks In
+
+- Teaching philosophy: **progressive affordance-driven reveal** for all systems, with **one anchoring voice moment** at t=0
+- No modal tutorials, ever
+- Entry conditions per system (§4) — the engineer and UX designer implement against these conditions
+- First meaningful decision is the Selfies-vs-Memes fork and balance passes must protect it
+- Four first-run safety rails (§5)
+
+### 7. What This Leaves Open
+
+- Final anchoring copy line (game-designer, at build time)
+- Exact follower thresholds for non-first-five-minutes system reveals (Gigs, Creator Kit, etc.) — those remain in their own specs
+- Whether the second-platform unlock affordance uses a different visual language than the generator-unlock affordance (ux-designer call)
+- Playtest validation that the Selfies/Memes fork is actually crisp at current balance values (game-designer + playtesting, task #88 territory)
+
+---
+
+## References
+
+1. `.frames/sdlc/proposals/accepted/core-game-identity-and-loop.md` — §1 Fantasy & Tone, §2 Core Loop, §8 Engagement Line, target aesthetics (Discovery, Expression, Submission)
+2. `.frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md` — Algorithm state definitions, 5-minute base interval, `short_form_surge` as the natural starting state
+3. `.frames/sdlc/proposals/accepted/algorithm-mood-visibility.md` — ambient vignette layer, visual presence independent of readable UI
+4. `.frames/sdlc/proposals/accepted/audience-mood-retention.md` — the system the §5.1 safety rail defers
+5. `.frames/sdlc/proposals/accepted/lvl-up-button-affordance-states.md` — the affordance-state pattern this proposal generalises
+6. `.frames/sdlc/proposals/accepted/creator-kit-upgrades.md` — per-run menu whose introduction is gated on the first Lvl↑ action
+7. `.frames/sdlc/proposals/accepted/clout-upgrade-menu.md` — structurally deferred until first Rebrand
+8. `.frames/sdlc/proposals/accepted/gigs-system.md` — timed-offer layer introduced via its own fire event
+
+---
+
+## Open Questions
+
+1. **Is the anchoring voice copy one static line for all first-runs, or does it rotate from a small pool?** A rotating pool gives repeat-account players variety; a single line gives a stronger identity moment. Leaning: single line for v1, revisit if playtesting shows it getting stale. **Owner: game-designer**
+2. **Should the second-platform unlock affordance look different from the generator-unlock affordance, or share the same visual language?** Affordance consistency vs. moment-differentiation. **Owner: ux-designer**
+3. **Does "5 minutes of cumulative play time" for the Audience Mood safety rail use wall-clock, in-game tick time, or session time?** Engineer-level distinction that affects save-file semantics. **Owner: engineer**
+4. **What is the player-visible surface, if any, for the Audience Mood safety rail?** Option A: entirely silent — mood strips simply don't appear until the rail lifts. Option B: a very subtle "learning your audience" flavor moment when the rail lifts. Leaning A (silent), but flagging. **Owner: game-designer + ux-designer**
+5. **Is the first-shift tightened variance (±30s) implementation-cheap, or does it require a special first-run branch in the seed logic?** Implementation cost may push this to "just accept ±1min and let the seed roll." **Owner: engineer**
