@@ -3790,7 +3790,7 @@
       "alias": "UX1",
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Derive light-mode accent palette (gold/green/amber/red/platinum on warm-white base)",
       "requester": "architect",
@@ -3823,7 +3823,8 @@
         "Output committed as either a revision section on proposals/accepted/visual-identity-light-mode.md or a new companion spec at .frames/sdlc/ux/accent-palette-light-mode.md"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 107,
@@ -3917,9 +3918,7 @@
         "Manual visual check: GameScreen renders, all five algorithm states load without visual regression beyond the intentional base flip, no illegible text found"
       ],
       "open_questions": [],
-      "blocked_on": [
-        106
-      ]
+      "blocked_on": []
     },
     {
       "id": 109,
