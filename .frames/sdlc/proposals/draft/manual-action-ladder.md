@@ -3,7 +3,7 @@ name: Manual Action Ladder
 description: Replaces the single Post button with a ladder of content verbs (Chirp, Selfie, Livestream, …) where each verb follows a three-step lifecycle — unlock, upgrade, automate — and every verb stays permanently manual-clickable. Automators are parallel actors that press each verb on their own cooldowns, not replacements for the player's hand.
 author: game-designer
 status: draft
-reviewers: [engineer, game-designer]
+reviewers: [game-designer]
 ---
 
 # Proposal: Manual Action Ladder
@@ -485,3 +485,54 @@ Three resolution paths, each cheap, with different semantics:
 4. **Deprecation of `base_engagement_rate` on GeneratorDef.** Keeping it as a computed getter (`get base_engagement_rate() { return this.base_event_yield * this.base_event_rate; }`) would preserve grep-ability for any downstream code I miss during the refactor sweep. Not strictly necessary under a TypeScript rename — compiler catches everything — but cheap insurance. Engineer's call at build time.
 
 Leaving myself in reviewers pending OQ16 resolution.
+
+---
+# Review: engineer (re-review)
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Re-review after game-designer's post-architect-re-review revision. My prior RFC was pre-cleared pending OQ16 resolution; both OQ16 and OQ17 are now resolved with implementation-ready detail. No remaining blockers.
+
+**OQ16 (phantom-hand floor) — resolved as recommended, with the scoping clarification I needed.**
+
+Game-designer picked option (ii) (`cooldown = 1 / (max(1, count) × base_event_rate)`), which was my recommendation. Architect's re-review approved and added the load-bearing detail: **the floor applies ONLY to the manual-cooldown derivation at `postClick`'s gate; it MUST NOT be applied inside `computeGeneratorEffectiveRate` in the tick loop.** Without that scoping, every existing count=0 generator would spuriously produce one-actor's-worth of passive engagement — a silent balance regression against the existing 7-generator roster. §12 now names this explicitly, which is exactly what the implementation needs.
+
+Concretely at build time:
+- `postClick` cooldown gate: `const cooldownMs = 1000 / (Math.max(1, genState.count) * def.base_event_rate);` — per architect's re-review snippet.
+- `computeGeneratorEffectiveRate`: formula stays `count * base_event_rate * base_event_yield * level_multiplier * algoMod * clout * kit` — unfloored, so count=0 yields zero passive output as today.
+
+Two gates, two surfaces, one floor. Clean.
+
+**OQ17 (no platform affinity at `postClick` tap time) — confirmed, matches today's behavior.**
+
+Today's `postClick` adds flat engagement and platform affinity enters only at `computeFollowerDistribution`. The resolution preserves that split. Architect's formula of record is now:
+
+```
+earned = def.base_event_yield × level_multiplier(genState.level) × algoMod × clout_bonus × kit_bonus
+```
+
+No platform-affinity term. No new routing decisions at click time. The `postClick(verbId)` refactor is a pure dispatch rename plus the cooldown gate — zero behavior change beyond per-verb yield/rate lookup.
+
+**My prior non-blocking flags — all addressed in §12 or left to build-time discretion:**
+
+1. *Platform-affinity ambiguity (flag #1)* — resolved by OQ17.
+2. *`last_manual_click_at` missing-key semantics (flag #2)* — the `?? 0` guard is now in §12's cooldown-gate signature: `state.player.last_manual_click_at[verbId] ?? 0`. Intent is legible at the gate site.
+3. *Test-surface expansion (flag #3)* — my responsibility at build time. In scope for the engine refactor task.
+4. *`base_engagement_rate` deprecation getter (flag #4)* — engineer's call at build time; leaning toward adding the getter as grep-insurance during the deprecation window, but not proposal-level.
+
+**Remaining open questions do not block engineering.**
+
+OQ2 (per-verb automation tuning curve), OQ4 (verb-to-platform coupling), OQ5 (unlock-threshold formula), OQ14 (verb-to-generator roster mapping), OQ15 (`base_event_yield` tuning) are all game-designer-owned balance/naming decisions. The engine refactor skeleton — yield/rate split, `postClick(verbId)` signature, `last_manual_click_at` field, save v8→v9 migration — is fully specified by §12 and the architect's resolutions. I can build the refactor without waiting for these; roster wiring and balance tuning plug into the refactor at defined seams (`staticData.generators` entries, content-affinity cells).
+
+**Engineering readiness summary:**
+
+- Scope: ~1 session, sonnet-complexity (per my prior estimate).
+- Save migration: one v8→v9 seeding `player.last_manual_click_at = {}`.
+- Driver API break: `click()` → `click(verbId)` — typed, compiler-surfaced.
+- Tick pipeline: mathematically identical output for seeded existing generators. No reordering, no contract changes.
+- UI wiring (per-verb Actions buttons): separate follow-up task gated on ux-designer's ladder UX spec.
+
+Removing engineer from reviewers. Game-designer remains per RFC loop self-inclusion and because OQ2/4/5/14/15 are theirs to close. Proposal stays in `draft/` — cannot move to `accepted/` while open questions remain, per review-state rules.
