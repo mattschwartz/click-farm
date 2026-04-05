@@ -44,6 +44,7 @@ import {
 import {
   kitEngagementBonus,
   kitFollowerConversionBonus,
+  kitViralBurstAmplifier,
 } from '../creator-kit/index.ts';
 
 // ---------------------------------------------------------------------------
@@ -293,9 +294,16 @@ export function evaluateViralTrigger(
     config.durationMsMin +
       random() * (config.durationMsMax - config.durationMsMin),
   );
-  const boostFactor =
+  // Roll the raw boost factor, then apply Mogging's kit amplifier per
+  // architecture/creator-kit.md §Integration Points §6. Level 0 → 1.0, no-op.
+  const boostFactorRaw =
     config.magnitudeBoostMin +
     random() * (config.magnitudeBoostMax - config.magnitudeBoostMin);
+  const kitAmplifier = kitViralBurstAmplifier(
+    state.player.creator_kit,
+    staticData,
+  );
+  const boostFactor = boostFactorRaw * kitAmplifier;
   // During the viral: effective rate = normal_rate × boostFactor
   // Bonus = normal_rate × (boostFactor - 1) per ms
   const bonus_rate_per_ms = totalRatePerMs * (boostFactor - 1);

@@ -93,6 +93,37 @@ export function kitAlgorithmLookaheadBonus(
 }
 
 /**
+ * Cumulative kit-level viral burst amplifier (Mogging). Multiplies the
+ * rolled `boost_factor` at viral trigger time per
+ * architecture/creator-kit.md §Integration Points §6.
+ *
+ * Returns 1.0 when Mogging is at level 0 or unowned.
+ */
+export function kitViralBurstAmplifier(
+  creatorKit: Record<KitItemId, number>,
+  staticData: StaticData,
+): number {
+  let multiplier = 1.0;
+  for (const itemId of Object.keys(creatorKit) as KitItemId[]) {
+    const level = creatorKit[itemId];
+    if (!level || level <= 0) continue;
+    const def = staticData.creatorKitItems[itemId];
+    if (def === undefined) continue;
+    if (def.effect.type === 'viral_burst_amplifier') {
+      const value = def.effect.values[level - 1];
+      if (value === undefined) {
+        throw new Error(
+          `kitViralBurstAmplifier: item '${itemId}' has no values[${level - 1}] ` +
+            `for level ${level} (max_level ${def.max_level})`,
+        );
+      }
+      multiplier *= value;
+    }
+  }
+  return multiplier;
+}
+
+/**
  * Cumulative kit-level follower-conversion multiplier. Reads every kit item
  * with a `follower_conversion_multiplier` effect (currently just `wardrobe`).
  *

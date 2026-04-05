@@ -1,5 +1,5 @@
 {
-  "next_id": 91,
+  "next_id": 96,
   "tasks": [
     {
       "id": 1,
@@ -2516,7 +2516,7 @@
       "alias": "E7",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit Mogging: viral burst amplifier",
       "requester": "architect",
@@ -2544,7 +2544,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 80,
@@ -3002,6 +3003,216 @@
       "blocked_on": [
         89
       ]
+    },
+    {
+      "id": 91,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Platform Identity & Affinity Matrix proposal",
+      "requester": "game-designer",
+      "complexity": "opus",
+      "overview": "Platforms are declared distinct in core-game-identity-and-loop.md (3 at launch, each with its own follower count, content affinity, and unlock threshold), but no proposal defines what each platform IS as a character — what it feels like to play on it, who its audience is, which generators resonate, and why a player would lean into one over another this run. Without this, platforms risk collapsing into 'three bars instead of one.' The affinity system is also referenced in audience-mood-retention.md (Content Fatigue is per-platform-per-generator) and creator-kit-upgrades.md (Phone head-starts sequential platforms), so the platform spec is load-bearing for multiple accepted systems. Produce a proposal naming each launch platform, its satirical voice, its affinity profile (which generators boost/penalize on it), its unlock threshold, and how playing on it FEELS different from the others.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Source of the 3-platform commitment and the content-affinity concept"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/audience-mood-retention.md",
+          "purpose": "Depends on per-platform-per-generator affinity for Content Fatigue pressure"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/creator-kit-upgrades.md",
+          "purpose": "Phone head-start mechanic depends on sequential platform ordering"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Generator roster the affinity matrix must address"
+        }
+      ],
+      "acceptance_criteria": [
+        "A draft proposal in proposals/draft/ naming each of the 3 launch platforms with satirical voice, fiction, and audience character",
+        "An affinity matrix (platform × generator) with boost/neutral/penalty cells and tuning rationale",
+        "Unlock thresholds (follower counts) for each platform with design rationale — why this order, why these gates",
+        "A design note on what a player should FEEL when they switch focus to a new platform — the discovery/expression aesthetic target",
+        "Explicit interaction notes with Audience Mood, Creator Kit Phone, and Algorithm states"
+      ],
+      "open_questions": [
+        {
+          "question": "Do platforms have per-platform retention floors or do they share the global retention floor?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Should platform order be fixed or player-chosen at unlock?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 92,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "First Five Minutes onboarding design",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "No proposal currently defines what the player does in their first 60 seconds, what they understand by minute 5, or how the game teaches its systems without explicit instructions. Skill floor is a design responsibility: clicker games live or die on whether the player feels agency within 5 minutes. Click Farm has more systems than Cookie Clicker did at launch (generators, platforms, algorithm states, gigs, creator kit, audience mood), so the teaching burden is higher. Produce a design proposal that sequences what appears on screen in what order, what the player's first meaningful decision is, when each system is introduced, and what the teaching mechanism is for each (discovery, affordance, flavor text — not tutorials).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Defines the target aesthetics (Discovery, Expression, Submission) the onboarding must deliver"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Defines generator introduction order"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/lvl-up-button-affordance-states.md",
+          "purpose": "Example of affordance-based teaching already in the game"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "Algorithm state visualization is one of the systems onboarding must introduce"
+        }
+      ],
+      "acceptance_criteria": [
+        "A draft proposal in proposals/draft/ defining a minute-by-minute sequence for the first 5 minutes of a fresh save",
+        "Named introduction order for each system (generators, platforms, algorithm, gigs, creator kit, audience mood) with design rationale",
+        "For each system, the teaching mechanism (affordance state, flavor copy, first-appearance moment) — no modal tutorials",
+        "Named first-meaningful-decision the player makes (and by when)",
+        "Explicit call-out for skill floor: what does agency feel like by minute 1, 3, 5"
+      ],
+      "open_questions": [
+        {
+          "question": "Should there be any first-run-only copy that does not reappear, or is all copy evergreen?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Is there a 'safety rail' period where Audience Mood is disabled so the player learns posting without drag?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 93,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Late-game content arc: generators 8+ and satirical voice ladder",
+      "requester": "game-designer",
+      "complexity": "opus",
+      "overview": "core-game-identity-and-loop.md promises escalating absurdity in the late game — AI Slop, Deepfakes of Yourself, Algorithmic Prophecy — unlocked via prestige. This promise is the game's narrative payoff and the single biggest differentiator from 'another clicker.' Cookie Clicker's late-game absurdity is what players remember and share. Click Farm currently has zero specced content beyond generator 7 (Viral Stunts), no voice-ladder for how satirical tone escalates with prestige count, and no design for what the game SAYS to a rebrand-#10 player that it did not say to a rebrand-#1 player. Produce a proposal for the late-game content arc: generators 8 through ~12, the satirical voice progression, and any unlock text / flavor moments that mark the player crossing into each new tier of absurdity.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Source of the escalating-absurdity promise (§1 Fantasy & Tone, §3 Generators, §7 Prestige)"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Launch generator roster the late-game arc continues from"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Clout unlocks gate new generator types — this spec must define what unlocks when"
+        }
+      ],
+      "acceptance_criteria": [
+        "A draft proposal in proposals/draft/ specifying generators 8 through ~12 with names, fiction, and mechanical differentiation from earlier generators",
+        "A satirical voice-ladder: how tone, copy, and content names escalate from early-game (relatable) to late-game (absurd)",
+        "Clout unlock costs / gating for each new generator with design rationale",
+        "Named late-game narrative beats — the moments the game wants the player to laugh at or recognize",
+        "Explicit check against the engagement line: each new generator must still pass the three-question test (honest, quittable, skill-tied)"
+      ],
+      "open_questions": [
+        {
+          "question": "Are late-game generators purely stat-escalation, or do any introduce new mechanics (e.g., compounds off other generators)?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Is there a hard ceiling to the absurdity ladder, or does it continue indefinitely via procedural naming?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 94,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Rebrand cadence intent: felt pacing across the prestige ladder",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The prestige formula is specced (floor(sqrt(total_followers)/10) per clout-to-follower-scaling-curve.md) but no design artifact captures the INTENT for when rebrands should happen or how rebrand #3 should feel different from rebrand #1. Prestige loops need a felt cadence, not just a formula — players need to know roughly when their first rebrand happens, when it starts feeling routine, when it starts feeling strategic (choosing when to pull the trigger vs push further). Without this design note, balance passes (like task #88) have no target to hit. Produce a design proposal capturing the expected rebrand cadence, how the feel of prestige evolves across the ladder, and what the designer considers 'right' pacing.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-to-follower-scaling-curve.md",
+          "purpose": "The math this proposal describes intent for"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "§7 Prestige: The Rebrand — establishes rebrand narrative framing"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/clout-upgrade-menu.md",
+          "purpose": "Clout spending menu whose pricing depends on rebrand cadence"
+        }
+      ],
+      "acceptance_criteria": [
+        "A draft proposal in proposals/draft/ naming the target time-to-first-rebrand (rough session minutes)",
+        "Named pacing intent for rebrands 1 / 3 / 5 / 10 — what each should FEEL like and how they should differ",
+        "A design note on when rebrand shifts from 'ceremonial milestone' to 'strategic timing decision'",
+        "Explicit interaction with Clout upgrade menu: roughly how many rebrands to afford key upgrades",
+        "A 'felt stakes' statement that balance tuners (game-designer on task #88 and beyond) can test against"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 95,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Tension audit: post-Audience-Mood felt stakes review",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Replacing Scandals with Audience Mood removed active follower loss — growth is now monotonically non-decreasing (retention ∈ [floor, 1.0] scales gains, never subtracts). This was the right ethical call (loss aversion 2–2.5× pain, no dark patterns), but it may have over-corrected on tension. The game currently has no moment where the player feels 'something I built is at risk.' Soft pressure (retention drag) is a slow-down, not a stake. This task audits whether the game has enough felt stakes after the Audience Mood migration, and if not, whether a consented-risk mechanic (player-initiated, reversible, offline-safe) should be introduced somewhere in the late-game or prestige layer. Output is a design decision document — not necessarily a new mechanic, but a written position on whether the current tension level is sufficient.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/audience-mood-retention.md",
+          "purpose": "The system that replaced active loss — starting point of the audit"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "The superseded system — what was removed and why"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "§8 Engagement Line — the constraints any new tension mechanic must respect"
+        }
+      ],
+      "acceptance_criteria": [
+        "A draft proposal in proposals/draft/ answering: does the game have enough felt stakes post-Audience-Mood?",
+        "Named assessment of current negative pressure (Audience Mood retention drag) — is it felt as opportunity cost or invisible?",
+        "If insufficient: a sketch of a consented-risk mechanic that respects the engagement line (player-initiated, reversible, offline-safe, passes the three-question test)",
+        "If sufficient: an explicit written position that the game is done adding negative pressure, with reasoning",
+        "Explicit check against the four Scandal-failure mechanisms (modal interrupt, symptom-not-cause, unrecoverable loss, single-signal overload) — any new mechanic must avoid all four"
+      ],
+      "open_questions": [
+        {
+          "question": "Is consented-risk even needed, or does the Gigs/Viral/Algorithm strategic layer carry the tension load adequately?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
     }
   ]
 }

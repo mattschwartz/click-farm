@@ -1042,3 +1042,126 @@ describe('Creator Kit — Wardrobe follower_conversion_multiplier', () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// Creator Kit — Mogging (viral_burst_amplifier) integration (task #79)
+// ---------------------------------------------------------------------------
+
+describe('Creator Kit — Mogging viral_burst_amplifier', () => {
+  function withMogging(state: GameState, level: number): GameState {
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        creator_kit: { mogging: level } as GameState['player']['creator_kit'],
+      },
+    };
+  }
+
+  // Deterministic PRNG: returns 0 for every call. This forces:
+  //   - Gate 2 probability roll: 0 < p_viral → pass
+  //   - duration roll: 0 → durationMsMin
+  //   - boost roll: 0 → magnitudeBoostMin
+  const zeros = () => 0;
+
+  it('level 0 Mogging leaves boost_factor unchanged (1.0 no-op)', () => {
+    const state = stateReadyToViral();
+    const withLevel0 = withMogging(state, 0);
+    const base = evaluateViralTrigger(state, STATIC_DATA, T0, zeros);
+    const lvl0 = evaluateViralTrigger(withLevel0, STATIC_DATA, T0, zeros);
+    expect(base).not.toBeNull();
+    expect(lvl0).not.toBeNull();
+    expect(lvl0!.magnitude).toBe(base!.magnitude);
+    expect(lvl0!.bonus_rate_per_ms).toBe(base!.bonus_rate_per_ms);
+  });
+
+  it('level 1 scales boost_factor by values[0] — magnitude scales proportionally', () => {
+    const state = stateReadyToViral();
+    const moggingDef = STATIC_DATA.creatorKitItems.mogging;
+    if (moggingDef.effect.type !== 'viral_burst_amplifier') throw new Error('bad def');
+    const amp = moggingDef.effect.values[0];
+
+    // Boost roll = 0 → boostFactorRaw = magnitudeBoostMin.
+    // Amplified boostFactor = magnitudeBoostMin * amp.
+    // bonus_rate_per_ms = totalRatePerMs * (boostFactor - 1).
+    const base = evaluateViralTrigger(state, STATIC_DATA, T0, zeros);
+    const lvl1 = evaluateViralTrigger(
+      withMogging(state, 1),
+      STATIC_DATA,
+      T0,
+      zeros,
+    );
+    expect(base).not.toBeNull();
+    expect(lvl1).not.toBeNull();
+
+    const min = STATIC_DATA.viralBurst.magnitudeBoostMin;
+    // Base bonus factor denom: (min - 1). Level 1 denom: (min*amp - 1).
+    const expectedRatio = (min * amp - 1) / (min - 1);
+    expect(lvl1!.bonus_rate_per_ms / base!.bonus_rate_per_ms).toBeCloseTo(
+      expectedRatio,
+      6,
+    );
+  });
+
+  it('level 2 scales boost_factor by values[1] — larger than level 1', () => {
+    const state = stateReadyToViral();
+    const moggingDef = STATIC_DATA.creatorKitItems.mogging;
+    if (moggingDef.effect.type !== 'viral_burst_amplifier') throw new Error('bad def');
+    expect(moggingDef.effect.values[1]).toBeGreaterThanOrEqual(
+      moggingDef.effect.values[0],
+    );
+
+    const lvl1 = evaluateViralTrigger(withMogging(state, 1), STATIC_DATA, T0, zeros);
+    const lvl2 = evaluateViralTrigger(withMogging(state, 2), STATIC_DATA, T0, zeros);
+    expect(lvl1).not.toBeNull();
+    expect(lvl2).not.toBeNull();
+    // Monotonic in level: higher amplifier → higher magnitude
+    expect(lvl2!.magnitude).toBeGreaterThanOrEqual(lvl1!.magnitude);
+  });
+
+  it('magnitude == bonus_rate_per_ms * duration_ms even when amplified', () => {
+    const state = stateReadyToViral();
+    const result = evaluateViralTrigger(
+      withMogging(state, 2),
+      STATIC_DATA,
+      T0,
+      zeros,
+    );
+    expect(result).not.toBeNull();
+    expect(result!.magnitude).toBeCloseTo(
+      result!.bonus_rate_per_ms * result!.duration_ms,
+      6,
+    );
+  });
+
+  it('bonus_rate_per_ms derives from amplified boost_factor — explicit formula check', () => {
+    const state = stateReadyToViral();
+    const moggingDef = STATIC_DATA.creatorKitItems.mogging;
+    if (moggingDef.effect.type !== 'viral_burst_amplifier') throw new Error('bad def');
+    const amp = moggingDef.effect.values[2]; // max level
+    const level = moggingDef.max_level;
+
+    const result = evaluateViralTrigger(
+      withMogging(state, level),
+      STATIC_DATA,
+      T0,
+      zeros,
+    );
+    expect(result).not.toBeNull();
+
+    // Compute expected using the same formula as the implementation.
+    const ratesPerSec = computeAllGeneratorEffectiveRates(
+      withMogging(state, level),
+      STATIC_DATA,
+    );
+    const totalRatePerSec = Object.values(ratesPerSec).reduce(
+      (sum, r) => sum + (r ?? 0),
+      0,
+    );
+    const totalRatePerMs = totalRatePerSec / 1000;
+    const boostFactorRaw = STATIC_DATA.viralBurst.magnitudeBoostMin;
+    const boostFactor = boostFactorRaw * amp;
+    const expectedBonus = totalRatePerMs * (boostFactor - 1);
+    expect(result!.bonus_rate_per_ms).toBeCloseTo(expectedBonus, 6);
+  });
+});
