@@ -910,8 +910,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* ~30% opacity backdrop — game loop continues, spec §3.1. */
-  background: rgba(0, 0, 0, 0.70);
+  /* ~30% opacity backdrop — game loop continues, spec §3.1.
+     Light dim so the empire remains visible behind the shop. */
+  background: rgba(0, 0, 0, 0.30);
   animation: fade-in 200ms ease-out;
 }
 
@@ -925,6 +926,8 @@
   overflow-y: auto;
   color: var(--text-p0);
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
 }
 
 .shop-header {
@@ -943,6 +946,8 @@
 .shop-close-btn {
   font-family: inherit;
   font-size: 20px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 4px 10px;
   border-radius: 6px;
   border: 1px solid transparent;
@@ -958,18 +963,214 @@
   border-color: rgba(255, 255, 255, 0.16);
 }
 
+/* Clout balance — 36px/weight 600 per spec §3.2. */
 .shop-balance {
-  padding: 20px 24px 0;
-  font-size: 28px;
+  padding: 20px 24px 8px;
+  font-size: 36px;
   font-weight: 600;
-  color: var(--accent-gold);
+  color: var(--text-p0); /* P0 contrast per spec */
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.005em;
 }
 
-.shop-body-placeholder {
-  padding: 24px;
-  font-size: 14px;
-  color: var(--text-p2);
+/* Empty-state hint — above the categories when Clout:0 & no rebrands. */
+.shop-empty-hint {
+  padding: 0 24px 16px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-p3);
+  letter-spacing: 0.04em;
+}
+
+/* All-maxed footer — muted hint line. */
+.shop-all-maxed {
+  padding: 16px 24px 20px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-p3);
+  text-align: center;
   font-style: italic;
+}
+
+/* --- Shop categories & rows --------------------------------------------- */
+
+.shop-categories {
+  padding: 0 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.shop-category-header {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--text-p2);
+  padding: 8px 0 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 4px;
+}
+
+.shop-category-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Row — 72px height, icon + text + level + cost + ⬆ button. */
+.shop-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto auto 48px;
+  align-items: center;
+  gap: 14px;
+  min-height: 72px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: background 120ms, border-color 120ms;
+}
+
+.shop-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.shop-row-atmax {
+  opacity: 0.82;
+}
+
+.shop-row-icon {
+  font-size: 28px;
+  text-align: center;
+  line-height: 1;
+}
+
+.shop-row-text {
+  min-width: 0;
+}
+
+.shop-row-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-p1);
+  margin-bottom: 3px;
+}
+
+.shop-row-desc {
+  font-size: 12px;
+  color: var(--text-p2); /* ~7:1 contrast per spec §3.3 */
+  line-height: 1.4;
+}
+
+.shop-row-level {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-p2);
+  min-width: 56px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-row-cost {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-p1);
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+  text-align: right;
+}
+
+/* Insufficient: amber cost label per spec §3.5 (not red). */
+.shop-row-cost-insufficient {
+  color: var(--accent-amber);
+}
+
+/* MAX / ✓ state. */
+.shop-row-cost-max {
+  color: var(--text-p3);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+/* ⬆ button — ≥44×44px hit area per spec accessibility. */
+.shop-row-btn {
+  font-family: inherit;
+  font-size: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 214, 107, 0.45);
+  background: rgba(255, 214, 107, 0.10);
+  color: var(--accent-gold);
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms, transform 60ms;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-row-btn:hover {
+  background: rgba(255, 214, 107, 0.18);
+  border-color: rgba(255, 214, 107, 0.62);
+}
+
+.shop-row-btn:active {
+  transform: scale(0.97);
+}
+
+/* Insufficient — 3:1 contrast (not faded) per spec §3.5. */
+.shop-row-btn-insufficient {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-p3);
+}
+
+.shop-row-btn-insufficient:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Reserve space where the button would be, to keep grid cols aligned. */
+.shop-row-btn-placeholder {
+  width: 44px;
+  height: 44px;
+}
+
+/* Purchase pulse — 1.0 → 1.02 → 1.0 over 250ms per spec §3.5. */
+.shop-row-pulsing {
+  animation: shop-row-pulse 250ms ease-out;
+}
+
+@keyframes shop-row-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+/* Insufficient shake — 4px horizontal, 200ms per spec §3.5. */
+.shop-row-shaking {
+  animation: shop-row-shake 200ms ease-in-out;
+}
+
+@keyframes shop-row-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+/* Reduce Motion — disable pulse, shake, and rely on static state signals. */
+@media (prefers-reduced-motion: reduce) {
+  .shop-row-pulsing,
+  .shop-row-shaking {
+    animation: none;
+  }
+  .shop-row-btn:active {
+    transform: none;
+  }
 }
 
 /* --- Rebrand Ceremony modal (Phase 1 — Threshold Review, spec §4.2) ------- */

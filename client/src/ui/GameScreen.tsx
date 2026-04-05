@@ -97,6 +97,7 @@ export function GameScreen() {
     dismissScandalResolution,
     pauseLoop,
     resumeLoop,
+    buyCloutUpgrade,
   } = useGame();
 
   // Render-time derived values --------------------------------------------
@@ -421,11 +422,12 @@ export function GameScreen() {
         </button>
       </div>
 
-      {/* Clout Shop shell — game loop continues ticking (spec §3.1). */}
+      {/* Clout Shop — game loop continues ticking (spec §3.1). */}
       {showShopModal && (
         <CloutShopModal
           state={state}
           onClose={handleShopClose}
+          onPurchase={buyCloutUpgrade}
         />
       )}
 
