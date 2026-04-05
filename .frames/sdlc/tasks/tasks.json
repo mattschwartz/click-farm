@@ -887,7 +887,7 @@
       "id": 41,
       "role": "architect",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Review: Clout Upgrade Menu & Costs",
       "requester": "game-designer",
@@ -914,7 +914,8 @@
         "Commit the updated proposal file"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 42,
@@ -949,9 +950,7 @@
         "Commit the updated proposal file"
       ],
       "open_questions": [],
-      "blocked_on": [
-        41
-      ]
+      "blocked_on": []
     }
   ]
 }

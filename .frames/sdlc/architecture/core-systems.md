@@ -76,6 +76,7 @@ The shifting modifier that changes which strategies perform best.
 | `current_state_index` | `int` | ≥ 0 | both | Position in the seeded shift schedule |
 | `shift_time` | `timestamp` | | both | When the next shift occurs |
 | `state_modifiers` | `map<generator_id, float>` | values typically in [0.5, 2.0], from static data | client | Per-generator multiplier for the current state |
+| `upcoming_states` | `AlgorithmStateId[]` | length = player's algorithm_insight lookahead value; empty if upgrade not owned | client | Upcoming Algorithm state IDs in order. Populated by the game loop after each shift using the player's `algorithm_insight` Clout upgrade level. Consumed by UI only — not persisted. |
 
 **The shift schedule is deterministic.** Given a seed, the full sequence of (state, duration) pairs is reproducible. See Technology Decisions for the PRNG spec.
 
@@ -102,10 +103,12 @@ Static definition of a permanent meta-upgrade purchased with Clout.
 | `effect` | `UpgradeEffect` | | client | What the upgrade does (typed union, see below) |
 
 **UpgradeEffect** is a tagged union:
-- `{ type: "engagement_multiplier", value: float }` — multiplies all engagement rates
-- `{ type: "generator_unlock", generator_id: string }` — unlocks a post-prestige generator
-- `{ type: "algorithm_insight", lookahead: int }` — reveals upcoming Algorithm shifts
-- `{ type: "platform_headstart", platform_id: string }` — platform starts unlocked on new runs
+- `{ type: "engagement_multiplier", values: float[] }` — multiplies all engagement rates; each entry is the cumulative multiplier at that level (indexed by `level - 1`)
+- `{ type: "generator_unlock", generator_id: string }` — unlocks a post-prestige generator (max_level: 1)
+- `{ type: "algorithm_insight", lookaheads: int[] }` — reveals upcoming Algorithm shifts; each entry is the lookahead count at that level (indexed by `level - 1`)
+- `{ type: "platform_headstart", platform_id: string }` — platform starts unlocked on new runs (max_level: 1)
+
+**Post-prestige generators and unlock wiring:** Generators unlocked via `generator_unlock` Clout effects must NOT have a follower-based `unlock_threshold`. Their entry in `StaticData.unlockThresholds.generators` must be absent or set to `Infinity` — a threshold of `0` would cause follower-based auto-unlock for all players. `applyRebrand` is responsible for re-owning these generators after the generator reset: it must iterate `player.clout_upgrades` and for each upgrade whose effect is `generator_unlock`, set `generators[generator_id].owned = true`. On first purchase of a `generator_unlock` upgrade mid-run, the same re-application runs immediately so the generator is available in the current run.
 
 ---
 
@@ -264,6 +267,14 @@ function applyRebrand(state: GameState, result: RebrandResult): GameState;
 ```
 
 `calculateRebrand` computes Clout earned from `total_followers` (sum of current platform follower counts, resets on rebrand — not `lifetime_followers`, which compounds across runs). `applyRebrand` resets engagement, generators (to unowned), platforms (to locked, minus headstarts), follower counts to zero, increments `rebrand_count`, applies new seed, preserves `clout` and `clout_upgrades`.
+
+**`applyRebrand` post-reset Clout re-application order:**
+1. Reset all generators to `owned: false`
+2. Iterate `player.clout_upgrades`; for each upgrade with effect `generator_unlock`, set `generators[generator_id].owned = true`
+3. Reset all platforms to `unlocked: false`
+4. Iterate `player.clout_upgrades`; for each upgrade with effect `platform_headstart`, set `platforms[platform_id].unlocked = true`
+
+This order ensures Clout-unlocked content is available from the first tick of the new run.
 
 ### Client → Server (future)
 

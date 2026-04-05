@@ -3,7 +3,7 @@ name: Clout Upgrade Menu & Costs
 description: Defines the complete Clout upgrade menu — what permanent meta-upgrades exist, what they cost, and how they pace across runs.
 author: game-designer
 status: draft
-reviewers: [architect, engineer]
+reviewers: [engineer]
 ---
 
 # Proposal: Clout Upgrade Menu & Costs
@@ -143,3 +143,40 @@ Total to max: 55 Clout.
 **Algorithmic Prophecy** is the endgame. 40× Viral Stunts base rate is satirically large by design — the game has been escalating toward this number since the opening click. Medium trend sensitivity (0.5) and medium conversion (0.5) make it neither the volatile superstar (Deepfakes) nor the stable workhorse (AI Slop) — it's simply enormous. The humor is that at this scale, the other numbers stop mattering.
 
 **On `unlock_threshold`:** Post-prestige generators are unlocked via Clout purchase (`generator_unlock` effect), not via follower threshold. Their `unlock_threshold` in static data should be `0` — the Clout upgrade sets `owned: true` directly. The architect should confirm this is the correct wiring in the data model.
+   - **Architect answer (2026-04-04):** `unlock_threshold: 0` is incorrect — the normal unlock check is `total_followers >= unlock_threshold`, so a threshold of 0 means "unlocks immediately for everyone." The correct wiring: post-prestige generators have no entry in `unlockThresholds` in static data (sentinel: `null` or `Infinity`) so they are never follower-unlocked. `applyRebrand` re-applies `generator_unlock` Clout effects after resetting generators to unowned — iterating `player.clout_upgrades` and setting `generators[generator_id].owned = true` for each `generator_unlock` effect. On first purchase, the same re-application runs immediately. Architecture doc updated.
+
+---
+# Review: architect
+
+**Date**: 2026-04-04
+**Decision**: Aligned
+
+**Comments**
+
+The design is architecturally sound and maps cleanly onto the existing data model. Three items required architecture doc corrections; one non-blocking note for the engineer.
+
+**1. UpgradeEffect multi-level values — architecture fix.**
+
+The existing `UpgradeEffect` union defines `{ type: "engagement_multiplier", value: float }` and `{ type: "algorithm_insight", lookahead: int }` — single values. Engagement Boost's cumulative multipliers (1.5×, 2.5×, 5×) are non-uniform across levels, and Algorithm Insight's lookahead (1, 2) varies by level. A single `value` field can't represent this.
+
+Fix applied in architecture doc: per-level arrays on the effect definition.
+- `{ type: "engagement_multiplier", values: float[] }` — indexed by `level - 1`
+- `{ type: "algorithm_insight", lookaheads: int[] }` — indexed by `level - 1`
+
+Game loop reads `values[player.clout_upgrades[upgrade_id] - 1]` to resolve the current effective value.
+
+**2. Post-prestige generator unlock wiring — answered above in Open Questions.**
+
+See the answer inline under the open question. Architecture doc updated with the correct wiring: no follower-based threshold, `applyRebrand` re-applies `generator_unlock` effects.
+
+**3. AlgorithmState needs `upcoming_states` field — architecture addition.**
+
+Algorithm Insight requires the UI to show 1–2 upcoming Algorithm shifts. The current `AlgorithmState` has no field for this. Added `upcoming_states: AlgorithmStateId[]` to the data model — populated by the game loop based on the player's current `algorithm_insight` level (empty array if the upgrade is not owned). Architecture doc updated.
+
+**4. Non-blocking: suggested static data IDs for the engineer.**
+
+The engineer will need concrete string identifiers. Suggested IDs (internal labels, no design impact):
+- Upgrades: `engagement_boost`, `algorithm_insight`, `instasham_headstart`, `grindset_headstart`, `ai_slop_unlock`, `deepfakes_unlock`, `algorithmic_prophecy_unlock`
+- Generators: `ai_slop`, `deepfakes`, `algorithmic_prophecy`
+
+These are new entries in existing static data tables — no structural change required.
