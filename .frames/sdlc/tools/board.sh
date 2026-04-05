@@ -121,7 +121,8 @@ for status_dir in draft accepted rejected; do
   for f in "$dir"/*.md; do
     [[ -f "$f" ]] || continue
     PROP_FILES+=("$f")
-    PROP_STATUSES+=("$status_dir")
+    fm_status="$(fm_field "$f" "status")"
+    PROP_STATUSES+=("${fm_status:-$status_dir}")
   done
 done
 
