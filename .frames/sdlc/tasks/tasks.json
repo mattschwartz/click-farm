@@ -1,5 +1,5 @@
 {
-  "next_id": 111,
+  "next_id": 114,
   "tasks": [
     {
       "id": 1,
@@ -4056,6 +4056,134 @@
         108,
         109
       ]
+    },
+    {
+      "id": 111,
+      "role": "architect",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Review manual-action-ladder proposal",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Review the Manual Action Ladder proposal (draft) from an architecture perspective. This proposal replaces the single Post button with a ladder of content verbs (Chirp, Selfie, Livestream...) where each verb has a three-step lifecycle (unlock → upgrade → automate), and the Automate track reduces a shared cooldown value that governs both the automator's timer AND the player's manual tap rate. The load-bearing architectural question is OQ11: does the ladder run PARALLEL to the existing 7-generator roster, or CONSOLIDATE with it (ladder verbs ARE generators)? The game-designer leans toward consolidation because it inherits existing unlock thresholds, level scaling, platform affinity, algorithm modifiers, and follower-distribution routing. But consolidation is a structural refactor of the Upgrades column's identity, the tick pipeline, and the generator data model. Related structural questions: OQ12 (cooldown vs. continuous-rate production model reconciliation), OQ13 (per-verb algorithm-modifier binding, currently hard-coded to selfies in postClick at game-loop/index.ts L62). This proposal supersedes `generator-balance-and-algorithm-states.md` §Manual Click Value (the CLICK_BASE_ENGAGEMENT=1.0 directive) — architect should weigh in on whether the revised balance target (automators take over per-verb, manual stays supplementary) is defensible.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/manual-action-ladder.md",
+          "purpose": "the proposal to review — focus on §2 (lifecycle), §4 (automator as parallel actor), §7 (relationship to existing systems), and OQs 11, 12, 13, 8"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "existing generator roster, rate table, trend_sensitivity values, and the §Manual Click Value directive this proposal supersedes"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "§3 generator list and §2 core loop — context for whether consolidation (OQ11-b) still serves the stated core loop"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/platform-identity-and-affinity-matrix.md",
+          "purpose": "§4 platform affinity matrix — ladder verbs inherit these cells for free under consolidation, or need new cells under parallel"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "current postClick() implementation at L575-597, CLICK_BASE_ENGAGEMENT at L55, CLICK_GENERATOR_ID at L62 — the sites this proposal refactors"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/actions-column.md",
+          "purpose": "Actions Column taxonomy; this proposal extends §5 discipline constraint but supersedes §2 baseline member"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the proposal in full (all 13 sections plus OQs)",
+        "Answer OQ11 (parallel vs. consolidation) with a reasoned decision",
+        "Answer OQ12 (cooldown vs. continuous-rate reconciliation) with a recommended data-model approach",
+        "Answer OQ13 (per-verb algorithm-modifier binding) with concrete implementation guidance",
+        "Weigh in on OQ8 (revised balance target against generator-balance-and-algorithm-states.md §Manual Click Value supersession)",
+        "Add a review section at the bottom of the document following the PROPOSALS.md template (Date, Decision: Aligned/Not Aligned/Request for Comment, Comments)",
+        "Update the reviewers field: remove self if aligned; leave self in if Not Aligned or Request for Comment",
+        "If you are the final reviewer and all OQs resolved, move the proposal to accepted/"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 112,
+      "role": "ux-designer",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Review manual-action-ladder proposal",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Review the Manual Action Ladder proposal (draft) from a UX perspective. This proposal reshapes the Actions column: instead of a single Post button, the column becomes a growing ladder of content verbs (Chirp, Selfie, Livestream...), each with an unlock/upgrade/automate lifecycle. Every unlocked verb stays permanently manual-clickable, and upgrading the Automate track tangibly speeds up the player's own tap rate (dual payoff — not just passive income). Two UX-owned open questions to resolve: OQ3 (the ladder creates direct tension with the accepted Actions Column 4-member soft cap — ladder could reach 5-6+ verbs PLUS brand deals), and OQ6 (where the Unlock purchase surface lives — Actions column ghost slot for diegetic 'next verb is waiting' feel, vs. Upgrades column line item for cleaner space). Also possibly touches OQ4 (if verb-to-platform coupling has visual consequences for the Actions zone). This proposal supersedes `actions-column.md` §2 (baseline member becomes Chirp, not Post) — ux-designer should confirm the visual grammar still holds.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/manual-action-ladder.md",
+          "purpose": "the proposal to review — focus on §4 (instrument panel aesthetic), §10 (target feeling), and OQs 3, 6, 4"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/actions-column.md",
+          "purpose": "the taxonomy this proposal extends — §2 baseline member (superseded), OQ4 resolution by ux-designer (the 4-member soft cap) is directly tensioned here"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/brand-deal-boost.md",
+          "purpose": "orthogonal Actions-column sibling; UX review at the bottom specs the deal card's place in the Actions zone — context for how a growing ladder composes with existing Actions siblings"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the proposal in full (all 13 sections plus OQs)",
+        "Answer OQ3 (Actions Column soft cap tension) — does internal scroll suffice, or does the ladder need a visual compaction model (e.g., collapsed strip for automated rungs)?",
+        "Answer OQ6 (Unlock purchase surface placement) — ghost slot in Actions column, or line item in Upgrades column, or other?",
+        "Weigh in on whether the instrument-panel aesthetic holds up visually as verbs accumulate (5+ simultaneous tap targets)",
+        "Confirm or revise the §2 actions-column.md supersession (baseline member becomes Chirp with the diegetic-anchor role)",
+        "Add a review section at the bottom of the document following the PROPOSALS.md template (Date, Decision: Aligned/Not Aligned/Request for Comment, Comments)",
+        "Update the reviewers field: remove self if aligned; leave self in if Not Aligned or Request for Comment"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 113,
+      "role": "engineer",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Review manual-action-ladder proposal for implementation feasibility",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Review the Manual Action Ladder proposal (draft) for implementation feasibility and refactor scope. This proposal replaces the single Post button with a ladder of click verbs (Chirp, Selfie, Livestream...), each with unlock/upgrade/automate purchase tracks. It directly refactors the manual-click code path in game-loop/index.ts: CLICK_BASE_ENGAGEMENT (L55), CLICK_GENERATOR_ID (L62), and postClick() (L575-597) all change shape, becoming per-verb rather than single-action. The architect will answer the structural question (OQ11 — parallel vs. consolidation with existing generators, OQ12 — cooldown vs. continuous-rate production, OQ13 — per-verb algorithm-modifier binding). Engineer's job here: assess whether the refactor is buildable within the current codebase, flag any non-obvious migration concerns (save versioning, tick pipeline reordering, driver contract changes), and estimate effort under both OQ11 options (parallel vs. consolidation).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/manual-action-ladder.md",
+          "purpose": "the proposal to review — focus on §2 (lifecycle), §7 (collisions with existing systems), and OQs 11, 12, 13"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "the main refactor site — postClick at L575-597, CLICK_BASE_ENGAGEMENT at L55, CLICK_GENERATOR_ID at L62, tick pipeline at L336-494"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "GameState, Player, GeneratorState types that may need extension to carry ladder-verb state"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "save versioning — a structural change like this likely requires a version bump and migration"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "current generator data model that OQ11-b (consolidation) would extend"
+        }
+      ],
+      "acceptance_criteria": [
+        "Read the proposal in full (all 13 sections plus OQs)",
+        "Assess feasibility of the postClick refactor given the current game-loop/index.ts structure",
+        "Estimate refactor scope under both OQ11 options: (a) parallel ladder system alongside existing generators, (b) consolidation where verbs ARE generators",
+        "Flag any non-obvious migration concerns (save version bump requirements, tick pipeline reordering, driver/ui contract changes)",
+        "Add a review section at the bottom of the document following the PROPOSALS.md template (Date, Decision: Aligned/Not Aligned/Request for Comment, Comments)",
+        "Update the reviewers field: remove self if aligned; leave self in if Not Aligned or Request for Comment"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }
