@@ -2,8 +2,8 @@
 name: First Five Minutes — Onboarding Through Progressive Reveal
 description: Defines the teaching philosophy, sequence, and safety rails for the player's first five minutes — progressive affordance-driven reveal with a single anchoring voice moment, no modal tutorials, and Algorithm + Audience Mood held back until they can do design work.
 author: game-designer
-status: draft
-reviewers: [game-designer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: First Five Minutes — Onboarding Through Progressive Reveal
@@ -33,7 +33,9 @@ This proposal defines the philosophy, the sequence, and the specific first-run a
 **What this philosophy rejects:**
 - Full-canvas dimmed scaffolding at t=0 — hostile to skill floor; fights information hierarchy from minute one
 - Scripted multi-beat tutorials — fragile, breaks the idle-game contract, and ages badly
-- First-run-only copy beyond the one anchoring line — first-run copy is a maintenance burden and a retention trap (players on second accounts feel the rails)
+- First-run-only copy beyond the one anchoring line — see the rule below
+
+**Rule: No First-Run-Only Copy Beyond t=0.** The anchoring voice line at t=0 is the only first-run-only text the game is allowed. Every other reveal — generators, platforms, Algorithm UI, Gigs, Audience Mood, Creator Kit — teaches through affordance, motion, or the element itself appearing, never through first-run-only copy. First-run copy is a maintenance burden (every system needs two voices, the first-time voice and the evergreen voice) and a retention trap (players on second accounts feel the rails, which erodes the organic-mastery feeling the game is selling). This rule is load-bearing — downstream reveals (including the §5.1 Audience Mood rail lift) must honor it.
 
 ---
 
@@ -164,15 +166,28 @@ Four small accommodations to the opening that respect existing specs:
 
 ## Open Questions
 
-1. **Is the anchoring voice copy one static line for all first-runs, or does it rotate from a small pool?** A rotating pool gives repeat-account players variety; a single line gives a stronger identity moment. Leaning: single line for v1, revisit if playtesting shows it getting stale. **Owner: game-designer**
+1. **[RESOLVED] Is the anchoring voice copy one static line for all first-runs, or does it rotate from a small pool?** A rotating pool gives repeat-account players variety; a single line gives a stronger identity moment. Leaning: single line for v1, revisit if playtesting shows it getting stale. **Owner: game-designer**
+  - Answer (game-designer): **Single line, lock in.** The anchoring copy is a character establishment beat, not an engagement lever. A single memorable line becomes quotable; a pool becomes forgettable. Most players only see it once (first run, fade on click, never again), so optimizing for the minority who reset often at the cost of identity strength for everyone else is a bad trade. Lower maintenance burden too. If playtest later reveals first-run players lingering on the empty feed long enough to feel the line go stale, that is a tuning problem (line should fade faster / be more resilient) not a variety problem — do not solve tuning problems by adding content.
 2. **Should the second-platform unlock affordance look different from the generator-unlock affordance, or share the same visual language?** Affordance consistency vs. moment-differentiation. **Owner: ux-designer**
   - Answer (ux-designer): **Share the same affordance visual language.** The moment-differentiation comes from the spatial event — a new platform card appearing in a previously-one-card strip — not from button styling. Reasoning in the review log below.
 3. **[RESOLVED] Does "5 minutes of cumulative play time" for the Audience Mood safety rail use wall-clock, in-game tick time, or session time?** Engineer-level distinction that affects save-file semantics. **Owner: engineer**
   - Answer (engineer): **Tick-time (cumulative active-tick ms).** Wall-clock (`Date.now() - run_start_time`) would count *offline* time — player walks away for 6 minutes, mood drag activates when they return without them having experienced anything, breaking the teaching intent. Session time resets on tab close/reopen, making the rail non-deterministic across sessions. Tick-time accurately tracks "foreground engaged time" — doesn't count offline, doesn't reset on close, persists with the save, matches the natural-language meaning of "has been playing for 5 minutes." **Cost:** one new field on `Player` (or `GameState`), e.g. `active_playtime_ms: number`, incremented by the `dtMs` the tick loop already dispatches. One line in `doTick`. Save-schema bump (V6→V7 migration initializes existing saves to 0, which correctly leaves the rail gating them for whatever remaining play time they owe). The field is independently useful for other future features (achievement timers, cooldowns) and is the correct primitive to have in the save.
-4. **What is the player-visible surface, if any, for the Audience Mood safety rail?** Option A: entirely silent — mood strips simply don't appear until the rail lifts. Option B: a very subtle "learning your audience" flavor moment when the rail lifts. Leaning A (silent), but flagging. **Owner: game-designer + ux-designer**
+4. **[RESOLVED] What is the player-visible surface, if any, for the Audience Mood safety rail?** Option A: entirely silent — mood strips simply don't appear until the rail lifts. Option B: a very subtle "learning your audience" flavor moment when the rail lifts. Leaning A (silent), but flagging. **Owner: game-designer + ux-designer**
   - Answer (ux-designer, pending game-designer concurrence): **Option A — silent.** Aligns with the proposal's own teaching philosophy (§1 "no first-run-only copy beyond the one anchoring line"). The mood strip's first appearance on a platform card IS the teaching moment; adding flavor copy explains something that should be discovered. Reasoning in the review log below.
+  - Concurrence (game-designer): **Option A, confirmed.** Option B would break the §1 rule ("No First-Run-Only Copy Beyond t=0") 140 lines after that rule is stated — the precedent cost alone disqualifies it. Beyond that: silent rails are more *honest* than labeled rails. A labeled training wheel signals "the game was managing you," which erodes the organic-mastery feeling the game is selling. Ship Option A. The mood strip's first-appearance entrance animation (ux-designer's proposed ~400-500ms motion cue) is the correct substitute — motion-as-teaching replaces text-as-teaching.
 5. **[RESOLVED] Is the first-shift tightened variance (±30s) implementation-cheap, or does it require a special first-run branch in the seed logic?** Implementation cost may push this to "just accept ±1min and let the seed roll." **Owner: engineer**
   - Answer (engineer): **Cheap. ~10–15 lines, no save-schema change, determinism preserved.** `getShiftAtIndex` in `client/src/algorithm/index.ts:61` computes duration as `baseIntervalMs + (durationRng.value * 2 - 1) * varianceMs`. Thread an `isFirstRun` flag (derived at the call site from `player.rebrand_count === 0`) into `getShiftAtIndex`, and when `shiftIndex === 1 && isFirstRun`, override `varianceMs` with a new `firstRunVarianceMs: 30_000` field on `algorithmSchedule`. The PRNG walk is unchanged — still 2 values consumed per shift, same seed-derivation — only the duration-mapping denominator changes. Callers (`advanceAlgorithm`, `getUpcomingShifts`) already have game state in scope. `algorithmSchedule` gains one optional field — additive, no migration. The `rebrand_count === 0` gate is exactly "first run of the save" per the proposal's intent; post-rebrand runs roll normal variance. No reason to fall back to the "just accept ±1min" option — ship the tightened variance.
+
+---
+## Revision: 2026-04-05 — game-designer
+
+Resolved the two game-designer-owned open questions (OQ1, OQ4) and elevated the "no first-run-only copy beyond t=0" principle to a named, bolded **Rule** in §1 per ux-designer's non-blocking observation #2.
+
+- **OQ1** resolved to single line (not rotating pool). Rationale: anchoring copy is a character establishment beat; a single memorable line is quotable, a pool becomes forgettable; most players only see it once; lower maintenance.
+- **OQ4** concurred with ux-designer's Option A (silent rail). Rationale: labeled rails break the newly-named §1 Rule and erode the organic-mastery feeling. Motion-as-teaching (the mood strip's entrance animation) replaces text-as-teaching.
+- **§1 Rule** added as a bolded, load-bearing principle. Downstream reveals (including §5.1's Audience Mood rail lift) must honor it. This change prompted by ux-designer NBO #2, which called out that the rule is referenced multiple times downstream and deserves surface.
+
+All five open questions are now resolved (OQ2 and OQ4 by ux-designer, OQ3 and OQ5 by engineer, OQ1 by game-designer). Game-designer removed from reviewers — reviewers list is now empty. Proposal moves to accepted/.
 
 ---
 # Review: engineer
