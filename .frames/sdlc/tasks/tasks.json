@@ -1,5 +1,5 @@
 {
-  "next_id": 44,
+  "next_id": 45,
   "tasks": [
     {
       "id": 1,
@@ -800,7 +800,7 @@
       "id": 38,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Mobile Layout Pass",
       "requester": "ux-designer",
@@ -823,7 +823,8 @@
         "Accessibility requirements met on mobile (hit areas, contrast, motion)"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 39,
@@ -923,7 +924,7 @@
       "id": 42,
       "role": "engineer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Review: Clout Upgrade Menu & Costs",
       "requester": "game-designer",
@@ -952,13 +953,14 @@
         "Commit the updated proposal file"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
     },
     {
       "id": 43,
       "role": "engineer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "Review: Generator Balance & Algorithm States",
       "requester": "game-designer",
@@ -985,6 +987,63 @@
         "Decision: Aligned or Not Aligned stated with rationale"
       ],
       "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-04"
+    },
+    {
+      "id": 44,
+      "role": "architect",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-04",
+      "title": "Viral burst event signal — engine contract + trigger",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "The Core Game UI (task #29) implements the visual choreography for the 'going viral' peak moment per UX spec §9 — counter acceleration, screen energy, sustained 5–10s cascade. The UX spec §9.1 explicitly states: 'Viral triggers are determined by the game loop, not this spec. The UX assumes the engine signals a viral burst event with source_generator_id, source_platform_id, duration_ms (5000–10000), magnitude (total bonus engagement).' No such signal exists in the current game loop. The UI has a dormant viralEvent hook ready to be driven — this task decides what fires it and how.\n\nArchitect needs to answer: (1) what in the simulation triggers a viral burst? (e.g., follower-rate spike threshold, algorithm state × generator combo, random-chance-on-post gated by state), (2) where in the tick pipeline does it emit, (3) how is the signal surfaced to the UI — is it persisted state on GameState, a transient event queue on the driver, or a one-shot callback? Game-designer owns the frequency target (UX spec §9.5 notes 15–40 minutes between virals per active play session; open question owned by game-designer).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§9 defines the visual contract the engine signal must satisfy (fields: source_generator_id, source_platform_id, duration_ms, magnitude)"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Current game loop and tick contract — the viral event mechanism must fit within the existing state→state pipeline or extend it cleanly"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "§4 establishes viral moments as the game's peak emotional beat; Q5 resolution describes the UX cascade"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "Where tick pipeline lives — the emission point will go here"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "The driver is the UI's contact point; event surfacing from tick→UI passes through here"
+        }
+      ],
+      "acceptance_criteria": [
+        "Architect proposal defines trigger condition(s) for a viral burst — what simulation state fires it",
+        "Architect proposal defines the signal transport: persisted on GameState vs transient driver event vs other",
+        "Architect proposal defines the payload shape matching UX spec §9.1 (source_generator_id, source_platform_id, duration_ms, magnitude)",
+        "Architect proposal defines engagement application — is magnitude applied instantaneously or distributed across duration_ms",
+        "Game-designer signs off on trigger frequency target (default 15–40 min between virals per UX §9.5)",
+        "Document notes what changes in tick() / driver.ts / types.ts to implement"
+      ],
+      "open_questions": [
+        {
+          "question": "What gameplay condition should trigger a viral burst? (rate spike, algorithm×generator combo, seeded rare-event, player action?)",
+          "owner": "architect"
+        },
+        {
+          "question": "Target frequency — is 15–40 min of active play between virals the right tuning?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Does viral magnitude apply all at once or amortized over duration_ms? Tick-rate drama (UX §9.3) suggests amortized so the counter visibly accelerates.",
+          "owner": "architect"
+        }
+      ],
       "blocked_on": []
     }
   ]

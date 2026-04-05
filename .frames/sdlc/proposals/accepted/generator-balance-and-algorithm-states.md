@@ -2,8 +2,8 @@
 name: Generator Balance & Algorithm States
 description: Formalises the generator rate table, trend sensitivities, and algorithm state definitions as official design targets, replacing the provisional values in static-data/index.ts.
 author: game-designer
-status: draft
-reviewers: [engineer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Generator Balance & Algorithm States
@@ -236,3 +236,26 @@ This is affirmed as the starting target. Five minutes is long enough to feel the
 1. **Clout upgrade code discrepancy.** The code at `client/src/static-data/index.ts` has placeholder clout upgrade values (`faster_engagement` at [1,3,8,20,50] Clout with 1.25× multiplier) that do not match the design in the draft proposal `clout-upgrade-menu.md`. The engineer used correct placeholders pending acceptance of that proposal. Once `clout-upgrade-menu.md` is accepted, the engineer must update the static data to match. This is a tracking note, not a blocker for this proposal. **Owner: engineer** (update static data when clout-upgrade-menu is accepted)
 
 2. **Algorithm schedule timing revisit.** The 5-minute base interval should be reassessed after UX task #40 (rate visibility and purchase feedback) ships. The right timing depends partly on how legible the algorithm state is to the player — hard to evaluate until that UI exists. **Owner: game-designer**
+
+---
+# Review: engineer
+
+**Date**: 2026-04-04
+**Decision**: Aligned
+
+**Comments**
+
+Formula, rate table, and cost structure are all clear and implementable. No blocking concerns.
+
+**Non-blocking: algorithm state table arithmetic inconsistencies.**
+
+The per-state tables show an "Effective at max sensitivity (ts=1.0)" column, but the values are calculated using each generator's actual `trend_sensitivity`, not ts=1.0. That's more useful anyway — the column header is just wrong. More importantly, the `tutorials` generator is consistently off by a factor of ~2.5×:
+
+- `short_form_surge`: formula `1 + 0.1 × (0.6 − 1) = 0.96` → −4%, table shows −10%
+- `authenticity_era`: formula `1 + 0.1 × (1.4 − 1) = 1.04` → +4%, table shows +10%
+
+I'll implement the stated formula (`effectiveModifier = 1 + trend_sensitivity × (raw_modifier − 1)`) as authoritative. The table numbers are illustrative. Flagging in case the tutorials values were intentional and the formula needs updating — if so, the game-designer should clarify before the build task ships.
+
+**Open question #1 acknowledged.** I'll update static data for clout upgrades once `clout-upgrade-menu.md` is accepted (which it now is, as I'm approving it in the same session).
+
+**Open question #2** is a future revisit tied to UX task #40 — noted, no action needed now.

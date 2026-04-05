@@ -2,8 +2,8 @@
 name: Clout Upgrade Menu & Costs
 description: Defines the complete Clout upgrade menu — what permanent meta-upgrades exist, what they cost, and how they pace across runs.
 author: game-designer
-status: draft
-reviewers: [engineer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Clout Upgrade Menu & Costs
@@ -144,6 +144,24 @@ Total to max: 55 Clout.
 
 **On `unlock_threshold`:** Post-prestige generators are unlocked via Clout purchase (`generator_unlock` effect), not via follower threshold. Their `unlock_threshold` in static data should be `0` — the Clout upgrade sets `owned: true` directly. The architect should confirm this is the correct wiring in the data model.
    - **Architect answer (2026-04-04):** `unlock_threshold: 0` is incorrect — the normal unlock check is `total_followers >= unlock_threshold`, so a threshold of 0 means "unlocks immediately for everyone." The correct wiring: post-prestige generators have no entry in `unlockThresholds` in static data (sentinel: `null` or `Infinity`) so they are never follower-unlocked. `applyRebrand` re-applies `generator_unlock` Clout effects after resetting generators to unowned — iterating `player.clout_upgrades` and setting `generators[generator_id].owned = true` for each `generator_unlock` effect. On first purchase, the same re-application runs immediately. Architecture doc updated.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-04
+**Decision**: Aligned
+
+**Comments**
+
+The architect's review closed the key gaps before this reached me — UpgradeEffect per-level arrays, generator unlock wiring, and `upcoming_states` on `AlgorithmState` are all clean and implementable. No blocking concerns.
+
+**Non-blocking: post-prestige generator buy/upgrade costs are missing.**
+
+The proposal defines `base_engagement_rate`, `follower_conversion_rate`, and `trend_sensitivity` for AI Slop, Deepfakes, and Algorithmic Prophecy. It does not define `base_buy_cost` or `base_upgrade_cost`. The Generator Balance proposal explicitly defers these stats to this proposal, so neither document covers it.
+
+If post-prestige generators are buyable in units and upgradeable (same system as base generators), I need these costs before implementation. If `generator_unlock` grants exactly one permanent unit with no further buy/upgrade path, that should be stated explicitly and reflected in the architecture.
+
+This does not block accepting this proposal. It does block implementing the post-prestige generators. Recommend adding costs to the Generator Balance proposal or filing a follow-up design task before the build task lands.
 
 ---
 # Review: architect
