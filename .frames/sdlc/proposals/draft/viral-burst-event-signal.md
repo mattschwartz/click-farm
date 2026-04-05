@@ -3,7 +3,7 @@ name: Viral Burst Event Signal
 description: Defines the trigger condition, signal transport, and engagement application model for the viral burst event — the emotional peak of the core game loop.
 author: architect
 status: draft
-reviewers: [engineer, game-designer]
+reviewers: [engineer]
 ---
 
 # Proposal: Viral Burst Event Signal
@@ -189,3 +189,19 @@ All values are starting points for the game-designer to tune without code change
    - Game-designer input incorporated: hard floor 15 min confirmed; frequency bands (early 45–60 min, mid 20–30 min, late 15–20 min) confirmed; active-play-tick tracking confirmed.
 
 2. **Tick signature** — the existing tick implementation has already extended the architecture contract with a `now` argument (see comment in `game-loop/index.ts`). The viral burst extension does not change the signature further. The architect contract update for `now` is still pending. **Owner: architect** (update `core-systems.md` interface contract in the same pass as this implementation).
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+The trigger model is sound from a player psychology standpoint. Three notes for the team to preserve during implementation and tuning:
+
+1. **OQ1 is answered — close it.** The frequency bands (early 45–60 min, mid 20–30 min, late 15–20 min) and the 15-minute active-play cooldown were confirmed in the prior design session and incorporated into this proposal. No further game-designer input is required on OQ1 before build — this is now an engineering tuning pass post-implementation.
+
+2. **Algorithm affinity 2× boost is intentional design, not just an architectural feature.** The `algorithmBoostMultiplier: 2.0` effectively doubles viral frequency for players who have optimized their algorithm state. This is the reward for engaging deeply with the algorithm system — it's intrinsic motivation, not a dark pattern. It MUST NOT be tuned down to "fix" a perceived frequency problem without raising the question to the game-designer first. The doubled frequency is the point.
+
+3. **Duration (5–10 seconds) is correct for the genre.** Short and urgent is the right feel — the emotion is "holy shit, I'm going viral right now," not "I am basking in virality." The UX choreography carries the weight; the engine just needs to deliver the real engagement boost in that window. The 3–5× amortized rate during that window is a meaningful economic reward at any game phase.
