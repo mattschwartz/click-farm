@@ -149,7 +149,7 @@ No concerns.
 - **Full roster grows from 7 to 8 generators** by adding `chirps` at position 0. Existing 7 retain identities, unlock thresholds, balance tuning, and platform affinities unchanged. Only chirps needs net-new balance + affinity cells.
 - Manual verbs follow a three-state lifecycle: unlock, upgrade, automate.
 - **Ladder verbs ARE generators** (OQ11 resolved). The Actions column is a view onto the existing Generator entity; no new entity class.
-- **`base_engagement_rate` splits into `base_event_yield × base_event_rate`** (OQ12 resolved). Upgrade scales yield via `level_multiplier(level)`; Automate scales rate via `count`. Backward-compatible for existing generators (seed `base_event_yield=1.0`).
+- **`base_engagement_rate` splits into `base_event_yield × base_event_rate`** (OQ12 resolved). Upgrade scales yield via `level_multiplier(level)`; Automate scales rate via `count`. For the 3 passive-only generators (memes, hot_takes, tutorials): seed `base_event_yield=1.0`, `base_event_rate=<old base_rate>` (backward-compatible). For the 5 ladder verbs: split chosen so pre-Automate manual cooldown matches §3 targets while preserving passive-economy output; exact values in §14a/b.
 - Every unlocked verb remains permanently manual-clickable — no button is ever retired.
 - Automators are parallel actors with their own independent cooldown timers; manual and auto stack by construction.
 - **Manual-tap cooldown is a derived view:** `cooldown_manual = 1 / (max(1, count) × base_event_rate)`. The `max(1, count)` floor models the player's own hand as the first actor on every unlocked verb, so manual cooldown is defined from the moment of Unlock (pre-Automate). Upgrading Automate (count) shrinks the manual cooldown; first Automate level halves it. Cooldown floor is ~0.01s.
@@ -162,14 +162,101 @@ No concerns.
 
 ### 13. What This Leaves Open
 
-All remaining questions are **balance-pass tuning**, not structural decisions:
+**Nothing structural.** All OQs are resolved. Balance cells are locked in §14 below. Only post-playtest fine-tuning remains — flag-and-adjust per the accepted generator-balance-and-algorithm-states.md's "design targets, not sacred numbers" discipline.
 
-- Per-verb automation-level tuning curve (OQ2) — the rate-reduction steps each Automate level buys.
-- The unlock-threshold formula for the 4 unlockable verbs (engagement vs. follower milestones vs. prior-verb prerequisites, OQ5).
-- `base_event_yield` tuning so manual taps stay "meaningfully supplementary" at late-game Automate levels (OQ15).
-- Net-new balance cells for `chirps` (yield, rate, algorithm-state modifiers, platform affinity row, trend_sensitivity).
+### 14. Balance Cells
 
-These are all game-designer-owned and belong to a dedicated balance pass after acceptance.
+All values below are the design target. Engineer implements these as the seeded static-data for the refactor. Playtest-driven fine-tuning may adjust them, but the structural relationships (yield × rate = preserved passive output; cooldown = `1/(max(1,count) × base_event_rate)`) are fixed.
+
+#### 14a. Yield/Rate Split — 5 Ladder Verbs
+
+The split is chosen so each ladder verb's **pre-Automate manual cooldown** matches §3's design target, while **`base_event_yield × base_event_rate` equals the verb's old `base_rate`** — preserving passive-economy output unchanged.
+
+| Verb | Cooldown target (count=0) | `base_event_rate` | `base_event_yield` | Passive at count=1, level=1 |
+|---|---|---|---|---|
+| chirps | 0.4s | 2.5 | 1 | 2.5 eng/sec *(new generator)* |
+| selfies | 2.5s | 0.4 | 2.5 | 1.0 eng/sec *(preserved from old base_rate)* |
+| livestreams | 10s | 0.1 | 800 | 80 eng/sec *(preserved)* |
+| podcasts | 30s | 0.033 | 4,545 | 150 eng/sec *(preserved)* |
+| viral_stunts | 120s | 0.0083 | 60,240 | 500 eng/sec *(preserved)* |
+
+#### 14b. Passive-Only Generators — Seeded Split (Unchanged)
+
+Not manual-clickable, so base_event_rate doesn't need to meet a cooldown target. Seeded per architect's backward-compatible migration.
+
+| Generator | `base_event_rate` | `base_event_yield` | Passive at count=1, level=1 |
+|---|---|---|---|
+| memes | 5.0 | 1 | 5.0 eng/sec *(preserved)* |
+| hot_takes | 12.0 | 1 | 12.0 eng/sec *(preserved)* |
+| tutorials | 30.0 | 1 | 30.0 eng/sec *(preserved)* |
+
+#### 14c. Chirps — Net-New Balance Cells
+
+| Cell | Value |
+|---|---|
+| `unlock_threshold` | 0 |
+| `base_event_rate` | 2.5 |
+| `base_event_yield` | 1 |
+| `fcr` (follower conversion rate) | 0.07 |
+| `trend_sensitivity` | 0.7 |
+| `base_buy_cost` | 2 |
+| `base_upgrade_cost` | 20 |
+| `manual_clickable` | `true` |
+
+**Chirps algorithm-state modifiers:**
+
+| State | Raw modifier | Effective at ts=0.7 |
+|---|---|---|
+| short_form_surge | 1.7 | +49% |
+| authenticity_era | 0.8 | −14% |
+| engagement_bait | 1.5 | +35% |
+| nostalgia_wave | 1.0 | 0% |
+| corporate_takeover | 0.7 | −21% |
+
+**Chirps platform affinity row:** Skroll ✓×1.5 (tweet-native), Instasham –×1.0 (neutral), Grindset ✗×0.6 (too ephemeral for long-form platform).
+
+#### 14d. Unlock Thresholds (OQ5 Resolution)
+
+Only one change from the accepted generator-balance spec: **selfies moves from 0 → 100** because chirps now holds the threshold=0 starter position. All other thresholds carry over unchanged.
+
+| Generator | unlock_threshold | Surface |
+|---|---|---|
+| chirps | 0 | Actions (starter, unlocked by default) |
+| memes | 50 | Upgrades (passive-only) — *unchanged* |
+| selfies | **100** | Actions (ladder Unlock purchase) — **NEW** |
+| hot_takes | 200 | Upgrades (passive-only) — *unchanged* |
+| tutorials | 1,000 | Upgrades (passive-only) — *unchanged* |
+| livestreams | 5,000 | Actions (ladder Unlock) — *unchanged* |
+| podcasts | 20,000 | Actions (ladder Unlock) — *unchanged* |
+| viral_stunts | 100,000 | Actions (ladder Unlock) — *unchanged* |
+
+For manual_clickable generators the threshold gates both the Actions column ghost-slot reveal AND the Unlock purchase. For passive-only generators it gates visibility in the Upgrades column as today.
+
+#### 14e. Automation Curve (OQ2 Resolution)
+
+Automation = `count` purchases. Cost follows the existing accepted formula `ceil(base_buy_cost × 1.15^count_owned)` unchanged. No new curve. The manual-cooldown rate-reduction emerges from the derived-view formula `cooldown = 1/(max(1,count) × base_event_rate)`:
+
+| Verb | count=1 | count=10 | count=100 | Floor reached at count |
+|---|---|---|---|---|
+| chirps | 0.4s | 0.04s | 0.01s (floor) | 40 |
+| selfies | 2.5s | 0.25s | 0.025s | 250 |
+| livestreams | 10s | 1s | 0.1s | 1,000 |
+| podcasts | 30s | 3s | 0.3s | 3,030 |
+| viral_stunts | 120s | 12s | 1.2s | 12,048 |
+
+#### 14f. Manual-Supplementary Ratio at the Cooldown Floor (OQ15 Resolution)
+
+At the 0.01s cooldown floor, max human tap = 100/sec and passive throughput scales linearly with count. The 10% ceiling (manual ≤ 10% passive) emerges naturally from the cooldown floor + yield-preserving split — **no separate per-verb yield tuning needed**. The ratio is `100 / (N × base_event_rate)`:
+
+| Verb | Count N at which manual = passive (1:1) | Count N at which manual = 10% of passive |
+|---|---|---|
+| chirps | 40 | 400 |
+| selfies | 250 | 2,500 |
+| livestreams | 1,000 | 10,000 |
+| podcasts | 3,030 | 30,303 |
+| viral_stunts | 12,048 | 120,482 |
+
+Nice gradient by design: early verbs fade to supplementary quickly (chirps at count=4 is already 10% of automator throughput pre-floor); late verbs stay manually meaningful deep into endgame. The player's hand focus naturally migrates up the ladder over time.
 
 ## Supersession Notes
 
@@ -194,13 +281,13 @@ This proposal modifies or extends several accepted decisions. On acceptance, the
 
 1. ~~**Do manual clicks on an automated verb stack with the auto-tick, or share its cooldown?**~~ **[RESOLVED — game-designer, 2026-04-05]** Stack, by architecture. The automator is a parallel actor with its own independent cooldown; manual clicks run on the player's own cooldown (or on no cooldown, for verbs like Chirp). The two never share a timer. See §4.
 
-2. **How many automation levels per verb, and what is the tick-interval progression?** E.g., auto-Chirp I fires every 5s, auto-Chirp II every 3s, III every 1s. Needs a tuning curve that respects the overall economy. **Owner: game-designer** (tune during balance pass).
+2. ~~**How many automation levels per verb, and what is the tick-interval progression?**~~ **[RESOLVED — game-designer, 2026-04-05]** Automation = `count` purchases, using the existing cost formula `ceil(base_buy_cost × 1.15^count_owned)` unchanged from the accepted generator-balance spec. Cooldown rate-reduction emerges naturally from `1/(max(1,count) × base_event_rate)` — each count purchase proportionally shrinks both automator-firing and manual-tap cooldowns. No net-new tuning curve. Progression table and per-verb floor-reached counts locked in §14e.
 
 3. ~~**Does the Actions Column soft cap (4 members) need to change?**~~ **[RESOLVED — ux-designer, 2026-04-05]** Soft cap of 4 stands; internal scroll at 5+. Auto-compacting automated verbs rejected (contradicts §3's interleaved-tapping intent; 40px violates 44px iOS minimum + 80px floor from `actions-column.md` OQ4). Refinement added: **spotlight slot (sticky top)** pins the most-recently-unlocked verb to the top of the scroll region (desktop) / bottom-anchor position (mobile), carrying the progression signal. Instrument-panel aesthetic holds at 5+ tap targets because hierarchy comes from motion/recency/touch, not equal-weight scanning. See ux-designer's review.
 
 4. ~~**Are verbs coupled to platforms, or platform-agnostic?**~~ **[RESOLVED — game-designer, 2026-04-05]** Verbs inherit platform affinity from the existing content-affinity matrix (`platform-identity-and-affinity-matrix.md`). Selfies/Livestreams/Podcasts/Viral Stunts already have affinity cells authored under today's roster — those cells carry over unchanged. **Only `chirps` needs net-new affinity cells:** high on Skroll (✓×1.5 — tweet-native), neutral on Instasham (–×1.0), low on Grindset (✗×0.6 — short-form text plays poorly on long-form platform). The affinity matrix remains the single source of truth for platform routing and applies at `computeFollowerDistribution` only, not at `postClick` tap time (per OQ17). **Note:** the naming mismatch "Chirp-on-Chirper vs. Chirp-on-Skroll" is resolved in-fiction by letting Chirper *be* Skroll's in-game name — or by making Skroll the platform and Chirp just the verb-name for the text medium on it. Final platform-name alignment is deferred to the platform-proposal's acceptance pass.
 
-5. **What unlock-threshold formula scales across the full ladder?** The user's example was "10 engagement to unlock Selfie." For a ladder of 5+ verbs, is the threshold an escalating engagement amount, a follower milestone, a prior-verb-upgrade prerequisite, or a combination? **Owner: game-designer** (economy tuning).
+5. ~~**What unlock-threshold formula scales across the full ladder?**~~ **[RESOLVED — game-designer, 2026-04-05]** Engagement thresholds (consistent with existing generator-balance spec). Only one change from the accepted thresholds: **selfies moves from 0 → 100** because chirps now holds the threshold=0 starter position. All other ladder thresholds (livestreams 5_000, podcasts 20_000, viral_stunts 100_000) and passive-only thresholds (memes 50, hot_takes 200, tutorials 1_000) carry over unchanged. Rationale: at chirps' tap rate (~2.5 eng/sec max), 100 engagement ≈ 40s of tapping — enough time for the player to form a Chirp rhythm before Selfie's ghost-slot opacifies. Threshold gates both ghost-slot reveal AND Unlock purchase for ladder verbs. Full table in §14d.
 
 6. ~~**Where does the Unlock purchase surface live?**~~ **[RESOLVED — ux-designer, 2026-04-05]** Actions column **ghost slot** (option a). Zero-tutorial, diegetic, Cookie-Clicker-proven. Spec: one ghost slot at a time (next verb in sequence), silhouette icon + unlock-condition text, 0.35 opacity, 60px height (shorter than 80px live-verb height — a promise, not an instrument), not tappable until condition met; on condition-met the slot opacifies and becomes tappable. Density stays within soft cap. Mobile: ghost sits directly above the bottom-anchor verb. See ux-designer's review; full anatomy in follow-up UX ladder spec.
 
@@ -232,11 +319,16 @@ This proposal modifies or extends several accepted decisions. On acceptance, the
 
     **Rationale:** (a) 5 ladder rungs is teachable — each verb has room to feel distinct before the next arrives; 8 would crowd intermediate verbs. (b) "What I personally perform" vs. "what my team produces for me" is a clean narrative split honest to the social-media-fame fiction. (c) Actions column stays within soft-cap-4 range most of the session (5 live-verb slots + 1 ghost kicks internal scroll only at ladder-complete). (d) Late-game depth comes from Podcasts/Viral Stunts' long automation curves, not from more new-verb unlocks.
 
-15. **`base_event_yield` tuning to preserve "meaningfully supplementary" feel.** At the 0.01s cooldown floor, manual contribution is bounded at ~10% of automator throughput. For the "I feel my hand matters" target (§10) to hold at late-game levels, the per-tap yield (`base_event_yield × level_multiplier × algo_mod × …`) must be tuned so that 10% of a verb's automated output is still a visible number jump per tap. Balance-pass concern. **Owner: game-designer** (post-implementation tuning, in collaboration with UX's click-feedback spec).
+15. ~~**`base_event_yield` tuning to preserve "meaningfully supplementary" feel.**~~ **[RESOLVED — game-designer, 2026-04-05]** The 10%-ceiling emerges structurally from the cooldown-floor + yield-preserving split; **no separate per-verb yield tuning is needed**. At the 0.01s cooldown floor, manual output = 100 × yield, passive output = N × rate × yield, so the ratio is `100 / (N × base_event_rate)` — pure function of base_event_rate and count, yield cancels out. This produces a deliberate gradient: chirps fade to supplementary at count=4 (very early); viral_stunts stay manually meaningful until count=1,200+ (super-endgame). The player's hand focus naturally migrates up the ladder over time, matching §10's "orchestra of content" target. Full ratio table in §14f. Post-playtest number-legibility tuning (e.g., is "60,240 per Viral Stunt tap" readable?) is legitimate playtest-pass work, not a pre-acceptance concern.
 
 16. ~~**Cooldown is undefined at `count === 0` (pre-Automate).**~~ **[RESOLVED — game-designer, 2026-04-05, pending architect sign-off]** The derived formula `cooldown = 1 / (count × base_event_rate)` is undefined for a freshly-unlocked verb that has not yet been Automated (count = 0 → Infinity cooldown → verb is uncliсkable), which contradicts §3's "short starting cooldown" requirement. **Resolution: phantom-hand floor — `cooldown = 1 / (max(1, count) × base_event_rate)`** (engineer's option ii). Pre-Automate, the player's own hand *is* the single actor firing the verb, so the formula correctly models "one actor's worth" of firing rate. Post-Automate, each purchased `count` adds a parallel automator and cooldown divides proportionally — first Automate level halves the cooldown, exactly matching §4's "you feel the Automate upgrade in your own hand" dual-payoff. Preserves the architect's derived-view principle (one-line formula change, no new fields, no mode-switch). Rejected alternatives: (i) seeding count=1 at Unlock conflates the Unlock and Automate lifecycle steps and breaks the teaching clarity that "Automate is when the first non-player actor shows up"; (iii) a separate `base_manual_cooldown` field violates "cooldown is a derived view." **Architect: please sign off on the formula change.**
 
 17. **Does `postClick` apply platform affinity at click time?** Engineer's non-blocking flag #1 from the implementation review: today's `postClick` adds flat engagement, and platform affinity enters only at the follower-distribution stage (`computeFollowerDistribution` in `platform/index.ts`). Architect's earned-formula includes `× platform_affinity_if_applicable`, which is ambiguous for manual clicks. **Game-designer resolution: no platform affinity at click time.** Manual taps add flat engagement per verb; platform routing happens downstream at the existing engagement→distribution split. Reasoning: (a) the player is tapping a content *verb*, not targeting a *platform* — the verb's yield is its own identity, independent of which platform harvests the followers; (b) introducing per-platform multipliers at tap time would force the player to mentally optimize "which verb is Skroll-hot right now" during every tap, which pulls focus from the rhythm-based "conductor" fantasy (§10); (c) preserving today's engagement→distribution split keeps the ladder orthogonal to the platform matrix (no coupling cost). **Owner: architect** (confirm this preserves the intent of the earned-formula).
+
+---
+## Revision: 2026-04-05 — game-designer (balance pass — OQ2/OQ5/OQ15 + chirps cells)
+
+Balance pass complete. Key finding: the yield/rate split is load-bearing for manual cooldowns — a naive backward-compat seed (`base_event_yield=1.0, base_event_rate=old_base_rate`) produces sub-millisecond cooldowns on livestreams/podcasts/viral_stunts, breaking §3's "big moment verb" intent. Resolution: re-split base_event_rate to hit §3 cooldown targets per ladder verb, compensating yield so passive output is preserved. Added §14 "Balance Cells" with 6 subsections: (a) yield/rate split for 5 ladder verbs, (b) seeded split for 3 passive-only generators, (c) chirps net-new cells (all fields), (d) unlock thresholds (selfies 0 → 100 is the only change), (e) automation curve table derived from existing cost formula, (f) manual-supplementary ratio table showing the 10% ceiling emerges structurally. OQ2/OQ5/OQ15 resolved with pointers to §14. OQ2 & OQ15 resolve structurally (no net-new tuning needed). OQ5 resolves with minimal change (one threshold). §12 updated with the split locked in. §13 now says "nothing structural open" — only post-playtest fine-tuning remains, per the "design targets, not sacred numbers" discipline inherited from generator-balance-and-algorithm-states.md. All 17 OQs resolved.
 
 ---
 ## Revision: 2026-04-05 — game-designer (OQ14 + OQ4 resolution)
