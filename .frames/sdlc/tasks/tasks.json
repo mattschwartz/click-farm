@@ -1,5 +1,5 @@
 {
-  "next_id": 53,
+  "next_id": 54,
   "tasks": [
     {
       "id": 1,
@@ -1372,7 +1372,7 @@
       "id": 52,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Brand deal card UX spec",
       "requester": "ux-designer",
@@ -1408,6 +1408,58 @@
       "open_questions": [
         {
           "question": "OQ3 from the proposal (architect) — how does brandDeal.active state live in GameState, and how does the driver expose the offer and activation callback? Card spec needs this to define the data the card renders.",
+          "owner": "architect"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 53,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Visual identity spec — platforms, generators, scandal icons",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Several specs reference visual identity elements that don't yet exist: platform icons and accent colors (Chirper, InstaSham, Grindset), generator icons (up to 12 types with semantic color lanes), and scandal card icons (6 types). These are all player-facing visual assets that need to be specified before the engineer can implement them. This task produces a single visual identity spec covering all three.",
+      "related_items": [
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "OQ3 — platform visual identity pass owned by ux-designer; §6.1 — generator four-differentiator system (semantic colors, badge shapes)"
+        },
+        {
+          "ref": "ux/scandal-system.md",
+          "purpose": "OQ6 — scandal card icons, one per scandal type; satirical icon direction"
+        },
+        {
+          "ref": "proposals/accepted/core-game-identity-and-loop.md",
+          "purpose": "Platform names and satire tone; generator categories and names"
+        },
+        {
+          "ref": "proposals/accepted/generator-balance-and-algorithm-states.md",
+          "purpose": "Full generator list with categories for icon assignment"
+        },
+        {
+          "ref": "proposals/accepted/scandals-and-follower-loss.md",
+          "purpose": "Six scandal types for icon assignment"
+        }
+      ],
+      "acceptance_criteria": [
+        "Each platform (Chirper, InstaSham, Grindset) has a defined icon direction, accent color, and satire-tone note",
+        "Each generator type has an icon direction and is assigned to a semantic color lane (images warm, text cool, video saturated, prestige metallic)",
+        "Each scandal type has an icon direction with satirical framing",
+        "All defined colors pass CVD simulation (protanopia, deuteranopia, tritanopia) and meet the 3:1 UI component contrast minimum",
+        "Spec written to ux/visual-identity.md and committed"
+      ],
+      "open_questions": [
+        {
+          "question": "What is the full generator list at launch? Need names and categories to assign icons.",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Are platform accent colors expected to influence any game mechanic visuals (e.g., affinity chip colors on platform cards), or are they purely decorative identity?",
           "owner": "architect"
         }
       ],

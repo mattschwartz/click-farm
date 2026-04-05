@@ -46,6 +46,11 @@ Modal, centered, ~520×620px. Backdrop dims main screen to ~30% opacity. Game co
 │                                          │
 │   MOTION                                 │
 │   ┌────────────────────────────────┐    │
+│   │  Reduce Time Pressure   [  ●] │    │  ← toggle
+│   │  Doubles the scandal decision  │    │
+│   │  window. For players who find  │    │
+│   │  the countdown stressful.      │    │
+│   ├────────────────────────────────┤    │
 │   │  Reduce Motion          [  ●] │    │  ← toggle
 │   │  Replaces decorative motion    │    │
 │   │  with static alternatives.     │    │
@@ -75,13 +80,27 @@ Modal, centered, ~520×620px. Backdrop dims main screen to ~30% opacity. Game co
 
 ## 3. Motion Section
 
-### 3.1 Reduce Motion toggle
+### 3.1 Reduce Time Pressure toggle
+
+- **Control:** standard toggle switch, on/off
+- **Default:** off
+- **Behavior:** when enabled, doubles the scandal decision window from its default (10–15s) to 20–30s. The read beat (1–2s flavor text hold) is unchanged.
+- **Persistence:** stored in save state, applies immediately on toggle
+
+**Why this is in Motion, not Accessibility as a separate section:** time pressure is intimately connected to anxiety, which is also the driver behind reducing motion. Players who experience anxiety from motion are likely to be the same players for whom 10–15s decision windows are stressful. They belong in the same control cluster.
+
+**Description text under toggle:**
+> Doubles the scandal decision window. For players who find the countdown stressful.
+
+**Note:** this toggle only affects scandal modals. No other time-pressured surface exists at current scope.
+
+### 3.2 Reduce Motion toggle
 
 - **Control:** standard toggle switch, on/off
 - **Default:** off (honors OS `prefers-reduced-motion` if detectable — set initial state to match OS preference, then let user override)
 - **Persistence:** stored in save state, applies immediately on toggle
 
-### 3.2 What Reduce Motion disables
+### 3.3 What Reduce Motion disables
 
 Authoritative list — engineer implements against this. Each entry references the spec that defined the original motion.
 
@@ -95,10 +114,10 @@ Authoritative list — engineer implements against this. Each entry references t
 | Rebrand Phase 2 desaturation (prestige-rebrand-screen.md §4.3) | Animated desaturation over 3s | Instant desaturation at phase start |
 | Rebrand Phase 4 counter dissolution (§4.5) | Counters tick down rapidly | Single fade to zero over 1s |
 | Rebrand Phase 4 background desaturation (§4.5) | Animated | Instant |
-| Generator breathing pulse (purchase-feedback §6.2) | Subtle glow oscillation at tick cadence | Static glow halo on owned rows |
+| Generator breathing pulse (purchase-feedback §6.2, generator-badge-breathing proposal) | Badge scale pulse, 2.5s staggered cycle | Static badge fill on owned rows — no pulse |
 | First-purchase sparkle (§6.3) | One-time sparkle pulse | Omitted — badge fill alone |
 
-### 3.3 What Reduce Motion PRESERVES
+### 3.4 What Reduce Motion PRESERVES
 
 Explicitly preserved — these are not decorative, they are content.
 
@@ -114,7 +133,7 @@ Explicitly preserved — these are not decorative, they are content.
 
 **Rule the engineer can apply:** if a motion communicates state change, delta, or game content, it stays. If a motion communicates mood or ambience, it can be replaced with a static alternative.
 
-### 3.4 Description text
+### 3.5 Description text
 
 Under the toggle, a two-line explanation:
 > Replaces decorative motion with static alternatives. Number animations preserved.

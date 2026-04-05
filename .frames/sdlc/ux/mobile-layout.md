@@ -177,7 +177,7 @@ Same as desktop §6.1 — `STARTER` / `MID` / `LATE` / `ABSURD` labels with stab
 
 ### 5.4 Generator breathing pulse
 
-Per `purchase-feedback-and-rate-visibility.md` §6.2 — unchanged on mobile. Breathing happens on the badge, cadence matches tick rate. Touches the badge (40px on mobile), still contained.
+Per `purchase-feedback-and-rate-visibility.md` §6.2 and `proposals/draft/generator-badge-breathing.md` — unchanged on mobile. Breathing happens on the badge (40px on mobile), 2.5s uniform staggered cadence, still contained. Rate-coupled cadence was rejected — see badge breathing proposal for rationale.
 
 ### 5.5 Scroll behavior
 
