@@ -67,7 +67,7 @@
   z-index: 1;
   min-height: 100vh;
   color: var(--text-p0);
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif;
   display: grid;
   grid-template-rows: 80px 1fr;
   max-width: 1280px;

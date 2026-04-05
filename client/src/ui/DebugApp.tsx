@@ -83,7 +83,7 @@ export function DebugApp() {
   const rebrandPreview = cloutForRebrand(state.player.total_followers);
 
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', padding: 16, maxWidth: 960, margin: '0 auto' }}>
+    <main style={{ fontFamily: "var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif", padding: 16, maxWidth: 960, margin: '0 auto' }}>
       <h1 style={{ marginBottom: 4 }}>Click Farm — Debug</h1>
       <p style={{ marginTop: 0, opacity: 0.7, fontSize: 12 }}>
         E7 integration harness. Not the final UI. Remove <code>?debug</code> from the URL to see the real screen.

@@ -1,6 +1,26 @@
 :root {
-  font-family: system-ui, sans-serif;
+  /* Typography faces — see proposals/accepted/typography-system.md.
+     --font-ui is the workhorse (Space Grotesk) used for chrome, data, numerals.
+     --font-voice is the voice face (Fraunces) loaded and available but applied
+     only at "witness" moments (scandals, prestige, rebrand) by downstream specs. */
+  --font-ui: 'Space Grotesk', 'Space Grotesk Fallback', system-ui, sans-serif;
+  --font-voice: 'Fraunces', 'Space Grotesk Fallback', Georgia, serif;
+
+  font-family: var(--font-ui);
   color-scheme: light dark;
+}
+
+/* Metric-adjusted fallback for Space Grotesk.
+   Overrides tune the local Arial metrics to match Space Grotesk so that when
+   the webfont swaps in, there is no visible layout shift. Values sourced from
+   the fontsource / next/font registry for Space Grotesk → Arial. */
+@font-face {
+  font-family: 'Space Grotesk Fallback';
+  src: local('Arial');
+  ascent-override: 95.05%;
+  descent-override: 26.38%;
+  line-gap-override: 0%;
+  size-adjust: 103.53%;
 }
 
 body {
