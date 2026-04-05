@@ -3,7 +3,7 @@ name: Badge Pro Shop
 description: Cosmetic badges earned through gameplay milestones and claimed from a shop for a small clout fee — prestige through achievement, not purchase.
 author: game-designer
 status: draft
-reviewers: [architect, ux-designer]
+reviewers: [architect]
 ---
 
 # Proposal: Badge Pro Shop
@@ -99,4 +99,38 @@ Both are valid reasons to spend clout. A player with excess clout after upgrades
 2. **Badge names and copy** — satirical names fitting the game's tone. **Owner: game-designer** (creative pass — can happen in parallel with build)
 3. **How many badges at launch?** ~~Too few and the collection feels thin. Too many and none feel special. **Owner: architect** (scoping question — what's buildable for a first pass?)~~ **[RESOLVED — architect, 2026-04-05]** 5 badges at launch. Enough for the collection to feel real without over-committing on milestone design before the progression curve is finalized.
 4. **Shop and collection screen design** — where does the shop live in the navigation? How are locked vs. claimed badges presented? How does the shine work visually? **Owner: ux-designer**
+   - **Answer (ux-designer, 2026-04-05):** See full spec below. Summary: Trophy icon at bottom-right of desktop screen (prestige corner, adjacent to Rebrand affordance); third button "Badges" in the mobile prestige row alongside Upgrades and Rebrand. Three badge states: claimed (full color + ambient shine), unlocked-unclaimed (full color + "Claim" CTA + clout cost + pulsing border), locked (silhouette + milestone description at 3:1 contrast). Shine is a left-to-right gradient shimmer overlay — intense one-time version on first view after claiming (600ms), ambient 8s cycle thereafter.
 5. **Badge visibility on the main screen** — does the player's most recently claimed or "featured" badge appear anywhere on the core game screen? **Owner: ux-designer**
+   - **Answer (ux-designer, 2026-04-05):** No persistent badge on the main screen at launch. The screen is already dense and a cosmetic badge at rest adds no information hierarchy value. **Exception:** a claim celebration moment — when the player claims a badge, the badge icon animates in at ~80px, holds for 2 seconds in the center of the screen (floating above the main content, below modals), then fades out over 400ms. This is a pure payoff beat, not a persistent element. Re-evaluate if social features ship post-launch.
+
+---
+# Review: ux-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+The mechanic is clean. Earned-first-then-claimed is the right model — it prevents badges from becoming a parallel grind track while giving the claim moment real ceremony weight. My UX answers to OQ4 and OQ5 follow.
+
+**OQ4 — Navigation and screen design**
+
+*Access point:*
+- **Desktop:** A trophy icon (24×24px, 44×44px hit area) at the bottom-right of the main game screen, in the prestige corner adjacent to the Rebrand affordance. Groups prestige-economy surfaces spatially without touching the top bar or main columns.
+- **Mobile:** A third button "Badges" in the prestige row (currently Upgrades | Rebrand — becomes Upgrades | Badges | Rebrand). Each button equally sized at one-third of the row.
+
+*Badge collection screen layout:* Full-screen or large sheet (full-screen on mobile). Grid of badge tiles — 3 columns on desktop, 2 on mobile. Category rows separate the milestone categories (Followers, Rebrands, Virals, etc.) with a label divider.
+
+*Three badge states:*
+
+**Claimed:** Full color. Badge icon at natural saturation. Ambient shimmer: a semi-transparent white gradient overlay sweeps left-to-right across the badge surface on an 8s cycle — low amplitude, ease-in-out, communicates "alive, not static." On first view after claiming (fresh-claim state), the shimmer runs once at 2× amplitude and 600ms, then settles to ambient cadence.
+
+**Unlocked, unclaimed (earned milestone, not yet claimed):** Full color icon — the player has earned it, it looks real. A "Claim" button below the badge with the clout cost displayed (e.g., "Claim — 2 Clout"). The badge tile has a subtle pulsing border in clout amber at 2s cycle — acknowledging it's waiting for the player's action. No shimmer until claimed.
+
+**Locked (milestone not yet reached):** Silhouette — the badge shape is the outer form of the icon in a muted color (badge shape visible, internal icon detail absent or reduced to outline). Milestone description below the silhouette: "10K followers" or "Survive first scandal." Contrast: 3:1 on background — perceptible but clearly receded. No claim button, no pulse.
+
+*Why silhouette over a full blackout:* a full black silhouette hides the icon shape entirely, removing the teaser. Showing the shape (without the detail) is the right level of "close but out of reach" — the player can see there's something there without seeing what it looks like claimed.
+
+**OQ5 — Main screen visibility:** Answered inline in OQ5 above. No persistent badge. Yes to a 2s celebration reveal on claim.
+
+**Non-blocking:** The prestige row on mobile becomes three buttons — the game-designer and architect should be aware that this changes the mobile prestige row layout from two buttons to three. The Upgrades button was introduced in `ux/mobile-layout.md` §6. Adding Badges does not break the row but may tighten the button widths. At 375px canvas with 24px horizontal padding, three buttons at 8px gaps = ~(375 - 24 - 16) / 3 = ~112px each. At 44px height this is a comfortable tap target.

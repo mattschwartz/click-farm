@@ -3,7 +3,7 @@ name: Actions Column
 description: Reframes the Post column as the Actions zone — a named class of discrete active player taps. Post is the baseline member; brand deals are the second; the column grows as progression adds siblings, and Post's visual prominence shrinks proportionally.
 author: game-designer
 status: draft
-reviewers: [ux-designer, architect]
+reviewers: [architect]
 ---
 
 # Proposal: Actions Column
@@ -87,5 +87,36 @@ No concerns.
 
 1. **When does Post start shrinking, and by what rule?** Trigger options: (a) the moment the first sibling arrives (brand-deal unlock threshold crossed), (b) a gradual shrink tied to the player's follower progression, (c) a step-function shrink at defined milestones. This is a layout-composition question. **Owner: ux-designer**
 2. **Does Post-as-bottom-bar on mobile still hold?** `ux/mobile-layout.md` §2 decision #4 anchored Post as a full-width fixed bottom bar because it was "the primary interaction." Under the Actions-column framing, Post is *a* primary interaction, not *the* primary interaction. The bottom bar may need to become an Actions bar that holds Post + active siblings, or the composition may change entirely. **Owner: ux-designer**
-3. **Should there be an architectural slot-type pattern?** If the Actions column is a first-class class, the codebase may benefit from a formal slot or registry pattern (e.g., an `ActionSlot` concept where new action systems register themselves, with rendering driven by the registry). Alternative: keep actions ad-hoc in the UI layer and let the column simply render whichever action components are currently valid. **Owner: architect**
+3. ~~**Should there be an architectural slot-type pattern?** If the Actions column is a first-class class, the codebase may benefit from a formal slot or registry pattern (e.g., an `ActionSlot` concept where new action systems register themselves, with rendering driven by the registry). Alternative: keep actions ad-hoc in the UI layer and let the column simply render whichever action components are currently valid. **Owner: architect**~~ **[RESOLVED — architect, 2026-04-05]** Ad-hoc rendering. The column's membership is fixed at build time (no runtime extensibility needed), realistically 3–5 members across the full game lifecycle, and each member is strongly curated with its own visual identity. A formal registry pattern would push implementation toward a lowest-common-denominator slot spec that flattens the feel of each member. YAGNI — if a registry becomes obviously useful at member 4 or 5, introduce it then.
 4. **Is there a maximum column density?** If the Actions class grows to 4+ members over the game's lifecycle, does the column stack, scroll, or compress? This is related to OQ1 but distinct — it's about long-game capacity, not immediate composition. **Owner: ux-designer (flag for long-term consideration, not launch-blocking)**
+   - **Answer (ux-designer, 2026-04-05):** Soft cap at 4 members. Desktop column scrolls internally at 5+ — no action compresses below 80px height. On mobile, the Actions zone caps at ~55% viewport height before introducing internal scroll. No action element (Post included) compresses below its minimum tap target. This is not a launch concern.
+
+---
+# Review: ux-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+The proposal is correct and the emergent pattern was always going to need naming. My answers to the UX-owned open questions follow.
+
+**OQ1 — When does Post start shrinking, and by what rule?**
+
+Option (a): trigger is the brand-deal unlock threshold. The column's composition reflects the player's progression state, not the instantaneous presence of an active card. If Post shrank back to full height whenever no brand deal was currently showing and re-shrank when the next one appeared, the UI would breathe in a way that contradicts the "you've grown" read. Growth is one-directional.
+
+Concrete layout rule: when brand deals unlock, the post zone permanently reserves **88px** at the bottom of the column for the brand-deal slot — matching the card height already specced in `ux/brand-deal-card.md` §2.1. Post resizes from 220px to ~170px tall. The transition is a 400ms ease-out height change on the post button element. When no deal is currently active, the reserved slot shows nothing (no placeholder, no ghost) — it is simply space. When a deal card arrives it fills its slot; when it expires it leaves the slot empty again.
+
+**Non-blocking flag for author:** `ux/brand-deal-card.md` §2.1 currently says the card "floats over the column bottom — does not push the Post button or rate display upward." Under the Actions Column model, the card occupies a reserved dedicated slot rather than floating. §2.1 will need a small update once this proposal is accepted. UX will make that edit.
+
+**OQ2 — Does Post-as-bottom-bar on mobile still hold?**
+
+Yes, with a reframe. The 96px fixed bottom bar stays, but it is now the **Post anchor of the Actions zone**, not the full extent of the Actions zone. The mobile Actions zone grows upward from the Post bar as siblings arrive.
+
+Concrete layout: brand deals already appear in a full-width 88px strip above the Post bar (per `ux/brand-deal-card.md` §6.1 — this was already specced correctly before this proposal existed). That strip is now understood as the first tier of the Actions zone above the Post anchor. Future siblings would stack above brand deals, below the prestige row, within a capped zone height. Post itself stays 96px because shrinking a full-width bar below 96px degrades thumb reachability — it never compresses.
+
+On mobile, "Post's visual prominence shrinks" manifests not as Post getting smaller but as the zone growing to include siblings that earn comparable visual weight. Post remains the bottom anchor; the zone grows up. The net effect on Post is the same — it is no longer the only thing in the zone — without compromising tap ergonomics.
+
+**OQ4 — answered inline above under OQ4.**
+
+**On the brand-deal-card float spec conflict:** flagged under OQ1 — non-blocking, author does not need to revise this proposal. UX will update the brand-deal-card spec after this proposal is accepted.
