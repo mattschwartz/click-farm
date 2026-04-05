@@ -103,6 +103,71 @@ export function clearSave(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Export / Import (ux/settings-screen.md §5)
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the raw JSON string for the current save, or null if no save
+ * exists. The string is the same payload that `save()` wrote — a
+ * serialized `SaveData` object including `version`.
+ */
+export function exportSaveJSON(): string | null {
+  return localStorage.getItem(STORAGE_KEY);
+}
+
+export interface ImportResult {
+  ok: boolean;
+  /** On failure, a short reason the UI can surface. */
+  reason?: string;
+}
+
+/**
+ * Validate a JSON string and write it to the save slot if it looks like
+ * a SaveData payload. The next `load()` call runs it through the full
+ * migration chain, so older versions are accepted as long as they're
+ * structurally a SaveData envelope.
+ *
+ * Does NOT reload state into the driver — the caller is expected to
+ * force a page reload (or re-create the driver) to pick up the new save.
+ */
+export function importSaveJSON(json: string): ImportResult {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch (err) {
+    return {
+      ok: false,
+      reason: `Not valid JSON: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+  if (parsed === null || typeof parsed !== 'object') {
+    return { ok: false, reason: 'Save payload is not an object.' };
+  }
+  const obj = parsed as Record<string, unknown>;
+  if (typeof obj.version !== 'number') {
+    return { ok: false, reason: 'Save payload is missing a numeric version.' };
+  }
+  if (obj.version > CURRENT_VERSION) {
+    return {
+      ok: false,
+      reason: `Save version ${obj.version} is newer than this build supports (max ${CURRENT_VERSION}).`,
+    };
+  }
+  if (obj.state === undefined || obj.state === null) {
+    return { ok: false, reason: 'Save payload is missing a `state` field.' };
+  }
+  try {
+    localStorage.setItem(STORAGE_KEY, json);
+  } catch (err) {
+    return {
+      ok: false,
+      reason: `Failed to write save: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
 // Migration chain
 // Each case transforms the data from version N to N+1.
 // Add a new case here whenever the save format changes.

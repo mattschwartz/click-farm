@@ -86,7 +86,7 @@
 
 .top-bar {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   align-items: center;
   gap: 32px;
   padding: 0 24px;
@@ -2538,4 +2538,356 @@
   .kit-rows { animation: none; }
   .kit-peek-signal { animation: none; }
 }
+
+/* ==========================================================================
+   Settings modal (ux/settings-screen.md)
+   ==========================================================================
+   Mirrors CloutShop surface grammar: ~520×620px, 30% backdrop, game loop
+   continues running underneath. Three vertical sections, no tabs. */
+
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.30);
+  animation: fade-in 200ms ease-out;
+}
+
+.settings-modal {
+  background: rgba(18, 21, 28, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  width: 520px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 64px);
+  overflow: hidden;
+  color: var(--text-p0);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.settings-title {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.settings-close-btn {
+  font-family: inherit;
+  font-size: 20px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-p2);
+  cursor: pointer;
+  line-height: 1;
+  transition: color 120ms, border-color 120ms;
+}
+
+.settings-close-btn:hover {
+  color: var(--text-p0);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.settings-body {
+  padding: 16px 24px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-p3);
+  margin: 0;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-save-group {
+  gap: 10px;
+}
+
+/* Toggle row — label+description left, switch right. */
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+}
+
+.settings-toggle-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-toggle-label {
+  font-size: 13px;
+  color: var(--text-p1);
+  font-weight: 500;
+}
+
+.settings-toggle-desc {
+  font-size: 11px;
+  color: var(--text-p3);
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+/* Switch control — 40×22 track with 18px thumb. */
+.settings-toggle {
+  flex-shrink: 0;
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 160ms, border-color 160ms;
+}
+
+.settings-toggle-thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-p2);
+  transition: transform 160ms ease, background-color 160ms;
+}
+
+.settings-toggle-on {
+  background: rgba(104, 104, 184, 0.55);
+  border-color: rgba(104, 104, 184, 0.85);
+}
+
+.settings-toggle-on .settings-toggle-thumb {
+  transform: translateX(18px);
+  background: var(--text-p0);
+}
+
+.settings-toggle:focus-visible {
+  outline: 2px solid rgba(104, 104, 184, 0.9);
+  outline-offset: 2px;
+}
+
+/* Save-section buttons. */
+.settings-btn {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px 14px;
+  min-height: 40px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-p1);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 120ms, border-color 120ms, color 120ms;
+}
+
+.settings-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: var(--text-p0);
+}
+
+.settings-btn-danger {
+  color: rgba(255, 107, 107, 0.92);
+  border-color: rgba(255, 107, 107, 0.35);
+}
+
+.settings-btn-danger:hover {
+  background: rgba(255, 107, 107, 0.10);
+  border-color: rgba(255, 107, 107, 0.6);
+  color: rgba(255, 140, 140, 1);
+}
+
+/* Inline Reset confirmation — keeps the player in place, no extra modal. */
+.settings-reset-confirm {
+  border: 1px solid rgba(255, 107, 107, 0.35);
+  border-radius: 6px;
+  padding: 12px 14px;
+  background: rgba(255, 107, 107, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-reset-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-p0);
+}
+
+.settings-reset-body {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-p2);
+  line-height: 1.4;
+}
+
+.settings-reset-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.settings-reset-actions .settings-btn {
+  flex: 1;
+  text-align: center;
+  padding: 8px 12px;
+  min-height: 36px;
+}
+
+/* Inline status flash (success/error). */
+.settings-status {
+  margin: 4px 0 0;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  animation: fade-in 160ms ease-out;
+}
+
+.settings-status-success {
+  color: rgba(140, 220, 140, 1);
+  background: rgba(70, 160, 70, 0.10);
+  border: 1px solid rgba(70, 160, 70, 0.30);
+}
+
+.settings-status-error {
+  color: rgba(255, 140, 140, 1);
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.30);
+}
+
+/* --- Top-bar gear button -------------------------------------------------- */
+
+.settings-gear-btn {
+  font-family: inherit;
+  font-size: 16px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-p2);
+  cursor: pointer;
+  line-height: 1;
+  align-self: center;
+  transition: color 120ms, border-color 120ms, background-color 120ms;
+}
+
+.settings-gear-btn:hover {
+  color: var(--text-p0);
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.settings-gear-btn:focus-visible {
+  outline: 2px solid rgba(104, 104, 184, 0.9);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Reduce Motion — in-game mirror of @media (prefers-reduced-motion: reduce).
+   ==========================================================================
+   The in-game "Reduce Motion" toggle writes html[data-reduce-motion="true"]
+   so the player can override their OS preference (or opt in without changing
+   system settings). Each block below MUST stay in sync with the @media
+   (prefers-reduced-motion: reduce) counterpart above — search for the same
+   selectors if you're modifying motion behavior. */
+
+html[data-reduce-motion="true"] .algorithm-background,
+html[data-reduce-motion="true"] .algorithm-background::after,
+html[data-reduce-motion="true"] .algorithm-background.instability {
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .badge.badge-owned {
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .shop-row-pulsing,
+html[data-reduce-motion="true"] .shop-row-shaking {
+  animation: none;
+}
+html[data-reduce-motion="true"] .shop-row-btn:active {
+  transform: none;
+}
+
+html[data-reduce-motion="true"] .generator-row.viral-halo {
+  background: rgba(255, 214, 107, 0.1);
+  border-bottom-color: rgba(255, 214, 107, 0.4);
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .platform-card.viral-illuminate {
+  box-shadow:
+    0 0 0 2px var(--platform-accent),
+    0 0 20px 2px var(--platform-accent);
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .viral-vignette {
+  display: none;
+}
+
+html[data-reduce-motion="true"] .game-screen.viral-zoom-pulse {
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .viral-particles-overlay {
+  display: none;
+}
+
+html[data-reduce-motion="true"] .generator-row.risk-high,
+html[data-reduce-motion="true"] .platform-card.risk-high {
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .upgrade-drawer,
+html[data-reduce-motion="true"] .upgrade-drawer.upgrade-drawer-closing {
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .kit-chevron { transition: none; }
+html[data-reduce-motion="true"] .kit-rows { animation: none; }
+html[data-reduce-motion="true"] .kit-peek-signal { animation: none; }
 

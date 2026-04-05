@@ -3,6 +3,8 @@ import {
   save,
   load,
   clearSave,
+  exportSaveJSON,
+  importSaveJSON,
   migrate,
   migrateV1toV2,
   migrateV3toV4,
@@ -139,6 +141,76 @@ describe('clearSave', () => {
     save(state);
     clearSave();
     expect(load()).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// exportSaveJSON / importSaveJSON
+// ---------------------------------------------------------------------------
+
+describe('exportSaveJSON', () => {
+  it('returns the raw localStorage payload after save()', () => {
+    const state = createInitialGameState(STATIC_DATA, 0);
+    save(state);
+    const exported = exportSaveJSON();
+    expect(exported).not.toBeNull();
+    const parsed = JSON.parse(exported as string);
+    expect(parsed.version).toBeTypeOf('number');
+    expect(parsed.state).toBeDefined();
+  });
+
+  it('returns null when no save is present', () => {
+    expect(exportSaveJSON()).toBeNull();
+  });
+});
+
+describe('importSaveJSON', () => {
+  it('round-trips: export then import reproduces loadable state', () => {
+    const state = createInitialGameState(STATIC_DATA, 0);
+    save(state);
+    const json = exportSaveJSON();
+    clearSave();
+    expect(load()).toBeNull();
+    const result = importSaveJSON(json as string);
+    expect(result.ok).toBe(true);
+    expect(load()).not.toBeNull();
+  });
+
+  it('rejects non-JSON input', () => {
+    const result = importSaveJSON('{not json');
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/valid json/i);
+  });
+
+  it('rejects payloads without a version field', () => {
+    const result = importSaveJSON(JSON.stringify({ state: {} }));
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/version/i);
+  });
+
+  it('rejects payloads without a state field', () => {
+    const result = importSaveJSON(JSON.stringify({ version: 5 }));
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/state/i);
+  });
+
+  it('rejects payloads from a newer-than-supported version', () => {
+    const state = createInitialGameState(STATIC_DATA, 0);
+    const result = importSaveJSON(
+      JSON.stringify({ version: 999, state }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/newer/i);
+  });
+
+  it('accepts older versioned payloads (load() handles migration)', () => {
+    // v4 payload; importSaveJSON just writes it, migrate() runs on load
+    const v4Payload = {
+      version: 4,
+      state: createInitialGameState(STATIC_DATA, 0),
+    };
+    const result = importSaveJSON(JSON.stringify(v4Payload));
+    expect(result.ok).toBe(true);
   });
 });
 

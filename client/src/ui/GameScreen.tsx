@@ -39,6 +39,8 @@ import { ScandalModal, ScandalAftermathCard } from './ScandalModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
 import { CreatorKitPanel, isPeekSignalActive } from './CreatorKitPanel.tsx';
+import { SettingsModal } from './SettingsModal.tsx';
+import { useSettings } from './useSettings.ts';
 import { GENERATOR_DISPLAY, PLATFORM_DISPLAY } from './display.ts';
 import { fmtCompactInt } from './format.ts';
 import './GameScreen.css';
@@ -109,6 +111,15 @@ export function GameScreen() {
     buyCloutUpgrade,
     buyKitItem,
   } = useGame();
+
+  // Settings — persisted separately from GameState, propagates reduceMotion
+  // to <html data-reduce-motion> so CSS can mirror the OS media query.
+  const {
+    settings,
+    setReduceTimePressure,
+    setReduceMotion,
+    setSound,
+  } = useSettings();
 
   // Render-time derived values --------------------------------------------
   const engagementRate = useMemo(() => {
@@ -231,6 +242,35 @@ export function GameScreen() {
   // Modal visibility state.
   const [showCeremonyModal, setShowCeremonyModal] = useState(false);
   const [showShopModal, setShowShopModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // Global Esc shortcut — opens Settings when no modal is open (§1). Each
+  // modal owns its own Esc-to-close handler; this listener bails out when
+  // any modal is visible so it doesn't double-handle.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (
+        showCeremonyModal ||
+        showShopModal ||
+        showSettingsModal ||
+        scandalUIState.activeScandal ||
+        offlineResult !== null
+      ) {
+        return;
+      }
+      e.preventDefault();
+      setShowSettingsModal(true);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [
+    showCeremonyModal,
+    showShopModal,
+    showSettingsModal,
+    scandalUIState.activeScandal,
+    offlineResult,
+  ]);
 
   // Refs for returning focus to the triggering button on modal close.
   const rebrandBtnRef = useRef<HTMLButtonElement>(null);
@@ -327,6 +367,7 @@ export function GameScreen() {
           summaryBadge={summaryBadge}
           rebrandCount={state.player.rebrand_count}
           peekSignalActive={isPeekSignalActive(state, STATIC_DATA)}
+          onOpenSettings={() => setShowSettingsModal(true)}
         />
 
         <div className="game-body">
@@ -456,6 +497,28 @@ export function GameScreen() {
           onCancel={handleCeremonyCancel}
           onConfirm={handleCeremonyConfirm}
           onComplete={handleCeremonyComplete}
+        />
+      )}
+
+      {/* Settings modal — game loop continues ticking. Esc closes. */}
+      {showSettingsModal && (
+        <SettingsModal
+          settings={settings}
+          onSetReduceTimePressure={setReduceTimePressure}
+          onSetReduceMotion={setReduceMotion}
+          onSetSound={setSound}
+          rebrandCount={state.player.rebrand_count}
+          onClose={() => setShowSettingsModal(false)}
+          onResetRequested={() => {
+            // Hard reload — the driver re-initialises from a fresh
+            // localStorage on reload, avoiding stale in-memory state.
+            if (typeof window !== 'undefined') window.location.reload();
+          }}
+          onImportApplied={() => {
+            // Same rationale as reset — force a reload so the driver
+            // picks up the imported save.
+            if (typeof window !== 'undefined') window.location.reload();
+          }}
         />
       )}
 

@@ -1196,7 +1196,7 @@
       "id": 48,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Settings screen modal",
       "requester": "engineer",
@@ -1232,7 +1232,8 @@
         "Settings state is persisted in localStorage alongside the save"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 49,
