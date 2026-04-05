@@ -2,8 +2,8 @@
 name: Core Systems Architecture Review
 description: Eight fragilities surfaced by an architect walk-through of the client core modules — schema-evolution risk, swallowed errors, stale architecture doc, dual-write fields, unused persistent fields, scattered polymorphism, and event-emission shape.
 author: architect
-status: draft
-reviewers: [engineer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Core Systems Architecture Review
@@ -125,9 +125,39 @@ None use a `default` branch that throws. Each handler silently ignores unfamilia
 ## Open Questions
 
 1. **Event-list pattern on `tick()` — worth the signature change before viral burst ships?** Finding #8 proposes extending `tick()` to return events alongside state. Tasks #50/#51 (viral burst) are the last tasks that will ship before the event count grows. Engineer: is this worth doing now, or do we accept the state-diff pattern for one more event and revisit when the third is added? **Owner: engineer**
+   - **[RESOLVED — engineer, 2026-04-05]** Yes, do it now. Tasks #50/#51 are the second event type — the concrete use case is already in front of us, so YAGNI doesn't apply. The signature change is mechanical (`tick()` returns `{ state, events }` instead of bare state; the driver is the only caller). Doing it after #50/#51 ship means touching already-shipped viral burst event handling plus regression risk. Now is the last cheap moment.
 
 2. **Hydrate-on-load vs. strict migration for enum additions.** Finding #1 proposes a hydrate step that fills missing enum keys after load. Alternative: require every enum addition to ship its own explicit migration case that inserts the new keys. Hydrate is cheaper and safer (no per-addition migration boilerplate); strict migrations are more auditable. Engineer: preference? **Owner: engineer**
+   - **[RESOLVED — engineer, 2026-04-05]** Both. Neither alone is sufficient. Hydrate is the crash guard — if a migration is missed, players don't lose their saves. The migration policy is the auditable record. Hydrate-only means migrations become optional and get skipped. Migrations-only means one missed case equals a crash on load. Document the policy: every enum addition ships a migration case AND the hydrate step catches anything that slips through.
 
 3. **`SnapshotState` removal — any reason to keep it?** Finding #6 proposes deleting the field. Engineer: is there a client-side use I missed (debug tooling, future offline approximation path)? **Owner: engineer**
+   - **[RESOLVED — engineer, 2026-04-05]** No reason to keep it. No debug tooling references it. No offline path has been designed that needs it. The field comment in the code ("reserved for future use") has no concrete future use behind it. Delete it.
 
 4. **`assertNever` pattern vs. centralized handler dispatch.** Finding #7 proposes scattered-but-exhaustive handlers. If the engineer prefers a single dispatch module (all effects applied in one place), say so — that is a viable alternative with different tradeoffs. **Owner: engineer**
+   - **[RESOLVED — engineer, 2026-04-05]** `assertNever` at four variants (realistically 6–8 ever). A centralized dispatch module is only worth it when the variants are numerous enough that finding all N handler sites is a real burden, or when multiple callers need to apply the same effect set, or when application order matters. None of those conditions hold here. Scattered-but-exhaustive with `assertNever` is KISS; compile errors at each site are the enforcement mechanism.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+All eight findings are correct. I've verified them against the code. The resolutions are sound. Answering all four open questions below and removing myself from reviewers.
+
+**Finding #1 (enum-closure / hydrate):** Aligned. The hydrate step is the right safety net. One note: `hydrate()` should run after `migrate()`, not before — we want to be operating on a state that has already been brought forward to the current version before we fill gaps. Order matters.
+
+**Finding #2 (empty migration chain):** Aligned. The v1→v2 no-op case is a one-line addition that gives the chain an exercised path. Filing the task.
+
+**Finding #3 (swallowed errors):** Aligned. The `saveErrorListener` channel is the correct pattern — it mirrors `onViralBurst` and keeps the driver's contract consistent. The result-type on `load()` (distinguishing `no-save` from `corrupt`) is important: currently a corrupt save and a first-run are indistinguishable to the hook, and that's how a player loses their save silently.
+
+**Finding #4 (contract drift):** Aligned. Architect-owned. I will stop annotating the stale doc in code once the corrections land — the annotations are there because the doc was wrong, not as permanent commentary.
+
+**Finding #5 (`total_followers` dual-write):** Aligned. Making it purely derived via `syncTotalFollowers` removes the failure mode entirely. `lifetime_followers` stays incremental as noted — it has no derivation source.
+
+**Finding #6 (`SnapshotState`):** Aligned. No client-side use. Delete it. See OQ3 resolution.
+
+**Finding #7 (`UpgradeEffect` scatter):** Aligned. `assertNever` is the right call at this variant count. See OQ4 resolution.
+
+**Finding #8 (event emission):** Aligned. The per-tick `events: GameEvent[]` return is clean — it's not a pub/sub bus, it's a flat list that the driver dispatches synchronously. That's the right scope. I'll extend the tick signature before #50/#51 ship. See OQ1 resolution.
