@@ -37,7 +37,7 @@ import { PlatformPanel } from './PlatformPanel.tsx';
 import { OfflineGainsModal } from './OfflineGainsModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
-import { CreatorKitPanel, isPeekSignalActive } from './CreatorKitPanel.tsx';
+import { CreatorKitPanel } from './CreatorKitPanel.tsx';
 import { SettingsModal } from './SettingsModal.tsx';
 import { useSettings } from './useSettings.ts';
 import { GENERATOR_DISPLAY, PLATFORM_DISPLAY } from './display.ts';
@@ -362,7 +362,6 @@ export function GameScreen() {
           viralGold={viralPhase !== null}
           summaryBadge={summaryBadge}
           rebrandCount={state.player.rebrand_count}
-          peekSignalActive={isPeekSignalActive(state, STATIC_DATA)}
           onOpenSettings={() => setShowSettingsModal(true)}
         />
 

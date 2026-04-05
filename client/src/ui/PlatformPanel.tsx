@@ -19,7 +19,7 @@ import {
   PLATFORM_ORDER,
   topAffinityGenerators,
 } from './display.ts';
-import { fmtCompactInt } from './format.ts';
+import { fmtCompact, fmtCompactInt } from './format.ts';
 
 interface Props {
   state: GameState;
@@ -152,7 +152,7 @@ function PlatformCard({
 
       <div className={`rate-row${ratePerSec > 0 ? ' gaining' : ''}`}>
         {ratePerSec > 0 ? '▲' : '—'}{' '}
-        {ratePerSec > 0 ? `+${ratePerSec.toFixed(1)}/s` : 'stalled'}
+        {ratePerSec > 0 ? `+${fmtCompact(ratePerSec)}/s` : 'stalled'}
       </div>
 
       {floats.map((f) => (

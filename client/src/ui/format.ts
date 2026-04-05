@@ -71,10 +71,11 @@ export function fmtCompactInt(n: number): string {
   return floored.toLocaleString();
 }
 
-/** Rate formatting for sub-labels — `+18/sec` or `+1.2K/sec`. */
+/** Rate formatting for sub-labels — `+18.0/s` or `+1.2K/s`.
+ *  Per game-screen-hud-refinements §4.2: rates append `/s`, deltas prefix `+`. */
 export function fmtRate(n: number): string {
-  if (!Number.isFinite(n) || n <= 0) return '0/sec';
-  return `+${fmtCompact(n)}/sec`;
+  if (!Number.isFinite(n) || n <= 0) return '0/s';
+  return `+${fmtCompact(n)}/s`;
 }
 
 /** Human-friendly elapsed duration for the offline modal. */

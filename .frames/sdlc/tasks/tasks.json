@@ -4676,7 +4676,7 @@
       "id": 122,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Implement GameScreen HUD refinements — top-bar layout + number formatting + icon collision",
       "requester": "ux-designer",
@@ -4709,7 +4709,8 @@
         "No regressions to existing per-row affordance states (dormant/armed/ready/maxed) documented in ux/generator-max-level-state.md"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 123,
