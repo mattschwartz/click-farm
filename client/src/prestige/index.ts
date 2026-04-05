@@ -37,6 +37,7 @@ import type {
 } from '../types.ts';
 import { deriveNewSeed, getShiftAtIndex, type ScheduledShift } from '../algorithm/index.ts';
 import { createAlgorithmState, spendClout } from '../model/index.ts';
+import { kitAlgorithmLookaheadBonus } from '../creator-kit/index.ts';
 
 // ---------------------------------------------------------------------------
 // Clout-from-followers formula
@@ -287,11 +288,13 @@ export function purchaseCloutUpgrade(
 
 /**
  * Return up to N upcoming shifts, where N is the lookahead granted by the
- * algorithm_insight upgrade. Level 0 (unpurchased) → no lookahead → [].
+ * algorithm_insight upgrade PLUS the kit `algorithm_lookahead` contribution
+ * (Laptop). Level 0 everywhere → no lookahead → [].
  *
- * The per-level lookahead is read from `effect.lookaheads[level - 1]` (each
- * entry is the absolute number of shifts revealed at that level). Multiple
- * algorithm_insight upgrades stack additively.
+ * The per-level clout lookahead is read from `effect.lookaheads[level - 1]`
+ * (each entry is the absolute number of shifts revealed at that level).
+ * Multiple algorithm_insight upgrades stack additively, and Laptop adds to
+ * the same sum — per architecture/creator-kit.md §Stacking Order (additive).
  */
 export function getUpcomingShifts(
   state: GameState,
@@ -314,6 +317,10 @@ export function getUpcomingShifts(
       lookahead += n;
     }
   }
+
+  // Kit Laptop lookahead stacks ADDITIVELY with Clout algorithm_insight.
+  lookahead += kitAlgorithmLookaheadBonus(state.player.creator_kit, staticData);
+
   if (lookahead <= 0) return [];
 
   const shifts: ScheduledShift[] = [];

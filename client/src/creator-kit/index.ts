@@ -61,6 +61,38 @@ export function kitEngagementBonus(
 }
 
 /**
+ * Total kit-contributed algorithm lookahead. Reads every kit item with an
+ * `algorithm_lookahead` effect (currently just `laptop`) and SUMS their
+ * level-indexed contributions — stacking is additive per the design
+ * proposal and architecture/creator-kit.md §Stacking Order.
+ *
+ * Returns 0 when no relevant kit item is owned.
+ */
+export function kitAlgorithmLookaheadBonus(
+  creatorKit: Record<KitItemId, number>,
+  staticData: StaticData,
+): number {
+  let lookahead = 0;
+  for (const itemId of Object.keys(creatorKit) as KitItemId[]) {
+    const level = creatorKit[itemId];
+    if (!level || level <= 0) continue;
+    const def = staticData.creatorKitItems[itemId];
+    if (def === undefined) continue;
+    if (def.effect.type === 'algorithm_lookahead') {
+      const n = def.effect.lookaheads[level - 1];
+      if (n === undefined) {
+        throw new Error(
+          `kitAlgorithmLookaheadBonus: item '${itemId}' has no lookaheads[${level - 1}] ` +
+            `for level ${level} (max_level ${def.max_level})`,
+        );
+      }
+      lookahead += n;
+    }
+  }
+  return lookahead;
+}
+
+/**
  * Cumulative kit-level follower-conversion multiplier. Reads every kit item
  * with a `follower_conversion_multiplier` effect (currently just `wardrobe`).
  *

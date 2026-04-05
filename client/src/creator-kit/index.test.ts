@@ -5,6 +5,7 @@ import {
   purchaseKitItem,
   kitEngagementBonus,
   kitFollowerConversionBonus,
+  kitAlgorithmLookaheadBonus,
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -327,5 +328,44 @@ describe('kitFollowerConversionBonus', () => {
         STATIC_DATA,
       ),
     ).toBe(1.0);
+  });
+});
+
+describe('kitAlgorithmLookaheadBonus', () => {
+  it('returns 0 for an empty kit', () => {
+    expect(
+      kitAlgorithmLookaheadBonus({} as Record<KitItemId, number>, STATIC_DATA),
+    ).toBe(0);
+  });
+
+  it('returns 0 when laptop is at level 0', () => {
+    expect(
+      kitAlgorithmLookaheadBonus(
+        { laptop: 0 } as Record<KitItemId, number>,
+        STATIC_DATA,
+      ),
+    ).toBe(0);
+  });
+
+  it('returns laptop.lookaheads[level-1] at each level', () => {
+    const def = STATIC_DATA.creatorKitItems.laptop;
+    if (def.effect.type !== 'algorithm_lookahead') throw new Error('bad def');
+    for (let level = 1; level <= def.max_level; level++) {
+      expect(
+        kitAlgorithmLookaheadBonus(
+          { laptop: level } as Record<KitItemId, number>,
+          STATIC_DATA,
+        ),
+      ).toBe(def.effect.lookaheads[level - 1]);
+    }
+  });
+
+  it('ignores items whose effect is not algorithm_lookahead', () => {
+    expect(
+      kitAlgorithmLookaheadBonus(
+        { camera: 2, wardrobe: 2, mogging: 2, phone: 2 } as Record<KitItemId, number>,
+        STATIC_DATA,
+      ),
+    ).toBe(0);
   });
 });
