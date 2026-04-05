@@ -2,7 +2,7 @@
 name: Visual Identity — Light Mode & Color System
 description: Establishes the game's base visual mood as clean and airy light mode, with color reserved for algorithm states and peak emotional moments.
 author: ux-designer
-status: draft
+status: accepted
 reviewers: []
 ---
 
