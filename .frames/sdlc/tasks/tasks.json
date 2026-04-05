@@ -1418,7 +1418,7 @@
       "id": 53,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Visual identity spec — platforms, generators, scandal icons",
       "requester": "ux-designer",
@@ -1456,14 +1456,17 @@
       "open_questions": [
         {
           "question": "What is the full generator list at launch? Need names and categories to assign icons.",
-          "owner": "game-designer"
+          "owner": "game-designer",
+          "answer": "[RESOLVED] Seven generators at launch: selfies, memes, hot_takes, tutorials, livestreams, podcasts, viral_stunts. Source: proposals/accepted/generator-balance-and-algorithm-states.md. Post-prestige generators (AI Slop, Deepfakes, Algorithmic Prophecy) deferred."
         },
         {
           "question": "Are platform accent colors expected to influence any game mechanic visuals (e.g., affinity chip colors on platform cards), or are they purely decorative identity?",
-          "owner": "architect"
+          "owner": "architect",
+          "answer": "[RESOLVED] Yes — platform accent colors appear in the screen-edge vignette during viral bursts, per algorithm-mood-visibility §6. Architect should ensure platform color tokens are available to the vignette layer. No new design required; mechanism already specced."
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     }
   ]
 }
