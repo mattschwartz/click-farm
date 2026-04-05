@@ -326,6 +326,39 @@ function GeneratorRow({
     ? -Math.round((generatorIndex / BREATHE_TOTAL) * BREATHE_CYCLE_MS)
     : 0;
 
+  // Lvl ↑ affordance state computed UNCONDITIONALLY so the hooks below can
+  // depend on it without skipping on unowned/locked renders. classifyLvlBtnState
+  // returns 'dormant' when count===0, which is correct for pre-owned rows.
+  const upgradeCostUnconditional = generatorUpgradeCost(id, g.level, staticData);
+  const lvlStateUnconditional = classifyLvlBtnState(
+    g.count,
+    g.level,
+    def.max_level,
+    state.player.engagement,
+    upgradeCostUnconditional,
+  );
+
+  // Maxed arrival celebration — one-shot (600ms) on the live ready→maxed
+  // transition within a session. Mount guard: prevLvlState is null on the
+  // first render, so generators loaded from save already at max do NOT fire.
+  // Spec: ux/generator-max-level-state.md §4.
+  //
+  // IMPORTANT: these hooks MUST be declared before any early returns below,
+  // so hook order stays stable across locked→discovered and unowned→owned
+  // transitions. Rules of Hooks.
+  const prevLvlState = useRef<LvlBtnState | null>(null);
+  const [maxedArrival, setMaxedArrival] = useState(false);
+  useEffect(() => {
+    const prev = prevLvlState.current;
+    if (shouldFireMaxedArrival(lvlStateUnconditional, prev)) {
+      setMaxedArrival(true);
+      const t = window.setTimeout(() => setMaxedArrival(false), LVL_MAXED_ARRIVAL_MS);
+      prevLvlState.current = lvlStateUnconditional;
+      return () => window.clearTimeout(t);
+    }
+    prevLvlState.current = lvlStateUnconditional;
+  }, [lvlStateUnconditional]);
+
   if (!isDiscovered) {
     return (
       <div className="generator-row locked" style={style}>
@@ -359,7 +392,7 @@ function GeneratorRow({
   }
 
   const buyCost = generatorBuyCost(id, g.count, staticData);
-  const upgradeCost = generatorUpgradeCost(id, g.level, staticData);
+  const upgradeCost = upgradeCostUnconditional;
   const canBuy = state.player.engagement >= buyCost;
   // Upgrading requires at least one unit. This can be 0 post-rebrand when a
   // generator_unlock head-start grants owned=true without any units.
@@ -368,32 +401,10 @@ function GeneratorRow({
   // Lvl ↑ button affordance state — spec tracks distinct visuals
   // (dormant / armed / ready / maxed) so players can tell at a glance
   // whether tapping the button opens a drawer they can act on.
-  // Tasks #69 (three states) + #89 (MAX cap).
-  const lvlState = classifyLvlBtnState(
-    g.count,
-    g.level,
-    def.max_level,
-    state.player.engagement,
-    upgradeCost,
-  );
+  // Tasks #69 (three states) + #89 (MAX cap). Computed above early returns
+  // so hook order stays stable.
+  const lvlState = lvlStateUnconditional;
   const lvlDeficit = Math.max(0, upgradeCost - state.player.engagement);
-
-  // Maxed arrival celebration — one-shot (600ms) on the live ready→maxed
-  // transition within a session. Mount guard: prevLvlState is null on the
-  // first render, so generators loaded from save already at max do NOT fire.
-  // Spec: ux/generator-max-level-state.md §4.
-  const prevLvlState = useRef<LvlBtnState | null>(null);
-  const [maxedArrival, setMaxedArrival] = useState(false);
-  useEffect(() => {
-    const prev = prevLvlState.current;
-    if (shouldFireMaxedArrival(lvlState, prev)) {
-      setMaxedArrival(true);
-      const t = window.setTimeout(() => setMaxedArrival(false), LVL_MAXED_ARRIVAL_MS);
-      prevLvlState.current = lvlState;
-      return () => window.clearTimeout(t);
-    }
-    prevLvlState.current = lvlState;
-  }, [lvlState]);
 
   const openDrawer = () => {
     if (!canOpenDrawer) return;
