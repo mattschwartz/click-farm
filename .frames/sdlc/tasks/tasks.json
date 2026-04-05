@@ -1,5 +1,5 @@
 {
-  "next_id": 67,
+  "next_id": 70,
   "tasks": [
     {
       "id": 1,
@@ -2047,6 +2047,129 @@
       "blocked_on": [
         65
       ]
+    },
+    {
+      "id": 67,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Left-align Upgrade button in generator upgrade drawer",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Small adjustment to the upgrade drawer shipped in task #46. The Upgrade button is currently right-aligned inside the 340px drawer, which opens from the right edge of the generator row. On desktop (mouse), the player taps ⬆ on the row and then has to move ~300px further right to hit Upgrade — and the drawer stays open for repeat upgrades, so they re-aim that gap every time. Left-aligning the Upgrade button puts it on the drawer edge nearest the trigger, cutting pointer travel to ~20–40px. Preview rows and all other drawer content stay exactly where they are.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/upgrade-curve-drawer-spec.md",
+          "purpose": "Amended spec — see Decision #6 and §2.3 (action row distinction). Layout diagram in §2 also updated."
+        },
+        {
+          "ref": "task #46",
+          "purpose": "Original drawer build — this task amends that work only."
+        }
+      ],
+      "acceptance_criteria": [
+        "Upgrade button on the action row is left-aligned within the drawer (was right-aligned)",
+        "Button size (100×36px), style, hover/press behavior, and insufficient-engagement state are unchanged",
+        "Preview rows (Lv+2, Lv+3) and all other drawer content remain in their current positions",
+        "Close button in the footer remains right-aligned"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 68,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Conditional drawer close-on-upgrade based on affordability",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Adjustment to the post-upgrade behavior of the generator upgrade drawer (shipped in task #46). Currently the drawer always stays open after a successful upgrade. New rule: the drawer's close behavior is conditional on whether the player can afford the NEXT level after the upgrade. This preserves the fast repeat-upgrade loop when the player has runway, and stops stranding them on a disabled button when they don't. Spec amended — see Decision #4 and §4 in ux/upgrade-curve-drawer-spec.md.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/ux/upgrade-curve-drawer-spec.md",
+          "purpose": "Amended spec — Decision #4 (rule) and §4 Upgrade Confirmation (sequence)"
+        },
+        {
+          "ref": "task #46",
+          "purpose": "Original drawer build — this task amends post-upgrade behavior"
+        },
+        {
+          "ref": "task #67",
+          "purpose": "Parallel UX fix (button left-align) — independent, can ship in either order"
+        }
+      ],
+      "acceptance_criteria": [
+        "After a successful upgrade, if the player can afford the new next level, the drawer stays open and re-renders against the new level (action row shows new level, new cost, new multiplier)",
+        "After a successful upgrade, if the player CANNOT afford the new next level, the drawer closes (slide back right, 150ms per §7)",
+        "After a successful upgrade, if the new level IS the max level, the drawer stays open and re-renders in the max-level state (§5.4)",
+        "When the drawer re-renders in place against a new level, there is no close+reopen animation — content updates in situ",
+        "The insufficient-engagement state (§5.3) is still reachable by opening the drawer while broke — unchanged"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 69,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Implement three affordance states on Lvl ↑ row button",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Replace the binary enabled/disabled visual on the per-row Lvl ↑ button (GeneratorList.tsx) with three distinct visual states — dormant, armed, ready — so players can tell at a glance whether tapping will open a drawer with something they can actually buy. Full spec in the referenced proposal; this task is purely implementation.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/lvl-up-button-affordance-states.md",
+          "purpose": "The UX spec — read first. Contains exact colors, borders, motion, reduce-motion variants, accessibility glyphs, and the stagger/de-escalation rules."
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "The component to modify. The button lives at roughly lines 328–346 inside GeneratorRow; affordability derivation happens around lines 273–278."
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Where to add the new keyframes and modifier classes. Existing patterns at lines 540–663 (row-btn base + buy-btn-glow + row-btn-shake + row-btn-buy-glow), 935–965 (viral-row-halo), 1617–1621 (.row-btn-upgrade.active). Add the new rules near line 1617."
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/generator-badge-breathing.md",
+          "purpose": "Prior-art for the 2400ms slow-breathe cadence and --breathe-delay stagger pattern. Reuse the existing CSS var rather than inventing a new one."
+        }
+      ],
+      "acceptance_criteria": [
+        "Derive a canAfford boolean in GeneratorRow (state.player.engagement >= upgradeCost) and pass it to the button alongside the existing canOpenDrawer.",
+        "Replace the single row-btn-disabled conditional with three mutually-exclusive modifier classes: row-btn-lvl-dormant (count===0), row-btn-lvl-armed (count>0 && !canAfford), row-btn-lvl-ready (count>0 && canAfford). The button remains clickable in both armed and ready states; only dormant keeps the disabled attribute.",
+        "Dormant state matches existing row-btn-disabled visuals (border 0.08 white, text-p3 label and cost, not-allowed cursor, disabled attribute, unchanged tooltip).",
+        "Armed state: border rgba(255,255,255,0.14), label color text-p2, cost numeral in --accent-amber at 60% opacity via color-mix, a leading ⊖ glyph (10px) before the cost numeral, no animation. Tooltip shows deficit engagement amount in addition to existing text.",
+        "Ready state: border 1px solid var(--accent-gold), background rgba(255,214,107,0.08), cost numeral in --accent-gold full strength weight 600, label color text-p1, a ▲ chevron (8px) inline inside the .label span before LVL ↑. Tooltip ends with '— ready'.",
+        "Ready state animates a lvl-ready-breathe keyframe: 2400ms ease-in-out infinite, animates box-shadow from 0 0 0 0 rgba(255,214,107,0) to 0 0 8px 1px rgba(255,214,107,0.35) and border-color from #ffd66b to #ffe89a and back. No transform/scale. No translate.",
+        "Breathing is staggered per-row using the existing --breathe-delay (or gen-index) CSS var already plumbed on .badge-owned. Apply as animation-delay: calc(var(--breathe-delay, 0ms) * -1) or negative-delay equivalent so rows are out of phase on mount.",
+        "Hover on ready: background rgba(255,214,107,0.14), box-shadow 0 0 12px 2px rgba(255,214,107,0.55), breathing animation paused (locks at peak) via animation-play-state: paused on :hover.",
+        "Click feedback on ready: reuse the existing row-btn-buy-glow 200ms keyframe on press.",
+        "Compute a ready-count in GeneratorList (count of rows where count>0 && canAfford) and apply a many-ready class on .generator-list when count >= 4. Under .many-ready, lvl-ready-breathe duration becomes 3200ms and peak shadow opacity drops to 0.18 (border remains full-strength gold).",
+        "When the upgrade drawer is open for this row (.row-btn-upgrade.active), suppress the breathing animation (animation: none) but keep the gold border and chevron.",
+        "Reduce Motion: under @media (prefers-reduced-motion: reduce), the ready-state animation is removed and the box-shadow holds at the fixed peak value 0 0 8px 1px rgba(255,214,107,0.35). All static color/border/glyph signals remain.",
+        "All three states are distinguishable without color: verify border weight progression (0.08 → 0.14 → full gold), non-color glyphs (⊖ on armed, ▲ on ready), and cursor differences are preserved per the spec's accessibility table.",
+        "No regression on existing generator row behaviors (first-buy-anim, viral-halo, drawer-open, risk- classes). Check that viral-halo + ready can coexist visually without double-flashing (they should — viral is 1s on the row, breathe is 2.4s on the button)."
+      ],
+      "open_questions": [
+        {
+          "question": "Should the ready halo also fire when a deeper tier (L+2, L+3) is affordable while L+1 is already covered? Spec defaults to NO — tie to the exact cost the button shows.",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Is gold the right hue for affordance-met, or is it reserved for engagement/viral signals? Spec defaults to gold (mental association with viral-gold class).",
+          "owner": "game-designer"
+        },
+        {
+          "question": "When .row-btn-upgrade.active (drawer already open on this row), should the breathing continue or be suppressed? Spec defaults to SUPPRESS — keep gold border, remove animation.",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
     }
   ]
 }
