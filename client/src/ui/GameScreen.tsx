@@ -35,6 +35,7 @@ import { PostZone } from './PostZone.tsx';
 import { GeneratorList } from './GeneratorList.tsx';
 import { PlatformPanel } from './PlatformPanel.tsx';
 import { OfflineGainsModal } from './OfflineGainsModal.tsx';
+import { ScandalModal, ScandalAftermathCard } from './ScandalModal.tsx';
 import { GENERATOR_DISPLAY, PLATFORM_DISPLAY } from './display.ts';
 import { fmtCompactInt } from './format.ts';
 import './GameScreen.css';
@@ -89,6 +90,9 @@ export function GameScreen() {
     offlineResult,
     clearOfflineResult,
     rebrand,
+    scandalUIState,
+    confirmPR,
+    dismissScandalResolution,
   } = useGame();
 
   // Render-time derived values --------------------------------------------
@@ -256,11 +260,13 @@ export function GameScreen() {
             onBuy={buy}
             onUpgrade={upgrade}
             viralGeneratorId={viralActive?.source_generator_id ?? null}
+            riskLevels={scandalUIState.riskLevels}
           />
           <PlatformPanel
             state={state}
             staticData={STATIC_DATA}
             viralPlatformId={viralActive?.source_platform_id ?? null}
+            riskLevels={scandalUIState.riskLevels}
           />
         </div>
       </main>
@@ -293,6 +299,22 @@ export function GameScreen() {
             setShowOffline(false);
             clearOfflineResult();
           }}
+        />
+      )}
+
+      {/* PR Response modal — shown when a scandal is active */}
+      {scandalUIState.activeScandal && (
+        <ScandalModal
+          activeScandal={scandalUIState.activeScandal}
+          onConfirm={confirmPR}
+        />
+      )}
+
+      {/* Aftermath display — shown after a scandal resolves */}
+      {scandalUIState.lastResolution && !scandalUIState.activeScandal && (
+        <ScandalAftermathCard
+          resolution={scandalUIState.lastResolution}
+          onDismiss={dismissScandalResolution}
         />
       )}
 

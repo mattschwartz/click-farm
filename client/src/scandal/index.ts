@@ -700,6 +700,7 @@ export function createDefaultStateMachine(staticData: StaticData): ScandalStateM
     timerDuration: pr.readBeatMs + pr.decisionWindowMs,
     readBeatDuration: pr.readBeatMs,
     pendingEngagementSpend: 0,
+    lastResolution: null,
   };
 }
 
@@ -911,6 +912,8 @@ export interface ScandalUIState {
     minLoss: number;
     engagementBalance: number;
     timerRemaining: number;
+    /** Total timer duration (ms) — needed to compute the drain fraction. */
+    timerDuration: number;
     sliderActive: boolean;
   } | null;
 
@@ -977,9 +980,11 @@ export function computeScandalUIState(
       minLoss,
       engagementBalance: state.player.engagement,
       timerRemaining,
+      timerDuration: sm.timerDuration,
       sliderActive,
     };
   }
 
-  return { riskLevels, activeScandal, lastResolution: null };
+  const lastResolution = sm.lastResolution ?? null;
+  return { riskLevels, activeScandal, lastResolution };
 }

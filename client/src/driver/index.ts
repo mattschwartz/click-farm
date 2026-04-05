@@ -37,6 +37,7 @@ import {
   unfreezeAccumulators,
   updateAccumulatorsOnPurchase,
   createDefaultStateMachine,
+  onPlayerConfirm,
 } from '../scandal/index.ts';
 
 // ---------------------------------------------------------------------------
@@ -122,6 +123,17 @@ export interface GameDriver {
   buyCloutUpgrade(upgradeId: UpgradeId): void;
   /** Upcoming algorithm shifts visible via the algorithm_insight upgrade. */
   getUpcomingShifts(): ScheduledShift[];
+  /**
+   * Player confirms the PR Response with a chosen engagement spend.
+   * Transitions scandal state machine from scandal_active → resolving.
+   * The game loop applies damage on the next tick.
+   */
+  confirmPR(engagementSpent: number): void;
+  /**
+   * Dismiss the aftermath resolution display. Clears lastResolution from
+   * the state machine so the UI can stop showing the aftermath card.
+   */
+  dismissScandalResolution(): void;
   /**
    * Subscribe to viral burst events. Fires once per event, synchronously,
    * before state subscribers are notified. Returns an unsubscribe function.
@@ -392,6 +404,22 @@ export function createDriver(options: DriverOptions): GameDriver {
     },
 
     getUpcomingShifts: () => getUpcomingShifts(state, staticData),
+
+    confirmPR(engagementSpent) {
+      const sm = state.scandalStateMachine;
+      if (sm.state !== 'scandal_active') return;
+      const nextSm = onPlayerConfirm(sm, engagementSpent);
+      applyState({ ...state, scandalStateMachine: nextSm });
+    },
+
+    dismissScandalResolution() {
+      const sm = state.scandalStateMachine;
+      if (sm.lastResolution === null) return;
+      applyState({
+        ...state,
+        scandalStateMachine: { ...sm, lastResolution: null },
+      });
+    },
 
     onViralBurst(listener) {
       viralListeners.add(listener);

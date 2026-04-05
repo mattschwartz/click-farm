@@ -23,6 +23,7 @@ import {
   createScandalSessionSnapshot,
   createDefaultStateMachine,
   selectTargetPlatform,
+  computeScandalUIState,
 } from './index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import { createInitialGameState, createGeneratorState } from '../model/index.ts';
@@ -33,6 +34,7 @@ import type {
   RiskAccumulator,
   ScandalEvent,
   ScandalSessionSnapshot,
+  ScandalStateMachine,
 } from '../types.ts';
 
 // ---------------------------------------------------------------------------
@@ -1079,5 +1081,135 @@ describe('computeAllRiskLevels', () => {
     // Even if one accumulator is higher, the merged level should be the maximum
     const hotTakesLevel = levels['generator:hot_takes'];
     expect(['none', 'building', 'high']).toContain(hotTakesLevel);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task #31: computeScandalUIState — lastResolution, timerDuration, activeScandal
+// ---------------------------------------------------------------------------
+
+describe('computeScandalUIState — task #31 additions', () => {
+  /** Build a minimal ScandalStateMachine in normal state with no resolution. */
+  function baseSM(): ScandalStateMachine {
+    return {
+      ...createDefaultStateMachine(SD),
+      state: 'normal',
+      lastResolution: null,
+    };
+  }
+
+  it('returns lastResolution: null when state machine has none', () => {
+    const state = scandalReadyState();
+    const ui = computeScandalUIState(state, T0, SD);
+    expect(ui.lastResolution).toBeNull();
+  });
+
+  it('returns lastResolution from state machine when present', () => {
+    const state: GameState = {
+      ...scandalReadyState(),
+      scandalStateMachine: {
+        ...baseSM(),
+        lastResolution: {
+          type: 'content_burnout',
+          platformAffected: 'chirper',
+          followersLost: 500,
+          suppressedNotice: null,
+        },
+      },
+    };
+    const ui = computeScandalUIState(state, T0, SD);
+    expect(ui.lastResolution).not.toBeNull();
+    expect(ui.lastResolution!.type).toBe('content_burnout');
+    expect(ui.lastResolution!.followersLost).toBe(500);
+  });
+
+  it('includes suppressedNotice in lastResolution when set', () => {
+    const state: GameState = {
+      ...scandalReadyState(),
+      scandalStateMachine: {
+        ...baseSM(),
+        lastResolution: {
+          type: 'hot_take_backlash',
+          platformAffected: 'chirper',
+          followersLost: 200,
+          suppressedNotice: '...and your audience noticed the Trend Chasing too',
+        },
+      },
+    };
+    const ui = computeScandalUIState(state, T0, SD);
+    expect(ui.lastResolution!.suppressedNotice).toContain('Trend Chasing');
+  });
+
+  it('includes timerDuration in activeScandal for timer bar fraction', () => {
+    const event: ScandalEvent = {
+      id: 'test-1',
+      scandal_type: 'content_burnout',
+      target_platform: 'chirper',
+      raw_magnitude: 0.1,
+      final_magnitude: null,
+      engagement_spent: 0,
+      followers_lost: 0,
+      timestamp: T0,
+      resolved: false,
+    };
+    const sm: ScandalStateMachine = {
+      ...createDefaultStateMachine(SD),
+      state: 'scandal_active',
+      activeScandal: event,
+      timerStartTime: T0,
+      timerDuration: 13_500,
+      readBeatDuration: 1_500,
+    };
+    const state: GameState = {
+      ...scandalReadyState(),
+      platforms: {
+        ...scandalReadyState().platforms,
+        chirper: { id: 'chirper', unlocked: true, followers: 10_000 },
+      },
+      scandalStateMachine: sm,
+    };
+    const ui = computeScandalUIState(state, T0 + 3_000, SD);
+    expect(ui.activeScandal).not.toBeNull();
+    expect(ui.activeScandal!.timerDuration).toBe(13_500);
+    // 3s elapsed out of 13.5s → ~10.5s remaining
+    expect(ui.activeScandal!.timerRemaining).toBeCloseTo(10_500, -1);
+  });
+
+  it('sliderActive is false during read beat and true after', () => {
+    const event: ScandalEvent = {
+      id: 'test-2',
+      scandal_type: 'platform_neglect',
+      target_platform: 'chirper',
+      raw_magnitude: 0.08,
+      final_magnitude: null,
+      engagement_spent: 0,
+      followers_lost: 0,
+      timestamp: T0,
+      resolved: false,
+    };
+    const sm: ScandalStateMachine = {
+      ...createDefaultStateMachine(SD),
+      state: 'scandal_active',
+      activeScandal: event,
+      timerStartTime: T0,
+      timerDuration: 13_500,
+      readBeatDuration: 1_500,
+    };
+    const state: GameState = {
+      ...scandalReadyState(),
+      platforms: {
+        ...scandalReadyState().platforms,
+        chirper: { id: 'chirper', unlocked: true, followers: 5_000 },
+      },
+      scandalStateMachine: sm,
+    };
+
+    // During read beat (500ms in)
+    const duringBeat = computeScandalUIState(state, T0 + 500, SD);
+    expect(duringBeat.activeScandal!.sliderActive).toBe(false);
+
+    // After read beat (2000ms in)
+    const afterBeat = computeScandalUIState(state, T0 + 2_000, SD);
+    expect(afterBeat.activeScandal!.sliderActive).toBe(true);
   });
 });

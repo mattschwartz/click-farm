@@ -575,7 +575,7 @@
       "alias": "E12",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-04",
       "title": "PR Response & Scandal UI [stretch]",
       "requester": "architect",
@@ -603,7 +603,8 @@
         "Tests cover: state machine transitions, slider damage reduction calculation, timer behavior, risk indicator thresholds"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 32,

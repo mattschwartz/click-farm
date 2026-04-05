@@ -508,14 +508,25 @@ export function tick(
       platforms = applyFollowerLoss(platforms, resolution.followersLost);
       player = syncTotalFollowers(player, platforms);
 
-      // Transition back to normal.
+      // Compute total followers lost for the aftermath display.
+      const totalLost = Object.values(resolution.followersLost).reduce(
+        (sum, n) => sum + (n ?? 0), 0
+      );
+
+      // Transition back to normal, recording the resolution for UI aftermath.
       scandalStateMachine = {
         ...scandalStateMachine,
         state: 'normal',
         activeScandal: null,
         timerStartTime: null,
         pendingEngagementSpend: 0,
-        // Keep suppressedNotification so the UI can show it post-resolution.
+        suppressedNotification: null, // cleared — recorded in lastResolution below
+        lastResolution: {
+          type: scandal.scandal_type,
+          platformAffected: scandal.target_platform,
+          followersLost: totalLost,
+          suppressedNotice: scandalStateMachine.suppressedNotification,
+        },
       };
     } else {
       // Resolving with no active scandal — safety reset.

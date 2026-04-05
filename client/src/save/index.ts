@@ -71,13 +71,22 @@ export function load(): GameState | null {
     viralBurst: { ...viralBurst, active: null },
     // Ensure scandal fields are present. Driver sets real values on open.
     accumulators: gameState.accumulators ?? [],
-    scandalStateMachine: gameState.scandalStateMachine ?? {
+    scandalStateMachine: {
       state: 'normal' as const,
       activeScandal: null,
       suppressedNotification: null,
       timerStartTime: null,
       timerDuration: 13_500,
       readBeatDuration: 1_500,
+      pendingEngagementSpend: 0,
+      lastResolution: null,
+      // Spread existing sm values over the defaults, so new fields default to
+      // null while existing fields are preserved.
+      ...(gameState.scandalStateMachine ?? {}),
+      // Always reset active state on load — in-flight scandals don't survive restarts.
+      state: 'normal' as const,
+      activeScandal: null,
+      timerStartTime: null,
       pendingEngagementSpend: 0,
     },
     scandalSessionSnapshot: null, // always reset — driver repopulates on open
@@ -133,6 +142,7 @@ export function migrateV2toV3(data: SaveData): SaveData {
     timerDuration: 13_500, // readBeatMs + decisionWindowMs defaults
     readBeatDuration: 1_500,
     pendingEngagementSpend: 0,
+    lastResolution: null,
   };
   return {
     ...data,

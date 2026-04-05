@@ -17,7 +17,7 @@
 // - §6.4: Count numeral pulses on additional purchases.
 
 import { useEffect, useRef, useState } from 'react';
-import type { GameState, GeneratorId, StaticData } from '../types.ts';
+import type { GameState, GeneratorId, RiskLevel, StaticData } from '../types.ts';
 import {
   generatorBuyCost,
   generatorUpgradeCost,
@@ -43,6 +43,11 @@ interface Props {
   onUpgrade: (id: GeneratorId) => void;
   /** When set, the matching row gets a pulsing gold halo (UX §9.2 Phase 1–2). */
   viralGeneratorId?: GeneratorId | null;
+  /**
+   * Risk levels keyed by "generator:{id}". When present, rows show amber
+   * warmth (building) or pulsing amber (high) risk indicators.
+   */
+  riskLevels?: Record<string, RiskLevel>;
 }
 
 const BADGE_SHAPE: Record<GeneratorCategory, string> = {
@@ -58,7 +63,7 @@ const BADGE_SHAPE: Record<GeneratorCategory, string> = {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGeneratorId }: Props) {
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGeneratorId, riskLevels }: Props) {
   // Track modifier pulses — when the algorithm state index changes, each
   // affected row pulses once (UX §4.4).
   const [pulseKey, setPulseKey] = useState(0);
@@ -96,6 +101,7 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGenera
                 onUpgrade={onUpgrade}
                 pulseKey={pulseKey}
                 viralHalo={viralGeneratorId === id}
+                riskLevel={riskLevels?.[`generator:${id}`] ?? 'none'}
               />
             ))}
           </div>
@@ -116,6 +122,8 @@ interface RowProps {
   pulseKey: number;
   /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
   viralHalo?: boolean;
+  /** Scandal risk level for this generator. 'none' = normal rendering. */
+  riskLevel?: RiskLevel;
 }
 
 function GeneratorRow({
@@ -126,6 +134,7 @@ function GeneratorRow({
   onUpgrade,
   pulseKey,
   viralHalo,
+  riskLevel = 'none',
 }: RowProps) {
   const g = state.generators[id];
   const def = staticData.generators[id];
@@ -214,9 +223,10 @@ function GeneratorRow({
   // without any units. Require at least one unit before the button activates.
   const canUpgrade = g.count > 0 && state.player.engagement >= upgradeCost;
 
+  const riskClass = riskLevel !== 'none' ? ` risk-${riskLevel}` : '';
   return (
     <div
-      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}${viralHalo ? ' viral-halo' : ''}`}
+      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}${viralHalo ? ' viral-halo' : ''}${riskClass}`}
       style={style}
     >
       <div

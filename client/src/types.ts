@@ -246,6 +246,16 @@ export interface ScandalStateMachine {
   readBeatDuration: number;
   /** Engagement to spend on PR Response. Set by player (task #31) or 0 on auto-resolve. */
   pendingEngagementSpend: number;
+  /**
+   * Set after a scandal resolves so the UI can display the aftermath.
+   * Cleared by the player dismissing the aftermath display.
+   */
+  lastResolution: {
+    type: ScandalTypeId;
+    platformAffected: PlatformId;
+    followersLost: number;
+    suppressedNotice: string | null;
+  } | null;
 }
 
 // ---------------------------------------------------------------------------

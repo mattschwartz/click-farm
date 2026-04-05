@@ -8,6 +8,7 @@ import type { GameState, GeneratorId, UpgradeId } from '../types.ts';
 import { createDriver, type ActionError } from '../driver/index.ts';
 import type { OfflineResult } from '../offline/index.ts';
 import type { RebrandResult } from '../prestige/index.ts';
+import { computeScandalUIState, type ScandalUIState } from '../scandal/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 export interface UseGameResult {
@@ -32,6 +33,12 @@ export interface UseGameResult {
   lastActionError: ActionError | null;
   /** Clear the last action error (call after displaying it to the user). */
   clearActionError: () => void;
+  /** Derived scandal UI state — risk levels, active modal data, aftermath. */
+  scandalUIState: ScandalUIState;
+  /** Confirm PR Response with chosen engagement spend. */
+  confirmPR: (engagementSpent: number) => void;
+  /** Dismiss the aftermath resolution display. */
+  dismissScandalResolution: () => void;
 }
 
 /**
@@ -104,9 +111,18 @@ export function useGame(): UseGameResult {
       rebrand: () => driver.rebrand(),
       buyCloutUpgrade: (id: UpgradeId) => driver.buyCloutUpgrade(id),
       clearActionError: () => setLastActionError(null),
+      confirmPR: (engagementSpent: number) => driver.confirmPR(engagementSpent),
+      dismissScandalResolution: () => driver.dismissScandalResolution(),
     }),
     [driver],
   );
 
-  return { state, offlineResult, lastActionError, ...actions };
+  // Scandal UI state — derived from current game state at render time.
+  // Computed here so all scandal-aware components share the same snapshot.
+  const scandalUIState = useMemo(
+    () => computeScandalUIState(state, Date.now(), STATIC_DATA),
+    [state],
+  );
+
+  return { state, offlineResult, lastActionError, scandalUIState, ...actions };
 }

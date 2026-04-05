@@ -13,6 +13,7 @@ import type {
   AlgorithmStateId,
   GeneratorId,
   PlatformId,
+  ScandalTypeId,
 } from '../types.ts';
 
 // ---------------------------------------------------------------------------
@@ -208,6 +209,44 @@ export const ALGORITHM_MOOD: Record<AlgorithmStateId, AlgorithmMood> = {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Scandal display
+// ---------------------------------------------------------------------------
+
+export interface ScandalDisplay {
+  /** Short name shown in the scandal card header. */
+  name: string;
+  /** Satirical one-liner — the comedic beat before the decision pressure. */
+  flavorText: string;
+}
+
+export const SCANDAL_DISPLAY: Record<ScandalTypeId, ScandalDisplay> = {
+  content_burnout: {
+    name: 'Content Burnout',
+    flavorText: 'Your audience is bored of seeing the same thing. Again. And again.',
+  },
+  platform_neglect: {
+    name: 'Platform Neglect',
+    flavorText: "Your followers think you ghosted them. They're not wrong.",
+  },
+  hot_take_backlash: {
+    name: 'Hot Take Backlash',
+    flavorText: 'Your take did not age well. Turns out, it did not even age a day.',
+  },
+  trend_chasing: {
+    name: 'Trend Chasing',
+    flavorText: "Your audience can tell you're pandering. They always can.",
+  },
+  growth_scrutiny: {
+    name: 'Growth Scrutiny',
+    flavorText: "People are asking if you bought your followers. Did you? We're not judging.",
+  },
+  fact_check: {
+    name: 'Fact Check',
+    flavorText: 'Someone checked your sources. The results were instructive.',
+  },
+};
 
 /** Build a top-3 list of generators this platform favors. */
 export function topAffinityGenerators(

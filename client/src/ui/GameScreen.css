@@ -1098,3 +1098,299 @@
     display: none;
   }
 }
+
+/* ==========================================================================
+   Scandal system — risk indicators + PR Response modal + aftermath
+   ========================================================================== */
+
+/* --- Risk indicators ------------------------------------------------------- */
+
+/* building: subtle amber warmth on the border/glow.
+   Attentive players notice; inattentive players are not punished for missing. */
+.generator-row.risk-building,
+.platform-card.risk-building {
+  box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.35), 0 0 8px rgba(255, 179, 71, 0.12);
+}
+
+/* high: amber intensifies with a slow pulse (1.5–2s cycle, ease-in-out).
+   Unmistakable on a glance; pulse rate is slow enough to avoid anxiety. */
+.generator-row.risk-high,
+.platform-card.risk-high {
+  box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.65), 0 0 14px rgba(255, 179, 71, 0.28);
+  animation: risk-pulse 1.75s ease-in-out infinite;
+}
+
+@keyframes risk-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.45), 0 0 10px rgba(255, 179, 71, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(255, 179, 71, 0.85), 0 0 22px rgba(255, 179, 71, 0.42);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .generator-row.risk-high,
+  .platform-card.risk-high {
+    /* Keep the amber glow but skip the pulse animation. */
+    animation: none;
+  }
+}
+
+/* --- PR Response modal ------------------------------------------------------ */
+
+.scandal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.scandal-card {
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: rgba(22, 25, 36, 0.97);
+  border: 1px solid rgba(255, 179, 71, 0.28);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.12), 0 24px 48px rgba(0, 0, 0, 0.6);
+}
+
+/* Timer bar — drains left to right */
+.scandal-timer-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+
+.scandal-timer-bar {
+  height: 100%;
+  background: var(--accent-amber);
+  transition: width 100ms linear;
+}
+
+.scandal-timer-bar.urgent {
+  background: var(--accent-red);
+}
+
+.scandal-card-body {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scandal-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.scandal-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent-amber);
+  letter-spacing: 0.01em;
+}
+
+.scandal-platform {
+  font-size: 13px;
+  color: var(--text-p2);
+}
+
+.scandal-flavor {
+  font-size: 14px;
+  color: var(--text-p1);
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Damage section */
+.scandal-damage-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scandal-damage-label {
+  font-size: 13px;
+  color: var(--text-p2);
+}
+
+.scandal-damage-label strong {
+  color: var(--accent-red);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.scandal-damage-bar-track {
+  height: 8px;
+  background: rgba(255, 107, 107, 0.15);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.scandal-damage-max {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 107, 107, 0.2);
+}
+
+.scandal-damage-projected {
+  height: 100%;
+  background: var(--accent-red);
+  border-radius: 4px;
+  transition: width 80ms ease-out;
+}
+
+.scandal-damage-range {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-p3);
+}
+
+/* Spend slider section */
+.scandal-spend-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scandal-spend-section.inactive {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.scandal-spend-label {
+  font-size: 13px;
+  color: var(--text-p2);
+}
+
+.read-beat-hint {
+  color: var(--text-p3);
+  font-style: italic;
+}
+
+.scandal-slider {
+  width: 100%;
+  accent-color: var(--accent-amber);
+  cursor: pointer;
+}
+
+.scandal-spend-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-p2);
+}
+
+.spend-amount {
+  color: var(--accent-amber);
+  font-weight: 500;
+}
+
+/* Confirm button */
+.scandal-confirm-btn {
+  width: 100%;
+  padding: 11px 16px;
+  background: rgba(255, 179, 71, 0.12);
+  border: 1px solid rgba(255, 179, 71, 0.35);
+  border-radius: 8px;
+  color: var(--accent-amber);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+
+.scandal-confirm-btn:hover:not(:disabled) {
+  background: rgba(255, 179, 71, 0.22);
+  border-color: rgba(255, 179, 71, 0.55);
+}
+
+.scandal-confirm-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* --- Aftermath card -------------------------------------------------------- */
+
+.scandal-aftermath {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  width: 300px;
+  background: rgba(22, 25, 36, 0.96);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 10px;
+  padding: 16px 18px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  animation: aftermath-enter 200ms ease-out;
+}
+
+@keyframes aftermath-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.aftermath-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.aftermath-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-amber);
+}
+
+.aftermath-platform {
+  font-size: 12px;
+  color: var(--text-p2);
+}
+
+.aftermath-loss {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-red);
+  letter-spacing: -0.01em;
+}
+
+.aftermath-suppressed {
+  font-size: 12px;
+  color: var(--text-p2);
+  font-style: italic;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.aftermath-dismiss {
+  align-self: flex-end;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  color: var(--text-p2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 100ms, color 100ms;
+}
+
+.aftermath-dismiss:hover {
+  border-color: rgba(255, 255, 255, 0.36);
+  color: var(--text-p0);
+}
