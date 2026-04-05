@@ -147,6 +147,7 @@ No concerns.
 - **3 generators are passive-only and do not appear in the Actions column:** `memes`, `hot_takes`, `tutorials`. They remain purchased in the Upgrades column as pure passive generators, unchanged from today.
 - **`GeneratorDef.manual_clickable: boolean` flag** distinguishes ladder verbs (true: 5 entries) from passive-only generators (false: 3 entries). The Actions column view filters to `manual_clickable: true`. `postClick(verbId)` only accepts verbIds where the generator is manual_clickable.
 - **Full roster grows from 7 to 8 generators** by adding `chirps` at position 0. Existing 7 retain identities, unlock thresholds, balance tuning, and platform affinities unchanged. Only chirps needs net-new balance + affinity cells.
+- **Unlock-purchase cost reuses `base_buy_cost`** (no new data-model field). Each ladder verb's Unlock costs `base_buy_cost` engagement; first Automate purchase (count 0→1) costs the same; total onramp per verb is `2 × base_buy_cost`. Threshold unit is **total_followers**, consistent with existing code.
 - Manual verbs follow a three-state lifecycle: unlock, upgrade, automate.
 - **Ladder verbs ARE generators** (OQ11 resolved). The Actions column is a view onto the existing Generator entity; no new entity class.
 - **`base_engagement_rate` splits into `base_event_yield × base_event_rate`** (OQ12 resolved). Upgrade scales yield via `level_multiplier(level)`; Automate scales rate via `count`. For the 3 passive-only generators (memes, hot_takes, tutorials): seed `base_event_yield=1.0`, `base_event_rate=<old base_rate>` (backward-compatible). For the 5 ladder verbs: split chosen so pre-Automate manual cooldown matches §3 targets while preserving passive-economy output; exact values in §14a/b.
@@ -217,9 +218,11 @@ Not manual-clickable, so base_event_rate doesn't need to meet a cooldown target.
 
 #### 14d. Unlock Thresholds (OQ5 Resolution)
 
+**Threshold unit: total followers** (not engagement). `unlock_threshold` reads against `player.total_followers` per the existing code semantics (`generator/index.ts` checkGeneratorUnlocks, `types.ts` GeneratorDef). No code-path change — the existing gate carries forward unchanged for ladder verbs and passive-only generators alike.
+
 Only one change from the accepted generator-balance spec: **selfies moves from 0 → 100** because chirps now holds the threshold=0 starter position. All other thresholds carry over unchanged.
 
-| Generator | unlock_threshold | Surface |
+| Generator | unlock_threshold (followers) | Surface |
 |---|---|---|
 | chirps | 0 | Actions (starter, unlocked by default) |
 | memes | 50 | Upgrades (passive-only) — *unchanged* |
@@ -231,6 +234,24 @@ Only one change from the accepted generator-balance spec: **selfies moves from 0
 | viral_stunts | 100,000 | Actions (ladder Unlock) — *unchanged* |
 
 For manual_clickable generators the threshold gates both the Actions column ghost-slot reveal AND the Unlock purchase. For passive-only generators it gates visibility in the Upgrades column as today.
+
+**Pacing note:** at chirps' early-game rate (yield=1, base_event_rate=2.5, fcr=0.07), pure manual tapping converts to ~0.175 followers/sec, so Selfies' 100-follower threshold would take ~10 minutes of manual tapping alone. In practice the player buys chirps automators along the way (first automator at base_buy_cost=2 engagement, trivially affordable) and memes (50-follower threshold, passive-only) unlocks around minute 3-5 to keep progression density healthy. Selfies typically unlocks in the 5-10 minute range. Post-playtest retune if pacing feels off.
+
+#### 14d-i. Unlock Purchase Cost
+
+Each ladder verb's Unlock purchase (the one-time cost to move from ghost-slot → manual-clickable, per §2's lifecycle table) **reuses the generator's existing `base_buy_cost` value** — no new data-model field. Semantics: player pays `base_buy_cost` engagement to Unlock (enable manual tapping) and pays the same amount again for the first Automate purchase (count: 0 → 1, cost = `base_buy_cost × 1.15^0`). Total onramp per ladder verb: `2 × base_buy_cost`.
+
+| Verb | Unlock cost (engagement) | First Automate cost (engagement) |
+|---|---|---|
+| chirps | *(n/a — unlocked by default)* | 2 |
+| selfies | 10 | 10 |
+| livestreams | 130,000 | 130,000 |
+| podcasts | 1,400,000 | 1,400,000 |
+| viral_stunts | 20,000,000 | 20,000,000 |
+
+Chirps has no Unlock step — it is the starter, available from the first frame. Its `base_buy_cost=2` is solely the first-automator cost.
+
+Doubling the onramp cost per ladder verb is inside the existing cost curve: at each verb's follower threshold the player's engagement balance is comfortably above `2 × base_buy_cost` (e.g., Selfies unlocks at 100 followers, by which time the player has earned far more than 20 engagement).
 
 #### 14e. Automation Curve (OQ2 Resolution)
 
@@ -287,7 +308,7 @@ This proposal modifies or extends several accepted decisions. On acceptance, the
 
 4. ~~**Are verbs coupled to platforms, or platform-agnostic?**~~ **[RESOLVED — game-designer, 2026-04-05]** Verbs inherit platform affinity from the existing content-affinity matrix (`platform-identity-and-affinity-matrix.md`). Selfies/Livestreams/Podcasts/Viral Stunts already have affinity cells authored under today's roster — those cells carry over unchanged. **Only `chirps` needs net-new affinity cells:** high on Skroll (✓×1.5 — tweet-native), neutral on Instasham (–×1.0), low on Grindset (✗×0.6 — short-form text plays poorly on long-form platform). The affinity matrix remains the single source of truth for platform routing and applies at `computeFollowerDistribution` only, not at `postClick` tap time (per OQ17). **Note:** the naming mismatch "Chirp-on-Chirper vs. Chirp-on-Skroll" is resolved in-fiction by letting Chirper *be* Skroll's in-game name — or by making Skroll the platform and Chirp just the verb-name for the text medium on it. Final platform-name alignment is deferred to the platform-proposal's acceptance pass.
 
-5. ~~**What unlock-threshold formula scales across the full ladder?**~~ **[RESOLVED — game-designer, 2026-04-05]** Engagement thresholds (consistent with existing generator-balance spec). Only one change from the accepted thresholds: **selfies moves from 0 → 100** because chirps now holds the threshold=0 starter position. All other ladder thresholds (livestreams 5_000, podcasts 20_000, viral_stunts 100_000) and passive-only thresholds (memes 50, hot_takes 200, tutorials 1_000) carry over unchanged. Rationale: at chirps' tap rate (~2.5 eng/sec max), 100 engagement ≈ 40s of tapping — enough time for the player to form a Chirp rhythm before Selfie's ghost-slot opacifies. Threshold gates both ghost-slot reveal AND Unlock purchase for ladder verbs. Full table in §14d.
+5. ~~**What unlock-threshold formula scales across the full ladder?**~~ **[RESOLVED — game-designer, 2026-04-05; refined 2026-04-05 post-#115]** **Follower-based thresholds** (existing code semantic, unchanged — `unlock_threshold` reads against `player.total_followers`). Only one change from the accepted thresholds: **selfies moves from 0 → 100** because chirps now holds the threshold=0 starter position. All other ladder thresholds (livestreams 5_000, podcasts 20_000, viral_stunts 100_000) and passive-only thresholds (memes 50, hot_takes 200, tutorials 1_000) carry over unchanged. Threshold gates both ghost-slot reveal AND Unlock purchase for ladder verbs. Full table + pacing note in §14d. Unlock-purchase cost reuses `base_buy_cost` (see §14d-i).
 
 6. ~~**Where does the Unlock purchase surface live?**~~ **[RESOLVED — ux-designer, 2026-04-05]** Actions column **ghost slot** (option a). Zero-tutorial, diegetic, Cookie-Clicker-proven. Spec: one ghost slot at a time (next verb in sequence), silhouette icon + unlock-condition text, 0.35 opacity, 60px height (shorter than 80px live-verb height — a promise, not an instrument), not tappable until condition met; on condition-met the slot opacifies and becomes tappable. Density stays within soft cap. Mobile: ghost sits directly above the bottom-anchor verb. See ux-designer's review; full anatomy in follow-up UX ladder spec.
 
@@ -324,6 +345,17 @@ This proposal modifies or extends several accepted decisions. On acceptance, the
 16. ~~**Cooldown is undefined at `count === 0` (pre-Automate).**~~ **[RESOLVED — game-designer, 2026-04-05, pending architect sign-off]** The derived formula `cooldown = 1 / (count × base_event_rate)` is undefined for a freshly-unlocked verb that has not yet been Automated (count = 0 → Infinity cooldown → verb is uncliсkable), which contradicts §3's "short starting cooldown" requirement. **Resolution: phantom-hand floor — `cooldown = 1 / (max(1, count) × base_event_rate)`** (engineer's option ii). Pre-Automate, the player's own hand *is* the single actor firing the verb, so the formula correctly models "one actor's worth" of firing rate. Post-Automate, each purchased `count` adds a parallel automator and cooldown divides proportionally — first Automate level halves the cooldown, exactly matching §4's "you feel the Automate upgrade in your own hand" dual-payoff. Preserves the architect's derived-view principle (one-line formula change, no new fields, no mode-switch). Rejected alternatives: (i) seeding count=1 at Unlock conflates the Unlock and Automate lifecycle steps and breaks the teaching clarity that "Automate is when the first non-player actor shows up"; (iii) a separate `base_manual_cooldown` field violates "cooldown is a derived view." **Architect: please sign off on the formula change.**
 
 17. **Does `postClick` apply platform affinity at click time?** Engineer's non-blocking flag #1 from the implementation review: today's `postClick` adds flat engagement, and platform affinity enters only at the follower-distribution stage (`computeFollowerDistribution` in `platform/index.ts`). Architect's earned-formula includes `× platform_affinity_if_applicable`, which is ambiguous for manual clicks. **Game-designer resolution: no platform affinity at click time.** Manual taps add flat engagement per verb; platform routing happens downstream at the existing engagement→distribution split. Reasoning: (a) the player is tapping a content *verb*, not targeting a *platform* — the verb's yield is its own identity, independent of which platform harvests the followers; (b) introducing per-platform multipliers at tap time would force the player to mentally optimize "which verb is Skroll-hot right now" during every tap, which pulls focus from the rhythm-based "conductor" fantasy (§10); (c) preserving today's engagement→distribution split keeps the ladder orthogonal to the platform matrix (no coupling cost). **Owner: architect** (confirm this preserves the intent of the earned-formula).
+
+---
+## Revision: 2026-04-05 — game-designer (task #115 — Unlock-phase balance gap fixes, post-acceptance)
+
+Two balance/data gaps surfaced during architect's planning of #114 that the original balance pass missed. Resolved both:
+
+**Q1 — Threshold unit:** was slipped as "engagement" in OQ5's rationale text; actually **follower-based**, matching the existing code semantic (`generator/index.ts` checkGeneratorUnlocks reads unlock_threshold against player.total_followers). Numbers in §14d table were already correct; only the rationale text needed fixing. §14d updated with explicit "follower-based" callout + pacing note against followers instead of engagement. OQ5's resolution text corrected in place with a refined-post-#115 marker.
+
+**Q2 — Unlock-purchase cost:** added new subsection §14d-i naming the resolution: **reuse `base_buy_cost` as the Unlock cost** (no new data-model field). Unlock cost = first Automate cost per verb = `base_buy_cost`. Total onramp per ladder verb: `2 × base_buy_cost`. Existing base_buy_cost values (selfies 10, livestreams 130k, podcasts 1.4M, viral_stunts 20M) carry over as Unlock costs. Chirps has no Unlock step (starter, threshold=0); its base_buy_cost=2 is solely the first-automator cost. §12 updated with the unlock-cost reuse + threshold unit explicit.
+
+These resolutions unblock engineer task E3 (lifecycle-expansion). E2 (engine-refactor) was never blocked.
 
 ---
 ## Revision: 2026-04-05 — game-designer (balance pass — OQ2/OQ5/OQ15 + chirps cells)
