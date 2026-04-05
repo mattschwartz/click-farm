@@ -2977,7 +2977,7 @@
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Save migration V4→V5: silent clamp engagement + per-generator level",
       "requester": "architect",
@@ -3007,7 +3007,8 @@
         "All existing save tests pass; `npm test` passes"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 91,

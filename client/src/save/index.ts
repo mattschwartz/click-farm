@@ -15,7 +15,7 @@ import type {
 } from '../types.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 5;
+const CURRENT_VERSION = 6;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -340,6 +340,72 @@ export function migrateV4toV5(data: SaveData): SaveData {
   };
 }
 
+/**
+ * Migrate a V5 save to V6 — one-time data repair for the pre-clamp overflow
+ * bug (task #90 / proposals/accepted/generator-level-growth-curves.md).
+ *
+ * Before task #89 shipped runtime clamps, two bugs could corrupt saves:
+ *   1) `player.engagement` could overflow to Infinity once per-unit rate × clout
+ *      × level multiplier × tick delta produced a non-finite sum. Once Infinity
+ *      is persisted, JSON.stringify writes `null` and load fails.
+ *   2) A generator's `level` could exceed the new max_level=10 cap because
+ *      the cap didn't exist yet — at L~14 the multiplier stack overflows.
+ *
+ * Both are silent data repairs. Per game-designer final review, this is NOT
+ * earned progress — at those magnitudes floats had already rounded to even
+ * and the player was not meaningfully accumulating anything. No player-facing
+ * "your save was repaired" UI. A console.warn carries diagnostic trace for
+ * devs investigating bug reports.
+ *
+ * max_level is hardcoded to 10 here rather than read from StaticData to keep
+ * migrations decoupled from evolving static-data tuning. If the cap ever
+ * moves, a new migration ships with it.
+ */
+export function migrateV5toV6(data: SaveData): SaveData {
+  const oldState = data.state as GameState;
+  const MAX_LEVEL = 10;
+
+  // Clamp engagement — NaN / Infinity / >MAX_SAFE_INTEGER all pinned to MAX_SAFE_INTEGER.
+  // Negative / missing values fall through unchanged (runtime code handles those).
+  const rawEngagement = oldState.player.engagement;
+  let clampedEngagement = rawEngagement;
+  const needsEngagementClamp =
+    !Number.isFinite(rawEngagement) || rawEngagement > Number.MAX_SAFE_INTEGER;
+  if (needsEngagementClamp) {
+    clampedEngagement = Number.MAX_SAFE_INTEGER;
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[save migrate V5→V6] clamped player.engagement: ${String(rawEngagement)} → ${Number.MAX_SAFE_INTEGER}`,
+    );
+  }
+
+  // Clamp each generator's level to MAX_LEVEL.
+  const newGenerators: Record<GeneratorId, GeneratorState> = { ...oldState.generators };
+  for (const id of Object.keys(oldState.generators) as GeneratorId[]) {
+    const gen = oldState.generators[id];
+    if (gen.level > MAX_LEVEL) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[save migrate V5→V6] clamped generators.${id}.level: ${gen.level} → ${MAX_LEVEL}`,
+      );
+      newGenerators[id] = { ...gen, level: MAX_LEVEL };
+    }
+  }
+
+  return {
+    ...data,
+    version: 6,
+    state: {
+      ...oldState,
+      generators: newGenerators,
+      player: {
+        ...oldState.player,
+        engagement: clampedEngagement,
+      },
+    },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -357,6 +423,10 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 4) {
     current = migrateV4toV5(current);
+  }
+
+  if (current.version === 5) {
+    current = migrateV5toV6(current);
   }
 
   if (current.version !== CURRENT_VERSION) {

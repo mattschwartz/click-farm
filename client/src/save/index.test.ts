@@ -9,6 +9,7 @@ import {
   migrateV1toV2,
   migrateV3toV4,
   migrateV4toV5,
+  migrateV5toV6,
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -238,16 +239,16 @@ describe('importSaveJSON', () => {
 // ---------------------------------------------------------------------------
 
 describe('migrate', () => {
-  it('passes through current-version (v5) data unchanged', () => {
+  it('passes through current-version (v6) data unchanged', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const data: SaveData = {
-      version: 5,
+      version: 6,
       state,
       lastCloseTime: 0,
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(5);
+    expect(result.version).toBe(6);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -385,7 +386,7 @@ describe('migrateV3toV4', () => {
 
   it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(5);
+    expect(result.version).toBe(6);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
     expect(result.state.player.creator_kit).toEqual({});
@@ -413,6 +414,12 @@ describe('migrateV4toV5', () => {
     expect(result.version).toBe(5);
   });
 
+  it('integrates with migrate() — a v4 save reaches current version via the chain', () => {
+    const result = migrate(makeV4SaveData());
+    expect(result.version).toBe(6);
+    expect(result.state.player.creator_kit).toEqual({});
+  });
+
   it('defaults player.creator_kit to empty object when absent', () => {
     const result = migrateV4toV5(makeV4SaveData());
     expect(result.state.player.creator_kit).toEqual({});
@@ -436,10 +443,106 @@ describe('migrateV4toV5', () => {
     expect(result.state.player.rebrand_count).toBe(3);
   });
 
-  it('integrates with migrate() — a v4 save reaches v5', () => {
+  it('integrates with migrate() — a v4 save reaches current version', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(5);
+    expect(result.version).toBe(6);
     expect(result.state.player.creator_kit).toEqual({});
+  });
+});
+
+// ---------------------------------------------------------------------------
+// migrateV5toV6 — engagement + generator.level clamp (task #90)
+// ---------------------------------------------------------------------------
+
+describe('migrateV5toV6', () => {
+  function makeV5SaveData(): SaveData {
+    const state = createInitialGameState(STATIC_DATA, 0);
+    return { version: 5, state, lastCloseTime: 0, lastCloseState: null };
+  }
+
+  it('bumps version from 5 to 6', () => {
+    const result = migrateV5toV6(makeV5SaveData());
+    expect(result.version).toBe(6);
+  });
+
+  it('clamps player.engagement = Infinity to MAX_SAFE_INTEGER', () => {
+    const data = makeV5SaveData();
+    data.state.player.engagement = Infinity;
+    const result = migrateV5toV6(data);
+    expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  it('clamps player.engagement > MAX_SAFE_INTEGER to MAX_SAFE_INTEGER', () => {
+    const data = makeV5SaveData();
+    data.state.player.engagement = Number.MAX_SAFE_INTEGER * 2;
+    const result = migrateV5toV6(data);
+    expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  it('coerces NaN engagement to MAX_SAFE_INTEGER', () => {
+    // NaN is non-finite → treated as corrupt and pinned to the ceiling.
+    const data = makeV5SaveData();
+    data.state.player.engagement = NaN;
+    const result = migrateV5toV6(data);
+    expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  it('clamps a generator at level=50 to level=10', () => {
+    const data = makeV5SaveData();
+    data.state.generators.selfies.level = 50;
+    const result = migrateV5toV6(data);
+    expect(result.state.generators.selfies.level).toBe(10);
+  });
+
+  it('clamps every over-cap generator independently', () => {
+    const data = makeV5SaveData();
+    data.state.generators.selfies.level = 14;
+    data.state.generators.memes.level = 25;
+    data.state.generators.tutorials.level = 9; // under cap — untouched
+    const result = migrateV5toV6(data);
+    expect(result.state.generators.selfies.level).toBe(10);
+    expect(result.state.generators.memes.level).toBe(10);
+    expect(result.state.generators.tutorials.level).toBe(9);
+  });
+
+  it('passes through a valid v5 save unchanged', () => {
+    const data = makeV5SaveData();
+    data.state.player.engagement = 12_345;
+    data.state.generators.selfies.level = 3;
+    const result = migrateV5toV6(data);
+    expect(result.state.player.engagement).toBe(12_345);
+    expect(result.state.generators.selfies.level).toBe(3);
+  });
+
+  it('preserves all other player + generator fields', () => {
+    const data = makeV5SaveData();
+    data.state.player.clout = 99;
+    data.state.player.engagement = Infinity;
+    data.state.generators.selfies.level = 20;
+    data.state.generators.selfies.count = 42;
+    const result = migrateV5toV6(data);
+    expect(result.state.player.clout).toBe(99);
+    expect(result.state.generators.selfies.count).toBe(42);
+  });
+
+  it('integrates with migrate() — a v1 save reaches v6 via the full chain', () => {
+    // Start with a v1-shaped save: strip viralBurst, scandal fields, creator_kit.
+    const base = createInitialGameState(STATIC_DATA, 0);
+    const v1State = {
+      ...base,
+      player: { ...base.player },
+    } as unknown as SaveData['state'];
+    // Corrupt engagement to verify the full chain still lands the clamp.
+    (v1State.player as unknown as { engagement: number }).engagement = Infinity;
+    const data: SaveData = {
+      version: 1,
+      state: v1State,
+      lastCloseTime: 0,
+      lastCloseState: null,
+    };
+    const result = migrate(data);
+    expect(result.version).toBe(6);
+    expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
 });
 
