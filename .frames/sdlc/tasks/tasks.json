@@ -1107,7 +1107,7 @@
       "id": 46,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Generator upgrade drawer",
       "requester": "engineer",
@@ -1143,7 +1143,8 @@
         "Drawer dismisses on outside-tap or explicit close; game loop keeps ticking behind it"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 47,
