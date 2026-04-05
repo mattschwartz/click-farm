@@ -203,7 +203,10 @@ function GeneratorRow({
   const buyCost = generatorBuyCost(id, g.count, staticData);
   const upgradeCost = generatorUpgradeCost(id, g.level, staticData);
   const canBuy = state.player.engagement >= buyCost;
-  const canUpgrade = state.player.engagement >= upgradeCost;
+  // Upgrading is a no-op (and throws in the model) when count=0. This state
+  // occurs post-rebrand when a generator_unlock head-start grants owned=true
+  // without any units. Require at least one unit before the button activates.
+  const canUpgrade = g.count > 0 && state.player.engagement >= upgradeCost;
 
   return (
     <div
@@ -234,7 +237,11 @@ function GeneratorRow({
           className="row-btn"
           onClick={() => onUpgrade(id)}
           disabled={!canUpgrade}
-          title={`Upgrade to L${g.level + 1} for ${fmtCompact(upgradeCost)} engagement`}
+          title={
+            g.count <= 0
+              ? `Buy at least one ${display.name} before upgrading`
+              : `Upgrade to L${g.level + 1} for ${fmtCompact(upgradeCost)} engagement`
+          }
         >
           <span className="label">Lvl ↑</span>
           {fmtCompact(upgradeCost)}
