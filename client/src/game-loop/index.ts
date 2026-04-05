@@ -38,6 +38,7 @@ import {
   kitFollowerConversionBonus,
   kitViralBurstAmplifier,
 } from '../creator-kit/index.ts';
+import { advanceNeglect, applyTickPosts } from '../audience-mood/index.ts';
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -371,10 +372,23 @@ export function tick(
     engagement: clampEngagement(state.player.engagement + engagementEarned),
   };
 
+  // 3a. Audience Mood pressure update (architect resolution 2026-04-05).
+  //   A "post" is a per-tick contribution from one owned generator. Advance
+  //   neglect for all unlocked platforms (tick delta, measured in ticks),
+  //   then fire one post event per owned generator → its highest-affinity
+  //   unlocked platform. This updates retention BEFORE follower
+  //   distribution, so this tick's follower gain scales by this tick's mood.
+  //   Offline catchup MUST NOT call advanceNeglect — the offline path in
+  //   offline/index.ts applies retention as a constant scalar instead.
+  const deltaTicks = deltaMs / 100; // tick cadence = 100 ms
+  let moodState: GameState = advanceNeglect(state, staticData, deltaTicks);
+  moodState = applyTickPosts(moodState, staticData);
+  const platformsWithMood = moodState.platforms;
+
   // 4. Compute follower distribution for this tick.
   const distribution = computeFollowerDistribution(
     ratesPerMs,
-    state.platforms,
+    platformsWithMood,
     staticData,
   );
 
@@ -388,30 +402,42 @@ export function tick(
   );
 
   // 5. Apply per-platform follower gains over deltaMs.
-  let platforms = state.platforms;
+  //    Audience Mood retention enters here — per-platform multiplier applied
+  //    AFTER content-affinity distribution and kit follower-conversion
+  //    (platform-scoped, step 6 in the stacking-order chain declared in
+  //    audience-mood/index.ts module header).
+  let platforms = platformsWithMood;
   if (distribution.totalRate > 0) {
-    const next: Record<PlatformId, PlatformState> = { ...state.platforms };
-    for (const id of Object.keys(state.platforms) as PlatformId[]) {
-      const gained = distribution.perPlatformRate[id] * kitFollowerMult * deltaMs;
+    const next: Record<PlatformId, PlatformState> = { ...platformsWithMood };
+    for (const id of Object.keys(platformsWithMood) as PlatformId[]) {
+      const retention = platformsWithMood[id].retention;
+      const gained =
+        distribution.perPlatformRate[id] * kitFollowerMult * retention * deltaMs;
       if (gained > 0) {
         next[id] = {
-          ...state.platforms[id],
-          followers: state.platforms[id].followers + gained,
+          ...platformsWithMood[id],
+          followers: platformsWithMood[id].followers + gained,
         };
       }
     }
     platforms = next;
-
-    // 6. Update lifetime_followers. total_followers is derived; will be synced below.
-    const totalGained = distribution.totalRate * kitFollowerMult * deltaMs;
-    player = {
-      ...player,
-      lifetime_followers: player.lifetime_followers + totalGained,
-    };
   }
 
-  // Sync derived total_followers from platforms (single source of truth).
+  // 6. Sync derived total_followers, then accumulate lifetime_followers as the
+  //    delta of the platform-sum. Deriving lifetime from the platform-sum
+  //    delta (rather than from a parallel running accumulator) keeps the
+  //    invariant `lifetime_followers ≥ Σ platform.followers` tight to
+  //    float precision — parallel accumulators diverge by ULPs over long
+  //    runs (Σ_t Σ_p vs Σ_p Σ_t under non-associative float add).
+  const oldTotal = player.total_followers;
   player = syncTotalFollowers(player, platforms);
+  if (player.total_followers > oldTotal) {
+    player = {
+      ...player,
+      lifetime_followers:
+        player.lifetime_followers + (player.total_followers - oldTotal),
+    };
+  }
 
   // 7. Check platform unlocks using the freshly-synced total.
   platforms = checkPlatformUnlocks(platforms, player.total_followers, staticData);
@@ -507,14 +533,24 @@ export function computeSnapshot(
   );
 
   // distribution rates are per-ms. Convert to per-sec for the snapshot.
+  // Audience Mood retention folded in per-platform — retention does NOT
+  // advance offline (architecture/audience-mood.md §Integration — Offline),
+  // so baking it into the snapshot as a constant scalar gives the offline
+  // calculator the right multiplier for the entire window.
   const platform_rates = Object.fromEntries(
     (Object.keys(state.platforms) as PlatformId[]).map((id) => [
       id,
-      distribution.perPlatformRate[id] * kitFollowerMult * 1000,
+      distribution.perPlatformRate[id] *
+        kitFollowerMult *
+        state.platforms[id].retention *
+        1000,
     ]),
   ) as Record<PlatformId, number>;
 
-  const total_follower_rate = distribution.totalRate * kitFollowerMult * 1000;
+  let total_follower_rate = 0;
+  for (const id of Object.keys(state.platforms) as PlatformId[]) {
+    total_follower_rate += platform_rates[id];
+  }
 
   return {
     total_engagement_rate,

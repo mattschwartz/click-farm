@@ -11,6 +11,7 @@ import {
   migrateV4toV5,
   migrateV5toV6,
   migrateV6toV7,
+  migrateV7toV8,
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -240,16 +241,16 @@ describe('importSaveJSON', () => {
 // ---------------------------------------------------------------------------
 
 describe('migrate', () => {
-  it('passes through current-version (v7) data unchanged', () => {
+  it('passes through current-version (v8) data unchanged', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const data: SaveData = {
-      version: 7,
+      version: 8,
       state,
       lastCloseTime: 0,
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(7);
+    expect(result.version).toBe(8);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -387,7 +388,7 @@ describe('migrateV3toV4', () => {
 
   it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(7);
+    expect(result.version).toBe(8);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
     expect(result.state.player.creator_kit).toEqual({});
@@ -417,7 +418,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version via the chain', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(7);
+    expect(result.version).toBe(8);
     expect(result.state.player.creator_kit).toEqual({});
   });
 
@@ -446,7 +447,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(7);
+    expect(result.version).toBe(8);
     expect(result.state.player.creator_kit).toEqual({});
   });
 });
@@ -526,7 +527,7 @@ describe('migrateV5toV6', () => {
     expect(result.state.generators.selfies.count).toBe(42);
   });
 
-  it('integrates with migrate() — a v1 save reaches v7 via the full chain', () => {
+  it('integrates with migrate() — a v1 save reaches v8 via the full chain', () => {
     // Start with a v1-shaped save. Post-Scandals-removal, a V1 save cannot
     // have scandal fields (they were introduced in V3 and stripped in V7).
     const base = createInitialGameState(STATIC_DATA, 0);
@@ -543,7 +544,7 @@ describe('migrateV5toV6', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(7);
+    expect(result.version).toBe(8);
     expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
 });
@@ -639,6 +640,89 @@ describe('migrateV6toV7', () => {
     const result = migrateV6toV7(data);
     expect(result.version).toBe(7);
     expect(result.state.player.id).toBe(base.player.id);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// migrateV7toV8 — initialise Audience Mood fields
+// ---------------------------------------------------------------------------
+
+describe('migrateV7toV8', () => {
+  function makeV7SaveData(): SaveData {
+    // A V7 save is a current-shape GameState MINUS the audience-mood fields
+    // on each PlatformState. We build a V8-shape state then strip those
+    // fields to simulate a save written by the V7 build.
+    const base = createInitialGameState(STATIC_DATA, 0);
+    const strippedPlatforms = Object.fromEntries(
+      Object.keys(base.platforms).map((id) => {
+        const { retention: _r, content_fatigue: _cf, neglect: _n, algorithm_misalignment: _am, ...rest } =
+          base.platforms[id as keyof typeof base.platforms];
+        void _r; void _cf; void _n; void _am;
+        return [id, rest];
+      }),
+    ) as unknown as SaveData['state']['platforms'];
+    return {
+      version: 7,
+      state: { ...base, platforms: strippedPlatforms },
+      lastCloseTime: 0,
+      lastCloseState: null,
+    };
+  }
+
+  it('bumps version from 7 to 8', () => {
+    const result = migrateV7toV8(makeV7SaveData());
+    expect(result.version).toBe(8);
+  });
+
+  it('initialises retention=1.0 on every platform', () => {
+    const result = migrateV7toV8(makeV7SaveData());
+    for (const id of Object.keys(result.state.platforms) as Array<
+      keyof typeof result.state.platforms
+    >) {
+      expect(result.state.platforms[id].retention).toBe(1.0);
+    }
+  });
+
+  it('initialises content_fatigue to empty map on every platform', () => {
+    const result = migrateV7toV8(makeV7SaveData());
+    for (const id of Object.keys(result.state.platforms) as Array<
+      keyof typeof result.state.platforms
+    >) {
+      expect(result.state.platforms[id].content_fatigue).toEqual({});
+    }
+  });
+
+  it('initialises neglect=0 and algorithm_misalignment=0 on every platform', () => {
+    const result = migrateV7toV8(makeV7SaveData());
+    for (const id of Object.keys(result.state.platforms) as Array<
+      keyof typeof result.state.platforms
+    >) {
+      expect(result.state.platforms[id].neglect).toBe(0);
+      expect(result.state.platforms[id].algorithm_misalignment).toBe(0);
+    }
+  });
+
+  it('preserves existing platform fields (unlocked, followers)', () => {
+    const data = makeV7SaveData();
+    const p = data.state.platforms.chirper as unknown as Record<string, unknown>;
+    p.followers = 9999;
+    p.unlocked = true;
+    const result = migrateV7toV8(data);
+    expect(result.state.platforms.chirper.followers).toBe(9999);
+    expect(result.state.platforms.chirper.unlocked).toBe(true);
+  });
+
+  it('is idempotent on a save that already has audience-mood fields', () => {
+    const base = createInitialGameState(STATIC_DATA, 0);
+    const data: SaveData = {
+      version: 7,
+      state: base,
+      lastCloseTime: 0,
+      lastCloseState: null,
+    };
+    const result = migrateV7toV8(data);
+    expect(result.version).toBe(8);
+    expect(result.state.platforms.chirper.retention).toBe(1.0);
   });
 });
 

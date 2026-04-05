@@ -166,9 +166,17 @@ export function calculateOffline(
         state.player.creator_kit,
         staticData,
       );
+      // Audience Mood retention is frozen offline — apply the retention
+      // value captured at closeTime as a constant scalar over the entire
+      // offline window. See architecture/audience-mood.md §Integration —
+      // Offline. No pressure advance while offline.
       for (const id of platformIds) {
+        const retention = state.platforms[id].retention;
         followersGained[id] +=
-          distribution.perPlatformRate[id] * kitFollowerMult * segmentDurationMs;
+          distribution.perPlatformRate[id] *
+          kitFollowerMult *
+          retention *
+          segmentDurationMs;
       }
     }
 

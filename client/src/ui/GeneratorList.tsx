@@ -314,7 +314,7 @@ function GeneratorRow({
   useEffect(() => {
     if (g.owned && g.count > prevCount.current) {
       setCountPulsing(true);
-      const t = window.setTimeout(() => setCountPulsing(false), 400);
+      window.setTimeout(() => setCountPulsing(false), 400);
     }
     prevCount.current = g.count;
   }, [g.owned, g.count]);

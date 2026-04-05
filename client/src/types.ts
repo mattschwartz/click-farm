@@ -24,6 +24,9 @@ export type GeneratorId =
 
 export type PlatformId = 'chirper' | 'instasham' | 'grindset';
 
+// Audience Mood pressure families. See architecture/audience-mood.md §Data Model.
+export type PressureId = 'content_fatigue' | 'neglect' | 'algorithm_misalignment';
+
 // Algorithm state names from the spec (short_form_surge, authenticity_era,
 // engagement_bait) plus 2 provisional additions.
 export type AlgorithmStateId =
@@ -171,6 +174,30 @@ export interface PlatformState {
   unlocked: boolean;
   /** Platform-specific follower count. ≥ 0. Independent of other platforms. */
   followers: number;
+  // -------------------------------------------------------------------------
+  // Audience Mood — retention multiplier + pressure accumulators.
+  // See architecture/audience-mood.md §Data Model.
+  //
+  // `retention` is a DERIVED field recomputed from the three pressures via
+  // recomputeRetention(). Persisted for save-load UI convenience; authoritative
+  // source is the pressure fields. Clamped to [retention_floor, 1.0].
+  //
+  // A "post" here is per-tick contribution from one owned generator — see
+  // architect resolution 2026-04-05. The tuning knobs in
+  // StaticData.audience_mood are scaled against that per-tick semantic.
+  // -------------------------------------------------------------------------
+  /** Derived retention multiplier. [retention_floor, 1.0]. Default 1.0. */
+  retention: number;
+  /**
+   * Per-generator fatigue on this platform. Each value ∈ [0, 1]. Partial —
+   * missing keys read as 0, matching the "map<GeneratorId, float>" spec
+   * in architecture/audience-mood.md §Data Model.
+   */
+  content_fatigue: Partial<Record<GeneratorId, number>>;
+  /** Time-since-last-post accumulator. [0, 1]. */
+  neglect: number;
+  /** Accumulates on posts misaligned with current Algorithm state. [0, 1]. */
+  algorithm_misalignment: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -297,6 +324,45 @@ export interface CloutUpgradeDef {
   effect: UpgradeEffect;
 }
 
+// Audience Mood tuning knobs. See architecture/audience-mood.md §Static data.
+// A "post" is a per-tick contribution from one owned generator (architect
+// resolution 2026-04-05). Per-post values are scaled against that semantic —
+// e.g. 0.08/post at 10 Hz = 0.8/sec of same-generator fatigue from one
+// continuously-posting generator. All values below are PLACEHOLDERS —
+// game-designer tunes at build time.
+export interface AudienceMoodStaticData {
+  /** Lower bound on retention multiplier. Target [0.3, 0.5]. */
+  retention_floor: number;
+  /** Retention level below which the mood strip is shown (UI contract). */
+  degradation_threshold: number;
+  /** Fatigue accumulation on a same-generator post to a platform. */
+  content_fatigue_per_post_same_gen: number;
+  /** Fatigue decay on other generators when any generator posts. */
+  content_fatigue_decay_per_post_other_gen: number;
+  /** Neglect accumulated per tick when a platform receives no posts. */
+  neglect_per_tick: number;
+  /** Neglect removed on any post to a platform. 1.0 = full reset. */
+  neglect_reset_on_post: number;
+  /** Misalignment accumulation on a post whose generator is off-trend. */
+  misalignment_per_off_trend_post: number;
+  /** Misalignment decay on an aligned post. */
+  misalignment_decay_per_aligned_post: number;
+  /** Weight on fatigue magnitude in the retention composition formula. [0,1]. */
+  fatigue_weight: number;
+  /** Weight on neglect magnitude. [0,1]. */
+  neglect_weight: number;
+  /** Weight on misalignment magnitude. [0,1]. */
+  misalignment_weight: number;
+  /** Tie-breaker ordering for dominant-pressure display. First wins on tie. */
+  composition_priority: [PressureId, PressureId, PressureId];
+  /**
+   * Threshold on raw algorithm modifier above (or equal to) which a post is
+   * considered "aligned" (favored by the current state) — per arch spec
+   * §Event-driven §Algorithm Misalignment. state_modifiers[G] ≥ threshold.
+   */
+  alignment_threshold: number;
+}
+
 export interface ViralBurstConfig {
   /** Active-play ticks before a viral can fire again. At 100ms/tick, 9000 = 15 min. */
   minCooldownTicks: number;
@@ -348,6 +414,11 @@ export interface StaticData {
     platforms: Record<PlatformId, number>;
   };
   viralBurst: ViralBurstConfig;
+  /**
+   * Audience Mood tuning knobs — see AudienceMoodStaticData. All values are
+   * placeholders; game-designer tunes at build time.
+   */
+  audience_mood: AudienceMoodStaticData;
 }
 
 // ---------------------------------------------------------------------------

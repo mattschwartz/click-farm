@@ -99,6 +99,11 @@ export function createPlatformState(
     id,
     unlocked,
     followers: 0,
+    // Audience Mood — healthy defaults. See architecture/audience-mood.md.
+    retention: 1.0,
+    content_fatigue: {},
+    neglect: 0,
+    algorithm_misalignment: 0,
   };
 }
 

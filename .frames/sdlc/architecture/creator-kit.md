@@ -123,7 +123,8 @@ Multiplicative effects are **order-independent** (commutative), so the current s
 3. Clout effects (permanent)
 4. Kit effects (per-run)
 5. Event effects (Brand Deal, Viral Burst, etc.)
-6. Clamps (if defined — e.g., Mogging burst cap if ever introduced)
+6. **Audience-Mood retention** (platform-scoped, applied to per-platform follower gain AFTER content-affinity weighting and kit follower-conversion, BEFORE any viral-burst amplifier that targets follower gain — see `architecture/audience-mood.md` §Integration Into Follower Distribution)
+7. Clamps (if defined — e.g., Mogging burst cap if ever introduced)
 
 **Additive stacking** (Laptop + Algorithm Insight):
 

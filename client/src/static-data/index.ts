@@ -20,6 +20,7 @@ import type {
   ViralBurstConfig,
   KitItemDef,
   KitItemId,
+  AudienceMoodStaticData,
 } from '../types.ts';
 
 // ---------------------------------------------------------------------------
@@ -450,6 +451,32 @@ const CREATOR_KIT_ITEM_DEFS: Record<KitItemId, KitItemDef> = {
 };
 
 // ---------------------------------------------------------------------------
+// Audience Mood tuning
+//
+// A "post" is a per-tick contribution from one owned generator (architect
+// resolution 2026-04-05, see architecture/audience-mood.md). At 10 Hz, one
+// continuously-posting generator fires 10 posts/second. Values below are
+// PLACEHOLDERS from the architecture spec — game-designer owns the final
+// magnitudes and will re-tune against the per-tick semantic.
+// ---------------------------------------------------------------------------
+
+const AUDIENCE_MOOD: AudienceMoodStaticData = {
+  retention_floor: 0.4,
+  degradation_threshold: 0.95,
+  content_fatigue_per_post_same_gen: 0.08,                 // BALANCE: placeholder
+  content_fatigue_decay_per_post_other_gen: 0.15,          // BALANCE: placeholder
+  neglect_per_tick: 0.001,                                 // BALANCE: placeholder — full-neglect in ~100s
+  neglect_reset_on_post: 1.0,                              // full reset on any post
+  misalignment_per_off_trend_post: 0.12,                   // BALANCE: placeholder
+  misalignment_decay_per_aligned_post: 0.20,               // BALANCE: placeholder
+  fatigue_weight: 0.5,                                     // BALANCE: placeholder
+  neglect_weight: 0.5,                                     // BALANCE: placeholder
+  misalignment_weight: 0.5,                                // BALANCE: placeholder
+  composition_priority: ['content_fatigue', 'algorithm_misalignment', 'neglect'],
+  alignment_threshold: 1.0,                                // state_modifiers[G] ≥ 1.0 is "aligned"
+};
+
+// ---------------------------------------------------------------------------
 // Exported static data
 // ---------------------------------------------------------------------------
 
@@ -484,4 +511,5 @@ export const STATIC_DATA: StaticData = {
     },
   },
   viralBurst: VIRAL_BURST_CONFIG,
+  audience_mood: AUDIENCE_MOOD,
 };

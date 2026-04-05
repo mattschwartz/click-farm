@@ -134,7 +134,16 @@ export function applyRebrand(
     (Object.keys(state.platforms) as PlatformId[]).map((id) => {
       const threshold = staticData.unlockThresholds.platforms[id];
       const unlocked = threshold === 0 || platformHeadstarts.has(id);
-      return [id, { id, unlocked, followers: 0 }];
+      // Audience Mood reset — rebrand wipes per-run pressure state.
+      return [id, {
+        id,
+        unlocked,
+        followers: 0,
+        retention: 1.0,
+        content_fatigue: {},
+        neglect: 0,
+        algorithm_misalignment: 0,
+      }];
     }),
   ) as Record<PlatformId, PlatformState>;
 

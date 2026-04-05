@@ -7,13 +7,17 @@ import type {
   GeneratorId,
   GeneratorState,
   KitItemId,
+  PlatformId,
+  PlatformState,
   SaveData,
   UpgradeId,
   ViralBurstState,
 } from '../types.ts';
+import { recomputeAllRetention } from '../audience-mood/index.ts';
+import { STATIC_DATA } from '../static-data/index.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 7;
+const CURRENT_VERSION = 8;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -92,10 +96,16 @@ export function load(): LoadResult {
     active_ticks_since_last: 0,
     active: null,
   };
-  return { kind: 'loaded', state: {
+  // Audience Mood: recompute retention on every platform from the loaded
+  // pressure values (normalises any drift from hand-edited saves, and gives
+  // the UI a correct retention value to render immediately on load).
+  // Architecture/audience-mood.md §Save-Schema Migration §Load-path recomputation.
+  const stateWithViral: GameState = {
     ...gameState,
     viralBurst: { ...viralBurst, active: null },
-  } };
+  };
+  const normalised = recomputeAllRetention(stateWithViral, STATIC_DATA);
+  return { kind: 'loaded', state: normalised };
 }
 
 /** Remove save data from localStorage. */
@@ -397,6 +407,46 @@ export function migrateV6toV7(data: SaveData): SaveData {
   };
 }
 
+/**
+ * Migrate a V7 save to V8 — initialise Audience Mood fields on every
+ * platform. See .frames/sdlc/architecture/audience-mood.md §Save-Schema
+ * Migration. Defaults represent a "healthy audience": retention = 1.0 and
+ * every pressure at 0/empty.
+ *
+ * The retention field IS written here (not left undefined) so downstream
+ * code never reads `undefined * N` when applying retention. The load path
+ * runs `recomputeAllRetention` immediately after migration, which is a
+ * no-op against these healthy defaults but guards against future migrations
+ * that may seed the pressure fields non-trivially.
+ */
+export function migrateV7toV8(data: SaveData): SaveData {
+  const oldState = data.state as GameState;
+  const platformIds = Object.keys(oldState.platforms) as PlatformId[];
+  const newPlatforms: Record<PlatformId, PlatformState> = {
+    ...oldState.platforms,
+  };
+  for (const id of platformIds) {
+    const p = oldState.platforms[id] as PlatformState & {
+      retention?: number;
+      content_fatigue?: Partial<Record<GeneratorId, number>>;
+      neglect?: number;
+      algorithm_misalignment?: number;
+    };
+    newPlatforms[id] = {
+      ...p,
+      retention: p.retention ?? 1.0,
+      content_fatigue: p.content_fatigue ?? {},
+      neglect: p.neglect ?? 0,
+      algorithm_misalignment: p.algorithm_misalignment ?? 0,
+    };
+  }
+  return {
+    ...data,
+    version: 8,
+    state: { ...oldState, platforms: newPlatforms },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -422,6 +472,10 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 6) {
     current = migrateV6toV7(current);
+  }
+
+  if (current.version === 7) {
+    current = migrateV7toV8(current);
   }
 
   if (current.version !== CURRENT_VERSION) {
