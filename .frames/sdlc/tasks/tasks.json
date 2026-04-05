@@ -2177,7 +2177,7 @@
       "id": 70,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Remove post-prestige generators from main generator list",
       "requester": "ux-designer",
@@ -2209,7 +2209,8 @@
         "Visual verification against the screenshot in this task: the generator list should end cleanly at Viral Stunts"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     }
   ]
 }
