@@ -6,8 +6,9 @@
 //   Cancel closes modal + resumes loop; Continue → Phase 2.
 //
 // Phase 2 (Eulogy): 3–4 satirical stanzas fade in sequentially, bg desaturates.
-//   Skip link hidden until 3rd stanza on first rebrand; auto-advances to Phase 3.
-//   Backdrop/Esc cancels.
+//   Skip link hidden until 3rd stanza on first rebrand. On the final stanza,
+//   playback stops and the skip link becomes a highlighted "Continue" — the
+//   player must click it to advance to Phase 3. Backdrop/Esc cancels.
 //
 // Phase 3 (Commit): "Become someone new." + one 280×80 Rebrand button.
 //   Tap calls onConfirm() (driver.rebrand()) and advances to Phase 4.
@@ -19,7 +20,7 @@
 // Total runtime: ~8s first rebrand (unskipped), ~5s subsequent (eulogy skipped).
 // Game loop is paused for the entire ceremony (parent's responsibility).
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { GameState, GeneratorId, PlatformId, UpgradeId } from '../types.ts';
 import { cloutForRebrand } from '../prestige/index.ts';
@@ -112,7 +113,6 @@ export function isSkipVisible(rebrandCount: number, currentStanzaIndex: number):
 const STANZA_FADE_MS = 600;
 const STANZA_LINGER_MS = 1000; // time between stanza-start and next stanza-start beyond fade-in → actually total display per stanza
 const STANZA_STEP_MS = STANZA_FADE_MS + STANZA_LINGER_MS; // 1600ms between stanza onsets
-const PHASE_2_FINAL_HOLD_MS = 1000; // 1s hold on final stanza before auto-advance
 
 // Phase 4 — Dissolution + Rebirth timings (spec §4.5)
 const DISSOLUTION_TICK_MS = 1000; // counters fall to zero over 1s
@@ -183,7 +183,10 @@ export function RebrandCeremonyModal({
   }, [phase, onCancel]);
 
   // Handle transition from Phase 3 → Phase 4: snapshot + rebrand + advance.
-  function handleCommit() {
+  // Stable identity — parent (GameScreen) re-renders every 1s due to its
+  // clock interval, so any inline callback passed into child phases would
+  // retrigger their effects and cancel their timers, freezing the ceremony.
+  const handleCommit = useCallback(() => {
     // Snapshot BEFORE calling onConfirm — once rebrand fires, state is fresh.
     setSnapshot({
       engagement: state.player.engagement,
@@ -192,7 +195,10 @@ export function RebrandCeremonyModal({
     });
     onConfirm();
     setPhase(4);
-  }
+  }, [state.player.engagement, state.player.total_followers, state.player.rebrand_count, onConfirm]);
+
+  const goToPhase2 = useCallback(() => setPhase(2), []);
+  const goToPhase3 = useCallback(() => setPhase(3), []);
 
   // Backdrop-click cancels on Phases 1–3 only.
   function handleBackdropClick(e: React.MouseEvent) {
@@ -212,15 +218,14 @@ export function RebrandCeremonyModal({
         <Phase1Review
           state={state}
           onCancel={onCancel}
-          onContinue={() => setPhase(2)}
+          onContinue={goToPhase2}
         />
       )}
       {phase === 2 && (
         <Phase2Eulogy
           state={state}
           reducedMotion={reducedMotion}
-          onSkip={() => setPhase(3)}
-          onAutoAdvance={() => setPhase(3)}
+          onSkip={goToPhase3}
         />
       )}
       {phase === 3 && (
@@ -357,31 +362,27 @@ function Phase2Eulogy({
   state,
   reducedMotion,
   onSkip,
-  onAutoAdvance,
 }: {
   state: GameState;
   reducedMotion: boolean;
   onSkip: () => void;
-  onAutoAdvance: () => void;
 }) {
   const stanzas = useRef(buildEulogyStanzas(state)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
   const rebrandCount = state.player.rebrand_count;
 
-  // Sequential stanza advance.
+  // Sequential stanza advance. On the final stanza, we stop and wait for the
+  // player to click Continue (the skip button is re-labelled) — no auto-advance.
   useEffect(() => {
-    if (currentIndex >= stanzas.length - 1) {
-      // On final stanza — schedule auto-advance after hold.
-      const t = window.setTimeout(onAutoAdvance, PHASE_2_FINAL_HOLD_MS + STANZA_FADE_MS);
-      return () => window.clearTimeout(t);
-    }
+    if (currentIndex >= stanzas.length - 1) return; // final stanza: wait for click
     const t = window.setTimeout(() => {
       setCurrentIndex((i) => i + 1);
     }, STANZA_STEP_MS);
     return () => window.clearTimeout(t);
-  }, [currentIndex, stanzas.length, onAutoAdvance]);
+  }, [currentIndex, stanzas.length]);
 
-  const showSkip = isSkipVisible(rebrandCount, currentIndex);
+  const onFinalStanza = currentIndex >= stanzas.length - 1;
+  const showSkip = onFinalStanza || isSkipVisible(rebrandCount, currentIndex);
 
   // Background desaturation progresses as stanzas advance (spec §4.3).
   // 0% → 40% over the full Phase 2 duration.
@@ -413,11 +414,11 @@ function Phase2Eulogy({
       </div>
       {showSkip && (
         <button
-          className="eulogy-skip-btn"
+          className={`eulogy-skip-btn${onFinalStanza ? ' eulogy-skip-btn-continue' : ''}`}
           onClick={onSkip}
-          aria-label="Skip eulogy"
+          aria-label={onFinalStanza ? 'Continue' : 'Skip eulogy'}
         >
-          Skip
+          {onFinalStanza ? 'Continue' : 'Skip'}
         </button>
       )}
     </div>

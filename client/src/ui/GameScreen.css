@@ -1409,6 +1409,20 @@
   color: var(--text-p1);
 }
 
+/* Final-stanza state: Skip → Continue, highlighted to pull the eye. */
+.eulogy-skip-btn-continue {
+  color: var(--accent-gold);
+  background: rgba(255, 214, 107, 0.12);
+  border: 1px solid rgba(255, 214, 107, 0.32);
+  border-radius: 4px;
+}
+
+.eulogy-skip-btn-continue:hover {
+  color: var(--accent-gold);
+  background: rgba(255, 214, 107, 0.20);
+  border-color: rgba(255, 214, 107, 0.50);
+}
+
 /* --- Phase 3: Commit ------------------------------------------------------ */
 
 .ceremony-modal-commit {
