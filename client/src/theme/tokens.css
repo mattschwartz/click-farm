@@ -90,6 +90,7 @@
   --palette-black-rgb: 0, 0, 0;              /* pure black, for overlays */
   --palette-gold-rgb: 160, 115, 14;          /* matches #A0730E accent-gold */
   --palette-red-rgb: 183, 28, 28;            /* matches #B71C1C accent-red */
+  --palette-green-rgb: 47, 122, 58;          /* matches #2F7A3A accent-green */
 
   /* Creator Kit accent — indigo hue reserved for kit chrome per
    * ux/creator-kit-panel.md. Hoisted from GameScreen.css during the
@@ -102,18 +103,11 @@
   --kit-accent: #6868B8;
   --kit-accent-rgb: 104, 104, 184;
 
-  /* Legacy modal surfaces — hold the pre-flip dark-modal values until E3
-   * (task #110) re-themes the modal shells (Offline, Shop, Ceremony,
-   * Settings). Hoisted during task #108 to keep GameScreen.css literal-
-   * free; all `--modal-*-legacy` tokens retire once E3 lands. */
-  --modal-bg-legacy: #161923;                /* offline-modal surface */
-  --modal-bg-shop-legacy: 18, 21, 28;        /* shop/settings rgba channels */
-  --modal-bg-ceremony-legacy: 14, 16, 22;    /* ceremony rgba channels */
-  --modal-danger-rgb-legacy: 255, 107, 107;  /* settings reset danger */
-  --modal-danger-soft-rgb-legacy: 255, 140, 140;
-  --modal-danger-wash-rgb-legacy: 255, 200, 200;
-  --modal-success-text-rgb-legacy: 140, 220, 140;
-  --modal-success-tint-rgb-legacy: 70, 160, 70;
+  /* Modal danger/success — light-mode values derived from the functional
+   * accent palette. Carry the rgb channels so call sites can composite at
+   * varying opacity (borders, washes, tints). */
+  --modal-danger-rgb: var(--palette-red-rgb);          /* #B71C1C */
+  --modal-success-rgb: var(--palette-green-rgb);       /* #2F7A3A */
 
   /* Functional accents — names preserved from dark mode, values re-derived
    * per ux/accent-palette-light-mode.md so existing `var(--accent-*)` call

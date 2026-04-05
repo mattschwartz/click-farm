@@ -3979,7 +3979,7 @@
       "alias": "E3",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Light-mode sweep of modals + non-GameScreen surfaces + WCAG AA verification",
       "requester": "architect",
@@ -4052,7 +4052,8 @@
         "All existing tests pass; any modal snapshot/style tests updated"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 111,
