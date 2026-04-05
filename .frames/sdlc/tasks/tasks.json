@@ -2388,7 +2388,7 @@
       "alias": "E3",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit purchase handler",
       "requester": "architect",
@@ -2411,7 +2411,8 @@
         "Unit tests cover: successful purchase, max-level rejection, insufficient-engagement rejection, engagement balance after purchase, level increment"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 76,
@@ -2506,9 +2507,7 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": [
-        75
-      ]
+      "blocked_on": []
     },
     {
       "id": 79,
@@ -2611,9 +2610,7 @@
         "Component tests cover: rendering, disabled-state logic, purchase dispatch, peek-signal trigger condition"
       ],
       "open_questions": [],
-      "blocked_on": [
-        75
-      ]
+      "blocked_on": []
     },
     {
       "id": 82,
@@ -2779,7 +2776,7 @@
       "id": 86,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "UX spec: per-variant Gig card treatments (ux/gig-cards.md)",
       "requester": "game-designer",
@@ -2813,7 +2810,8 @@
         "Cross-reference added to ux/brand-deal-card.md pointing to the new spec"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 87,
