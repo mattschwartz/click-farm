@@ -1,5 +1,5 @@
 {
-  "next_id": 86,
+  "next_id": 87,
   "tasks": [
     {
       "id": 1,
@@ -2634,7 +2634,7 @@
       "id": 82,
       "role": "architect",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Review generator-level-growth-curves proposal",
       "requester": "engineer",
@@ -2674,7 +2674,8 @@
         "Decide proposal disposition: accepted (move to proposals/accepted/), rejected, or remain in draft with new open questions for a further round"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 83,
@@ -2782,6 +2783,46 @@
         "Answer engineer-owned question: under the full runtime multiplier stack (generator base × level multiplier × clout × viral × gigs, etc.), is L=10 safe from Infinity/precision loss? Show the upper-bound math or name the concrete failure path.",
         "Record findings directly in the proposal document under a new Review section with Decision: Aligned / Not Aligned / Request for Comment",
         "If Aligned and you are the last reviewer, move proposal to proposals/accepted/ per the review state protocol; otherwise leave in draft with yourself listed in reviewers"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 86,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "UX spec: per-variant Gig card treatments (ux/gig-cards.md)",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Follow-up UX spec committed to during the ux-designer review of the Gigs System proposal (2026-04-05, now accepted). The gigs-system proposal introduces three Gig variants — Brand Deal (3× / 20s), Livestream (2× / 60s), Convention (5× / 10s) — sharing one Actions-column slot. ux-designer committed direction during review but deferred the asset-level per-variant card spec to this follow-up. Produce ux/gig-cards.md extending the existing ux/brand-deal-card.md spec with three distinct card treatments. Direction is already set in the accepted proposal (OQ3 resolution) and must be honored: (1) duration is the loudest element on the card — visual hierarchy is duration > variant name > icon > body copy (inverts conventional reading order, deliberate, because Convention's 10s leaves no room for misread); (2) rarity signals through arrival motion, not static art — uniform entrance with different icons kills the emotional register; Brand Deal keeps baseline motion, Livestream enters slower/heavier, Convention enters fast+punchier with distinct audio/visual signature; (3) all three cards live in the corporate-green lane with secondary accent (Brand Deal baseline green, Livestream warm green-toward-amber, Convention cooled green-toward-teal) passing 3:1 UI contrast; (4) iconography: phone/handshake (Brand Deal), broadcast dot / go-live badge (Livestream), crowd / badge-lanyard (Convention); (5) on-card copy: 'Convention' full word, never 'Con' (collides with Scandal system vocabulary — 'con' as scheme/fraud). Final icon assets, exact accent hex values, and per-variant motion timings are the outputs of this spec.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/gigs-system.md",
+          "purpose": "The accepted proposal — OQ3 resolution contains the committed direction this spec must honor"
+        },
+        {
+          "ref": ".frames/sdlc/ux/brand-deal-card.md",
+          "purpose": "Existing single-variant card spec this extends; baseline motion for Brand Deal comes from here"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "Color system — corporate-green lane, 3:1 contrast rules, accent palette constraints"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/actions-column.md",
+          "purpose": "Actions-column framing — Gigs as one citizen, not three"
+        }
+      ],
+      "acceptance_criteria": [
+        "Create .frames/sdlc/ux/gig-cards.md with per-variant card specs for Brand Deal, Livestream, and Convention",
+        "Visual hierarchy defined explicitly: duration > variant name > icon > body copy, with type sizes/weights per layer",
+        "Per-variant entrance motion defined (timing, easing, distinct signature per variant) — not just different icons on identical motion",
+        "Per-variant accent color defined with exact values passing 3:1 UI-component contrast against card background",
+        "Per-variant iconography finalized (phone/handshake, broadcast/go-live, crowd/lanyard)",
+        "On-card copy confirmed: 'Convention' full word on primary label; short forms allowed only in secondary copy",
+        "Cross-reference added to ux/brand-deal-card.md pointing to the new spec"
       ],
       "open_questions": [],
       "blocked_on": []
