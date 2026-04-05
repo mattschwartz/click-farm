@@ -28,6 +28,23 @@ Commit messages are a single line. Always use `-m` — never a heredoc or temp f
 git commit -m "feat(task #12): implement generator tick loop"
 ```
 
+## What to stage
+
+You MUST stage only the files you personally modified during this session. Nothing else.
+
+```bash
+# Right — explicit file paths only
+git add client/src/game-loop/index.ts client/src/game-loop/index.test.ts
+
+# Wrong — stages everything, including files you didn't touch
+git add -A
+git add .
+```
+
+Before committing, run `git status` and review every staged file. If a file appears that you did not intentionally modify, do NOT include it. Unstage it with `git restore --staged <file>` and leave it for whoever owns that change.
+
+When in doubt: less is more. A commit that's missing a file can be followed up. A commit that includes someone else's unfinished work cannot easily be undone.
+
 ## Examples
 
 ```
