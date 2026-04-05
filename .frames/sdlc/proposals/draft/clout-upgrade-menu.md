@@ -123,4 +123,23 @@ Total to max: 55 Clout.
 
 ## Open Questions
 
-1. **Post-prestige generator stats.** AI Slop, Deepfakes, and Algorithmic Prophecy need base engagement rates and trend sensitivity values before they can be implemented. These should scale beyond Viral Stunts to justify the Clout cost. **Owner: game-designer** (balance decision, separate task — does not block this proposal)
+1. [RESOLVED] **Post-prestige generator stats.** AI Slop, Deepfakes, and Algorithmic Prophecy need base engagement rates and trend sensitivity values before they can be implemented. These should scale beyond Viral Stunts to justify the Clout cost. **Owner: game-designer** (balance decision, separate task — does not block this proposal)
+   - **Answer:** Stats defined below. `base_engagement_rate` values are expressed as multipliers relative to Viral Stunts (tier 7) — absolute values require calibration against the full generator balance table, which is a separate build task.
+
+### Post-Prestige Generator Stats
+
+| Generator | base_engagement_rate | follower_conversion_rate | trend_sensitivity | Character |
+|---|---|---|---|---|
+| AI Slop | 8× Viral Stunts | 0.6 | 0.1 | High volume, algorithm-agnostic. Wins by not caring what's trending. |
+| Deepfakes of Yourself | 15× Viral Stunts | 0.3 | 0.95 | Extremely volatile. Dominant in favorable states, mediocre otherwise. Synergizes with Algorithm Insight. |
+| Algorithmic Prophecy | 40× Viral Stunts | 0.5 | 0.5 | Massive and consistent. Not volatile, not immune — just absurd. The numbers stop making sense. |
+
+**Design notes:**
+
+**AI Slop** has the lowest trend sensitivity in the game (0.1 — nearly immune). It mechanically expresses "indiscriminate content": it neither benefits from favorable algorithm states nor collapses in unfavorable ones. The high follower conversion (0.6) reflects that volume reliably breeds audience even without quality. This is the accessible post-prestige unlock — powerful, readable, not complex.
+
+**Deepfakes of Yourself** has the highest trend sensitivity in the game (0.95). In a favorable algorithm state it outperforms AI Slop significantly. In an unfavorable one it's underwhelming despite its high base rate. The low follower conversion (0.3) reflects that controversy generates engagement but not loyalty — you go viral but you don't build a lasting audience. This generator is the mechanical argument for Algorithm Insight: players who own both are playing a more interesting game.
+
+**Algorithmic Prophecy** is the endgame. 40× Viral Stunts base rate is satirically large by design — the game has been escalating toward this number since the opening click. Medium trend sensitivity (0.5) and medium conversion (0.5) make it neither the volatile superstar (Deepfakes) nor the stable workhorse (AI Slop) — it's simply enormous. The humor is that at this scale, the other numbers stop mattering.
+
+**On `unlock_threshold`:** Post-prestige generators are unlocked via Clout purchase (`generator_unlock` effect), not via follower threshold. Their `unlock_threshold` in static data should be `0` — the Clout upgrade sets `owned: true` directly. The architect should confirm this is the correct wiring in the data model.
