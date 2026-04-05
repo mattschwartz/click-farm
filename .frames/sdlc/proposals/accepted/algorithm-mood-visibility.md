@@ -2,8 +2,8 @@
 name: Algorithm Mood Visibility
 description: The algorithm mood background should be perceptible through content panels via screen-edge vignettes, with per-state edge colors derived for the light-mode base and panel opacity tuning deferred until contrast is verified across all states.
 author: ux-designer
-status: draft
-reviewers: [engineer]
+status: accepted
+reviewers: []
 ---
 
 ## Revision: 2026-04-05 — ux-designer
@@ -167,3 +167,25 @@ Reviewed from the player-experience lens. No blocking concerns.
 - The proposal does not specify vignette behavior during a **scandal** event. Scandals have their own visual language per the accepted `Scandals & Follower Loss` proposal. Mood being ambient and scandal being foreground should let the two coexist, but it is worth confirming in implementation that the scandal visual language does not compete with or wash out the mood vignette at the moment a player most needs to read the screen. Not blocking — can be handled when scandals are built against this layer.
 
 Moving to accepted.
+
+---
+# Review: engineer (revision 2026-04-05)
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Reviewing the light-mode re-derivation. The mechanics I aligned on in the prior review — second `<div>` layer, React-driven viral burst state machine, instability factor pass-through, 400ms crossfade — are unchanged. Only color tokens and opacity values shifted, plus OQ3/OQ4 resolved.
+
+1. **OQ3 (fixed base vs. shifting base) resolved "fixed" — matches my recommendation.** Calibration surface stays at one canvas. Retrofit path to a per-state base shift remains open (swap `--base-canvas` token per mood) but is not committed in v1. Good default.
+
+2. **Opacity table change is a token-value edit, not a code-shape change.** The implementation still reads `--mood-color-edge` off the current mood, still crossfades over 400ms, still scales opacity by the existing `instabilityFactor`. New values drop into `ALGORITHM_MOOD` in `display.ts` — no structural work.
+
+3. **Corporate Takeover hex direction (`#8A95A8` at 14%).** Fits the same token slot; will tune in-browser against the other four alongside the rest of the table per OQ2's "perceptible but not distracting" anchor.
+
+4. **Phase 2 reframe (accent wash around panels, not translucent panels) is still correctly deferred.** Still an in-browser contrast measurement across all five mood states once Phase 1 is live. No change to my prior assessment.
+
+5. **Non-blocking note carried forward from game-designer's flag-for-discussion:** vignette + scandal coexistence. Will verify when scandals are wired against this layer that scandal foreground treatment does not compete with the ambient vignette at the moment the player most needs to read the screen. Not a blocker for Phase 1.
+
+All four OQs resolved. No new engineering concerns. Last reviewer — moving to accepted.
