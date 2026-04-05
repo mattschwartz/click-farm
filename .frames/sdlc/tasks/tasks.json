@@ -2589,7 +2589,7 @@
       "alias": "E8",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit menu UI shell (collapsible panel + purchase rows)",
       "requester": "architect",
@@ -2614,7 +2614,8 @@
         "Component tests cover: rendering, disabled-state logic, purchase dispatch, peek-signal trigger condition"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 82,

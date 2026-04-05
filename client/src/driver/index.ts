@@ -14,10 +14,12 @@
 import type {
   GameState,
   GeneratorId,
+  KitItemId,
   StaticData,
   UpgradeId,
   ViralBurstPayload,
 } from '../types.ts';
+import { purchaseKitItem } from '../creator-kit/index.ts';
 import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
 import { buyGenerator, upgradeGenerator } from '../generator/index.ts';
 import { createInitialGameState } from '../model/index.ts';
@@ -59,7 +61,7 @@ export type StateListener = (state: GameState) => void;
 export type ViralBurstListener = (payload: ViralBurstPayload) => void;
 
 /** Which driver action was attempted when the error fired. */
-export type ActionName = 'click' | 'buy' | 'upgrade' | 'buyCloutUpgrade';
+export type ActionName = 'click' | 'buy' | 'upgrade' | 'buyCloutUpgrade' | 'buyKitItem';
 
 /**
  * Fired when a player-triggered action throws out of the model layer. The
@@ -121,6 +123,8 @@ export interface GameDriver {
   rebrand(): RebrandResult;
   /** Spend Clout to level up a meta-upgrade. Throws when unaffordable. */
   buyCloutUpgrade(upgradeId: UpgradeId): void;
+  /** Spend Engagement on a Creator Kit item. Errors caught via onActionError. */
+  buyKitItem(itemId: KitItemId): void;
   /** Upcoming algorithm shifts visible via the algorithm_insight upgrade. */
   getUpcomingShifts(): ScheduledShift[];
   /**
@@ -400,6 +404,12 @@ export function createDriver(options: DriverOptions): GameDriver {
     buyCloutUpgrade(upgradeId) {
       runAction('buyCloutUpgrade', { upgradeId }, () => {
         applyState(purchaseCloutUpgrade(state, upgradeId, staticData));
+      });
+    },
+
+    buyKitItem(itemId) {
+      runAction('buyKitItem', { itemId }, () => {
+        applyState(purchaseKitItem(state, itemId, staticData));
       });
     },
 

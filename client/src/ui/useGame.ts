@@ -4,7 +4,7 @@
 // the game loop.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import type { GameState, GeneratorId, UpgradeId } from '../types.ts';
+import type { GameState, GeneratorId, KitItemId, UpgradeId } from '../types.ts';
 import { createDriver, type ActionError } from '../driver/index.ts';
 import type { OfflineResult } from '../offline/index.ts';
 import type { RebrandResult } from '../prestige/index.ts';
@@ -25,6 +25,8 @@ export interface UseGameResult {
   rebrand: () => RebrandResult;
   /** Spend Clout on a meta-upgrade. Throws when unaffordable. */
   buyCloutUpgrade: (id: UpgradeId) => void;
+  /** Spend Engagement on a Creator Kit item. */
+  buyKitItem: (id: KitItemId) => void;
   /**
    * Last action error, if any. Updates when a player action (click/buy/
    * upgrade/buyCloutUpgrade) fails a model precondition. Consumers can
@@ -121,6 +123,7 @@ export function useGame(): UseGameResult {
       },
       rebrand: () => driver.rebrand(),
       buyCloutUpgrade: (id: UpgradeId) => driver.buyCloutUpgrade(id),
+      buyKitItem: (id: KitItemId) => driver.buyKitItem(id),
       clearActionError: () => setLastActionError(null),
       confirmPR: (engagementSpent: number) => driver.confirmPR(engagementSpent),
       dismissScandalResolution: () => driver.dismissScandalResolution(),

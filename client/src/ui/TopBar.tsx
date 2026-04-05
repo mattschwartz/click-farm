@@ -26,6 +26,11 @@ interface Props {
   summaryBadge?: { magnitude: number; fading: boolean } | null;
   /** Rebrand count — drives RUN N badge appearance (UX §5, task #66). */
   rebrandCount?: number;
+  /**
+   * When true, renders the "↑ kit" peek-signal below the Engagement value
+   * (ux/creator-kit-panel.md §5.2). 9px, kit accent, static.
+   */
+  peekSignalActive?: boolean;
 }
 
 type TransitionPhase = 'idle' | 'exiting' | 'entering';
@@ -56,6 +61,7 @@ export function TopBar({
   viralGold,
   summaryBadge,
   rebrandCount = 0,
+  peekSignalActive = false,
 }: Props) {
   // Track algorithm state transitions — when current_state_index changes,
   // we slide the old label out and the new one in (UX §4.4, 1.2s total).
@@ -156,6 +162,11 @@ export function TopBar({
         {summaryBadge && (
           <div className={`viral-summary-badge${summaryBadge.fading ? ' fading' : ''}`}>
             VIRAL +{fmtCompactInt(summaryBadge.magnitude)}
+          </div>
+        )}
+        {peekSignalActive && (
+          <div className="kit-peek-signal" aria-label="Creator Kit item affordable">
+            ↑ kit
           </div>
         )}
         <div className={`engagement-rate${rateFlaring ? ` rate-flare-${rateDeltaDir}` : ''}`}>

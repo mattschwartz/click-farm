@@ -38,6 +38,7 @@ import { OfflineGainsModal } from './OfflineGainsModal.tsx';
 import { ScandalModal, ScandalAftermathCard } from './ScandalModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
+import { CreatorKitPanel, isPeekSignalActive } from './CreatorKitPanel.tsx';
 import { GENERATOR_DISPLAY, PLATFORM_DISPLAY } from './display.ts';
 import { fmtCompactInt } from './format.ts';
 import './GameScreen.css';
@@ -106,6 +107,7 @@ export function GameScreen() {
     pauseLoop,
     resumeLoop,
     buyCloutUpgrade,
+    buyKitItem,
   } = useGame();
 
   // Render-time derived values --------------------------------------------
@@ -324,6 +326,7 @@ export function GameScreen() {
           viralGold={viralPhase !== null}
           summaryBadge={summaryBadge}
           rebrandCount={state.player.rebrand_count}
+          peekSignalActive={isPeekSignalActive(state, STATIC_DATA)}
         />
 
         <div className="game-body">
@@ -332,15 +335,22 @@ export function GameScreen() {
             perClick={perClick}
             contextLabel={contextLabel}
           />
-          <GeneratorList
-            state={state}
-            staticData={STATIC_DATA}
-            onBuy={buy}
-            onUpgrade={upgrade}
-            viralGeneratorId={viralActive?.source_generator_id ?? null}
-            riskLevels={scandalUIState.riskLevels}
-            onDrawerOpenChange={setUpgradeDrawerOpen}
-          />
+          <div className="generator-column">
+            <GeneratorList
+              state={state}
+              staticData={STATIC_DATA}
+              onBuy={buy}
+              onUpgrade={upgrade}
+              viralGeneratorId={viralActive?.source_generator_id ?? null}
+              riskLevels={scandalUIState.riskLevels}
+              onDrawerOpenChange={setUpgradeDrawerOpen}
+            />
+            <CreatorKitPanel
+              state={state}
+              staticData={STATIC_DATA}
+              onBuy={buyKitItem}
+            />
+          </div>
           <PlatformPanel
             state={state}
             staticData={STATIC_DATA}

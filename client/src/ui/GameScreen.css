@@ -342,6 +342,20 @@
   }
 }
 
+/* --- Generator column (list + kit panel stack) ------------------------- */
+
+.generator-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 0;
+}
+
+.generator-column .generator-list {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 /* --- Generator list (UX §6) --------------------------------------------- */
 
 .generator-list {
@@ -2312,3 +2326,216 @@
     animation: none;
   }
 }
+
+/* --- Creator Kit panel (ux/creator-kit-panel.md) ------------------------ */
+/*
+ * Visual weight: deliberately quieter than generator rows. Smaller type
+ * scale, 40px rows, no left-edge stripe, no row fill. See §3.3 for the
+ * explicit visual comparison.
+ */
+
+:root {
+  --kit-accent: #6868b8;
+}
+
+.kit-panel {
+  flex: 0 0 auto;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  margin-top: -1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.kit-panel-peek::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--kit-accent);
+  opacity: 0.5;
+}
+
+.kit-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  cursor: pointer;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  user-select: none;
+}
+
+.kit-header:focus-visible {
+  outline: 2px solid var(--kit-accent);
+  outline-offset: -2px;
+}
+
+.kit-header-icon {
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+.kit-header-label {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--kit-accent);
+  opacity: 0.7;
+  flex: 1 1 auto;
+}
+
+.kit-active-count {
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--text-p2);
+  margin-right: 8px;
+}
+
+.kit-chevron {
+  font-size: 12px;
+  color: var(--kit-accent);
+  opacity: 0.7;
+  transition: transform 220ms ease-out;
+}
+
+.kit-chevron.open {
+  transform: rotate(180deg);
+}
+
+.kit-rows {
+  display: flex;
+  flex-direction: column;
+  animation: kit-rows-fade-in 140ms ease-out 80ms both;
+}
+
+@keyframes kit-rows-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.kit-row {
+  display: grid;
+  grid-template-columns: 22px 1fr 22px;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.kit-row-icon {
+  font-size: 14px;
+  opacity: 0.6;
+  text-align: center;
+}
+
+.kit-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kit-row-top {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.kit-row-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-p1);
+}
+
+.kit-row-flavor {
+  font-size: 10px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-p2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.kit-row-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kit-row-level {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-p2);
+}
+
+.kit-row-cost {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-p2);
+  margin-left: auto;
+}
+
+.kit-row-buy {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--kit-accent);
+  font-size: 12px;
+  cursor: pointer;
+  transition: opacity 120ms ease-out, background 120ms ease-out;
+}
+
+.kit-row-buy:hover:not(:disabled) {
+  background: rgba(104, 104, 184, 0.15);
+}
+
+.kit-row-buy:focus-visible {
+  outline: 2px solid var(--kit-accent);
+  outline-offset: 1px;
+}
+
+.kit-row-unaffordable .kit-row-buy,
+.kit-row-buy:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+/* Top-bar peek signal (§5.2) ------------------------------------------- */
+
+.kit-peek-signal {
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--kit-accent);
+  opacity: 0.65;
+  margin-top: 1px;
+  letter-spacing: 0.02em;
+  animation: kit-peek-fade-in 300ms ease-out;
+}
+
+@keyframes kit-peek-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 0.65; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-chevron { transition: none; }
+  .kit-rows { animation: none; }
+  .kit-peek-signal { animation: none; }
+}
+
