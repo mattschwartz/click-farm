@@ -3,7 +3,7 @@ name: Cheap Purchase Engagement Dampening
 description: Dampens engagement/sec contribution from purchases that are trivially cheap relative to current income, so outdated-tier generators stop distorting the late-game curve.
 author: game-designer
 status: draft
-reviewers: [architect, ux-designer]
+reviewers: [architect, ux-designer, game-designer]
 ---
 
 # Proposal: Cheap Purchase Engagement Dampening
