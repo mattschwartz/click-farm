@@ -1,8 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { save, load, clearSave, migrate, migrateV1toV2, migrateV3toV4 } from './index.ts';
+import {
+  save,
+  load,
+  clearSave,
+  migrate,
+  migrateV1toV2,
+  migrateV3toV4,
+  migrateV4toV5,
+} from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
-import type { SaveData } from '../types.ts';
+import type { KitEffect, SaveData } from '../types.ts';
 
 // ---------------------------------------------------------------------------
 // localStorage mock — no jsdom dependency required
@@ -139,16 +147,16 @@ describe('clearSave', () => {
 // ---------------------------------------------------------------------------
 
 describe('migrate', () => {
-  it('passes through current-version (v4) data unchanged', () => {
+  it('passes through current-version (v5) data unchanged', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const data: SaveData = {
-      version: 4,
+      version: 5,
       state,
       lastCloseTime: 0,
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(4);
+    expect(result.version).toBe(5);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -284,10 +292,98 @@ describe('migrateV3toV4', () => {
     }
   });
 
-  it('integrates with migrate() — a v3 save reaches v4 via the chain', () => {
+  it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(4);
+    expect(result.version).toBe(5);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
+    expect(result.state.player.creator_kit).toEqual({});
+  });
+});
+
+// ---------------------------------------------------------------------------
+// migrateV4toV5 — Creator Kit foundation
+// ---------------------------------------------------------------------------
+
+describe('migrateV4toV5', () => {
+  function makeV4SaveData(): SaveData {
+    const base = createInitialGameState(STATIC_DATA, 0);
+    // Simulate a v4 save by stripping creator_kit from the player.
+    const { creator_kit: _ck, ...playerWithoutKit } = base.player as typeof base.player & { creator_kit?: unknown };
+    const state = {
+      ...base,
+      player: playerWithoutKit,
+    } as unknown as SaveData['state'];
+    return { version: 4, state, lastCloseTime: 0, lastCloseState: null };
+  }
+
+  it('bumps version from 4 to 5', () => {
+    const result = migrateV4toV5(makeV4SaveData());
+    expect(result.version).toBe(5);
+  });
+
+  it('defaults player.creator_kit to empty object when absent', () => {
+    const result = migrateV4toV5(makeV4SaveData());
+    expect(result.state.player.creator_kit).toEqual({});
+  });
+
+  it('preserves player.creator_kit when already present', () => {
+    const data = makeV4SaveData();
+    (data.state.player as unknown as { creator_kit: Record<string, number> }).creator_kit = {
+      camera: 2,
+    };
+    const result = migrateV4toV5(data);
+    expect(result.state.player.creator_kit).toEqual({ camera: 2 });
+  });
+
+  it('preserves all other player fields', () => {
+    const data = makeV4SaveData();
+    data.state.player.clout = 42;
+    data.state.player.rebrand_count = 3;
+    const result = migrateV4toV5(data);
+    expect(result.state.player.clout).toBe(42);
+    expect(result.state.player.rebrand_count).toBe(3);
+  });
+
+  it('integrates with migrate() — a v4 save reaches v5', () => {
+    const result = migrate(makeV4SaveData());
+    expect(result.version).toBe(5);
+    expect(result.state.player.creator_kit).toEqual({});
+  });
+});
+
+// ---------------------------------------------------------------------------
+// KitEffect — type-level discriminator coverage
+//
+// This test is compile-time: if any discriminator is removed or renamed, the
+// exhaustive switch's `never` assignment breaks the build. Verifies all five
+// discriminators exist per architecture/creator-kit.md.
+// ---------------------------------------------------------------------------
+
+describe('KitEffect discriminators', () => {
+  it('covers all five effect types exhaustively', () => {
+    const tagOf = (e: KitEffect): string => {
+      switch (e.type) {
+        case 'engagement_multiplier': return 'camera';
+        case 'algorithm_lookahead': return 'laptop';
+        case 'platform_headstart_sequential': return 'phone';
+        case 'follower_conversion_multiplier': return 'wardrobe';
+        case 'viral_burst_amplifier': return 'mogging';
+        default: {
+          const _exhaustive: never = e;
+          return _exhaustive;
+        }
+      }
+    };
+    const samples: KitEffect[] = [
+      { type: 'engagement_multiplier', values: [1.1] },
+      { type: 'algorithm_lookahead', lookaheads: [1] },
+      { type: 'platform_headstart_sequential' },
+      { type: 'follower_conversion_multiplier', values: [1.2] },
+      { type: 'viral_burst_amplifier', values: [1.5] },
+    ];
+    expect(samples.map(tagOf)).toEqual([
+      'camera', 'laptop', 'phone', 'wardrobe', 'mogging',
+    ]);
   });
 });

@@ -13,6 +13,7 @@ import type {
   AlgorithmStateId,
   StaticData,
   UpgradeId,
+  KitItemId,
 } from '../types.ts';
 import {
   createAccumulators,
@@ -66,6 +67,7 @@ export function createPlayer(seed: number, now: number = Date.now()): Player {
     lifetime_followers: 0,
     rebrand_count: 0,
     clout_upgrades,
+    creator_kit: {} as Record<KitItemId, number>,
     algorithm_seed: seed,
     run_start_time: now,
     last_close_time: null,

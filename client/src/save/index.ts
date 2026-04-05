@@ -6,6 +6,7 @@ import type {
   GameState,
   GeneratorId,
   GeneratorState,
+  KitItemId,
   RiskAccumulator,
   SaveData,
   ScandalStateMachine,
@@ -14,7 +15,7 @@ import type {
 } from '../types.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 4;
+const CURRENT_VERSION = 5;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -222,6 +223,34 @@ export function migrateV3toV4(data: SaveData): SaveData {
   };
 }
 
+/**
+ * Migrate a V4 save to V5 — Creator Kit foundation.
+ *
+ * Task #73: `player.creator_kit` is introduced as a per-run map of
+ * KitItemId → level. Existing saves default to an empty kit. The field is
+ * wiped on rebrand (see prestige/applyRebrand), so defaulting to `{}` is
+ * always correct on load.
+ */
+export function migrateV4toV5(data: SaveData): SaveData {
+  const oldState = data.state as GameState & {
+    player: GameState['player'] & {
+      creator_kit?: Record<KitItemId, number>;
+    };
+  };
+  return {
+    ...data,
+    version: 5,
+    state: {
+      ...oldState,
+      player: {
+        ...oldState.player,
+        creator_kit:
+          oldState.player.creator_kit ?? ({} as Record<KitItemId, number>),
+      },
+    },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -235,6 +264,10 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 3) {
     current = migrateV3toV4(current);
+  }
+
+  if (current.version === 4) {
+    current = migrateV4toV5(current);
   }
 
   if (current.version !== CURRENT_VERSION) {

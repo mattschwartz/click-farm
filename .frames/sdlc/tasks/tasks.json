@@ -2313,7 +2313,7 @@
       "alias": "E1",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Creator Kit foundation: state field, types, save migration, rebrand wipe",
       "requester": "architect",
@@ -2339,7 +2339,8 @@
         "Unit tests cover: save migration from previous version, applyRebrand wipes creator_kit, type-level: KitEffect discriminators compile"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 74,
@@ -2379,9 +2380,7 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": [
-        73
-      ]
+      "blocked_on": []
     },
     {
       "id": 75,
@@ -2412,7 +2411,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        73,
         74
       ]
     },
@@ -2446,7 +2444,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        73,
         74
       ]
     },
@@ -2478,7 +2475,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        73,
         74
       ]
     },
@@ -2516,7 +2512,6 @@
         }
       ],
       "blocked_on": [
-        73,
         74,
         75
       ]
@@ -2555,7 +2550,6 @@
         }
       ],
       "blocked_on": [
-        73,
         74
       ]
     },
@@ -2626,7 +2620,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        73,
         74,
         75
       ]

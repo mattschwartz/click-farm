@@ -240,6 +240,15 @@ describe('applyRebrand — preservation of meta', () => {
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 5_000);
     expect(next.player.run_start_time).toBe(T0 + 5_000);
   });
+
+  it('wipes creator_kit — per-run purchases do NOT survive rebrand', () => {
+    const state = seedState({ total_followers: 1_000 });
+    // Simulate mid-run kit purchases.
+    (state.player.creator_kit as Record<string, number>).camera = 2;
+    (state.player.creator_kit as Record<string, number>).mogging = 1;
+    const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
+    expect(next.player.creator_kit).toEqual({});
+  });
 });
 
 // ---------------------------------------------------------------------------

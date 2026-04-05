@@ -21,6 +21,8 @@ import type {
   ScandalStaticData,
   ScandalTypeId,
   ScandalTypeDef,
+  KitItemDef,
+  KitItemId,
 } from '../types.ts';
 
 // ---------------------------------------------------------------------------
@@ -485,6 +487,9 @@ export const STATIC_DATA: StaticData = {
     varianceMs: 60 * 1_000,         // ±1 minute
   },
   cloutUpgrades: CLOUT_UPGRADE_DEFS,
+  // Populated by task #74 (Creator Kit static data). Foundation task #73
+  // establishes only the type wiring — empty is acceptable here.
+  creatorKitItems: {} as Record<KitItemId, KitItemDef>,
   unlockThresholds: {
     // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
     // intentionally absent — they are unlocked only via Clout `generator_unlock`

@@ -27,6 +27,7 @@ import type {
   GameState,
   GeneratorId,
   GeneratorState,
+  KitItemId,
   PlatformId,
   PlatformState,
   Player,
@@ -168,6 +169,8 @@ export function applyRebrand(
   );
 
   // Player: preserve meta, reset run state, add earned clout, bump count.
+  // creator_kit is per-run (architecture/creator-kit.md §Rebrand) — wiped
+  // here and MUST NOT appear in any preservation list.
   const player: Player = {
     ...state.player,
     engagement: 0,
@@ -177,6 +180,7 @@ export function applyRebrand(
     rebrand_count: state.player.rebrand_count + 1,
     algorithm_seed: result.newSeed,
     run_start_time: now,
+    creator_kit: {} as Record<KitItemId, number>,
     // last_close_time / last_close_state preserved — they reflect
     // serialization state, not run state.
   };
