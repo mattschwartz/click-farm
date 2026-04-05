@@ -3,7 +3,7 @@ name: Cheap Purchase Engagement Dampening
 description: Dampens engagement/sec contribution from purchases that are trivially cheap relative to current income, so outdated-tier generators stop distorting the late-game curve.
 author: game-designer
 status: draft
-reviewers: [architect, ux-designer, game-designer]
+reviewers: [architect, game-designer]
 ---
 
 # Proposal: Cheap Purchase Engagement Dampening
@@ -108,6 +108,7 @@ The floor ensures purchasing never produces nothing — the "sweep the board" co
 2. **Should the dampening be visible to the player?**
    If a purchase contributes only 5% of "normal," should the UI say so? Showing it risks the player feeling cheated ("why did I only get 5%?"). Hiding it risks the player not understanding why their purchase didn't bump the rate. Possible middle ground: a subtle visual tell on the buy button (e.g. dimmed "trivial purchase" badge) when `D < 0.5`.
    **Owner: ux-designer.**
+   - Answer (ux-designer): **Yes — surfaced as pre-click disclosure on the buy button, not post-click explanation.** When `D < 0.5` on the next-unit purchase, the buy button displays a small inline "(filler)" label in muted text next to the cost; tooltip explains "cheap relative to current income — reduced rate contribution." This preserves player agency (they know before they click) and keeps the post-click rate delta honest and un-caveated. Full direction, accessibility treatment, and coupling to Q1's Option choice in the review log below.
 
 3. **Should upgrades be dampened the same way?**
    Upgrading a low-tier generator when its upgrade cost is trivial relative to income produces a large absolute rate bump via the `2^(level²/5)` curve. Same underlying pathology. Do we extend the dampening to upgrades, or leave upgrades alone? My lean: **extend, using upgrade cost as the input to `D` in place of buy cost**, because the pathology is identical. But this expands the scope and may need separate tuning.
@@ -199,3 +200,51 @@ No engineer-owned Open Questions on this proposal, so my review is implementabil
 **Stale reference (non-blocking).** The proposal's §"What This Does NOT Change" cites upgrade cost as `ceil(base × 4^(level-1))`. That was the bug formula replaced by the accepted `generator-level-growth-curves.md` (Decision 1), which restored `ceil(base_upgrade_cost × levelMultiplier(targetLevel))`. Updating this reference would also strengthen the proposal's framing: because cost now scales identically to `levelMultiplier`, at-tier purchases have D exactly at the T threshold's boundary by construction, and D only diverges below 1.0 for off-tier purchases. That's a cleaner argument for the dampening shape than the stale formula conveys.
 
 **Removing engineer from reviewers.** architect (OQ1, OQ4) and ux-designer (OQ2) still own outstanding questions. game-designer owns OQ1, OQ3, OQ5 but is the author — no self-addition needed here per proposals protocol.
+
+---
+# Review: ux-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Aligned on the design intent — the "multiplier loses meaning" framing is exactly right, and the trust-signal-design lens (players who don't trust the numbers disengage from the core loop) endorses this direction. Architect's blocking concerns are real and separate; my review is scoped to OQ2 and the UX coupling to OQ1's outcome.
+
+**Q2 — Yes, surface the dampening. As pre-click disclosure, not post-click explanation.**
+
+The proposal correctly names the trap on both sides: hiding dampening breaks trust (player presses Buy, rate barely moves, no causal explanation, game feels broken); surfacing it as a reward reduction breaks trust differently (post-click "you only got 5%" reframes the mechanic as a punishment imposed on the player, which the "intrinsic motivation preserved" goal explicitly rejects).
+
+The way out is **contextual disclosure on the affordance, not on the outcome.** Tell the player THIS purchase is trivial *before* they click. Then when the rate barely moves after they click, they already know why — because the button told them. The player retains agency. The number stays honest. Nobody feels punished; they chose a housekeeping purchase, knowingly.
+
+**Direction: an inline `(filler)` label on the buy button's cost display when `D < 0.5`.**
+
+Concrete treatment:
+- **Label text:** `(filler)` — dry, honest, non-punitive. Maps cleanly to the proposal's own "housekeeping, not progress" framing from §Player Psychology & Aesthetic. Alternatives considered: `(trivial)` (reads as judgmental), `(outdated)` (factually scoped wrong — the unit isn't obsolete, just cheap relative to income), `(bargain)` (positive framing that misrepresents — it's not actually a good deal, it's a rate drag). `(filler)` is the right register: dry satirical creator-economy voice that matches the game's tone without editorializing.
+- **Typography:** inline, muted, same line as the cost numeral. Font-size one step smaller than cost text, color `var(--text-p2)` or a new `--text-p3` receded value to keep it present-but-deferential. No border, no chip, no background — parenthetical inline text reads as modifier/qualifier, which is what it is.
+- **Threshold:** appears at `D < 0.5` per the proposal's suggestion. Below that point, the player is buying mostly for housekeeping. `D >= 0.5` is "this still matters" territory and deserves no qualifier.
+- **Tooltip:** on hover of the `(filler)` label or the buy button when filler is active, show: "Cheap relative to current income. Reduced rate contribution. Buy anyway? That's fine — it's housekeeping." (Final copy at build time; direction is *informative, not scolding*.)
+- **Animation:** none. The label is static on the button. It appears when D crosses the threshold and disappears when it crosses back (rare). Use a 150ms fade so the transition isn't jarring.
+- **No color-only signal:** the word "(filler)" carries the meaning text-first; muted color reinforces but doesn't replace the text. Accessibility table holds.
+
+**Why not a chip/badge?** The existing Lvl↑ button already uses glyphs (⊖, ▲, ♛) and state colors to communicate four states. Adding a separate chip near the cost would compete visually with that language. Inline parenthetical text is lighter-touch, sits alongside the cost it modifies, and doesn't stake out a new visual vocabulary.
+
+**Why not dim the cost numeral itself?** Tempting but wrong. The cost IS the amount the player will pay. Dimming it risks reading as "this cost is approximate" or "you can ignore this number." The cost is the number the player is deciding against; it must stay at full contrast.
+
+**Coupling to Q1 (Option A vs B vs C) — critical for UX planning.**
+
+My Q2 answer above is scoped to Option A (architect's recommended `avg_D` baked at purchase). If Q1 resolves differently, the UX surface expands:
+
+- **Under Option A (bake at purchase):** the `(filler)` label on the BUY button is sufficient. Once purchased, the unit's contribution is stable — no owned-unit disclosure needed. The player's mental model is "the button told me, I bought it, that's the deal."
+- **Under Option B (continuous re-eval):** an owned unit the player bought honestly can later decay to the 5% floor as income grows past it. That needs its own UX surface — the player will otherwise watch their rate silently leak value without a causal explanation. Concretely: each generator row would need a subtle indicator when its weighted_D has decayed below some threshold (e.g., a dimmed badge on the owned-count chip showing "outdated"). This is a second, larger UX surface — not prohibitive but significantly more than Option A's button label.
+- **Under Option C (hybrid):** both surfaces needed — the buy-button `(filler)` label AND a per-row obsolescence indicator for owned units that drifted into decay.
+
+**My lean, weighting UX cost:** Option A. It confines the UX surface to the decision point (pre-click disclosure on the buy button), keeps the player's mental model simple, and doesn't require players to watch their owned stacks decay. The architect recommends A on data-model grounds; the engineer leans B on implementation cost grounds. The UX cost of B/C is real and tilts me toward A — but the final call is game-designer's.
+
+**If game-designer chooses Option B, flag to ux-designer for follow-up:** the owned-unit decay indicator needs its own spec. Not blocking this proposal's acceptance; blocking the build task.
+
+**Non-blocking observation — upgrade dampening (Q3) and the Lvl↑ ready state.**
+
+If Q3 resolves to "extend dampening to upgrades," the Lvl↑ button's `ready` state (currently gold-breathing per accepted affordance-state pattern) would need to express dampened-upgrade visually — either as a distinct color treatment for dampened-ready (similar to the maxed/platinum treatment I just specced for task #101) or as a chip/label addition. That's a meaningful expansion of the ready state's visual responsibility and would want its own UX spec pass. Not prescribing it here; flagging that Q3's resolution has Lvl↑ button implications that the game-designer and I will need to align on if Q3 resolves yes.
+
+**Summary.** Aligned. Q2 answered with pre-click `(filler)` label under Option A. UX cost is part of the Option A/B/C tradeoff and tilts toward A. Upgrade dampening (Q3) has visual-system implications to flag if it advances. Removing ux-designer from reviewers.
