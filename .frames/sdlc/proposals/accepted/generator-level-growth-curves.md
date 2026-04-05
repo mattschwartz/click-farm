@@ -2,8 +2,8 @@
 name: Generator Level Growth Curves
 description: Resolves the runaway upgrade ROI that drives engagement to Infinity by restoring cost/reward parity, imposing a generator level cap, and adding a runtime safety clamp.
 author: game-designer
-status: draft
-reviewers: [game-designer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Generator Level Growth Curves
@@ -118,13 +118,18 @@ So: rebrand remains driven by strategy, not by hitting a wall. The cap is a ceil
 
 ## Open Questions
 
-1. **Architect — `max_level` on `GeneratorDefinition`.** Adding `max_level: number` to `GeneratorDefinition` in `StaticData` is a data-contract change. Is that contract edit acceptable in the same PR that fixes the formula, or does it need a separate architecture update first? **Owner: architect**
+1. **[RESOLVED] Architect — `max_level` on `GeneratorDefinition`.** Adding `max_level: number` to `GeneratorDefinition` in `StaticData` is a data-contract change. Is that contract edit acceptable in the same PR that fixes the formula, or does it need a separate architecture update first? **Owner: architect**
+  - Answer (architect): Same-PR is fine. `GeneratorDef` lives in `StaticData` (seeded from config, never deserialised), so this is a static-data contract edit, not a save-schema edit. Precedent exists on `CloutUpgradeDef.max_level`. Splitting the PR would be worse because cost parity without the cap still hits the overflow at L~72.
 
-2. **Architect / engineer — migration of in-flight saves.** Players who have already broken their save with `engagement = Infinity` or `level > 10` need a one-time migration on load. What's the right shape — silent clamp on load, or a one-time "your save was repaired" notice? **Owner: architect** for the contract, **engineer** for the load-path code.
+2. **[RESOLVED] Architect / engineer — migration of in-flight saves.** Players who have already broken their save with `engagement = Infinity` or `level > 10` need a one-time migration on load. What's the right shape — silent clamp on load, or a one-time "your save was repaired" notice? **Owner: architect** for the contract, **engineer** for the load-path code.
+  - Answer (architect): Bump `CURRENT_VERSION` to 5; add `migrateV4toV5(data)` that clamps `player.engagement` to `Number.MAX_SAFE_INTEGER` and each `generators[id].level` to `max_level` (10). Append to the existing `migrate()` chain. Keep runtime clamps from Decision 3 regardless — permanent invariants, not migration logic.
+  - Answer (game-designer): **Silent clamp — no player-facing notice.** The Infinity state and over-cap levels were a bug, not earned progress; at that magnitude floats had already rounded to even and the value was arithmetically meaningless. A modal would force the player to reckon with loss that wasn't real. `console.warn` for diagnostic trace is fine and desired.
 
-3. **Engineer — verify overflow headroom with stacked multipliers.** At L=10, `levelMultiplier = 2^20 ≈ 1.05M`. Multiplied by `viral_stunts.base_engagement_rate = 500`, then count=10, then a 3× clout bonus, then a ~5× viral burst boostFactor, gives ~7.8e10 engagement/sec — still comfortably inside MAX_SAFE_INTEGER. Please sanity-check this at implementation time with the actual max stack and confirm the L=10 cap holds with real numbers. If it doesn't, flag back for a L=9 cap. **Owner: engineer**
+3. **[RESOLVED] Engineer — verify overflow headroom with stacked multipliers.** At L=10, `levelMultiplier = 2^20 ≈ 1.05M`. Multiplied by `viral_stunts.base_engagement_rate = 500`, then count=10, then a 3× clout bonus, then a ~5× viral burst boostFactor, gives ~7.8e10 engagement/sec — still comfortably inside MAX_SAFE_INTEGER. Please sanity-check this at implementation time with the actual max stack and confirm the L=10 cap holds with real numbers. If it doesn't, flag back for a L=9 cap. **Owner: engineer**
+  - Answer (engineer): True worst-case is `algorithmic_prophecy` (base 20,000), not `viral_stunts`. Maxed stack per unit/sec = `20,000 × 2^20 × 1.0 × 5.0 × 5.0 ≈ 5.24e11`. ~4 orders of magnitude of headroom below `MAX_SAFE_INTEGER` remain. L=10 holds. **Do not raise the cap without re-analysis** — L=14 already blows past `MAX_SAFE_INTEGER` under the same stack.
 
-4. **Game-designer (self) — base_upgrade_cost rebalance after the fix.** With cost tracking reward 1:1, the provisional base_upgrade_cost values from `generator-balance-and-algorithm-states.md` may produce runs that feel too long or too short. This is a balance pass — not a blocker — but I want to revisit seed costs once the fixed economy has been playtested. **Owner: game-designer**
+4. **[RESOLVED] Game-designer (self) — base_upgrade_cost rebalance after the fix.** With cost tracking reward 1:1, the provisional base_upgrade_cost values from `generator-balance-and-algorithm-states.md` may produce runs that feel too long or too short. This is a balance pass — not a blocker — but I want to revisit seed costs once the fixed economy has been playtested. **Owner: game-designer**
+  - Answer (game-designer): Deferred to post-fix playtesting. Seed values ship as-is with the correctness fix; a dedicated balance-pass task will be filed once the fixed economy can be felt end-to-end. Not a blocker for acceptance — the *shape* is what's locked by this proposal, tuning is downstream.
 
 ---
 # Review: architect
@@ -210,3 +215,21 @@ Per-tick earned engagement at 100ms: `rate_per_sec × 0.1`. Even for absurd coun
 **Protocol note.** Q4 (`base_upgrade_cost` rebalance after the fix) is game-designer-owned and unresolved. It is explicitly flagged as non-blocking balance work, but per the proposals protocol (matching the precedent from `level-multiplier-curve.md` where engineer added game-designer for formal self-closure), I'm adding game-designer to the reviewers list so the self-question can be formally marked [RESOLVED] — even if the resolution is "deferred to post-fix playtesting" — before the proposal moves to accepted. Process step only; no content concerns.
 
 Removing engineer from reviewers. Adding game-designer.
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-05
+**Decision**: Aligned
+
+**Comments**
+
+Closing this out as author and final reviewer. Both technical reviews are Aligned and the headroom math is solid. Two things to put on record:
+
+**On the migration UX (Q2 tonal call).** Silent clamp, no player-facing notice. Architect flagged this as a design call — I'm making it. The Infinity state and over-cap levels were not earned progress. At that magnitude floats were rounding to even, so the value was arithmetically meaningless before it got read back. Forcing a "your save was repaired" modal makes the player reckon with a loss that wasn't real — it fails the honesty leg of the three-question test by implying something was taken away. The satirical voice of the game *could* carry a cheeky notice ("the algorithm had a stroke, we fixed it"), but only at the cost of pretending there was something to lose. Don't do that. `console.warn` in the migration function for diagnostic trace is the correct shape.
+
+**On the relationship to rebrand.** Worth reiterating, because this is the thing most likely to drift during implementation: L=10 is a **ceiling, not a gate**. The `sqrt(total_followers)/10` prestige curve already flattens late-run Clout gain, so rebrand remains strategy-driven, not wall-driven. Maxing all seven generators is a stretch goal across multiple rebrands. If during implementation it turns out the cap *feels* like a wall in playtest — players hitting MAX and feeling punished rather than rewarded — that's a signal to revisit the rebrand break-even point, not to raise the cap. Engineer has already ruled out raising the cap on overflow grounds.
+
+**On Q4 (base_upgrade_cost rebalance).** Resolved as deferred. The seed values from `generator-balance-and-algorithm-states.md` ship as-is with the correctness fix. The *shape* is what this proposal locks. A dedicated balance-pass task gets filed after the fixed economy has been playtested end-to-end — likely as a game-designer design-state task once there's real play data to respond to.
+
+No open concerns. Removing game-designer from reviewers. Moving to accepted.
