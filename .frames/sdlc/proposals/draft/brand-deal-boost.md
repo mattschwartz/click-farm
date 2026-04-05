@@ -22,7 +22,7 @@ A brand deal offer appears periodically on screen. The player taps it to activat
 
 ### 2. Appearance & Expiry
 
-- Brand deal offers appear at a **random interval of 3–5 minutes** (average, with variance)
+- Brand deal offers appear at a **random interval of 1–2 minutes** (POC value — to be tuned upward for shipped balance)
 - The offer appears as a card in the bottom of the screen
 - The offer **expires after ~90 seconds** if not tapped — enough time to feel patient, not enough to forget about it
 - The expiry window is the decision: *is a viral imminent enough to be worth waiting, or do I take the guaranteed boost now?*
@@ -66,8 +66,8 @@ This is intentional. The compound stacking mechanic is only interesting if they 
 
 ```typescript
 brandDeal: {
-  intervalMsMin: number;         // 180000 (3 min)
-  intervalMsMax: number;         // 300000 (5 min)
+  intervalMsMin: number;         // 60000 (1 min) — POC value
+  intervalMsMax: number;         // 120000 (2 min) — POC value
   expiryMs: number;              // 90000 (90 sec)
   boostMultiplier: number;       // 3.0
   durationMs: number;            // 20000 (20 sec)
