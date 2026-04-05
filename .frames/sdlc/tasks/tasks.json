@@ -1,5 +1,5 @@
 {
-  "next_id": 99,
+  "next_id": 100,
   "tasks": [
     {
       "id": 1,
@@ -3326,6 +3326,57 @@
         "Update reviewers list at top of the proposal per review protocol"
       ],
       "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 99,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-05",
+      "title": "Plan the Scandal removal: decompose into engineer build tasks",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The accepted proposal at proposals/accepted/remove-scandals-interim.md authorizes ripping the Scandals system out of the client with no replacement until Audience Mood ships. Three reviewers (architect, engineer, ux-designer) have aligned on scope, migration strategy, and UX impact — their reviews trace the exact code surface area. What remains is decomposition: break the removal into concrete, sequenced engineer build tasks with explicit done-whens. The proposal's scope is accurate but lives in prose; engineers need a list of bite-sized tasks with acceptance criteria.\n\nThe architect already traced the surface area during review (see the architect review section in the proposal) and confirmed: module + test suite deletion, types cleanup, static-data cleanup, UI file scans, save migration V5→V6 via migrateV5toV6, driver interface contract update (removes dismissScandalResolution), prestige passthrough removal, architecture doc supersede banner. The engineer estimated ~1 day / ~2450 LOC for the full removal. Your job here is to shape this into tasks that an engineer can pick up without guessing — likely 1 primary build task, possibly split if any piece is independently shippable.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/remove-scandals-interim.md",
+          "purpose": "The accepted proposal — source of truth for scope and decisions"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/audience-mood-retention.md",
+          "purpose": "The end-state replacement — defines the downstream direction, not implemented here"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/scandal-system.md",
+          "purpose": "Architecture doc that needs superseded banner, not deletion"
+        },
+        {
+          "ref": "client/src/scandal/",
+          "purpose": "Module being removed"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Migration chain — needs V5→V6 migrateV5toV6 function and load-path defaulting block deletion"
+        }
+      ],
+      "acceptance_criteria": [
+        "File one or more engineer build tasks (state: build) that together cover the full removal scope traced in the architect + engineer review sections of the proposal",
+        "Each filed task has explicit acceptance criteria an engineer can verify against (e.g. 'all scandal-related files deleted', 'V5→V6 migration tested against fixture saves', 'all tests pass')",
+        "Produce superseded-banner subtasks (or include as criteria): architecture/scandal-system.md full-doc banner, ux/scandal-system.md full-doc banner, ux/visual-identity.md §3 section banner — these can be bundled with the removal task if engineer-owned, or filed as a ux-designer follow-up per OQ7",
+        "Name the sequencing: is this one monolithic task or split (e.g. separate save-migration task from UI removal task)? Justify the choice.",
+        "Once build tasks are filed, edit tasks #88 and #94 to add the new build task ID(s) to their blocked_on arrays (per OQ3 of the proposal)"
+      ],
+      "open_questions": [
+        {
+          "question": "Should the supersede-banner work on ux/scandal-system.md and ux/visual-identity.md §3 be bundled into the engineer's removal task, or split as a ux-designer follow-up task (per OQ7 of the proposal)?",
+          "owner": "architect"
+        },
+        {
+          "question": "Should task #95 (Tension Audit) be promoted now with a blocked_on pointer to the removal task, or wait for the removal to actually land before reactivating?",
+          "owner": "architect / producer"
+        }
+      ],
       "blocked_on": []
     }
   ]
