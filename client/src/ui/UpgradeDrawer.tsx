@@ -107,12 +107,35 @@ export function UpgradeDrawer({
       window.setTimeout(() => setShaking(false), 220);
       return;
     }
+
+    // Decide close behavior BEFORE calling onUpgrade — we compute post-upgrade
+    // state from current props, since by the time the setTimeout fires the
+    // drawer will already have re-rendered against new props.
+    //
+    // Spec §4 step 6 / Decision #4 (ux/upgrade-curve-drawer-spec.md):
+    //   - next level affordable → drawer stays open (preserves fast repeat loop)
+    //   - next level NOT affordable → drawer closes (slide back right)
+    //   - new level is max → drawer stays open in max-level state
+    //
+    // NOTE: generators currently have no max_level in GeneratorDef — the
+    // max-level branch is unreachable until/unless a cap is introduced. If
+    // a cap is added, extend this check to also stay open in that case and
+    // implement the §5.4 layout.
+    const postUpgradeEngagement = engagement - nextLevel.cost;
+    const postUpgradeNextCost = levels[1].cost;
+    const canAffordAfterUpgrade = postUpgradeEngagement >= postUpgradeNextCost;
+
     onUpgrade();
-    // Drawer closes after brief delay (spec §4 step 5: t=100–250ms).
-    window.setTimeout(() => {
-      setClosing(true);
-      window.setTimeout(onClose, DRAWER_CLOSE_DELAY_MS);
-    }, 80);
+
+    if (!canAffordAfterUpgrade) {
+      // Close after brief delay (spec §4 step 6: t=100–250ms).
+      // Re-render against new level already happens via prop update at t≈0.
+      window.setTimeout(() => {
+        setClosing(true);
+        window.setTimeout(onClose, DRAWER_CLOSE_DELAY_MS);
+      }, 80);
+    }
+    // else: drawer stays open; in-place re-render shows new level / cost / multi.
   }
 
   const style = {

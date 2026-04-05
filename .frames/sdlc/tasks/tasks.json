@@ -2082,7 +2082,7 @@
       "id": 68,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Conditional drawer close-on-upgrade based on affordability",
       "requester": "ux-designer",
@@ -2110,7 +2110,8 @@
         "The insufficient-engagement state (§5.3) is still reachable by opening the drawer while broke — unchanged"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 69,
