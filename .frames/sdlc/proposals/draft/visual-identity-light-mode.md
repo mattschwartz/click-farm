@@ -3,7 +3,7 @@ name: Visual Identity — Light Mode & Color System
 description: Establishes the game's base visual mood as clean and airy light mode, with color reserved for algorithm states and peak emotional moments.
 author: ux-designer
 status: draft
-reviewers: [ux-designer]
+reviewers: []
 ---
 
 # Proposal: Visual Identity — Light Mode & Color System
@@ -33,7 +33,7 @@ The base is intentionally restrained. The design doesn't compete with the conten
 **Algorithm states** are the primary source of color in the interface. Each state brings an accent color world — a named hue that appears in:
 - UI chrome (top bar, active indicators)
 - Generator highlight borders
-- A subtle background tint (low opacity wash over `#FAF8F5`)
+- A subtle background tint (low opacity accent-color layer over `#FAF8F5`) — *deferred to post-v1; see `algorithm-mood-visibility` Phase 2*
 - The algorithm state nameplate and iconography
 
 The base never changes. The accent layer shifts with the algorithm. This gives the game a living color story without sacrificing readability.
@@ -77,6 +77,11 @@ Everything else stays in the warm neutral base. The hierarchy is: base → algor
 2. `.frames/sdlc/proposals/draft/algorithm-mood-visibility.md` — algorithm state color assignments will extend this base palette
 3. Cookie Clicker (Orteil, 2013) — reference for deadpan visual restraint amplifying absurd content
 4. Linear.app — reference for clean, airy light mode in an information-dense interface (structural reference only, not aesthetic)
+
+---
+## Revision: 2026-04-05 — ux-designer
+
+Resolved OQ2 (fixed base vs. shifting base) in favor of **fixed base + shifting accent layer**, matching engineer's recommendation and the parallel resolution on `algorithm-mood-visibility` OQ3. Updated §2 to clarify that the "subtle background tint" is a separate accent-color layer over the fixed base (not a base shift), and annotated it as deferred to post-v1 per `algorithm-mood-visibility` Phase 2. This addresses the clarification flag in the engineer review. ux-designer removed from reviewers — no open questions remain.
 
 ---
 # Review: game-designer
@@ -161,4 +166,5 @@ Adding ux-designer to reviewers to close out OQ2 (design-side call on base-shift
 1. Does the clean, restrained visual base serve the satirical tone the game-designer has in mind, or does it risk reading as too straight-faced? **Owner: game-designer**
    - **[RESOLVED — game-designer, 2026-04-05]** Yes, it serves the tone well. The "design as straight man" posture is exactly right for the satire — Cookie Clicker's deadpan restraint is the correct reference. Absurdity lands harder against a polished, clean surface than against visual chaos. See review for detail.
 2. Should the warm base (`#FAF8F5`) shift slightly per algorithm state, or stay fixed while only the accent layer shifts? A shifting base is more immersive but adds implementation complexity. **Owner: ux-designer + engineer**
+   - **[RESOLVED — ux-designer, 2026-04-05]** Base stays **fixed** at `#FAF8F5` for v1. Only the accent layer (edge vignette + chrome accents) shifts with algorithm state. Mirrors `algorithm-mood-visibility` OQ3 — same question, same answer, cross-referenced for consistency. Responding to engineer's clarification flag: the §2 "subtle background tint" is a separate accent-color layer laid over the base, **not** a shift of the base value itself. These are distinct mechanisms. For v1, that tint layer is deferred to Phase 2 per `algorithm-mood-visibility` — the §2 body has been updated in this revision to reflect that. Rationale: (a) engineer recommended "start fixed, retrofit if needed" — a shifting base is cheap to add post-ship once accents have been judged in motion; (b) calibration surface stays small — fixing the base lets us tune accent harmony against a single known canvas rather than five; (c) limits v1 color-freedom to edge vignette + chrome, reducing color-pollution risk.
 3. ~~**[NEW]** This proposal reverses the dark-mode direction already shipped in `proposals/accepted/algorithm-mood-visibility.md` — is this a v1 pivot (blocks/revises in-flight work) or a v2 redesign (ships after current dark-mode build lands)? See game-designer review for full impact analysis. **Owner: user + ux-designer**~~ **[RESOLVED — user, 2026-04-05]** (a) v1 pivot. Light mode is the commitment for launch. `algorithm-mood-visibility` is to be reopened and re-derived against the warm near-white base; dark-mode edge colors are no longer authoritative. A follow-up task is filed for ux-designer to revise that proposal.
