@@ -2,10 +2,12 @@ import { describe, it, expect } from 'vitest';
 import {
   generatorBuyCost,
   generatorUpgradeCost,
+  autoclickerBuyCost,
   checkGeneratorUnlocks,
   buyGenerator,
   upgradeGenerator,
   unlockGenerator,
+  buyAutoclicker,
 } from './index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import {
@@ -662,5 +664,92 @@ describe('initial state — new player starting set', () => {
   it('selfies starts unowned (threshold=100, manual_clickable)', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     expect(state.generators.selfies.owned).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// autoclickerBuyCost
+// ---------------------------------------------------------------------------
+
+describe('autoclickerBuyCost', () => {
+  it('returns base_autoclicker_cost at count=0', () => {
+    const cost = autoclickerBuyCost('chirps', 0, STATIC_DATA);
+    expect(cost).toBe(STATIC_DATA.generators.chirps.base_autoclicker_cost);
+  });
+
+  it('scales exponentially: ceil(base × 1.15^count)', () => {
+    const def = STATIC_DATA.generators.chirps;
+    const cost3 = autoclickerBuyCost('chirps', 3, STATIC_DATA);
+    expect(cost3).toBe(
+      Math.ceil(def.base_autoclicker_cost * Math.pow(def.buy_cost_multiplier, 3)),
+    );
+  });
+
+  it('increases monotonically', () => {
+    for (let i = 0; i < 5; i++) {
+      expect(autoclickerBuyCost('chirps', i + 1, STATIC_DATA)).toBeGreaterThan(
+        autoclickerBuyCost('chirps', i, STATIC_DATA),
+      );
+    }
+  });
+
+  it('throws on negative count', () => {
+    expect(() => autoclickerBuyCost('chirps', -1, STATIC_DATA)).toThrow(
+      /must be ≥ 0/,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buyAutoclicker
+// ---------------------------------------------------------------------------
+
+describe('buyAutoclicker', () => {
+  it('increments autoclicker_count by 1 and deducts cost', () => {
+    const cost = autoclickerBuyCost('chirps', 0, STATIC_DATA);
+    const state = stateWithOwnedGenerator('chirps', 0, 1, cost, 0);
+    const next = buyAutoclicker(state, 'chirps', STATIC_DATA);
+    expect(next.generators.chirps.autoclicker_count).toBe(1);
+    expect(next.player.engagement).toBeCloseTo(0, 6);
+  });
+
+  it('deducts the correct escalated cost at higher counts', () => {
+    const cost0 = autoclickerBuyCost('chirps', 0, STATIC_DATA);
+    const cost1 = autoclickerBuyCost('chirps', 1, STATIC_DATA);
+    const totalNeeded = cost0 + cost1 + 1;
+    let state = stateWithOwnedGenerator('chirps', 0, 1, totalNeeded, 0);
+    state = buyAutoclicker(state, 'chirps', STATIC_DATA);
+    state = buyAutoclicker(state, 'chirps', STATIC_DATA);
+    expect(state.generators.chirps.autoclicker_count).toBe(2);
+    expect(state.player.engagement).toBeCloseTo(1, 6);
+  });
+
+  it('throws when generator is not manual_clickable', () => {
+    const state = stateWithOwnedGenerator('memes', 1, 1, 1_000_000, 0);
+    expect(() => buyAutoclicker(state, 'memes', STATIC_DATA)).toThrow(
+      /not manual-clickable/,
+    );
+  });
+
+  it('throws when generator is not yet unlocked', () => {
+    const state = createInitialGameState(STATIC_DATA, T0);
+    expect(() => buyAutoclicker(state, 'selfies', STATIC_DATA)).toThrow(
+      /not yet unlocked/,
+    );
+  });
+
+  it('throws when player cannot afford the cost', () => {
+    const state = stateWithOwnedGenerator('chirps', 0, 1, 0, 0);
+    expect(() => buyAutoclicker(state, 'chirps', STATIC_DATA)).toThrow(
+      /cannot afford/,
+    );
+  });
+
+  it('does not affect other generators', () => {
+    const cost = autoclickerBuyCost('chirps', 0, STATIC_DATA);
+    const state = stateWithOwnedGenerator('chirps', 0, 1, cost, 0);
+    const next = buyAutoclicker(state, 'chirps', STATIC_DATA);
+    expect(next.generators.selfies).toBe(state.generators.selfies);
+    expect(next.generators.memes).toBe(state.generators.memes);
   });
 });

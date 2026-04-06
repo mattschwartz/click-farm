@@ -75,6 +75,30 @@ export function generatorUpgradeCost(
   return Math.ceil(def.base_upgrade_cost * multiplier);
 }
 
+/**
+ * Engagement cost to buy the next autoclicker for a generator.
+ *
+ *   cost = ceil(base_autoclicker_cost × buy_cost_multiplier^currentAutoclickerCount)
+ *
+ * Same exponential escalation as BUY. Only meaningful for manual_clickable
+ * generators (passive-only generators have base_autoclicker_cost = 0).
+ */
+export function autoclickerBuyCost(
+  generatorId: GeneratorId,
+  currentAutoclickerCount: number,
+  staticData: StaticData,
+): number {
+  if (currentAutoclickerCount < 0) {
+    throw new Error(
+      `autoclickerBuyCost: currentAutoclickerCount must be ≥ 0, got ${currentAutoclickerCount}`,
+    );
+  }
+  const def = staticData.generators[generatorId];
+  return Math.ceil(
+    def.base_autoclicker_cost * Math.pow(def.buy_cost_multiplier, currentAutoclickerCount),
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Generator unlock checks
 // ---------------------------------------------------------------------------
@@ -293,6 +317,56 @@ export function upgradeGenerator(
     generators: {
       ...state.generators,
       [generatorId]: { ...gen, level: gen.level + 1 },
+    },
+  };
+}
+
+/**
+ * Buy one autoclicker for a manual-clickable generator, spending Engagement.
+ *
+ * Throws if:
+ * - The generator is not manual_clickable (passive-only generators don't have autoclickers).
+ * - The generator is not yet unlocked (owned=false).
+ * - The player cannot afford the cost.
+ *
+ * Pure — returns a new GameState; does not mutate the input.
+ */
+export function buyAutoclicker(
+  state: GameState,
+  generatorId: GeneratorId,
+  staticData: StaticData,
+): GameState {
+  const def = staticData.generators[generatorId];
+
+  if (!def.manual_clickable) {
+    throw new Error(
+      `buyAutoclicker: generator '${generatorId}' is not manual-clickable`,
+    );
+  }
+
+  const gen = state.generators[generatorId];
+
+  if (!gen.owned) {
+    throw new Error(
+      `buyAutoclicker: generator '${generatorId}' is not yet unlocked`,
+    );
+  }
+
+  const cost = autoclickerBuyCost(generatorId, gen.autoclicker_count, staticData);
+
+  if (!canAffordEngagement(state.player, cost)) {
+    throw new Error(
+      `buyAutoclicker: cannot afford autoclicker for '${generatorId}' — ` +
+        `cost ${cost}, have ${state.player.engagement}`,
+    );
+  }
+
+  return {
+    ...state,
+    player: spendEngagement(state.player, cost),
+    generators: {
+      ...state.generators,
+      [generatorId]: { ...gen, autoclicker_count: gen.autoclicker_count + 1 },
     },
   };
 }
