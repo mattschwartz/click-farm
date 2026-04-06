@@ -307,107 +307,184 @@
   color: var(--accent-red);
 }
 
-/* --- Post zone (UX §8) --------------------------------------------------- */
+/* --- Actions Column — per-verb manual ladder (UX manual-action-ladder.md) --- */
 
-.post-zone {
-  background: var(--surface-panel);
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
-  padding: 24px;
+.actions-column {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  position: relative;
-  overflow: hidden;
+  gap: 4px;
+  min-height: 0;
 }
 
-/* Post-button — primary click CTA.
- * NOTE (task #108, light-mode flip): the dark gradient (#1d2230→#12151e) was
- * the dark-mode CTA island. Flipped here to a light panel with a strong
- * border + shadow for lift, consistent with visual-identity-light-mode §2
- * ("design doesn't compete with the content"). If ux-designer prefers a
- * dark CTA island, flip --surface-panel back to a dark gradient and
- * text to --text-inverse. Flagged for ux QA post-build. */
-.post-button {
+.actions-scroll-region {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: none;
+}
+.actions-scroll-region::-webkit-scrollbar { display: none; }
+
+/* Live verb button — 80px tap target per actions-column.md OQ4. */
+.live-verb-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
   width: 100%;
-  max-width: 260px;
-  height: 220px;
-  border-radius: 12px;
-  border: 2px solid var(--border-default);
+  height: 80px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border-default);
   background: var(--surface-panel);
   color: var(--text-primary);
-  box-shadow: var(--panel-shadow);
   font-family: inherit;
   cursor: pointer;
+  overflow: hidden;
+  transition: filter 120ms ease-out;
+  box-sizing: border-box;
+}
+
+.live-verb-btn:active { transform: scale(0.97); }
+.live-verb-cooldown { filter: saturate(0.8); cursor: default; }
+.live-verb-cooldown:active { transform: none; }
+
+/* Spotlight — 2px top-border accent in verb color lane. */
+.live-verb-spotlight { border-top: 2px solid var(--verb-color); }
+
+/* Cooldown fill — full-button horizontal sweep (ux-designer revision).
+ * Replaces the 3px left-edge stripe for better peripheral readability.
+ * --cd-fill drives the sweep: 0% = just tapped, 100% = ready. */
+.live-verb-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(var(--verb-color-rgb, 0,0,0), 0.14) var(--cd-fill),
+    transparent var(--cd-fill)
+  );
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Header row: icon + name + badge */
+.verb-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  transition: transform 120ms ease-out, border-color 120ms ease-out;
-  position: relative;
+}
+.verb-icon { font-size: 20px; flex-shrink: 0; }
+.verb-name { font-size: 14px; font-weight: 500; letter-spacing: 0.04em; }
+.verb-badge {
+  margin-left: auto;
+  font-size: 12px; font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  line-height: 1.4;
 }
 
-.post-button:hover {
-  transform: scale(1.02);
-  border-color: var(--border-emphasis);
+/* Data row: yield + pulse */
+.verb-data {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 28px; /* align with verb-name */
+}
+.verb-yield { font-size: 11px; color: var(--text-secondary); }
+.verb-pulse {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  animation: verb-pulse-anim 1.2s ease-in-out infinite;
+}
+@keyframes verb-pulse-anim {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+.live-verb-ready .verb-pulse { display: inline-block; }
+
+/* Ready swoop — light shimmer sweeps across when cooldown completes. */
+.live-verb-ready::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 60%
+  );
+  animation: verb-ready-swoop 600ms ease-out forwards;
+  pointer-events: none;
+  border-radius: inherit;
+}
+@keyframes verb-ready-swoop {
+  0%   { transform: translateX(-100%); opacity: 1; }
+  100% { transform: translateX(100%);  opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-verb-ready::after { animation: none; display: none; }
 }
 
-.post-button:active {
-  transform: scale(0.97);
-  transition: transform 60ms ease-out;
-}
-
-.post-button .primary {
-  font-size: 32px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.post-button .context {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-secondary);
-}
-
-.post-rate {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-/* Confirm flash on post button click (§4.1) — 10% lightness bump, 150ms. */
-.post-button.post-confirm-flash {
-  animation: post-confirm 150ms ease-out;
-}
-
-@keyframes post-confirm {
-  0%   { filter: brightness(1); }
-  30%  { filter: brightness(1.25); }
-  100% { filter: brightness(1); }
-}
-
-/* Click feedback floaters */
-.float-number {
+/* Float feedback on tap */
+.verb-float {
   position: absolute;
   pointer-events: none;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--accent-gold);
-  animation: float-up 500ms ease-out forwards;
+  animation: verb-float-up 500ms ease-out forwards;
   z-index: 2;
-  text-shadow: 0 1px 3px rgba(var(--palette-near-black-rgb),0.15);
+  top: 30%;
+  text-shadow: 0 1px 3px rgba(var(--palette-near-black-rgb), 0.15);
+}
+@keyframes verb-float-up {
+  0% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -40px); }
 }
 
-@keyframes float-up {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -56px);
-  }
+/* Ghost slot — promise state (60px, 0.35 opacity, not tappable). */
+.ghost-slot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+.ghost-promise {
+  height: 60px;
+  opacity: 0.35;
+  cursor: default;
+}
+.ghost-icon { font-size: 20px; flex-shrink: 0; }
+.ghost-info { display: flex; flex-direction: column; gap: 2px; }
+.ghost-name { font-size: 13px; font-weight: 500; letter-spacing: 0.04em; }
+.ghost-condition { font-size: 11px; color: var(--text-secondary); }
+
+/* Ghost slot — awakened state (80px, full opacity, tappable). */
+.ghost-awakened {
+  height: 80px;
+  opacity: 1;
+  cursor: pointer;
+  border: 1px solid var(--verb-color, var(--border-default));
+  background: var(--surface-panel);
+  font-family: inherit;
+  color: var(--text-primary);
+  transition: opacity 400ms ease-out, height 400ms ease-out;
+}
+.ghost-awakened:hover { background: var(--surface-hover); }
+.ghost-cost { font-size: 11px; color: var(--text-secondary); }
+.ghost-cost-disabled { color: var(--accent-amber); opacity: 0.6; }
+.ghost-disabled { cursor: default; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .verb-pulse { animation: none; opacity: 1; }
+  .ghost-awakened { transition: none; }
 }
 
 /* --- Generator column (list + kit panel stack) ------------------------- */

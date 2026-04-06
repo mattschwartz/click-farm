@@ -12,9 +12,10 @@ import { STATIC_DATA } from '../static-data/index.ts';
 
 export interface UseGameResult {
   state: GameState;
-  click: () => void;
+  click: (verbId: GeneratorId) => void;
   buy: (id: GeneratorId) => void;
   upgrade: (id: GeneratorId) => void;
+  unlock: (verbId: GeneratorId) => void;
   saveNow: () => void;
   /** Offline gains captured at driver creation, if any. */
   offlineResult: OfflineResult | null;
@@ -125,9 +126,10 @@ export function useGame(): UseGameResult {
 
   const actions = useMemo(
     () => ({
-      click: () => driver.click(),
+      click: (verbId: GeneratorId) => driver.click(verbId),
       buy: (id: GeneratorId) => driver.buy(id),
       upgrade: (id: GeneratorId) => driver.upgrade(id),
+      unlock: (verbId: GeneratorId) => driver.unlock(verbId),
       saveNow: () => driver.saveNow(),
       clearOfflineResult: () => {
         driver.clearOfflineResult();

@@ -110,13 +110,6 @@ export interface GameDriver {
    * with cooldown gating and per-verb yield.
    */
   click(verbId: GeneratorId): void;
-  /**
-   * Zero-arg shim — routes to click('chirps'). Temporary compatibility bridge
-   * for existing call sites (GameScreen, tests) until the per-verb UI ladder
-   * ships in E4 and replaces all zero-arg click() calls.
-   * TODO(E4): remove this shim when the Actions column ladder is wired.
-   */
-  click(): void;
   buy(generatorId: GeneratorId): void;
   upgrade(generatorId: GeneratorId): void;
   /** Unlock a manual-clickable generator (pays base_buy_cost, flips owned=true). */
@@ -366,11 +359,9 @@ export function createDriver(options: DriverOptions): GameDriver {
       return () => listeners.delete(listener);
     },
 
-    click(verbId?: GeneratorId) {
-      // TODO(E4): remove zero-arg shim when the Actions column ladder is wired.
-      const id = verbId ?? 'chirps';
-      runAction('click', { verbId: id }, () => {
-        applyState(postClick(state, staticData, id, now()));
+    click(verbId: GeneratorId) {
+      runAction('click', { verbId }, () => {
+        applyState(postClick(state, staticData, verbId, now()));
       });
     },
 

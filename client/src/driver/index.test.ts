@@ -103,7 +103,7 @@ describe('driver — lifecycle & actions', () => {
 
     const before = driver.getState().player.engagement;
     s.advance(500); // advance past cooldown
-    driver.click();
+    driver.click('chirps');
     expect(driver.getState().player.engagement).toBeGreaterThan(before);
     expect(callCount).toBe(1);
   });
@@ -119,11 +119,11 @@ describe('driver — lifecycle & actions', () => {
     let count = 0;
     const unsub = driver.subscribe(() => { count++; });
     s.advance(500);
-    driver.click();
+    driver.click('chirps');
     expect(count).toBe(1);
     unsub();
     s.advance(500);
-    driver.click();
+    driver.click('chirps');
     expect(count).toBe(1);
   });
 
@@ -195,7 +195,7 @@ describe('driver — tick loop', () => {
     // Step #1: chirps + selfies start owned (threshold 0).
     s.advance(200);
     // Bootstrap engagement via clicks (advance past cooldown each time).
-    for (let i = 0; i < 20; i++) { s.advance(500); driver.click(); }
+    for (let i = 0; i < 20; i++) { s.advance(500); driver.click('chirps'); }
     expect(driver.getState().generators.chirps.owned).toBe(true);
     driver.buy('chirps');
     expect(driver.getState().generators.chirps.count).toBe(1);
@@ -242,7 +242,7 @@ describe('driver — persistence', () => {
     });
     // Generate some state — advance clock between clicks for cooldown gate
     driver.step(1);
-    for (let i = 0; i < 20; i++) { s.advance(500); driver.click(); }
+    for (let i = 0; i < 20; i++) { s.advance(500); driver.click('chirps'); }
     driver.buy('chirps');
 
     driver.saveNow();
@@ -261,7 +261,7 @@ describe('driver — persistence', () => {
       setInterval: s.setInterval,
       clearInterval: s.clearInterval,
     });
-    for (let i = 0; i < 5; i++) { s.advance(500); driverA.click(); }
+    for (let i = 0; i < 5; i++) { s.advance(500); driverA.click('chirps'); }
     const savedEngagement = driverA.getState().player.engagement;
     driverA.saveNow();
 
@@ -294,7 +294,7 @@ describe('driver — persistence', () => {
       ...sA,
     });
     driverA.step(1);                       // unlock selfies + chirps
-    for (let i = 0; i < 30; i++) { t += 500; driverA.click(); }
+    for (let i = 0; i < 30; i++) { t += 500; driverA.click('chirps'); }
     driverA.buy('chirps');
     // Tick once so there's a rate to persist in the snapshot.
     t += 1000;
@@ -335,7 +335,7 @@ describe('driver — persistence', () => {
       clearInterval: () => {},
     });
     driverA.step(1);
-    for (let i = 0; i < 30; i++) { t += 500; driverA.click(); }
+    for (let i = 0; i < 30; i++) { t += 500; driverA.click('chirps'); }
     driverA.buy('chirps');
     driverA.saveNow();
 
@@ -359,7 +359,7 @@ describe('driver — persistence', () => {
       setInterval: () => 0,
       clearInterval: () => {},
     });
-    driverA.click();
+    driverA.click('chirps');
     driverA.saveNow();
     // Reopen at the same time.
     const driverB = createDriver({
@@ -383,7 +383,7 @@ describe('driver — persistence', () => {
     });
     // Bootstrap some state: enough engagement to look mid-run, some followers.
     driver.step(1);
-    for (let i = 0; i < 50; i++) driver.click();
+    for (let i = 0; i < 50; i++) driver.click('chirps');
     driver.buy('selfies');
     // Force a big follower count so rebrand awards nontrivial clout.
     const s0 = driver.getState();
@@ -508,7 +508,7 @@ describe('driver — persistence', () => {
       loadFromStorage: false,
       persistToStorage: false,
     });
-    driver.click();
+    driver.click('chirps');
     driver.saveNow();
     expect(localStorage.getItem('click_farm_save')).toBeNull();
   });
@@ -638,7 +638,7 @@ describe('driver — onSaveError', () => {
     });
     const received: SaveError[] = [];
     driver.onSaveError((e) => received.push(e));
-    driver.click();
+    driver.click('chirps');
     driver.saveNow();
     expect(received).toHaveLength(0);
     // A fresh driver loading the just-written save also emits nothing.

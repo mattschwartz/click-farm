@@ -21,18 +21,13 @@ import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useGame } from './useGame.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import {
-  cloutBonus,
   computeAllGeneratorEffectiveRates,
-  effectiveAlgorithmModifier,
-  levelMultiplier,
 } from '../game-loop/index.ts';
-import { kitEngagementBonus } from '../creator-kit/index.ts';
-import { getAlgorithmModifier } from '../algorithm/index.ts';
 import { cloutForRebrand } from '../prestige/index.ts';
 import type { ActiveViralEvent, GeneratorId } from '../types.ts';
 import { AlgorithmBackground } from './AlgorithmBackground.tsx';
 import { TopBar } from './TopBar.tsx';
-import { PostZone } from './PostZone.tsx';
+import { ActionsColumn } from './ActionsColumn.tsx';
 import { GeneratorList } from './GeneratorList.tsx';
 import { PlatformPanel } from './PlatformPanel.tsx';
 import { OfflineGainsModal } from './OfflineGainsModal.tsx';
@@ -41,7 +36,7 @@ import { CloutShopModal } from './CloutShopModal.tsx';
 import { CreatorKitPanel } from './CreatorKitPanel.tsx';
 import { SettingsModal } from './SettingsModal.tsx';
 import { useSettings } from './useSettings.ts';
-import { GENERATOR_DISPLAY, PLATFORM_DISPLAY } from './display.ts';
+import { PLATFORM_DISPLAY } from './display.ts';
 import { fmtCompactInt } from './format.ts';
 import './GameScreen.css';
 
@@ -100,6 +95,7 @@ export function GameScreen() {
     click,
     buy,
     upgrade,
+    unlock,
     offlineResult,
     clearOfflineResult,
     rebrand,
@@ -130,35 +126,7 @@ export function GameScreen() {
     return total;
   }, [state]);
 
-  // Per-click engagement yield for chirps (the default verb during the shim
-  // window). Uses the per-verb formula: base_event_yield × level_multiplier ×
-  // algoMod × clout × kit. TODO(E4): generalise for the full action ladder.
-  const perClick = useMemo(() => {
-    const def = STATIC_DATA.generators.chirps;
-    const genState = state.generators.chirps;
-    const raw = getAlgorithmModifier(state.algorithm, 'chirps');
-    const algoMod = effectiveAlgorithmModifier(raw, def.trend_sensitivity);
-    const clout = cloutBonus(state.player.clout_upgrades, STATIC_DATA);
-    const kit = kitEngagementBonus(state.player.creator_kit, STATIC_DATA);
-    return def.base_event_yield * levelMultiplier(genState.level) * algoMod * clout * kit;
-  }, [state.algorithm, state.player.clout_upgrades, state.player.creator_kit, state.generators.chirps]);
-
-  // Derive the context sub-label: "Selfie → Chirper" or "+ auto".
-  // The "default" here is heuristic: the player's first-unlocked platform
-  // and the generator whose current contribution would land most followers
-  // on that platform. Auto-posting is active once any generator has count ≥ 1.
-  const contextLabel = useMemo(() => {
-    const anyActive = (Object.keys(state.generators) as GeneratorId[]).some(
-      (id) => state.generators[id].owned && state.generators[id].count > 0,
-    );
-    const firstPlatform = (['chirper', 'instasham', 'grindset'] as const).find(
-      (id) => state.platforms[id].unlocked,
-    );
-    const label = firstPlatform
-      ? `${GENERATOR_DISPLAY.chirps.name} → ${PLATFORM_DISPLAY[firstPlatform].name}`
-      : GENERATOR_DISPLAY.chirps.name;
-    return anyActive ? `${label}  ·  + auto` : label;
-  }, [state.generators, state.platforms]);
+  // Per-verb yield preview is now computed per-button inside ActionsColumn.
 
   // ---------------------------------------------------------------------------
   // Viral burst orchestration (UX §9)
@@ -393,10 +361,11 @@ export function GameScreen() {
         )}
 
         <div className="game-body">
-          <PostZone
-            onClick={click}
-            perClick={perClick}
-            contextLabel={contextLabel}
+          <ActionsColumn
+            state={state}
+            staticData={STATIC_DATA}
+            onClickVerb={click}
+            onUnlockVerb={unlock}
           />
           <div className="generator-column">
             <GeneratorList

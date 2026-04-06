@@ -48,7 +48,7 @@ describe('integration — end-to-end play loop', () => {
     // 2. Click to bootstrap engagement past chirps buy cost (5).
     //    Advance time between clicks to satisfy the per-verb cooldown gate
     //    (chirps cooldown = 400ms at count=0). chirps yield ~0.34/click.
-    for (let i = 0; i < 20; i++) { t += 500; driver.click(); }
+    for (let i = 0; i < 20; i++) { t += 500; driver.click('chirps'); }
     expect(driver.getState().player.engagement).toBeGreaterThanOrEqual(5);
 
     // 3. Buy chirps — engagement drains.
@@ -60,7 +60,7 @@ describe('integration — end-to-end play loop', () => {
     // 4. Advance time — ticks produce engagement AND followers.
     // Need enough to unlock instasham (100 followers). Buy many selfies
     // by repeatedly clicking + buying. At level 1 this is slow, so fast-forward.
-    for (let i = 0; i < 200; i++) { t += 500; driver.click(); }
+    for (let i = 0; i < 200; i++) { t += 500; driver.click('chirps'); }
     // Buy until a purchase fails (driver surfaces failure via onActionError
     // rather than throwing). Count-not-changing is a fallback guard.
     let failed = false;
@@ -171,7 +171,7 @@ describe('integration — end-to-end play loop', () => {
       persistToStorage: false,
     });
     driver.step(1); // unlock selfies + chirps
-    for (let i = 0; i < 50; i++) { t += 500; driver.click(); }
+    for (let i = 0; i < 50; i++) { t += 500; driver.click('chirps'); }
 
     const before = driver.getState().player.engagement;
     // chirps buy cost at count=0 is ceil(5 × 1.15^0) = 5
@@ -189,7 +189,7 @@ describe('integration — end-to-end play loop', () => {
       persistToStorage: false,
     });
     driver.step(1);
-    for (let i = 0; i < 200; i++) { t += 500; driver.click(); }
+    for (let i = 0; i < 200; i++) { t += 500; driver.click('chirps'); }
     // Buy until a purchase fails (see comment in upstream integration test).
     let failed2 = false;
     const unsub2 = driver.onActionError(() => { failed2 = true; });
@@ -252,7 +252,7 @@ describe('integration — save/reload round-trip', () => {
       persistToStorage: true,
     });
     driverA.step(1);
-    for (let i = 0; i < 30; i++) { t += 500; driverA.click(); }
+    for (let i = 0; i < 30; i++) { t += 500; driverA.click('chirps'); }
     driverA.buy('selfies');
     t += 10_000;
     driverA.step(10_000);
