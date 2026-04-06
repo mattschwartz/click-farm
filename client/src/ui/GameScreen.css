@@ -128,6 +128,13 @@
   backdrop-filter: blur(6px);
 }
 
+.top-bar-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
 /* Zone A — algorithm label (max 40% width, §1.2). */
 .algo-label {
   display: flex;

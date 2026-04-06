@@ -140,6 +140,7 @@ export function TopBar({
 
   return (
     <header className="top-bar">
+      <img src="/favicon.png" alt="Click Farm" className="top-bar-icon" />
       <div className="algo-label">
         <div className="name-slot">
           <span className={`name ${phase === 'exiting' ? 'exiting' : phase === 'entering' ? 'entering' : ''}`}>

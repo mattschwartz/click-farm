@@ -3,7 +3,7 @@ name: Glass Action Buttons
 description: Apply frosted-glass material treatment to the Actions-column verb buttons, allowing algorithm-mood vignettes to tint through.
 created: 2026-04-06
 author: ux-designer
-status: accepted
+status: rejected
 reviewers: []
 ---
 

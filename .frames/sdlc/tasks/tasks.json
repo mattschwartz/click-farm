@@ -1,5 +1,5 @@
 {
-  "next_id": 126,
+  "next_id": 128,
   "tasks": [
     {
       "id": 1,
@@ -4766,12 +4766,12 @@
       "id": 125,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
-      "title": "Implement glass material on Actions-column verb buttons",
+      "title": "[SUPERSEDED] Implement glass material on Actions-column verb buttons",
       "requester": "ux-designer",
       "complexity": "haiku",
-      "overview": "Apply a frosted-glass CSS treatment to the Actions-column verb buttons (manual-action-ladder). Glass is scoped exclusively to the action buttons — generators, platform cards, and all other panels stay opaque. The mood-edge vignettes bleed through the translucent surface, tinting the buttons with the active algorithm mood for free. Ghost slots get a more transparent variant. The spotlight slot gets a slightly more opaque variant + subtle shadow to stay elevated. Fallback for browsers without backdrop-filter support is included.",
+      "overview": "SUPERSEDED by action-button-physicality proposal. Glass approach was rejected — see proposals/rejected/20260406-glass-action-buttons.md. Do not implement. Pick up the replacement task instead.",
       "related_items": [
         {
           "ref": "proposals/accepted/20260406-glass-action-buttons.md",
@@ -4802,6 +4802,94 @@
         "@supports fallback renders `rgba(255,255,255,0.92)` + `border: 1px solid #E8E4DF` when backdrop-filter is unsupported",
         "Any amber accent text (`--accent-amber`) appearing on action buttons sits on an opaque white chip/pill, not directly on the glass surface",
         "Visual verification: mood-edge vignette tints are visible through the glass buttons when an algorithm mood is active"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 126,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Implement action button physicality — raised slabs with press/spring-back",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Replace flat white action-button cards with raised, colored slabs that depress on tap and spring back. Each verb gets its own color-lane face. The buttons should feel heavy and satisfying — like pressing a physical arcade button. Press is fast (40ms), release is spring-loaded with overshoot (100ms). On press, the engagement counter does a scale bump to register the hit. Ghost slots are muted grey slabs. Spotlight slot gets extra depth. Reduced-motion fallback removes transitions but preserves visual state change.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "Accepted proposal — complete spec with all CSS values, color table, press/release physics, ghost/spotlight variants, reduced motion, and counter-bump animation"
+        },
+        {
+          "ref": "ux/manual-action-ladder.md",
+          "purpose": "Actions-column UX spec — button anatomy, ghost slots, spotlight slot, class names"
+        },
+        {
+          "ref": "ux/visual-identity.md",
+          "purpose": "Generator color lanes — verb face colors derive from §2 + §4"
+        },
+        {
+          "ref": "proposals/rejected/20260406-glass-action-buttons.md",
+          "purpose": "Prior glass approach — rejected, do NOT implement this"
+        }
+      ],
+      "acceptance_criteria": [
+        "Each action button face uses its verb's color lane: Chirps `#4d9ef0`, Selfies `#e07040`, Livestreams `#9a3adf`, Podcasts `#5a6adf`, Viral Stunts `#df3a5a`",
+        "Resting state: 4px bottom depth shadow in darkened verb color + 1px top border in lightened verb color + soft ambient shadow",
+        "Pressed state (on pointerdown): translateY(3px), shadow compresses to 1px, transition 40ms ease-in",
+        "Release state (on pointerup): spring-back with `cubic-bezier(0.34, 1.56, 0.64, 1)` over 100ms — overshoots slightly then settles",
+        "Counter bump: on the press frame, the verb's engagement counter scales to 1.15 and settles back over 150ms ease-out",
+        "Ghost slots: muted warm grey (`#E8E4DF`) slab at 0.5 opacity, same raised shape, no press interaction",
+        "Spotlight slot: 5px depth shadow (1px deeper), subtle 2% scale bump, stronger ambient shadow",
+        "Reduced motion: all transitions set to `none`, counter-bump animation removed, static visual state change preserved (shadow shift still visible)",
+        "Button text is white (`#FFFFFF`) on all verb faces — Space Grotesk 600, 14px+",
+        "Cooldown ring renders on the colored face as `rgba(255,255,255,0.3)` overlay",
+        "Generators, platform cards, top bar remain completely untouched — physicality is exclusive to the Actions column"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 127,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Buy button for unowned manual-clickable generators throws instead of unlocking",
+      "requester": "engineer",
+      "complexity": "haiku",
+      "overview": "When a manual-clickable generator (e.g. livestreams) reaches its follower threshold and becomes buyable in the middle panel (GeneratorList), clicking 'Buy Livestreams' throws an error because the BuyButton calls onBuy(id) → driver.buy() → buyGenerator(), which rejects with 'must be unlocked first — use unlockGenerator'. The GeneratorList component has no onUnlock prop wired, so there is no code path to call unlockGenerator for these rows.\n\nThe left panel (ActionsColumn) handles this correctly via its GhostSlot → onUnlockVerb → driver.unlock() → unlockGenerator(). The middle panel never got the same wiring.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "BuyButton on line 389 calls onBuy(id) for unowned manual-clickable generators — should call onUnlock instead"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Parent wires onBuy={buy} but does not pass an onUnlock prop to GeneratorList"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "buyGenerator (line 219) throws when owned=false for manual-clickable gens; unlockGenerator (line 150) is the correct entry point"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "driver.unlock() dispatches unlockGenerator; driver.buy() dispatches buyGenerator"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "GhostSlot correctly uses onUnlock for the same action — reference implementation"
+        }
+      ],
+      "acceptance_criteria": [
+        "GeneratorList accepts an onUnlock prop (verbId: GeneratorId) => void",
+        "GameScreen passes the existing unlock callback as onUnlock to GeneratorList",
+        "GeneratorRow detects unowned manual-clickable generators and routes BuyButton click through onUnlock instead of onBuy",
+        "Clicking 'Buy Livestreams' (or any unowned manual-clickable generator) in the middle panel successfully unlocks the generator without throwing",
+        "Existing onBuy path for owned generators (additional purchases) is unchanged"
       ],
       "open_questions": [],
       "blocked_on": []
