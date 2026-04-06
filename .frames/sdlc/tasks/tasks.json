@@ -1,5 +1,5 @@
 {
-  "next_id": 143,
+  "next_id": 144,
   "tasks": [
     {
       "id": 1,
@@ -5648,6 +5648,48 @@
       ],
       "blocked_on": [],
       "date_completed": "2026-04-06"
+    },
+    {
+      "id": 143,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Implement ratio-scaled manual tap floating numbers",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Scale the verb-float's font-size and gold brightness based on tap significance (perClick / currentEngagement). The proposal is accepted and the engineer confirmed ~30 min implementation. The change is contained to ActionsColumn.tsx (inline style on the verb-float span) and GameScreen.css (defaults become overridable).\n\nFormulas:\n- ratio = perClick / max(1, currentEngagement)\n- t = clamp((log10(ratio) + 6) / 6, 0, 1)\n- fontSize = lerp(16, 32, t)\n- saturation = lerp(40, 100, t), lightness = lerp(52, 71, t)\n- color = hsl(43, saturation%, lightness%)\n\nAutoclicker floats (§4.6) scale to 80% of the current manual float size. Density-cap batched floats stay fixed at 22px.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-ratio-scaled-manual-tap-floats.md",
+          "purpose": "Accepted proposal — full spec with formulas, color tokens, accessibility notes"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "verb-float span (line 204) — add inline style for fontSize and color"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": ".verb-float rule — font-size and color become defaults overridden by inline styles"
+        },
+        {
+          "ref": ".frames/sdlc/ux/manual-action-ladder.md",
+          "purpose": "§4.6 autoclicker float spec — autoclicker floats scale to 80% of manual float size"
+        }
+      ],
+      "acceptance_criteria": [
+        "verb-float font-size scales from 16px (t=0, negligible tap) to 32px (t=1, significant tap) based on log-scale ratio formula",
+        "verb-float color scales from dim gold hsl(43,40%,52%) to bright gold hsl(43,100%,71%) using the same t value",
+        "Text-shadow on .verb-float stays fixed (contrast mechanism, not significance signal)",
+        "Autoclicker individual floats render at 80% of the current manual float fontSize (not fixed 80% of 22px)",
+        "Density-cap batched floats (+total ×N at 8+ autoclickers) stay at fixed 22px per §4.6",
+        "First tap (currentEngagement ≤ 1) produces t=1.0 — biggest, brightest float",
+        "No new animation introduced — size and brightness are static at emission time",
+        "Reduced-motion: no change needed (size/brightness are not motion)",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }
