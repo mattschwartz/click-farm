@@ -45,7 +45,7 @@ Read the entire proposal body, including any existing Review Log entries from ot
 
 ### 3. Discuss with the User
 
-Share your assessment of the proposal with the user. Surface concerns, ask clarifying questions, and reach a position.
+Before writing anything, share your assessment of the proposal with the user. Surface concerns, ask clarifying questions, and reach a position.
 
 **Constraints:**
 - You MUST name specific concerns with specific reasoning — "this feels wrong" is not a review
