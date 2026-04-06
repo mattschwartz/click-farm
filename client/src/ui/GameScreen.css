@@ -375,8 +375,15 @@
   transition: transform 40ms ease-in, box-shadow 40ms ease-in;
 }
 
-/* Cooldown: desaturated, cursor default, no press. */
-.live-verb-cooldown { filter: saturate(0.7) brightness(0.85); cursor: default; }
+/* Cooldown: cursor default, no press. Grayscale is handled per-element below. */
+.live-verb-cooldown { cursor: default; }
+
+/* During cooldown, desaturate the background image. The ::before overlay
+ * restores color on the filled portion by being transparent there. */
+.live-verb-cooldown .verb-icon-img {
+  filter: grayscale(1) brightness(0.7);
+}
+
 .live-verb-cooldown:active {
   transform: none;
   box-shadow:
@@ -392,10 +399,11 @@
   transform: scale(1.02);
 }
 
-/* Cooldown fill — dark overlay that drains as cooldown progresses.
- * --cd-fill: 0% = just tapped (fully covered), 100% = ready (no overlay).
- * The overlay fills from right to left: the uncovered portion on the left
- * shows the clean image, the covered portion on the right is darkened.
+/* Cooldown fill — color restoration sweep over the grayscale image.
+ * --cd-fill: 0% = just tapped (fully grey), 100% = ready (fully colored).
+ * The filled portion (left, up to --cd-fill) paints verb color back over
+ * the grayscale image. The unfilled portion stays transparent (grey shows).
+ * At 100% (ready), the image filter removes grayscale so no overlay needed.
  * z-index: 1 layers above the background image (z-index: 0),
  * text sits at z-index: 2. */
 .live-verb-btn::before {
@@ -405,11 +413,16 @@
   z-index: 1;
   background: linear-gradient(
     to right,
-    transparent var(--cd-fill),
-    rgba(0, 0, 0, 0.35) var(--cd-fill)
+    rgba(var(--verb-color-rgb, 0,0,0), 0.45) var(--cd-fill),
+    transparent var(--cd-fill)
   );
   pointer-events: none;
   border-radius: inherit;
+}
+
+/* When ready, no overlay needed — image is full color. */
+.live-verb-ready::before {
+  background: none;
 }
 
 /* Reduced motion: no transitions, static shadow shift preserved. */
