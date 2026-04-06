@@ -104,7 +104,7 @@ export function floatStyle(perClick: number, currentEngagement: number): { fontS
   const fontSize = lerp(16, 32, t);
   const saturation = lerp(40, 100, t);
   const lightness = lerp(52, 71, t);
-  return { fontSize, color: `hsl(43, ${saturation}%, ${lightness}%)` };
+  return { fontSize, color: '#FFFFFF' };
 }
 
 // ---------------------------------------------------------------------------
@@ -332,7 +332,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
               opacity: autoOpacity,
             }}
           >
-            +{fmtCompact(f.value)}{f.batchCount ? ` ×${f.batchCount}` : ''}
+            +{fmtCompact(f.value)}{f.batchCount ? <span className="float-multiplier"> ×{f.batchCount}</span> : ''}
           </span>
         );
       })}

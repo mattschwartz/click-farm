@@ -670,14 +670,21 @@
   pointer-events: none;
   font-size: 22px;
   font-weight: 800;
-  color: #FFD66B;
+  color: #FFFFFF;
   animation: verb-float-pop 2600ms ease-out forwards;
   z-index: 3;
   text-shadow:
-    0 0 3px rgba(255, 214, 107, 0.9),
-    0 0 8px rgba(255, 214, 107, 0.5),
-    0 0 16px rgba(255, 200, 50, 0.3),
+    0 0 3px rgba(255, 255, 255, 0.9),
+    0 0 8px rgba(255, 255, 255, 0.5),
+    0 0 16px rgba(255, 255, 255, 0.3),
     0 2px 4px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.5);
+}
+.float-multiplier {
+  color: #FFD66B;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-style: italic;
 }
 @keyframes verb-float-pop {
   0% {
