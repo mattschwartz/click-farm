@@ -12,6 +12,7 @@
 import { useState } from 'react';
 import { GameScreen } from './ui/GameScreen.tsx';
 import { DebugApp } from './ui/DebugApp.tsx';
+import coverSrc from './assets/cover.png';
 
 function isDebugRequested(): boolean {
   if (typeof window === 'undefined') return false;
@@ -26,7 +27,7 @@ function StartGate({ onStart }: { onStart: () => void }) {
       style={{
         position: 'fixed', inset: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'rgba(0, 0, 0, 0.4)',
+        background: 'rgba(0, 0, 0, 0.7)',
         zIndex: 9999,
         cursor: 'pointer',
       }}
@@ -37,29 +38,22 @@ function StartGate({ onStart }: { onStart: () => void }) {
         WebkitBackdropFilter: 'blur(20px) saturate(1.4) brightness(1.15)',
         border: '1px solid rgba(255, 255, 255, 0.15)',
         borderRadius: '20px',
-        padding: '48px 64px',
+        padding: '6px',
         display: 'flex',
         flexDirection: 'column' as const,
         alignItems: 'center',
-        gap: '16px',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
         pointerEvents: 'none',
       }}>
-        <span style={{
-          fontSize: '36px',
-          fontWeight: 800,
-          color: '#fff',
-          letterSpacing: '0.04em',
-        }}>
-          Click Farm
-        </span>
-        <span style={{
-          fontSize: '15px',
-          color: 'rgba(255, 255, 255, 0.6)',
-          letterSpacing: '0.03em',
-        }}>
-          click anywhere to play
-        </span>
+        <img
+          src={coverSrc}
+          alt="Click Farm"
+          style={{
+            width: '75vw',
+            borderRadius: '12px',
+            objectFit: 'cover',
+          }}
+        />
       </div>
     </div>
   );
