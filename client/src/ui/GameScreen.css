@@ -162,10 +162,27 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: center;
   line-height: 1;
   position: relative; /* anchor for viral-summary-badge absolute positioning */
   flex: 1 1 auto;
   min-width: 30%;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  box-shadow:
+    0 2px 8px -2px rgba(0, 0, 0, 0.08),
+    0 8px 24px -4px rgba(0, 0, 0, 0.05);
+  padding: 8px 20px;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .engagement-slot {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #E8E4DF;
+  }
 }
 
 /* Engagement counter — overflow truncates per §1.3, never wraps. */
