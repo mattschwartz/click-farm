@@ -4973,7 +4973,7 @@
       "id": 130,
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Plan level-driven-manual-cooldown implementation",
       "requester": "game-designer",
@@ -5030,7 +5030,8 @@
         "Supersession edits to manual-action-ladder.md called out as a separate task"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 131,
