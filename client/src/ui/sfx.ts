@@ -33,6 +33,22 @@ async function loadBuffer(url: string): Promise<AudioBuffer | null> {
   }
 }
 
+function startSource(
+  audioCtx: AudioContext,
+  buffer: AudioBuffer,
+  volume: number,
+  pitchRange: [number, number],
+): void {
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.playbackRate.value =
+    pitchRange[0] + Math.random() * (pitchRange[1] - pitchRange[0]);
+  const gain = audioCtx.createGain();
+  gain.gain.value = volume;
+  source.connect(gain).connect(audioCtx.destination);
+  source.start();
+}
+
 function play(
   buffer: AudioBuffer | null,
   volume: number,
@@ -42,16 +58,14 @@ function play(
   const audioCtx = getCtx();
   if (!audioCtx) return;
   if (audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(() => {});
+    // First user gesture — wait for resume before playing so the sound
+    // isn't silently dropped into a suspended context.
+    audioCtx.resume().then(() => {
+      startSource(audioCtx, buffer, volume, pitchRange);
+    }).catch(() => {});
+    return;
   }
-  const source = audioCtx.createBufferSource();
-  source.buffer = buffer;
-  source.playbackRate.value =
-    pitchRange[0] + Math.random() * (pitchRange[1] - pitchRange[0]);
-  const gain = audioCtx.createGain();
-  gain.gain.value = volume;
-  source.connect(gain).connect(audioCtx.destination);
-  source.start();
+  startSource(audioCtx, buffer, volume, pitchRange);
 }
 
 // ---------------------------------------------------------------------------
