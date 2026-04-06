@@ -131,8 +131,13 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     setSfxVolume,
   } = useSettings();
 
-  // Music player — track play/pause state for the UI button.
+  // Music player — sync UI with actual audio state. Poll at 250ms so mute
+  // toggle, background-tab pause, and track-end transitions are reflected.
   const [musicPlaying, setMusicPlaying] = useState(() => isMusicPlaying());
+  useEffect(() => {
+    const t = window.setInterval(() => setMusicPlaying(isMusicPlaying()), 250);
+    return () => window.clearInterval(t);
+  }, []);
 
   const handlePrev = () => { prevTrack(); setMusicPlaying(true); };
   const handleNext = () => { nextTrack(); setMusicPlaying(true); };
