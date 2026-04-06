@@ -609,22 +609,36 @@
 
 /* --- Generator list (UX §6) --------------------------------------------- */
 
+/* Glass clipboard — single frosted panel for the entire generator list.
+ * Mood vignettes bleed through the translucent surface (task #128). */
 .generator-list {
-  background: var(--surface-panel);
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  box-shadow:
+    0 2px 8px -2px rgba(0, 0, 0, 0.08),
+    0 8px 24px -4px rgba(0, 0, 0, 0.05);
   padding: 16px;
   overflow-y: auto;
 }
 
+@supports not (backdrop-filter: blur(1px)) {
+  .generator-list {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #E8E4DF;
+  }
+}
+
 .category-divider {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: rgba(26, 26, 26, 0.4);
   text-transform: uppercase;
   padding: 12px 4px 6px;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: none;
   margin-bottom: 4px;
 }
 
@@ -638,7 +652,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 4px;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   transition: opacity 200ms ease-out, background 120ms ease-out;
 }
 
