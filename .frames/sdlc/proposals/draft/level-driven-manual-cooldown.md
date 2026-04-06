@@ -43,8 +43,8 @@ Level starts at 1, caps at `max_level` (currently 10). At level 1, cooldown equa
 
 | Verb | L1 (base) | L2 | L5 | L10 (max) |
 |---|---|---|---|---|
-| chirps | 400ms | 200ms | 80ms | 40ms |
-| selfies | 2,500ms | 1,250ms | 500ms | 250ms |
+| chirps | 2,000ms | 1,000ms | 250ms | 0ms |
+| selfies | 5,000ms | 2,500ms | 750ms | 0ms |
 | livestreams | 10,000ms | 5,000ms | 2,000ms | 1,000ms |
 | podcasts | 30,303ms | 15,151ms | 6,060ms | 3,030ms |
 | viral_stunts | 120,482ms | 60,241ms | 24,096ms | 12,048ms |
