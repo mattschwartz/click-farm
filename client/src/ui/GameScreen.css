@@ -392,8 +392,10 @@
   transform: scale(1.02);
 }
 
-/* Cooldown fill — white overlay sweep on the colored face.
- * --cd-fill drives the sweep: 0% = just tapped, 100% = ready.
+/* Cooldown fill — dark overlay that drains as cooldown progresses.
+ * --cd-fill: 0% = just tapped (fully covered), 100% = ready (no overlay).
+ * The overlay fills from right to left: the uncovered portion on the left
+ * shows the clean image, the covered portion on the right is darkened.
  * z-index: 1 layers above the background image (z-index: 0),
  * text sits at z-index: 2. */
 .live-verb-btn::before {
@@ -403,8 +405,8 @@
   z-index: 1;
   background: linear-gradient(
     to right,
-    rgba(255, 255, 255, 0.3) var(--cd-fill),
-    transparent var(--cd-fill)
+    transparent var(--cd-fill),
+    rgba(0, 0, 0, 0.35) var(--cd-fill)
   );
   pointer-events: none;
   border-radius: inherit;
