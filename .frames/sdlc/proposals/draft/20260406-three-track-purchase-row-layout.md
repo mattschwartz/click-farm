@@ -4,7 +4,7 @@ description: LVL UP, BUY, and Autoclicker purchase controls render as compact in
 created: 2026-04-06
 author: ux-designer
 status: draft
-reviewers: [engineer, game-designer]
+reviewers: [engineer]
 ---
 
 # Proposal: Three-Track Purchase Row Layout — Compact Inline Pills
@@ -86,7 +86,20 @@ Applies to LVL UP at `max_level` and Autoclicker if a cap is introduced.
 - **Shine sweep:** the pill participates in the existing `@keyframes lvl-maxed-shine` — 7s cycle, ~420ms sweep, synced with all other maxed elements on screen. The pill catches the light occasionally, reading as a trophy. Same `::before` pseudo-element technique as the LVL UP maxed plaque.
 - **Reduced motion:** shine sweep disabled, static platinum pill remains.
 
-### 5. Density at 5 verbs
+### 5. Passive-only generator rows
+
+Passive-only generators (memes, hot_takes, tutorials) have `manual_clickable: false` — no action button, no manual cooldown, no autoclicker. Their pill set reduces to `[BUY]` only. LVL and AUTO pills are omitted entirely (not shown as disabled or maxed).
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│ [badge] Icon  Name       ×N  +18/s  [×1.8▲]                [BUY] │
+│         32px  wt 500     ct  rate   chip                    pill  │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+The single BUY pill right-aligns to the same edge as the rightmost pill (AUTO) in a three-pill verb row. This preserves vertical scanning — the player's eye finds "the purchase zone" on the right edge regardless of pill count.
+
+### 6. Density at 5 verbs
 
 At 5 live verbs, the column has 5 rows each with 7 inline data points (badge, name, count, rate, chip, 3 pills). This is dense. Mitigations:
 
@@ -96,7 +109,7 @@ At 5 live verbs, the column has 5 rows each with 7 inline data points (badge, na
 
 This is a known density tradeoff. The layout holds at 5 verbs on desktop. If a future overhaul introduces more per-row information, the inline approach may need to give way to an expandable tray — but that's a bridge to cross when we get there.
 
-### 6. Mobile adaptation
+### 7. Mobile adaptation
 
 On mobile, the Generators column renders as a full-width scrollable list (per `ux/mobile-layout.md`). The three pills remain inline but benefit from the wider row:
 
@@ -105,7 +118,7 @@ On mobile, the Generators column renders as a full-width scrollable list (per `u
 - Cost ghost label renders above the pill (same as desktop hover) on long-press. No hover state on mobile.
 - Touch targets: the row itself is 56px+ tall, and the pills sit within that — 28px pill height + row padding clears the 44px touch target minimum.
 
-### 7. What this locks in
+### 8. What this locks in
 
 - Three inline pill buttons per generator row, right-aligned, in LVL / BUY / AUTO order.
 - Grouped by verb — each generator row contains its own three purchase controls.
@@ -113,7 +126,7 @@ On mobile, the Generators column renders as a full-width scrollable list (per `u
 - Maxed pills use the existing platinum + shine sweep treatment.
 - Cost shown on hover/long-press, not inline at rest.
 
-### 8. What this leaves open
+### 9. What this leaves open
 
 - Exact color tokens for the affordable pill tint per verb — the follow-up UX spec (task #141) will define these against the generator color lanes from `ux/visual-identity.md` §2.
 - Whether BUY has a cap (currently uncapped in the game model) — if a cap is introduced, the maxed state applies.
@@ -132,4 +145,30 @@ On mobile, the Generators column renders as a full-width scrollable list (per `u
 
 ## Open Questions
 
-1. **Should the three pills visually compress into a single "invest" indicator at very early game (only 1 verb, player hasn't purchased anything yet)?** The three pills might overwhelm a brand-new player who just unlocked Chirps. Counter-argument: three small pills next to an otherwise clean row is not that loud, and hiding them delays discovery. Lean toward showing all three from the start. — owner: game-designer
+1. **[RESOLVED] Should the three pills visually compress into a single "invest" indicator at very early game (only 1 verb, player hasn't purchased anything yet)?** The three pills might overwhelm a brand-new player who just unlocked Chirps. Counter-argument: three small pills next to an otherwise clean row is not that loud, and hiding them delays discovery. Lean toward showing all three from the start. — owner: game-designer
+  - Answer (game-designer): **Show all three from the start.** Three recessed unaffordable pills next to a clean row are not loud. The affordable/unaffordable state itself is the teaching — the player sees two grey pills and one lit one, taps the lit one, and learns. Hiding them creates a reveal moment that needs its own UX choreography, and the onboarding is already handling enough progressive reveals (platform unlocks, algorithm state, creator kit). Don't add another.
+2. **[RESOLVED]** **(ux-designer)** What is the pill set for passive-only generators (memes, hot_takes, tutorials)? These have `manual_clickable: false`, no action button, no LVL UP (level drives manual cooldown which is irrelevant), and no Autoclicker (they're inherently passive via count). The pill set should reduce to `[BUY]` only — not three pills where two are permanently inert. Confirm the row anatomy diverges for passive-only gens.
+  - Answer (ux-designer): **Passive-only rows show `[BUY]` only.** LVL and AUTO pills are omitted entirely — not shown as permanently maxed or disabled, just absent. Two permanently inert pills would teach the wrong lesson ("something's broken here") and waste horizontal space. The single BUY pill right-aligns in the same position as the rightmost pill in a three-pill row, so vertical scanning across mixed rows still works — the player's eye finds "the purchase zone" on the right edge regardless of pill count.
+
+---
+## Revision: 2026-04-06 — ux-designer
+
+Added §5 (passive-only generator rows) — passive gens show `[BUY]` only, LVL/AUTO pills omitted. OQ2 resolved inline. Prompted by game-designer review flag on passive-only pill set.
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-06
+**Decision**: Aligned
+
+**Comments**
+
+The layout serves the player's actual decision flow — "I want to invest in Chirps, which track?" — not a cross-verb comparison the player rarely makes. Three pills per row is the right density: visible without interaction, no expand/collapse indirection, muscle memory builds on fixed position.
+
+**OQ1 resolved.** Show pills from the start. Three recessed unaffordable pills are not overwhelming. The affordable/unaffordable visual state IS the teaching — no separate reveal choreography needed. Answer written inline.
+
+**Cost-hidden-at-rest works.** The affordable/unaffordable binary state is the cost preview for 90% of decisions ("can I buy this? yes/no" is a glance). The actual cost number matters only when the player is close to affording something or choosing between two affordable options. Hover/long-press covers that narrow case without adding 15 numbers to the screen (3 pills × 5 verbs).
+
+**Non-blocking flag: passive-only generator pill set.** The proposal specifies three pills per generator row, but passive-only generators (memes, hot_takes, tutorials) have no manual tap, no LVL UP benefit (level drives cooldown, irrelevant without a tap button), and no Autoclicker (they produce passively via count alone). These rows should show only `[BUY]`, not three pills where two are permanently inert. Filed as OQ2 for ux-designer.
+
+Removing game-designer from reviewers.
