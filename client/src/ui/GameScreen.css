@@ -167,6 +167,17 @@
   position: relative; /* anchor for viral-summary-badge absolute positioning */
   flex: 1 1 auto;
   min-width: 30%;
+}
+
+/* Engagement counter — frosted glass that hugs the number. */
+.engagement-value {
+  font-size: 64px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  display: inline-block;
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -175,24 +186,14 @@
   box-shadow:
     0 2px 8px -2px rgba(0, 0, 0, 0.08),
     0 8px 24px -4px rgba(0, 0, 0, 0.05);
-  padding: 8px 20px;
+  padding: 4px 16px;
 }
 
 @supports not (backdrop-filter: blur(1px)) {
-  .engagement-slot {
+  .engagement-value {
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid #E8E4DF;
   }
-}
-
-/* Engagement counter — overflow truncates per §1.3, never wraps. */
-.engagement-value {
-  font-size: 64px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
 
 /* Rate promoted to P0 weight per purchase-feedback spec §2.1.
