@@ -506,7 +506,7 @@ function GeneratorRow({
             {lvlState === 'maxed' && (
               <span className="lvl-crown" aria-hidden>♛</span>
             )}
-            Lvl ↑
+            SPEED
           </span>
           {lvlState === 'armed' && (
             <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
@@ -654,7 +654,7 @@ function CompactBuyButton({ costLabel, canBuy, onBuy }: CompactBuyButtonProps) {
       aria-disabled={!canBuy}
       title={`Buy 1 unit for ${costLabel} engagement`}
     >
-      <span className="label">Buy</span>
+      <span className="label">POWER</span>
       {costLabel}
     </button>
   );
