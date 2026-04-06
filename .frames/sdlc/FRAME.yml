@@ -25,7 +25,7 @@ states:
     exit: When the task has been saved to disk and the user is happy with the output.
     input: A conversation with the user or a design document in `proposals/accepted`
     output: A list of tasks written to disk and assigned to their respective roles.
-    allowed-roles: [architect, producer]
+    allowed-roles: [architect, ux-designer]
 
   - name: build
     description: Implement a clearly-defined task. The goal is working code with passing tests that satisfies the task's done-when condition.
