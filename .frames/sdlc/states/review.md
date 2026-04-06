@@ -62,6 +62,19 @@ Append a Review Log entry to the proposal document. This is the transactional st
 - You MUST NOT modify the proposal body itself, because you are a reviewer — changes to the proposal content belong to the author. Your review lives in the Review Log.
 - You MUST NOT skip this step, because a review that exists only in conversation is invisible to the next agent in the next session
 
+Format:
+```md
+---
+# Review: <ROLE_NAME>
+
+**Date**: YYYY-MM-DD
+**Decision**: Aligned/Not Aligned/Request for Comment
+
+**Comments**
+
+Enumerate your thoughts on the proposal and summarize your decision.
+```
+
 ### 5. Update the Frontmatter
 
 After writing your review, update the proposal's frontmatter to reflect your review.

@@ -163,6 +163,9 @@ Polly's other thoughts on using vague directives intentionally
 - [observation] finally, the architect said it was not aligned and flagged major concerns. so it does do it but it needs a really big tipping point. but it went against me so that was i think a good sign
 - [observation] the LLMs may actually prefer NL over code? they keep doing --pretty-print since it was added. 
   - but interestingly, the FRAME.yml YAML is easier to write/read for humans and the LLMs seem to understand it well, so maybe maps are good for them?
+- [learning] I need epics...
+- [observation] long session with multiple compactions caused the agent to start forgetting rules. the agent is not as clearly remembering rules like to load additional context files when entering a state. using the opus-1m @ 24% context
+- [theory] compactions lessen importance of earlier rules to the agent?
 - 
 
 SKills from polly
