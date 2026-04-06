@@ -326,7 +326,9 @@
 }
 .actions-scroll-region::-webkit-scrollbar { display: none; }
 
-/* Live verb button — 80px tap target per actions-column.md OQ4. */
+/* Live verb button — 80px tap target per actions-column.md OQ4.
+ * Glass material (task #125): frosted-glass surface lets mood-edge vignettes
+ * bleed through, tinting the buttons with the active algorithm mood. */
 .live-verb-btn {
   position: relative;
   display: flex;
@@ -337,8 +339,14 @@
   height: 80px;
   padding: 12px 16px;
   border-radius: 6px;
-  border: 1px solid var(--border-default);
-  background: var(--surface-panel);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.72),
+    rgba(255, 255, 255, 0.55)
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: var(--text-primary);
   font-family: inherit;
   cursor: pointer;
@@ -347,12 +355,24 @@
   box-sizing: border-box;
 }
 
+/* Fallback for browsers without backdrop-filter support. */
+@supports not (backdrop-filter: blur(1px)) {
+  .live-verb-btn {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--border-default);
+  }
+}
+
 .live-verb-btn:active { transform: scale(0.97); }
 .live-verb-cooldown { filter: saturate(0.8); cursor: default; }
 .live-verb-cooldown:active { transform: none; }
 
-/* Spotlight — 2px top-border accent in verb color lane. */
-.live-verb-spotlight { border-top: 2px solid var(--verb-color); }
+/* Spotlight — elevated glass variant + 2px top-border accent. */
+.live-verb-spotlight {
+  border-top: 2px solid var(--verb-color);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
 
 /* Cooldown fill — full-button horizontal sweep (ux-designer revision).
  * Replaces the 3px left-edge stripe for better peripheral readability.
@@ -465,20 +485,35 @@
 .ghost-name { font-size: 13px; font-weight: 500; letter-spacing: 0.04em; }
 .ghost-condition { font-size: 11px; color: var(--text-secondary); }
 
-/* Ghost slot — awakened state (80px, full opacity, tappable). */
+/* Ghost slot — awakened state (80px, full opacity, tappable).
+ * Glass material — more transparent variant than live-verb. */
 .ghost-awakened {
   height: 80px;
   opacity: 1;
   cursor: pointer;
-  border: 1px solid var(--verb-color, var(--border-default));
-  background: var(--surface-panel);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   font-family: inherit;
   color: var(--text-primary);
   transition: opacity 400ms ease-out, height 400ms ease-out;
 }
+@supports not (backdrop-filter: blur(1px)) {
+  .ghost-awakened {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--border-default);
+  }
+}
 .ghost-awakened:hover { background: var(--surface-hover); }
 .ghost-cost { font-size: 11px; color: var(--text-secondary); }
-.ghost-cost-disabled { color: var(--accent-amber); opacity: 0.6; }
+.ghost-cost-disabled {
+  color: var(--accent-amber);
+  opacity: 0.6;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
 .ghost-disabled { cursor: default; }
 
 /* Reduced motion */
