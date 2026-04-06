@@ -290,14 +290,16 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
         <span className="verb-header">
           {!VERB_IMAGE[verbId] && <span className="verb-icon">{display.icon}</span>}
           <span className="verb-name-group">
-            <span className="verb-name">{display.name.toUpperCase()}</span>
-            {/* Autoclicker badge — shows army size (§4.2). Hidden when 0.
-                Pulses on each autoclicker burst (§4.4). */}
-            {autoCountForBadge > 0 && (
-              <span className={`verb-auto-badge${badgePulsing ? ' verb-auto-badge-pulse' : ''}`}>
-                ×{autoCountForBadge}
-              </span>
-            )}
+            <span className="verb-name">
+              {display.name.toUpperCase()}
+              {/* Autoclicker badge — shows army size (§4.2). Hidden when 0.
+                  Pulses on each autoclicker burst (§4.4). */}
+              {autoCountForBadge > 0 && (
+                <span className={`verb-auto-badge${badgePulsing ? ' verb-auto-badge-pulse' : ''}`}>
+                  {' '}×{autoCountForBadge}
+                </span>
+              )}
+            </span>
           </span>
         </span>
 

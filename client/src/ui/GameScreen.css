@@ -3407,14 +3407,15 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
  * --------------------------------------------------------------------------- */
 
 .verb-auto-badge {
-  font-size: 13px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(var(--verb-color-rgb), 0.25);
-  border-radius: 4px;
-  padding: 2px 4px;
-  margin-left: 6px;
-  display: inline-block;
+  /* Inline with verb name — inherits font family, weight, italic from .verb-name */
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  display: inline;
   transition: transform 200ms ease-out;
 }
 
