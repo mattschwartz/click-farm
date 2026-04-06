@@ -179,17 +179,6 @@ export function TopBar({
         </div>
       </div>
 
-      {onOpenSettings && (
-        <button
-          type="button"
-          className="settings-gear-btn"
-          onClick={onOpenSettings}
-          aria-label="Open Settings"
-          title="Settings"
-        >
-          ⚙
-        </button>
-      )}
     </header>
   );
 }

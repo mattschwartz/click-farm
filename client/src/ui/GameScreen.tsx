@@ -505,6 +505,29 @@ export function GameScreen() {
 
       {/* First-rebrand ambient copy (task #66, UX §5) — top-right, 600ms fade-in,
           4s hold, 600ms fade-out. Never shown after rebrand_count >= 2. */}
+      {/* Floating bottom-left toolbar — mute + settings */}
+      <div className="floating-toolbar">
+        <button
+          type="button"
+          className="settings-gear-btn"
+          onClick={() => setSound(!settings.sound)}
+          aria-label={settings.sound ? 'Mute' : 'Unmute'}
+          title={settings.sound ? 'Mute' : 'Unmute'}
+        >
+          {settings.sound ? '♪' : '♪'}
+          {!settings.sound && <span className="mute-cross">╲</span>}
+        </button>
+        <button
+          type="button"
+          className="settings-gear-btn"
+          onClick={() => setShowSettingsModal(true)}
+          aria-label="Open Settings"
+          title="Settings"
+        >
+          ⚙
+        </button>
+      </div>
+
       {showAmbientCopy && (
         <div className={`ambient-copy${ambientCopyFading ? ' ambient-copy-fading' : ''}`}>
           You are new again.

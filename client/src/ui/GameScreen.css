@@ -3301,14 +3301,26 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   background: rgba(var(--modal-danger-rgb),0.08);
 }
 
-/* --- Top-bar gear button -------------------------------------------------- */
+/* --- Floating bottom-left toolbar ---------------------------------------- */
+
+.floating-toolbar {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  gap: 4px;
+  z-index: 100;
+}
+
+/* --- Settings / mute button ---------------------------------------------- */
 
 .settings-gear-btn {
+  position: relative;
   font-family: inherit;
-  font-size: 16px;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 4px 8px;
+  font-size: 32px;
+  min-width: 56px;
+  min-height: 56px;
+  padding: 10px 14px;
   border-radius: 6px;
   border: 1px solid transparent;
   background: transparent;
@@ -3317,6 +3329,18 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   line-height: 1;
   align-self: center;
   transition: color 120ms, border-color 120ms, background-color 120ms;
+}
+
+.mute-cross {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  pointer-events: none;
 }
 
 .settings-gear-btn:hover {
