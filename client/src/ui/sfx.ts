@@ -1,37 +1,99 @@
 // Sound effects — Web Audio API with pitch randomization.
 // Gracefully degrades when AudioContext is unavailable (test environments).
+//
+// Design:
+// 1. Raw audio data is pre-fetched on import (no AudioContext needed).
+// 2. AudioContext is created on the first user gesture via a global listener.
+// 3. Buffers are eagerly decoded as soon as the context exists.
+// 4. play() uses a synchronous fast path when buffers are cached — no async
+//    hops between the user gesture and source.start().
+// 5. The global gesture listener also resumes suspended contexts (post-idle),
+//    so the context is always running by the time play() fires.
 
 import clickSfx from '../assets/click.wav';
 import purchaseSfx from '../assets/purchase.wav';
 
 // ---------------------------------------------------------------------------
-// Shared AudioContext + buffer loader
+// Raw data pre-fetch (no AudioContext required)
+// ---------------------------------------------------------------------------
+
+const rawCache = new Map<string, Promise<ArrayBuffer>>();
+
+function prefetch(url: string): void {
+  if (rawCache.has(url)) return;
+  rawCache.set(
+    url,
+    fetch(url).then((r) => r.arrayBuffer()).catch(() => new ArrayBuffer(0)),
+  );
+}
+
+prefetch(clickSfx);
+prefetch(purchaseSfx);
+
+// ---------------------------------------------------------------------------
+// Lazy AudioContext + eager decode
 // ---------------------------------------------------------------------------
 
 let ctx: AudioContext | null = null;
+const bufferCache = new Map<string, AudioBuffer>();
 
+/**
+ * Get or create the AudioContext. On creation, eagerly kicks off decode of
+ * all pre-fetched buffers so they're ready before the first play() call.
+ */
 function getCtx(): AudioContext | null {
   if (typeof AudioContext === 'undefined') return null;
-  if (!ctx) ctx = new AudioContext();
+  if (ctx && ctx.state === 'closed') {
+    ctx = null;
+    bufferCache.clear(); // buffers are tied to the context that decoded them
+  }
+  if (!ctx) {
+    ctx = new AudioContext();
+    // Eagerly decode all pre-fetched audio into the new context.
+    for (const [url] of rawCache) {
+      decodeBuffer(url, ctx);
+    }
+  }
   return ctx;
 }
 
-const bufferCache = new Map<string, AudioBuffer>();
-
-async function loadBuffer(url: string): Promise<AudioBuffer | null> {
+async function decodeBuffer(url: string, audioCtx: AudioContext): Promise<AudioBuffer | null> {
   if (bufferCache.has(url)) return bufferCache.get(url)!;
-  const audioCtx = getCtx();
-  if (!audioCtx) return null;
+  const raw = rawCache.get(url);
+  if (!raw) return null;
   try {
-    const resp = await fetch(url);
-    const arr = await resp.arrayBuffer();
-    const buf = await audioCtx.decodeAudioData(arr);
+    const arr = await raw;
+    if (arr.byteLength === 0) return null;
+    // decodeAudioData consumes the ArrayBuffer — copy for re-decode safety.
+    const buf = await audioCtx.decodeAudioData(arr.slice(0));
     bufferCache.set(url, buf);
     return buf;
   } catch {
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Global gesture listener — create context + resume on ANY user interaction.
+// This ensures the context is running before play() is called, avoiding the
+// async gap between resume() and source.start() that drops the first sound.
+// ---------------------------------------------------------------------------
+
+if (typeof window !== 'undefined') {
+  const onGesture = (): void => {
+    const audioCtx = getCtx();
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  };
+  for (const evt of ['click', 'touchstart', 'keydown']) {
+    window.addEventListener(evt, onGesture, { capture: true, passive: true });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Playback
+// ---------------------------------------------------------------------------
 
 function startSource(
   audioCtx: AudioContext,
@@ -50,33 +112,34 @@ function startSource(
 }
 
 function play(
-  buffer: AudioBuffer | null,
+  url: string,
   volume: number,
   pitchRange: [number, number],
 ): void {
-  if (!buffer) return;
   const audioCtx = getCtx();
   if (!audioCtx) return;
+
+  // Belt-and-suspenders: resume here too in case play() is called from a
+  // path the global listener didn't catch.
   if (audioCtx.state === 'suspended') {
-    // First user gesture — wait for resume before playing so the sound
-    // isn't silently dropped into a suspended context.
-    audioCtx.resume().then(() => {
-      startSource(audioCtx, buffer, volume, pitchRange);
-    }).catch(() => {});
+    audioCtx.resume();
+  }
+
+  // FAST PATH: buffer already decoded — play synchronously in the same
+  // microtask as the user gesture. This is critical for Chrome's autoplay
+  // policy and for post-idle resume timing.
+  const cached = bufferCache.get(url);
+  if (cached) {
+    startSource(audioCtx, cached, volume, pitchRange);
     return;
   }
-  startSource(audioCtx, buffer, volume, pitchRange);
+
+  // SLOW PATH: buffer not yet decoded (only possible on the very first play
+  // if the eager decode hasn't finished yet). Accept the async penalty.
+  decodeBuffer(url, audioCtx).then((buffer) => {
+    if (buffer) startSource(audioCtx, buffer, volume, pitchRange);
+  }).catch(() => {});
 }
-
-// ---------------------------------------------------------------------------
-// Preload on import
-// ---------------------------------------------------------------------------
-
-let clickBuffer: AudioBuffer | null = null;
-let purchaseBuffer: AudioBuffer | null = null;
-
-loadBuffer(clickSfx).then((b) => { clickBuffer = b; });
-loadBuffer(purchaseSfx).then((b) => { purchaseBuffer = b; });
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -84,10 +147,10 @@ loadBuffer(purchaseSfx).then((b) => { purchaseBuffer = b; });
 
 /** Play the click sound with +-8% pitch randomization. */
 export function playClick(): void {
-  play(clickBuffer, 0.3, [0.92, 1.08]);
+  play(clickSfx, 0.3, [0.92, 1.08]);
 }
 
 /** Play the purchase sound with +-5% pitch randomization. */
 export function playPurchase(): void {
-  play(purchaseBuffer, 0.4, [0.95, 1.05]);
+  play(purchaseSfx, 0.4, [0.95, 1.05]);
 }
