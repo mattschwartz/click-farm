@@ -210,6 +210,12 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
         <span className="verb-pulse">READY</span>
       )}
 
+      {!isReady && !atFloor && cdMs > 500 && (
+        <span className="verb-cooldown-timer">
+          {((cdMs - elapsed) / 1000).toFixed(cdMs >= 10000 ? 0 : 1)}s
+        </span>
+      )}
+
       {/* Float feedback */}
       {floats.map((f) => (
         <span

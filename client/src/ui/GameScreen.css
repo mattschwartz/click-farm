@@ -549,6 +549,18 @@
 }
 .live-verb-ready .verb-pulse { display: block; opacity: 1; }
 
+.verb-cooldown-timer {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 2;
+  font-size: 14px;
+  font-weight: 600;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
 /* Ready border chase — a light sweeps the button edge once when cooldown
  * completes. Fires on cooldown→ready transition (class swap re-triggers
  * the animation). Uses conic-gradient rotated via @property, masked to
