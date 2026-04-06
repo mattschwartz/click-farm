@@ -1,5 +1,5 @@
 {
-  "next_id": 152,
+  "next_id": 153,
   "tasks": [
     {
       "id": 1,
@@ -6095,6 +6095,61 @@
       "blocked_on": [
         150
       ]
+    },
+    {
+      "id": 152,
+      "role": "architect",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Design music player integration with react-h5-audio-player",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "The game currently has a custom music player (prev/play-pause/next buttons in the floating toolbar) backed by raw HTMLAudioElement usage in sfx.ts. It cycles through 8 djart-ost tracks sequentially. The user wants to replace this with react-h5-audio-player (v3.10.2), a purpose-built React audio component with transport controls, seek bar, progress display, and volume. The architect should design how this integrates: where it renders (floating toolbar? dedicated panel?), how it interfaces with the existing sfx.ts mute/volume system and settings persistence, whether it replaces the HTMLAudioElement approach entirely or wraps it, and how track cycling works through the library's API.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/sfx.ts",
+          "purpose": "Current music playback implementation — HTMLAudioElement, track cycling, volume/mute state, prev/next/togglePlayPause exports"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Current player UI — prev/play-pause/next buttons in .floating-toolbar, imports from sfx.ts"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Current .music-player and .music-player-btn styles"
+        },
+        {
+          "ref": "client/src/ui/useSettings.ts",
+          "purpose": "Settings hook — musicVolume, sfxVolume, sound toggle that drive sfx.ts"
+        },
+        {
+          "ref": "client/src/ui/SettingsModal.tsx",
+          "purpose": "Music/SFX volume sliders that call setMusicVolume/setSfxVolume"
+        },
+        {
+          "ref": "client/src/assets/djart-ost/",
+          "purpose": "8 MP3 tracks that the player cycles through"
+        }
+      ],
+      "acceptance_criteria": [
+        "Decision on whether react-h5-audio-player replaces the HTMLAudioElement in sfx.ts or lives as a separate UI-only component",
+        "Layout spec: where the player renders, sizing constraints, how it fits with the existing floating toolbar",
+        "Integration contract: how the library's volume/mute state syncs with the existing settings system (useSettings, SettingsModal sliders)",
+        "Track cycling contract: how prev/next/auto-advance work through the library's onEnded/onClickPrevious/onClickNext callbacks",
+        "Decision on whether SFX (click, purchase) remain on the Web Audio API path or move to the same system"
+      ],
+      "open_questions": [
+        {
+          "question": "Should the player show a seek/progress bar, or just transport controls (prev/play/next)?",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "Should the player show track name/title, or remain anonymous?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": []
     }
   ]
 }
