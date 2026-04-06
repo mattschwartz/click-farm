@@ -3,8 +3,8 @@ name: Three-Track Purchase Row Layout — Compact Inline Pills
 description: LVL UP, BUY, and Autoclicker purchase controls render as compact inline pill buttons within each generator row, grouped by verb.
 created: 2026-04-06
 author: ux-designer
-status: draft
-reviewers: [engineer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Three-Track Purchase Row Layout — Compact Inline Pills
@@ -172,3 +172,22 @@ The layout serves the player's actual decision flow — "I want to invest in Chi
 **Non-blocking flag: passive-only generator pill set.** The proposal specifies three pills per generator row, but passive-only generators (memes, hot_takes, tutorials) have no manual tap, no LVL UP benefit (level drives cooldown, irrelevant without a tap button), and no Autoclicker (they produce passively via count alone). These rows should show only `[BUY]`, not three pills where two are permanently inert. Filed as OQ2 for ux-designer.
 
 Removing game-designer from reviewers.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-06
+**Decision**: Aligned
+
+**Comments**
+
+Implementable as specified. The pill approach is the simplest of the three options — no expand/collapse state management, no new interaction patterns. The conditional for passive-only rows (`manual_clickable`) already exists in static data.
+
+Observations (non-blocking, for the follow-up spec task #141):
+
+1. The cost ghost label on hover/long-press (§4) is net-new UI — no tooltip component exists today. Task #141 should specify dimensions, positioning, and animation so the engineer doesn't have to invent it.
+2. The maxed shine sweep references `@keyframes lvl-maxed-shine` — if this isn't implemented yet, the keyframes need to be defined in the spec.
+3. Keyboard navigation order (§9, deferred) should be LVL → BUY → AUTO within a row, then tab to next row. Standard left-to-right order. Task #141 should confirm.
+4. Single-letter abbreviation at < 360px (§7) is a straightforward CSS media query with static mapping.
+
+Both OQs are resolved. All reviewers aligned. Moving to accepted.
