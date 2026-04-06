@@ -96,6 +96,7 @@ export function GameScreen() {
     buy,
     upgrade,
     unlock,
+    buyAutoclicker,
     offlineResult,
     clearOfflineResult,
     rebrand,
@@ -374,6 +375,7 @@ export function GameScreen() {
               onBuy={buy}
               onUpgrade={upgrade}
               onUnlock={unlock}
+              onBuyAutoclicker={buyAutoclicker}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
               onDrawerOpenChange={setUpgradeDrawerOpen}
             />
