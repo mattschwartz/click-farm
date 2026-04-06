@@ -358,9 +358,8 @@
   box-sizing: border-box;
   user-select: none;
   -webkit-user-select: none;
-  /* Resting: 4px bottom depth + ambient shadow + dark gradient scrim */
+  /* Resting: 4px bottom depth + ambient shadow */
   box-shadow:
-    inset 0 -32px 16px rgba(0, 0, 0, 0.35),
     0 4px 0 0 var(--verb-color-dark),
     0 4px 12px rgba(0, 0, 0, 0.12);
   transform: translateY(0);
@@ -468,7 +467,16 @@
 }
 .verb-name {
   font-size: 14px; font-weight: 500; letter-spacing: 0.04em;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+  text-shadow:
+    -2px -2px 0 rgba(0, 0, 0, 0.8),
+    2px -2px 0 rgba(0, 0, 0, 0.8),
+    -2px 2px 0 rgba(0, 0, 0, 0.8),
+    2px 2px 0 rgba(0, 0, 0, 0.8),
+    -1px -1px 0 rgba(0, 0, 0, 0.8),
+    1px -1px 0 rgba(0, 0, 0, 0.8),
+    -1px 1px 0 rgba(0, 0, 0, 0.8),
+    1px 1px 0 rgba(0, 0, 0, 0.8),
+    0 2px 6px rgba(0, 0, 0, 0.65);
 }
 .verb-badge {
   margin-left: auto;
@@ -478,6 +486,11 @@
   line-height: 1.4;
   color: #FFFFFF;
   background: rgba(255, 255, 255, 0.2);
+  text-shadow:
+    -1px -1px 0 rgba(0, 0, 0, 0.8),
+    1px -1px 0 rgba(0, 0, 0, 0.8),
+    -1px 1px 0 rgba(0, 0, 0, 0.8),
+    1px 1px 0 rgba(0, 0, 0, 0.8);
 }
 
 /* Data row: yield + pulse */
@@ -491,7 +504,16 @@
 }
 .verb-yield {
   font-size: 11px; color: rgba(255, 255, 255, 0.8);
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+  text-shadow:
+    -2px -2px 0 rgba(0, 0, 0, 0.8),
+    2px -2px 0 rgba(0, 0, 0, 0.8),
+    -2px 2px 0 rgba(0, 0, 0, 0.8),
+    2px 2px 0 rgba(0, 0, 0, 0.8),
+    -1px -1px 0 rgba(0, 0, 0, 0.8),
+    1px -1px 0 rgba(0, 0, 0, 0.8),
+    -1px 1px 0 rgba(0, 0, 0, 0.8),
+    1px 1px 0 rgba(0, 0, 0, 0.8),
+    0 2px 6px rgba(0, 0, 0, 0.65);
 }
 .verb-pulse {
   width: 6px; height: 6px;
