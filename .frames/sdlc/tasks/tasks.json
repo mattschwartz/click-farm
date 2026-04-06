@@ -5458,7 +5458,7 @@
       "alias": "A1",
       "role": "architect",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Supersession edits to manual-action-ladder.md for level-driven-cooldown",
       "requester": "architect",
@@ -5485,7 +5485,8 @@
         "Each edit includes a reference to level-driven-manual-cooldown.md so future readers can trace the decision"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     }
   ]
 }

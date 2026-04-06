@@ -1,6 +1,6 @@
 # Manual Action Ladder Architecture
 
-> **Scope:** Defines the data-model delta, interface contracts, coupling surfaces, and migration contract for the Manual Action Ladder — the refactor that turns the single Post button into a per-verb ladder of manual-clickable generators, splits `base_engagement_rate` into yield × rate, and introduces a three-state lifecycle (Unlock → Upgrade → Automate) over the existing `GeneratorState`.
+> **Scope:** Defines the data-model delta, interface contracts, coupling surfaces, and migration contract for the Manual Action Ladder — the refactor that turns the single Post button into a per-verb ladder of manual-clickable generators, splits `base_engagement_rate` into yield × rate, and introduces a three-state lifecycle (Unlock → Upgrade → Automate) over the existing `GeneratorState`. **[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: the three-state lifecycle becomes three parallel investment tracks (LVL UP / BUY / Autoclicker purchase) available once a verb is unlocked, not sequential stages.]**
 
 > **Not in scope:** Balance values (owned by game-designer — see `proposals/accepted/manual-action-ladder.md` §14 and task #115), Actions-column UX anatomy (owned by ux-designer, tracked in task #118 / UX ladder spec), late-game content arc above viral_stunts.
 
@@ -18,7 +18,7 @@ The `base_engagement_rate` scalar splits into two fields; one new boolean field 
 |-------|------|-------------|--------|-------|
 | `base_engagement_rate` | `float` | — | **REMOVED** | Replaced by the `base_event_yield × base_event_rate` product. All existing call sites migrate. |
 | `base_event_yield` | `float` | > 0, from static data | **NEW** | Engagement produced per event (per click for manual; per passive "event" for automators). Scales with Upgrade (level). |
-| `base_event_rate` | `float` | > 0, from static data | **NEW** | Events per second per unit (actor). Scales with Automate (count). Derived manual-cooldown: `1 / (max(1, count) × base_event_rate)`. |
+| `base_event_rate` | `float` | > 0, from static data | **NEW** | Events per second per unit (actor). Scales with Automate (count). Derived manual-cooldown: `1 / (max(1, count) × base_event_rate)`. **[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: cooldown now level-keyed as `max(50, 1000 / (level × base_event_rate))`; phantom-hand floor eliminated; base_event_rate retuned for chirps and selfies.]** |
 | `manual_clickable` | `bool` | from static data | **NEW** | `true` for the 5 ladder verbs (chirps, selfies, livestreams, podcasts, viral_stunts); `false` for the 3 passive-only generators (memes, hot_takes, tutorials) AND the 3 post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy). See §Coupling → Static Data. |
 
 **Mathematical equivalence.** Seeded with `base_event_yield=1.0, base_event_rate=<old base_engagement_rate>`, the effective-rate formula produces numerically identical passive output to today. This equivalence MUST be covered by a regression test (`computeGeneratorEffectiveRate` → tick → engagement delta) against a pinned GameState with count≥1, level≥1.
@@ -99,6 +99,8 @@ Replaces today's `postClick(state, staticData)`. Signature break; the callsite c
    if (now - last < cooldownMs) return state;
    ```
    The `Math.max(1, count)` floor models the player's own hand as actor #1 (per OQ16). The `?? 0` makes "never clicked" explicit.
+   
+   **[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: cooldown formula is now `max(50, 1000 / (level × base_event_rate))`. Level drives cooldown, not count. The phantom-hand floor is eliminated (level always ≥ 1, so cooldown is always defined).]**
 5. Compute earned (no platform-affinity term — per OQ17):
    ```
    earned = def.base_event_yield
@@ -107,6 +109,7 @@ Replaces today's `postClick(state, staticData)`. Signature break; the callsite c
           × cloutBonus(state.player.clout_upgrades, staticData)
           × kitEngagementBonus(state.player.creator_kit, staticData)
    ```
+   **[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: per-tap yield formula is now `base_event_yield × (1 + count) × algoMod × clout × kit`. Level no longer scales per-tap yield; level drives cooldown only. Count (via the `1 + count` multiplier) drives per-tap yield.]**
 6. Return `state` with `engagement += earned` (clamped), `last_manual_click_at[verbId] = now`.
 
 **Determinism / `now` sourcing.** `postClick` needs a timestamp for the cooldown gate. Engineer should accept `now` as a parameter (defaulting to `Date.now()`) to keep the function testable, mirroring the pattern in `tick()`. Whether `now` is passed through the driver or read inside `postClick` is an engineer call; the contract requires only that manual clicks made within `cooldownMs` of each other on the same verb produce one state update, not two.
@@ -124,7 +127,7 @@ The new driver action that implements the Unlock lifecycle step for manual-click
 4. Throws if player cannot afford `unlockCost(verbId, staticData)` — see §Assumption A2 for the unlock-cost source.
 5. On success: spends Engagement, flips `state.generators[verbId].owned = true`, returns new state.
 
-**Why a new action, not repurposed `buyGenerator`:** `buyGenerator` increments `count` (the Automate step). Conflating the two would couple the "first Automate purchase" price to the Unlock price, which blurs the three-state lifecycle the proposal locks in. A distinct `unlockGenerator` keeps the lifecycle legible in the codebase.
+**Why a new action, not repurposed `buyGenerator`:** `buyGenerator` increments `count` (the Automate step). Conflating the two would couple the "first Automate purchase" price to the Unlock price, which blurs the three-state lifecycle the proposal locks in. A distinct `unlockGenerator` keeps the lifecycle legible in the codebase. **[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: the lifecycle is now Unlock → three parallel investment tracks (LVL UP / BUY / Autoclicker), not sequential Unlock → Upgrade → Automate. The `unlockGenerator` action remains; the subsequent investments are concurrent, not ordered.]**
 
 **Driver wiring:** a new `driver.unlock(verbId)` method, mirroring `driver.buy(verbId)` / `driver.upgrade(verbId)`.
 
@@ -162,6 +165,10 @@ effective_rate = count × base_event_rate × base_event_yield × levelMultiplier
 **No behavior change to the tick loop.** `tick()`, offline progression, viral-burst rate queries, and UI rate displays all continue to call `computeGeneratorEffectiveRate` and receive a `number` in engagement/sec. No downstream caller changes.
 
 **The `max(1, count)` floor DOES NOT apply here.** It is scoped to manual-cooldown derivation only (per architect re-review). A count=0 generator produces 0 passive engagement — the unfloored multiply is critical for preserving the existing 7-generator balance.
+
+---
+
+**[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: passive tick formula is now `effective_rate = autoclicker_count × base_event_rate × base_event_yield × (1 + count) × algoMod × clout × kit`. Leading factor changes from `count` to `autoclicker_count` (new field). `levelMultiplier(level)` is removed entirely. The `(1 + count)` multiplier replaces it, making count-driven yield apply uniformly to both manual taps and passive/autoclicker generation.]**
 
 ---
 
