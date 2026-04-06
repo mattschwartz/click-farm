@@ -120,14 +120,6 @@ export function TopBar({
             VIRAL +{fmtCompactInt(summaryBadge.magnitude)}
           </div>
         )}
-        {/* Rate display hidden — engagement number promoted to larger size */}
-      </div>
-
-      <div className="followers-slot">
-        <div className="followers-label">followers</div>
-        <div className={`followers-value${decreased ? ' decreased' : ''}`}>
-          {fmtCompactInt(totalFollowers)}
-        </div>
       </div>
 
     </header>
