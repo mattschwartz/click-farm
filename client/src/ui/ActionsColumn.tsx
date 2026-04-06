@@ -208,12 +208,11 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
 
       <span className="verb-data">
         <span className="verb-yield">{fmtCompact(perTap)} eng/tap</span>
-        {(isReady || atFloor) && (
-          <span className="verb-pulse">
-            {lastTap === 0 ? 'ready' : ''}
-          </span>
-        )}
       </span>
+
+      {(isReady || atFloor) && (
+        <span className="verb-pulse">READY</span>
+      )}
 
       {/* Float feedback */}
       {floats.map((f) => (
