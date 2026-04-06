@@ -3314,6 +3314,46 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   padding: 10px 14px;
 }
 
+/* --- Music player controls (prev / play-pause / next) -------------------- */
+
+.music-player {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 2px 4px;
+}
+
+.music-player-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #555);
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 0;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.music-player-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-primary, #1a1a1a);
+}
+
+.music-player-btn:active {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.music-player-btn-play {
+  width: 32px;
+  height: 32px;
+}
+
 /* ==========================================================================
    Reduce Motion — in-game mirror of @media (prefers-reduced-motion: reduce).
    ==========================================================================

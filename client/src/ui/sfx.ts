@@ -13,6 +13,10 @@
 import clickSfx from '../assets/click.wav';
 import purchaseSfx from '../assets/purchase.wav';
 import ost1Src from '../assets/ost1.mp3';
+import ost2Src from '../assets/ost2.mp3';
+import ost3Src from '../assets/ost3.mp3';
+
+const OST_TRACKS = [ost1Src, ost2Src, ost3Src];
 
 // ---------------------------------------------------------------------------
 // Raw data pre-fetch (no AudioContext required)
@@ -76,23 +80,37 @@ async function decodeBuffer(url: string, audioCtx: AudioContext): Promise<AudioB
 
 // ---------------------------------------------------------------------------
 // Background music — HTML Audio element (streams, no decode needed).
-// Starts on first user gesture and loops indefinitely.
+// Cycles through OST_TRACKS sequentially. When a track ends, the next one
+// starts automatically. After the last track, loops back to the first.
 // ---------------------------------------------------------------------------
 
 let bgMusic: HTMLAudioElement | null = null;
 let bgMusicStarted = false;
+let currentTrackIndex = 0;
+
+/** Start playing the track at currentTrackIndex. */
+function playCurrentTrack(): void {
+  if (!bgMusic) return;
+  bgMusic.src = OST_TRACKS[currentTrackIndex];
+  bgMusic.volume = musicVol;
+  bgMusic.play().then(() => { bgMusicStarted = true; }).catch(() => {});
+}
 
 /** Create the audio element (if needed) and start playback if unmuted. */
 function ensureBgMusic(): void {
   if (typeof window === 'undefined') return;
-  // Always create the element on gesture so it's ready when unmuted later.
   if (!bgMusic) {
-    bgMusic = new Audio(ost1Src);
-    bgMusic.loop = true;
+    bgMusic = new Audio();
+    bgMusic.loop = false; // we handle cycling ourselves
     bgMusic.volume = musicVol;
+    bgMusic.addEventListener('ended', () => {
+      // Advance to the next track, wrapping around.
+      currentTrackIndex = (currentTrackIndex + 1) % OST_TRACKS.length;
+      playCurrentTrack();
+    });
   }
   if (!masterMuted && !bgMusicStarted) {
-    bgMusic.play().then(() => { bgMusicStarted = true; }).catch(() => {});
+    playCurrentTrack();
   }
 }
 
@@ -201,6 +219,45 @@ export function setSfxVolume(v: number): void {
 
 // ---------------------------------------------------------------------------
 // Public API
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Track controls — prev / play-pause / next for the music player UI.
+// ---------------------------------------------------------------------------
+
+/** Skip to the previous track (wraps around). */
+export function prevTrack(): void {
+  if (!bgMusic) return;
+  currentTrackIndex = (currentTrackIndex - 1 + OST_TRACKS.length) % OST_TRACKS.length;
+  playCurrentTrack();
+}
+
+/** Skip to the next track (wraps around). */
+export function nextTrack(): void {
+  if (!bgMusic) return;
+  currentTrackIndex = (currentTrackIndex + 1) % OST_TRACKS.length;
+  playCurrentTrack();
+}
+
+/** Toggle play/pause on the current track. Returns true if now playing. */
+export function togglePlayPause(): boolean {
+  if (!bgMusic) return false;
+  if (bgMusic.paused) {
+    bgMusic.play().catch(() => {});
+    return true;
+  } else {
+    bgMusic.pause();
+    return false;
+  }
+}
+
+/** Whether music is currently playing (not paused). */
+export function isMusicPlaying(): boolean {
+  return bgMusic !== null && !bgMusic.paused;
+}
+
+// ---------------------------------------------------------------------------
+// SFX playback
 // ---------------------------------------------------------------------------
 
 /** Play the click sound with +-8% pitch randomization. */
