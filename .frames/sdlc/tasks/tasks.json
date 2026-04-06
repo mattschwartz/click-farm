@@ -1,5 +1,5 @@
 {
-  "next_id": 131,
+  "next_id": 132,
   "tasks": [
     {
       "id": 1,
@@ -5030,6 +5030,132 @@
         "Supersession edits to manual-action-ladder.md called out as a separate task"
       ],
       "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 131,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Rename platforms (instasham→picshift, grindset→skroll) + add new platform podpod",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Rename two existing platforms and add a fourth. instasham becomes picshift, grindset becomes skroll, and podpod is a new platform. This touches the PlatformId union, static data, display metadata, save migration, upgrade IDs, and every Record<PlatformId, ...> across the codebase.\n\nThe rename is a structural find-and-replace plus a save migration to remap persisted keys. The new platform needs full static data (content_affinity, unlock_threshold) and display metadata authored by game-designer — use placeholder values if not provided.",
+      "related_items": [
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "PlatformId union (line 26): rename 'instasham'→'picshift', 'grindset'→'skroll', add 'podpod'. Also UpgradeId: rename platform_headstart_instasham→platform_headstart_picshift, platform_headstart_grindset→platform_headstart_skroll, possibly add platform_headstart_podpod"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "PLATFORM_DEFS (3 entries → 4): rename keys, update id fields, add podpod def with content_affinity for all 11 generators + unlock_threshold. CLOUT_UPGRADE_DEFS: rename platform_headstart keys + platform_id references. unlockThresholds.platforms: rename keys + add podpod entry"
+        },
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "PLATFORM_DISPLAY (line 161): rename entries, add podpod with name/icon/accent/tagline. PLATFORM_ORDER (line 182): rename entries, add podpod"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "ALL_PLATFORM_IDS array (line 38): rename + add. createPlayer UpgradeId list (line 45): rename headstart upgrade IDs"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "New migrateV9toV10: remap platform keys in state.platforms (instasham→picshift, grindset→skroll), seed state.platforms.podpod, remap player.clout_upgrades keys, bump CURRENT_VERSION to 10"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "applyRebrand references platform IDs when resetting — needs renamed keys"
+        },
+        {
+          "ref": "client/src/ui/CloutShopModal.tsx",
+          "purpose": "References platform_headstart_instasham/grindset upgrade IDs — rename"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "May reference platform IDs directly"
+        },
+        {
+          "ref": "client/src/ui/DebugApp.tsx",
+          "purpose": "References instasham/grindset by name"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Context label references platform names"
+        },
+        {
+          "ref": "client/src/game-loop/index.test.ts",
+          "purpose": "~26 occurrences of instasham/grindset in test fixtures"
+        },
+        {
+          "ref": "client/src/integration.test.ts",
+          "purpose": "~15 occurrences"
+        },
+        {
+          "ref": "client/src/platform/index.test.ts",
+          "purpose": "~35 occurrences"
+        },
+        {
+          "ref": "client/src/save/index.test.ts",
+          "purpose": "~7 occurrences + version assertions"
+        },
+        {
+          "ref": "client/src/prestige/index.test.ts",
+          "purpose": "~13 occurrences"
+        },
+        {
+          "ref": "client/src/audience-mood/index.test.ts",
+          "purpose": "~21 occurrences"
+        },
+        {
+          "ref": "client/src/creator-kit/index.test.ts",
+          "purpose": "~17 occurrences"
+        },
+        {
+          "ref": "client/src/offline/index.test.ts",
+          "purpose": "~23 occurrences"
+        },
+        {
+          "ref": "client/src/ui/CloutShopModal.test.ts",
+          "purpose": "~12 occurrences"
+        },
+        {
+          "ref": "client/src/ui/RebrandCeremonyModal.test.ts",
+          "purpose": "~4 occurrences"
+        },
+        {
+          "ref": "client/src/ui/eulogy-templates.test.ts",
+          "purpose": "~4 occurrences"
+        }
+      ],
+      "acceptance_criteria": [
+        "PlatformId union is 'chirper' | 'picshift' | 'skroll' | 'podpod' — no references to 'instasham' or 'grindset' remain in src/",
+        "UpgradeId union renames platform_headstart_instasham→platform_headstart_picshift, platform_headstart_grindset→platform_headstart_skroll",
+        "PLATFORM_DEFS has 4 entries with correct ids, content_affinity maps (11 generators each), and unlock_thresholds",
+        "PLATFORM_DISPLAY has 4 entries with name/icon/accent/tagline for picshift, skroll, podpod",
+        "ALL_PLATFORM_IDS and PLATFORM_ORDER updated to 4 entries",
+        "CLOUT_UPGRADE_DEFS keys and platform_id fields renamed",
+        "migrateV9toV10 remaps instasham→picshift and grindset→skroll in state.platforms, remaps clout_upgrade keys, seeds state.platforms.podpod, bumps CURRENT_VERSION to 10",
+        "Every Record<PlatformId, ...> across the codebase gains a podpod entry (TypeScript compiler enforces this)",
+        "All ~224 occurrences of 'instasham'/'grindset' in src/ are renamed",
+        "All existing tests pass with updated platform names",
+        "npm run build succeeds; no TypeScript errors",
+        "Game-designer to provide: podpod display name, icon, accent color, tagline, content_affinity values, unlock_threshold, and whether it gets a clout headstart upgrade"
+      ],
+      "open_questions": [
+        {
+          "question": "What are podpod's balance values? content_affinity for each of the 11 generators, unlock_threshold, and any clout headstart upgrade?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "What is podpod's display metadata? Name, icon/emoji, accent color, tagline?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Should Chirper also be renamed to Skroll (as mentioned in the manual-action-ladder UX spec §11.1)?",
+          "owner": "game-designer"
+        }
+      ],
       "blocked_on": []
     }
   ]
