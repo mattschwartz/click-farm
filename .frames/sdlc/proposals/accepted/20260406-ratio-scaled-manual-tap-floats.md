@@ -3,8 +3,8 @@ name: Ratio-Scaled Manual Tap Floating Numbers
 description: Scale floating number size and brightness based on tap significance — the ratio of engagement earned to current engagement balance.
 created: 2026-04-06
 author: ux-designer
-status: draft
-reviewers: [ux-designer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Ratio-Scaled Manual Tap Floating Numbers
