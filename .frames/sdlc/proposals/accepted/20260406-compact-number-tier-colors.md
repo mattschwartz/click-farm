@@ -45,7 +45,7 @@ The ramp moves from **neutral grey through cool blue, into violet-purple, ending
 
 4. **Hot magenta peak.** Sp through Dc push into magenta and crimson-pink. The warmth is intense without being red (which is reserved for danger). Magenta reads as "extreme, maximal, beyond" — which is exactly what Decillions are.
 
-5. **Increasing contrast.** The ramp naturally darkens from 4.6:1 (K) to 7.6:1 (Dc). Higher tiers have more visual weight, which reinforces the magnitude signal through a second channel (contrast weight, not just hue).
+5. **Increasing contrast.** The ramp naturally darkens from 4.8:1 (K) to 6.7:1 (Dc). Higher tiers have more visual weight, which reinforces the magnitude signal through a second channel (contrast weight, not just hue).
 
 ### Collision avoidance
 

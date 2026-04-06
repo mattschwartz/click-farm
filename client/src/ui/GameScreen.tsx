@@ -125,6 +125,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     settings,
     setReduceMotion,
     setSound,
+    toggleSound,
     setMusicVolume,
     setSfxVolume,
   } = useSettings();
@@ -343,7 +344,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
           viralGold={viralPhase !== null}
           summaryBadge={summaryBadge}
           rebrandCount={state.player.rebrand_count}
-          onOpenSettings={() => setShowSettingsModal(true)}
         />
 
         {saveError && (
@@ -505,7 +505,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
         <button
           type="button"
           className="settings-gear-btn"
-          onClick={() => setSound(!settings.sound)}
+          onClick={toggleSound}
           aria-label={settings.sound ? 'Mute' : 'Unmute'}
           title={settings.sound ? 'Mute' : 'Unmute'}
         >

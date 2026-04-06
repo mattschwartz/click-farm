@@ -23,6 +23,7 @@ export interface UseSettingsResult {
   setReduceTimePressure: (v: boolean) => void;
   setReduceMotion: (v: boolean) => void;
   setSound: (v: boolean) => void;
+  toggleSound: () => void;
   setMusicVolume: (v: number) => void;
   setSfxVolume: (v: number) => void;
 }
@@ -65,6 +66,10 @@ export function useSettings(): UseSettingsResult {
     (v: boolean) => setSettings((s) => ({ ...s, sound: v })),
     [],
   );
+  const toggleSound = useCallback(
+    () => setSettings((s) => ({ ...s, sound: !s.sound })),
+    [],
+  );
   const setMusicVolume = useCallback(
     (v: number) => setSettings((s) => ({ ...s, musicVolume: v })),
     [],
@@ -79,6 +84,7 @@ export function useSettings(): UseSettingsResult {
     setReduceTimePressure,
     setReduceMotion,
     setSound,
+    toggleSound,
     setMusicVolume,
     setSfxVolume,
   };
