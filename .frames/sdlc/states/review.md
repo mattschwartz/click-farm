@@ -140,9 +140,9 @@ reviewers: []
 ```
 File moved to `.frames/sdlc/proposals/accepted/`.
 
-## Commit
+## Commit - After Acceptance ONLY
 
-After updating the frontmatter, commit the proposal file.
+ONLY after the document has been moved to accepted and the frontmatter been updated, commit the proposal file.
 
 **Constraints:**
 - You MUST wait until the user is ready to commit

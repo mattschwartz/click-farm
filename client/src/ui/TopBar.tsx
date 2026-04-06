@@ -26,8 +26,6 @@ interface Props {
   summaryBadge?: { magnitude: number; fading: boolean } | null;
   /** Rebrand count — drives RUN N badge appearance (UX §5, task #66). */
   rebrandCount?: number;
-  /** Called when the gear icon is tapped. Opens Settings modal (§1). */
-  onOpenSettings?: () => void;
 }
 
 type TransitionPhase = 'idle' | 'exiting' | 'entering';
@@ -58,7 +56,6 @@ export function TopBar({
   viralGold,
   summaryBadge,
   rebrandCount = 0,
-  onOpenSettings,
 }: Props) {
   // Track algorithm state transitions — when current_state_index changes,
   // we slide the old label out and the new one in (UX §4.4, 1.2s total).
@@ -179,17 +176,6 @@ export function TopBar({
         </div>
       </div>
 
-      {onOpenSettings && (
-        <button
-          type="button"
-          className="settings-gear-btn"
-          onClick={onOpenSettings}
-          aria-label="Open Settings"
-          title="Settings"
-        >
-          ⚙
-        </button>
-      )}
     </header>
   );
 }
