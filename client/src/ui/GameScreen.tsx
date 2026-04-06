@@ -487,16 +487,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
         <button
           type="button"
           className="settings-gear-btn"
-          onClick={toggleSound}
-          aria-label={settings.sound ? 'Mute' : 'Unmute'}
-          title={settings.sound ? 'Mute' : 'Unmute'}
-        >
-          {settings.sound ? '♪' : '♪'}
-          {!settings.sound && <span className="mute-cross">╲</span>}
-        </button>
-        <button
-          type="button"
-          className="settings-gear-btn"
           onClick={() => setShowSettingsModal(true)}
           aria-label="Open Settings"
           title="Settings"
