@@ -122,14 +122,7 @@ export function TopBar({
             VIRAL +{fmtCompactInt(summaryBadge.magnitude)}
           </div>
         )}
-        <div className={`engagement-rate${rateFlaring ? ` rate-flare-${rateDeltaDir}` : ''}`}>
-          {fmtRate(engagementRate)}
-          {rateDelta !== null && (
-            <span className={`rate-delta rate-delta-${rateDeltaDir}`}>
-              {rateDelta >= 0 ? '+' : ''}{fmtCompact(rateDelta)}/s
-            </span>
-          )}
-        </div>
+        {/* Rate display hidden — engagement number promoted to larger size */}
       </div>
 
       <div className="followers-slot">
