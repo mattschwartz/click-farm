@@ -5604,7 +5604,7 @@
       "id": 142,
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Design ratio-scaled manual tap floating numbers (size + brightness by significance)",
       "requester": "ux-designer",
@@ -5646,7 +5646,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     }
   ]
 }
