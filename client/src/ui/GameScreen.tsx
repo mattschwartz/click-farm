@@ -25,12 +25,12 @@ import {
 } from '../game-loop/index.ts';
 import { cloutForRebrand } from '../prestige/index.ts';
 import type { ActiveViralEvent, GeneratorId } from '../types.ts';
+import type { OfflineResult } from '../offline/index.ts';
 import { AlgorithmBackground } from './AlgorithmBackground.tsx';
 import { TopBar } from './TopBar.tsx';
 import { ActionsColumn } from './ActionsColumn.tsx';
 import { GeneratorList } from './GeneratorList.tsx';
 import { PlatformPanel } from './PlatformPanel.tsx';
-import { OfflineGainsModal } from './OfflineGainsModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
 import { CreatorKitPanel } from './CreatorKitPanel.tsx';
@@ -89,7 +89,12 @@ export function shouldShowAmbientCopy(rebrandCount: number): boolean {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function GameScreen() {
+interface GameScreenProps {
+  /** Called once on mount with the offline result (or null if first session). */
+  onOfflineResult?: (result: OfflineResult | null) => void;
+}
+
+export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
   const {
     state,
     click,
@@ -98,7 +103,6 @@ export function GameScreen() {
     unlock,
     buyAutoclicker,
     offlineResult,
-    clearOfflineResult,
     rebrand,
     pauseLoop,
     resumeLoop,
@@ -108,6 +112,12 @@ export function GameScreen() {
     clearSaveError,
     resetGame,
   } = useGame();
+
+  // Notify parent of offline result on mount (for the start gate to show).
+  useEffect(() => {
+    onOfflineResult?.(offlineResult);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // fire once on mount
 
   // Settings — persisted separately from GameState, propagates reduceMotion
   // to <html data-reduce-motion> so CSS can mirror the OS media query.
@@ -182,15 +192,8 @@ export function GameScreen() {
     : null;
 
   // ---------------------------------------------------------------------------
-  // Modal visibility — only show if meaningful time elapsed (> 60s per §11).
-  const [showOffline, setShowOffline] = useState(
-    () => offlineResult !== null && offlineResult.durationMs > 60_000,
-  );
-  useEffect(() => {
-    if (offlineResult && offlineResult.durationMs > 60_000) {
-      setShowOffline(true);
-    }
-  }, [offlineResult]);
+  // Offline modal moved to the App-level start gate (welcome back variant).
+  // The standalone OfflineGainsModal is no longer rendered here.
 
   // Upgrade drawer open state — used to dim the platform panel per spec §1.
   const [upgradeDrawerOpen, setUpgradeDrawerOpen] = useState(false);
@@ -417,15 +420,7 @@ export function GameScreen() {
         </div>
       )}
 
-      {showOffline && offlineResult && (
-        <OfflineGainsModal
-          result={offlineResult}
-          onDismiss={() => {
-            setShowOffline(false);
-            clearOfflineResult();
-          }}
-        />
-      )}
+      {/* Offline gains modal moved to App-level start gate. */}
 
       {/* Prestige cluster — bottom-right, two buttons, visually grouped.
           Both buttons render at 3:1 contrast when locked (spec §2.1). */}

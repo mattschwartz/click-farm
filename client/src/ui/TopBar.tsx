@@ -58,7 +58,7 @@ export function TopBar({
   viralGold,
   summaryBadge,
   rebrandCount = 0,
-  onOpenSettings,
+  onOpenSettings: _onOpenSettings,
 }: Props) {
   // Track algorithm state transitions — when current_state_index changes,
   // we slide the old label out and the new one in (UX §4.4, 1.2s total).
