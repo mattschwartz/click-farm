@@ -3,8 +3,8 @@ name: Purchase Button Location — Generators Column
 description: All three purchase tracks (LVL UP, BUY, Autoclicker) live in the Generators center column, not on the action button slab.
 created: 2026-04-06
 author: ux-designer
-status: draft
-reviewers: [engineer]
+status: accepted
+reviewers: []
 ---
 
 # Proposal: Purchase Button Location — Generators Column
@@ -67,3 +67,19 @@ If these signals are subtle, the distance between purchase and effect will feel 
 ## Open Questions
 
 None. Game-designer and ux-designer aligned on Option A during pre-proposal discussion.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-06
+**Decision**: Aligned
+
+**Comments**
+
+Option A is the right call from an engineering perspective for three reasons:
+
+1. **Component separation stays clean.** The action button component remains a pure tap target with display-only state (cooldown ring, yield, badge, pulse). Purchase logic and controls stay consolidated in the Generators column, which already owns upgrade/automate controls. Options B or C would force the action button to mux between tap handling and purchase affordance state — more complexity, more edge cases.
+
+2. **The load-bearing assumption is achievable with existing wiring.** The feedback signals (cooldown ring speed change, yield display update, badge appear/increment) are all reactive derivations from model state changes that already flow through the existing data path. No new wiring pattern is needed. Whether those signals are visually punchy enough is a UX spec concern (task #136), not a structural one.
+
+3. **Scales without layout pressure.** As verb count grows from 1 to 5, the action slab stays fixed at its current complexity. The Generators column absorbs the growth. This avoids a progressively more cluttered slab component that would need responsive layout logic at low counts and cramped overflow handling at high counts.
