@@ -134,9 +134,6 @@ function PlatformCard({
       </div>
       <div className="platform-followers-row">
         <span className="platform-followers">{fmtCompactInt(followers)}</span>
-        <span className={`platform-rate${ratePerSec > 0 ? ' gaining' : ''}`}>
-          {ratePerSec > 0 ? `▲ +${fmtCompact(ratePerSec)}/s` : '— stalled'}
-        </span>
       </div>
       <div className="platform-sub-label">{display.audienceLabel ?? 'followers'}</div>
 
