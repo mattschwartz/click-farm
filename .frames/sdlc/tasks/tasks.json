@@ -5348,8 +5348,7 @@
       "open_questions": [],
       "blocked_on": [
         133,
-        136,
-        137
+        136
       ]
     },
     {
@@ -5393,7 +5392,7 @@
       "alias": "U2",
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Decide purchase button location for LVL UP / BUY / Autoclicker (Gap 4)",
       "requester": "architect",
@@ -5424,7 +5423,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 138,
