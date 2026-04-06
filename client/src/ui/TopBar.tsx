@@ -14,6 +14,7 @@ import type { AlgorithmState } from '../types.ts';
 import { ALGORITHM_MOOD } from './display.ts';
 import { fmtCompact, fmtCompactInt, fmtRate } from './format.ts';
 import { useInterpolatedValue } from './useInterpolatedValue.ts';
+import faviconSrc from '../assets/favicon.png';
 
 interface Props {
   algorithm: AlgorithmState;
@@ -137,7 +138,7 @@ export function TopBar({
 
   return (
     <header className="top-bar">
-      <img src="/favicon.png" alt="Click Farm" className="top-bar-icon" />
+      <img src={faviconSrc} alt="Click Farm" className="top-bar-icon" />
       <div className="algo-label">
         <div className="name-slot">
           <span className={`name ${phase === 'exiting' ? 'exiting' : phase === 'entering' ? 'entering' : ''}`}>
