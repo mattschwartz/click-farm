@@ -5348,9 +5348,7 @@
         "npm run build succeeds; full test suite passes"
       ],
       "open_questions": [],
-      "blocked_on": [
-        141
-      ]
+      "blocked_on": []
     },
     {
       "id": 136,
@@ -5554,7 +5552,7 @@
       "alias": "U5",
       "role": "ux-designer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Write Generators column purchase controls UX spec",
       "requester": "ux-designer",
@@ -5598,7 +5596,8 @@
         "Engineer handover section: component props, state derivations from model, event handlers"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 142,
