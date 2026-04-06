@@ -9,7 +9,7 @@
 // A start gate modal is shown on first load. The "Play" button is the
 // user gesture that unlocks audio (Chrome autoplay policy).
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { GameScreen } from './ui/GameScreen.tsx';
 import { DebugApp } from './ui/DebugApp.tsx';
 import coverSrc from './assets/cover.png';
@@ -21,13 +21,23 @@ function isDebugRequested(): boolean {
 }
 
 function StartGate({ onStart }: { onStart: () => void }) {
+  const [popping, setPopping] = useState(false);
+
+  const handleClick = useCallback(() => {
+    if (popping) return;
+    setPopping(true);
+    setTimeout(onStart, 250);
+  }, [popping, onStart]);
+
   return (
     <div
-      onClick={onStart}
+      onClick={handleClick}
       style={{
         position: 'fixed', inset: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: 'rgba(0, 0, 0, 0.7)',
+        transition: 'opacity 250ms ease-in',
+        opacity: popping ? 0 : 1,
         zIndex: 9999,
         cursor: 'pointer',
       }}
@@ -44,6 +54,7 @@ function StartGate({ onStart }: { onStart: () => void }) {
         alignItems: 'center',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
         pointerEvents: 'none',
+        animation: popping ? 'pop-shrink 250ms ease-in forwards' : undefined,
       }}>
         <img
           src={coverSrc}
@@ -55,6 +66,15 @@ function StartGate({ onStart }: { onStart: () => void }) {
           }}
         />
       </div>
+      {popping && (
+        <style>{`
+          @keyframes pop-shrink {
+            0%   { transform: scale(1); }
+            15%  { transform: scale(1.08); }
+            100% { transform: scale(0); }
+          }
+        `}</style>
+      )}
     </div>
   );
 }
