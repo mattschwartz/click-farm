@@ -178,39 +178,38 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
   const fillHeight = atFloor ? 100 : progress * 100;
 
   return (
-    <button
-      ref={btnRef}
-      className={`live-verb-btn${isSpotlight ? ' live-verb-spotlight' : ''}${isReady || atFloor ? ' live-verb-ready' : ' live-verb-cooldown'}`}
-      style={{
-        '--verb-color': color,
-        '--verb-color-dark': darkenHex(color),
-        '--verb-color-rgb': hexToRgb(color),
-        '--cd-fill': `${fillHeight}%`,
-      } as React.CSSProperties}
-      onClick={handleClick}
-      aria-label={`${display.name}, ${fmtCompact(perTap)} engagement per tap, cooldown ${Math.round(cdMs)}ms`}
-    >
-
-      {/* Background image — direct child so it positions relative to the button */}
-      {VERB_IMAGE[verbId] && (
-        <img className="verb-icon-img" src={VERB_IMAGE[verbId]} alt="" aria-hidden="true" />
+    <div className="verb-btn-wrap">
+      {genState.count > 0 && (
+        <span className="verb-badge">x{genState.count}</span>
       )}
+      <button
+        ref={btnRef}
+        className={`live-verb-btn${isSpotlight ? ' live-verb-spotlight' : ''}${isReady || atFloor ? ' live-verb-ready' : ' live-verb-cooldown'}`}
+        style={{
+          '--verb-color': color,
+          '--verb-color-dark': darkenHex(color),
+          '--verb-color-rgb': hexToRgb(color),
+          '--cd-fill': `${fillHeight}%`,
+        } as React.CSSProperties}
+        onClick={handleClick}
+        aria-label={`${display.name}, ${fmtCompact(perTap)} engagement per tap, cooldown ${Math.round(cdMs)}ms`}
+      >
 
-      <span className="verb-header">
-        {!VERB_IMAGE[verbId] && <span className="verb-icon">{display.icon}</span>}
-        <span className="verb-name">{display.name.toUpperCase()}</span>
-        {genState.count > 0 && (
-          <span className="verb-badge">
-            x{genState.count}
-          </span>
+        {/* Background image — direct child so it positions relative to the button */}
+        {VERB_IMAGE[verbId] && (
+          <img className="verb-icon-img" src={VERB_IMAGE[verbId]} alt="" aria-hidden="true" />
         )}
-      </span>
+
+        <span className="verb-header">
+          {!VERB_IMAGE[verbId] && <span className="verb-icon">{display.icon}</span>}
+          <span className="verb-name">{display.name.toUpperCase()}</span>
+        </span>
 
       <span className="verb-data">
         <span className="verb-yield">{fmtCompact(perTap)} eng/tap</span>
       </span>
 
-      {(isReady || atFloor) && (
+      {(isReady || atFloor) && state.player.engagement === 0 && (
         <span className="verb-pulse">READY</span>
       )}
 
@@ -225,6 +224,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
         </span>
       ))}
     </button>
+    </div>
   );
 }
 
