@@ -3313,8 +3313,14 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   z-index: 100;
 }
 
-.alpha-label {
+.alpha-row {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.alpha-label {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 54px;
   font-weight: 900;
@@ -3328,7 +3334,6 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 }
 
 .alpha-version {
-  width: 100%;
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 18px;
   font-weight: 900;
