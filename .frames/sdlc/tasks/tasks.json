@@ -1,5 +1,5 @@
 {
-  "next_id": 149,
+  "next_id": 150,
   "tasks": [
     {
       "id": 1,
@@ -5980,6 +5980,41 @@
         "Tasks are filed covering CSS tokens, formatter refactor, wrapper component, call-site rollout, and tests",
         "Each task is assigned to the correct role with clear done-when criteria",
         "Dependencies between tasks are captured in blocked_on fields"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 149,
+      "role": "ux-designer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Add pixel-art icons for sound toggle and settings button",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Generate and integrate pixel-art icons for two UI controls: (1) a sound mute/unmute toggle (two states — speaker with sound waves for ON, speaker with X for OFF), and (2) a settings gear icon. All icons should match the existing 16-bit arcade pixel art style used throughout the game (verb button art, platform card art). Icons need to be readable at 32x32px. Image generation prompts have been drafted in a prior session — check conversation history or re-derive from the existing asset style (chirper.png, picshift.png, etc.).",
+      "related_items": [
+        {
+          "ref": "client/src/assets/",
+          "purpose": "Existing pixel-art assets — style reference for consistency"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Top bar and settings button styling"
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "Where the settings gear currently renders"
+        }
+      ],
+      "acceptance_criteria": [
+        "Sound ON icon (speaker + waves) generated as pixel art PNG, added to client/src/assets/",
+        "Sound OFF icon (speaker + X) generated as pixel art PNG, added to client/src/assets/",
+        "Settings gear icon generated as pixel art PNG, added to client/src/assets/",
+        "All three icons match the existing 16-bit arcade style (chirper.png, picshift.png, etc.)",
+        "Icons are readable at 32x32px display size",
+        "Icons wired into the relevant UI components (sound toggle, settings button)"
       ],
       "open_questions": [],
       "blocked_on": []
