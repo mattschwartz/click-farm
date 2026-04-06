@@ -105,11 +105,11 @@ function cooldownMs(verbId: GeneratorId, state: GameState, staticData: StaticDat
 interface FloatItem {
   id: number;
   value: number;
-  offsetX: number;
+  x: number; // % from left
+  y: number; // % from top
 }
 
 const FLOAT_TTL_MS = 500;
-const STACK_OFFSET_MAX_PX = 30;
 
 // ---------------------------------------------------------------------------
 // LiveVerbButton
@@ -145,17 +145,26 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
   const [floats, setFloats] = useState<FloatItem[]>([]);
   const nextId = useRef(0);
 
-  const handleClick = useCallback(() => {
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
     // Only show float feedback if the cooldown gate will accept the tap.
-    // Mirror the engine's gate: cooldownMs = 1000 / (max(1, count) × rate).
     const cdNow = Date.now();
     const lastTapNow = state.player.last_manual_click_at[verbId] ?? 0;
-    if (cdNow - lastTapNow < cdMs) return; // cooldown — no feedback
+    if (cdNow - lastTapNow < cdMs) return;
 
     onClick(verbId);
     const id = nextId.current++;
-    const offsetX = (Math.random() - 0.5) * STACK_OFFSET_MAX_PX;
-    setFloats((prev) => [...prev, { id, value: perTap, offsetX }]);
+
+    // Position the float at the mouse cursor relative to the button.
+    const rect = btnRef.current?.getBoundingClientRect();
+    let x = 50, y = 40; // fallback center
+    if (rect) {
+      x = ((e.clientX - rect.left) / rect.width) * 100;
+      y = ((e.clientY - rect.top) / rect.height) * 100;
+    }
+
+    setFloats((prev) => [...prev, { id, value: perTap, x, y }]);
     window.setTimeout(() => {
       setFloats((prev) => prev.filter((f) => f.id !== id));
     }, FLOAT_TTL_MS);
@@ -165,6 +174,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
 
   return (
     <button
+      ref={btnRef}
       className={`live-verb-btn${isSpotlight ? ' live-verb-spotlight' : ''}${isReady || atFloor ? ' live-verb-ready' : ' live-verb-cooldown'}`}
       style={{
         '--verb-color': color,
@@ -205,7 +215,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
         <span
           key={f.id}
           className="verb-float"
-          style={{ left: `calc(50% + ${f.offsetX}px)` }}
+          style={{ left: `${f.x}%`, top: `${f.y}%` }}
         >
           +{fmtCompact(f.value)}
         </span>
