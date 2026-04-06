@@ -4856,7 +4856,7 @@
       "id": 127,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Buy button for unowned manual-clickable generators throws instead of unlocking",
       "requester": "engineer",
@@ -4892,7 +4892,8 @@
         "Existing onBuy path for owned generators (additional purchases) is unchanged"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 128,

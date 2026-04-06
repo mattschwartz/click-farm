@@ -4,7 +4,7 @@ description: Redefine the Actions-column buttons so LVL UP controls tap speed, B
 created: 2026-04-06
 author: game-designer
 status: draft
-reviewers: [game-designer]
+reviewers: []
 ---
 
 # Proposal: Level-Driven Manual Cooldown
@@ -190,12 +190,88 @@ earned = def.base_event_yield * (1 + genState.count) * algoMod * clout * kit
 
 All other sections of manual-action-ladder (verb roster, unlock thresholds, platform affinities, algorithm modifiers) remain in force.
 
+### UX Spec Work Required Before UI Build
+
+This section consolidates the downstream UX spec updates identified during ux-designer review. The architect should factor these into task decomposition. All items are consequences of the mechanical changes above — they do not alter the game-design decisions.
+
+#### UX-1: Action Button Badge Semantics (blocks UI build)
+
+The `×N` badge on live-verb buttons (`ux/manual-action-ladder.md` §4.2) currently shows automator count (old `count`). Under this proposal, `count` means BUY count (yield multiplier) and `autoclicker_count` is a separate field. The badge must be re-specified.
+
+**Recommended resolution:** badge shows `autoclicker_count` (army size). The yield multiplier is already communicated through the yield display (`"5.0 eng/tap"` reflects the multiplied value). The badge then correlates with the visible autoclicker firing — "that's 3 workers firing" matches the `×3` badge.
+
+**Files to update:** `ux/manual-action-ladder.md` §4.2 (badge definition), §4.4 (automator-tick badge pulse — now pulses on autoclicker fires, not old count-driven fires), §10 (engineer handover — `LiveVerbButton` props gain `autoclicker_count`).
+
+#### UX-2: Autoclicker Floating-Number Feedback (blocks UI build)
+
+The proposal specifies "every autoclicker fire emits a floating number — identical visual feedback to manual taps." The existing floating-number spec (`ux/core-game-screen.md` §8) was designed for human-frequency taps (~2-10/sec). At scale (20 autoclickers on chirps = 20 simultaneous numbers every 2 seconds), the screen becomes a wall of numbers.
+
+**Spec needed:**
+- **Stagger timing:** how to spread N simultaneous emissions across the burst interval for visual smoothness
+- **Density cap:** at what N to switch from individual floating numbers to a batch indicator (e.g., `+240 ×5`)
+- **Visual differentiation:** whether autoclicker-emitted numbers are visually distinct from manual-tap numbers (smaller? lower opacity?) to preserve the "I smacked it" feeling for manual taps
+- **Reduced motion:** `ux/manual-action-ladder.md` §9.5 doesn't cover autoclicker emission motion
+
+**Deliverable:** new section in `ux/manual-action-ladder.md` or a dedicated mini-spec for autoclicker visual feedback.
+
+#### UX-3: Physicality Counter-Bump Scoping (non-blocking — default is correct)
+
+The action-button-physicality spec (`proposals/accepted/20260406-action-button-physicality.md` §5) defines a counter-bump (scale 1.15) on the press frame. This was designed for player-initiated taps. If autoclicker fires also trigger counter-bumps, the counter becomes a strobe at high autoclicker counts.
+
+**Resolution:** counter-bump is manual-tap-only. Autoclicker fires use the existing autoclicker badge pulse (§4.4: scale 1.0→1.05→1.0 over 200ms) plus floating numbers as their feedback channel. The physicality spec §5 should add one line: "Counter-bump fires on manual `pointerdown` only — autoclicker fires do not trigger it."
+
+**File to update:** `proposals/accepted/20260406-action-button-physicality.md` §5.
+
+#### UX-4: Purchase Button Placement (blocks UI build — game-designer + ux-designer co-decision)
+
+This proposal introduces three purchase tracks per verb: LVL UP (speed), BUY (power), Autoclicker (army). The old model placed Upgrade and Automate in the Upgrades middle column. This proposal doesn't specify where the three new purchase buttons live.
+
+**Options:**
+- (a) All three in the Upgrades/generators column (current pattern — action button stays a pure tap target)
+- (b) On the action button itself (risks cluttering the arcade-slab pixel art)
+- (c) A hybrid — LVL UP and BUY on the generators-column row for that verb, Autoclicker as a separate purchase
+
+The action buttons are now full-bleed pixel-art arcade slabs. Adding sub-buttons to them would fight the physicality feel. The generators column (glass clipboard) already has BUY and LVL UP buttons per row — those may be the natural home for all three purchase tracks.
+
+**Owner:** ux-designer spec, with game-designer input on whether co-location with the tap target matters for feel.
+
+#### UX-5: Cooldown Ring Threshold Cleanup (non-blocking — dead code, not wrong code)
+
+The 100ms threshold rule (`ux/manual-action-ladder.md` §4.5 — "when cooldownMs ≤ 100, stop animating the ring") is now unreachable. Under this proposal, the fastest manual cooldown is chirps L10 = 200ms. No verb ever crosses the 100ms threshold.
+
+**Resolution:** simplify §4.5 to note the threshold is unreachable under level-driven cooldowns. The 50ms hard floor from this proposal replaces the old 10ms floor as the engine safety clamp. The section becomes documentation rather than active UX logic.
+
+**File to update:** `ux/manual-action-ladder.md` §4.5.
+
+#### UX-6: Yield Display Formula Update (blocks UI build)
+
+The yield display (`ux/manual-action-ladder.md` §4.2) currently shows `base_event_yield × level_multiplier(level)` as "eng/tap". Under this proposal, per-tap yield is `base_event_yield × (1 + count)`. The display formula must change.
+
+Additionally, the yield display is now the primary way the player sees the effect of BUY purchases. A BUY that changes `1.0 eng/tap` → `2.0 eng/tap` should trigger the rate-flare from `ux/purchase-feedback-and-rate-visibility.md` §5 so the player feels the power increase. Under the old model, rate-flare fired on Upgrade (which drove yield). Under this model, rate-flare should fire on BUY (which now drives yield).
+
+**Files to update:** `ux/manual-action-ladder.md` §4.2 (yield display formula), integration note with `ux/purchase-feedback-and-rate-visibility.md` §5 (rate-flare trigger changes from Upgrade to BUY).
+
+#### Summary
+
+| ID | Gap | Blocks UI build? | Owner |
+|---|---|---|---|
+| UX-1 | Badge semantics (`×N` → autoclicker count) | Yes | ux-designer |
+| UX-2 | Autoclicker floating-number spec | Yes | ux-designer |
+| UX-3 | Counter-bump scoped to manual-tap-only | No | ux-designer |
+| UX-4 | Purchase button placement | Yes | ux-designer + game-designer |
+| UX-5 | Cooldown ring threshold cleanup | No | ux-designer |
+| UX-6 | Yield display formula + rate-flare trigger | Yes | ux-designer |
+
 ## References
 
 1. `.frames/sdlc/proposals/accepted/manual-action-ladder.md` — the accepted proposal this partially supersedes (§4, §12, §14e, §14f)
 2. `.frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md` — generator rate table and cost structure
 3. `client/src/game-loop/index.ts` — `postClick` implementation with current count-driven cooldown gate
 4. `client/src/static-data/index.ts` — generator definitions with `base_event_rate`, `max_level` fields
+5. `ux/manual-action-ladder.md` — Actions-column UX spec (§4.2 badge, §4.4 states, §4.5 threshold, §10 handover — all need updates per UX-1 through UX-6)
+6. `proposals/accepted/20260406-action-button-physicality.md` — arcade slab physicality spec (§5 counter-bump needs scoping per UX-3)
+7. `ux/purchase-feedback-and-rate-visibility.md` — rate-flare trigger (§5 — trigger changes from Upgrade to BUY per UX-6)
+8. `ux/core-game-screen.md` §8 — floating-number spec (designed for human-frequency taps, needs autoclicker extension per UX-2)
 
 ## Open Questions
 
@@ -407,3 +483,110 @@ That reasoning was correct when level affected passive rate (no units = no outpu
 ### OQ5 blocks implementation planning
 
 Agreeing with the architect's flag: OQ5 (`base_autoclicker_cost` per verb) must be resolved before build tasks are filed. I cannot write `buyAutoclicker` without the cost structure. OQ4 (UX spec) doesn't block engine work but blocks UI work.
+
+---
+# Review: ux-designer
+
+**Date**: 2026-04-06
+**Decision**: Aligned
+
+**Comments**
+
+The level→speed / count→power swap is emotionally correct. "LVL UP = I'm faster" and "BUY = I hit harder" match universal game literacy. The three-axis model (speed / power / army) gives the player three distinct feelings from three distinct buttons. The architect and engineer have resolved the structural and implementation concerns cleanly. I'm aligned on the game design.
+
+What follows is an honest accounting of the UX surface this proposal cracks open. None of these are blocking — the design is right and should be accepted. But they are real gaps that need specs before the engineer can build the UI layer.
+
+### Gap 1: The Action Button Now Has Three Purchase Targets — Layout Implications
+
+The manual-action-ladder UX spec (`ux/manual-action-ladder.md` §4) defines the live-verb button as an 80px element with: icon, verb name, automate badge (`×N`), yield display, cooldown ring, and pulse indicator. That was designed for a two-purchase model (Upgrade + Automate, purchased in the Upgrades column).
+
+Under this proposal, the action button's surface needs to communicate THREE investment axes:
+- **Cooldown / speed** (driven by level) — currently shown via the cooldown ring
+- **Power / yield** (driven by count) — currently shown via the yield display
+- **Autoclicker count** — NEW, needs a visible badge or indicator on the button
+
+The `×N` badge in the current spec (§4.2) showed automator count (old `count`). Under this proposal, `count` means BUY count (yield multiplier), and `autoclicker_count` is a separate field. The badge's semantics need to be re-specified. Options:
+- (a) Badge shows `autoclicker_count` (the army size — "how many workers do I have?")
+- (b) Badge shows `count` (the power multiplier — "how hard do I hit?")
+- (c) Two badges — one for each
+
+My instinct: badge shows `autoclicker_count` because that's the visually active thing — when autoclickers fire, the badge count tells you "that's 3 workers firing." The yield multiplier (`1 + count`) is communicated through the yield display (`"5.0 eng/tap"` already reflects the multiplied value). But this is a UX spec call I need to make, not a blocking concern for this proposal.
+
+**Spec work needed:** Revise `ux/manual-action-ladder.md` §4.2 (badge semantics), §4.4 (interaction states — automator firing no longer uses `×N` to show old count), and §10 (engineer handover — `LiveVerbButton` props change to include `autoclicker_count` alongside `count`).
+
+### Gap 2: Floating Numbers From Autoclicker Fires — No UX Spec Exists
+
+The proposal says: "Every time an autoclicker fires, the verb's action button emits a floating number showing the engagement generated — identical visual feedback to manual taps."
+
+The existing floating-number spec lives in `ux/core-game-screen.md` §8 (click feedback): a `+12` floats from the button center, drifts up toward the engagement counter, fades over 500ms. That was designed for a single manual tap at human frequency (~2-10/sec max).
+
+With autoclickers, the firing rate is different:
+- **Burst mode:** all N autoclickers fire simultaneously. At 5 autoclickers on chirps (base cooldown 2,000ms), you get 5 floating numbers every 2 seconds. That's fine.
+- **At scale:** 20 autoclickers on chirps = 20 floating numbers every 2 seconds. That's a wall of numbers.
+
+The proposal correctly notes "UX layer may visually stagger the floating-number emissions for a smoother feel." But there's no spec for:
+- **Stagger timing** (how spread across the interval?)
+- **Density cap** (at what N do you stop showing individual numbers and switch to a batch indicator like `+240 ×5`?)
+- **Visual differentiation** (should autoclicker-emitted numbers look different from manual-tap numbers? Slightly smaller? Different opacity? The proposal says "identical" but at high density that may be wrong)
+- **Reduced motion** — the manual-action-ladder spec (§9.5) doesn't cover autoclicker emission motion because autoclickers didn't exist when it was written
+
+**Spec work needed:** New section in `ux/manual-action-ladder.md` or a dedicated mini-spec for autoclicker visual feedback: floating-number stagger, density cap, visual differentiation, reduced-motion fallback. OQ4 from this proposal.
+
+### Gap 3: The Pixel-Art Arcade Buttons Change Meaning
+
+We just shipped the action-button-physicality spec (`proposals/accepted/20260406-action-button-physicality.md`). The arcade slabs were designed with a specific counter-bump on press: "the engagement counter for that verb does a scale(1.15) pulse at the moment the button hits bottom."
+
+Under this proposal, autoclicker fires also generate engagement. The counter-bump was designed for player-initiated taps (one bump per deliberate press). If autoclicker fires ALSO trigger counter-bumps, the counter becomes a seizure machine at high autoclicker counts.
+
+**Resolution direction:** counter-bump is player-tap-only. Autoclicker fires get their own distinct signal — the floating numbers, plus possibly the autoclicker badge pulse from the existing spec (§4.4, automator-tick badge pulse: scale 1.0→1.05→1.0 over 200ms). This preserves the "I smacked it" feeling for manual taps while autoclicker output is visible through the floating-number stream.
+
+**Spec work needed:** Amend the physicality spec §5 to clarify counter-bump is manual-tap-only. Add autoclicker-fire visual feedback as a separate signal.
+
+### Gap 4: Where Do the Three Purchase Buttons Live?
+
+The old model: Upgrade and Automate purchased in the Upgrades middle column. The action button itself was just a tap target.
+
+This proposal introduces three purchase tracks: LVL UP (speed), BUY (power), Autoclicker. Where do these buttons live? Options:
+
+- (a) All three in the Upgrades column (current pattern — action button is tap-only)
+- (b) On the action button itself (the screenshot shows BUY and LVL UP next to generators — but those are in the generators column, not the actions column)
+- (c) A hybrid — some on the button, some in Upgrades
+
+The proposal doesn't specify this, and it's a significant layout question. The action buttons are 80px arcade slabs with pixel art. If we add three sub-buttons to each slab, the arcade feel gets cluttered. If they stay in the Upgrades column, the "three feelings" aren't co-located with the tap target.
+
+**This is a game-designer + ux-designer co-decision.** Flagging for follow-up — not blocking acceptance of the mechanical design.
+
+### Gap 5: Cooldown Ring Semantics Change
+
+The cooldown ring (3px left-edge fill, §4.2/§4.4) currently represents `cooldown_manual = 1 / (max(1, count) × base_event_rate)`. Under this proposal, cooldown is `max(50, 1000 / (level × base_event_rate))`.
+
+The visual spec doesn't change — a ring is a ring — but two things shift:
+- **The ring drains MUCH slower at start.** Chirps L1 cooldown is now 2,000ms (was 400ms). A 2-second drain on a 3px stripe is legible and feels weighty — actually better for the arcade-button feel. This is a win.
+- **The 100ms threshold rule (§4.5) needs re-evaluation.** The old model could reach sub-100ms cooldowns via high count. Under this proposal, the fastest manual cooldown is L10: chirps=200ms, selfies=500ms, etc. No verb ever reaches the 100ms threshold. The "ring stops animating" rule from §4.5 becomes dead code for manual cooldowns. However, if the ring is ever used to visualize autoclicker cadence (which the current spec says it should NOT — §4.4 note on automator ticks), then the autoclicker's fixed base cooldown is the only cadence displayed, and it never changes. Clean.
+
+**Spec work needed:** Update §4.5 to note that the 100ms threshold is unreachable under the new cooldown formula. The section can be simplified or removed. The 50ms hard floor from this proposal replaces the old 10ms floor as the safety clamp.
+
+### Gap 6: Yield Display Formula Changes
+
+The yield display (§4.2) currently shows `base_event_yield × level_multiplier(level)` as "eng/tap". Under this proposal, per-tap yield is `base_event_yield × (1 + count)`. The display formula needs updating in the spec.
+
+Additionally, the yield display is now the primary way the player sees the effect of BUY purchases. It should probably be more prominent — a BUY that changes yield from `1.0 eng/tap` to `2.0 eng/tap` should trigger the rate-flare from `ux/purchase-feedback-and-rate-visibility.md` §5 so the player feels the power increase.
+
+**Spec work needed:** Update yield display formula in §4.2. Confirm rate-flare fires on BUY (it currently fires on Upgrade, which drove yield under the old model — semantic swap).
+
+### Summary of UX Spec Work Created by This Proposal
+
+| Gap | What needs updating | Blocking build? |
+|---|---|---|
+| Action button badge semantics | `ux/manual-action-ladder.md` §4.2, §4.4, §10 | Yes — engineer needs to know what the badge shows |
+| Autoclicker floating-number spec | New section or mini-spec | Yes — engineer needs density caps, stagger rules |
+| Physicality counter-bump scope | `proposals/accepted/20260406-action-button-physicality.md` §5 | No — default is "manual only" which is correct |
+| Purchase button location | UX + game-designer co-decision | Yes — layout question |
+| Cooldown ring threshold cleanup | `ux/manual-action-ladder.md` §4.5 | No — dead code, not wrong code |
+| Yield display formula | `ux/manual-action-ladder.md` §4.2 | Yes — display shows wrong formula otherwise |
+
+None of this blocks accepting the proposal. The mechanical design is sound. These are downstream spec updates I need to make once this is accepted. I'll file them as tasks.
+
+### One honest reaction
+
+This is a better model. The old "BUY reduces cooldown AND adds passive income" conflation was elegant on paper but would have been confusing in the player's hand — "wait, buying a unit made me faster AND added a worker? Why?" Now each button does one thing. That clarity is worth the spec churn.
