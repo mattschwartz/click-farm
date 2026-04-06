@@ -3,7 +3,7 @@ name: Purchase Button Location — Generators Column
 description: All three purchase tracks (LVL UP, BUY, Autoclicker) live in the Generators center column, not on the action button slab.
 created: 2026-04-06
 author: ux-designer
-status: accepted
+status: implementation
 reviewers: []
 ---
 

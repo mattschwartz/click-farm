@@ -1,5 +1,5 @@
 {
-  "next_id": 140,
+  "next_id": 142,
   "tasks": [
     {
       "id": 1,
@@ -3110,7 +3110,7 @@
       "id": 93,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Late-game content arc: generators 8+ and satirical voice ladder",
       "requester": "game-designer",
@@ -3147,7 +3147,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 94,
@@ -3187,7 +3188,7 @@
       "id": 95,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Tension audit: post-Audience-Mood felt stakes review",
       "requester": "game-designer",
@@ -3220,7 +3221,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 96,
@@ -5038,7 +5040,7 @@
       "id": 131,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Rename platforms (instasham→picshift, grindset→skroll) + add new platform podpod",
       "requester": "game-designer",
@@ -5158,7 +5160,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 132,
@@ -5348,7 +5351,8 @@
       "open_questions": [],
       "blocked_on": [
         133,
-        136
+        136,
+        141
       ]
     },
     {
@@ -5488,6 +5492,115 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-06"
+    },
+    {
+      "id": 140,
+      "alias": "U4",
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Design three-track purchase row layout in Generators column",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "The purchase-button-location proposal (accepted) decided that LVL UP, BUY, and Autoclicker purchase controls live in the Generators center column — not on the action button slab. But it explicitly leaves open two layout questions: (1) compact inline vs expandable tray vs dedicated sub-rows, and (2) grouping by verb (all three tracks in one generator row) vs by track type (all LVL UPs together, etc.). These are design decisions that affect how the center column scales from 1 to 5 verbs, how purchase affordances compete for attention against generator modifier chips and rate displays, and whether the strategic ledger reading of the column survives. The wrong layout will make the column feel like a spreadsheet or hide purchase affordances behind too many taps.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-purchase-button-location.md",
+          "purpose": "Source decision — locks in Generators column, leaves layout open"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Three-axis model definition — LVL UP (speed), BUY (power), Autoclicker (passive)"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§4 Generators column layout, §3 information hierarchy, modifier chips spec"
+        },
+        {
+          "ref": ".frames/sdlc/ux/manual-action-ladder.md",
+          "purpose": "Actions column spec — the other side of the spatial grammar"
+        },
+        {
+          "ref": ".frames/sdlc/ux/purchase-feedback-and-rate-visibility.md",
+          "purpose": "Rate-flare and purchase feedback patterns — purchase controls must integrate with these"
+        },
+        {
+          "ref": ".frames/sdlc/ux/upgrade-curve-drawer-spec.md",
+          "purpose": "Existing upgrade drawer — how level-up currently surfaces in the generator row"
+        }
+      ],
+      "acceptance_criteria": [
+        "Layout format decided: compact inline, expandable tray, or dedicated sub-rows — with rationale addressing column density at 5 verbs",
+        "Grouping decided: by verb or by track type — with rationale addressing player mental model ('invest in this verb' vs 'compare all speeds')",
+        "Affordance states sketched for each track: affordable, unaffordable, maxed — enough detail for the follow-up spec task to elaborate",
+        "Mobile adaptation direction noted: how the layout adapts to the mobile Generators view",
+        "Proposal written to proposals/draft/ per template"
+      ],
+      "open_questions": [
+        {
+          "question": "Does the existing upgrade-curve-drawer interaction (tap generator row → drawer opens) survive, merge with the new purchase controls, or get replaced?",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "At 5 verbs × 3 tracks = 15 purchase affordances visible — is that too dense for the center column, or does the ledger reading hold?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 141,
+      "alias": "U5",
+      "role": "ux-designer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Write Generators column purchase controls UX spec",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Write the full UX spec for the three-track purchase controls (LVL UP, BUY, Autoclicker) in the Generators center column, based on the layout decision from U4. This spec is the engineer's implementation reference for task #135 (UI wiring). It must cover: row anatomy with dimensions, visual states per track (affordable/unaffordable/maxed/first-available), cost display formatting, tap interaction and feedback, integration with existing rate-flare and modifier chip systems, mobile layout, motion briefs, reduced-motion fallback, accessibility (contrast, color independence), and a clean engineer handover section with component props and state derivations.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-purchase-button-location.md",
+          "purpose": "Source decision — Generators column confirmed"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "Generator row anatomy, modifier chips, information hierarchy"
+        },
+        {
+          "ref": ".frames/sdlc/ux/purchase-feedback-and-rate-visibility.md",
+          "purpose": "Rate-flare integration — purchase feedback must chain with existing patterns"
+        },
+        {
+          "ref": ".frames/sdlc/ux/upgrade-curve-drawer-spec.md",
+          "purpose": "Existing upgrade drawer spec — must integrate or supersede"
+        },
+        {
+          "ref": ".frames/sdlc/ux/visual-identity.md",
+          "purpose": "Color tokens, contrast requirements"
+        },
+        {
+          "ref": ".frames/sdlc/ux/accent-palette-light-mode.md",
+          "purpose": "Accent palette for affordance states"
+        }
+      ],
+      "acceptance_criteria": [
+        "Spec written to ux/ directory with full row anatomy: dimensions, padding, typography, color tokens for each purchase track",
+        "Three affordance states per track specified: affordable (tap to purchase), unaffordable (cost visible, visually recessed), maxed (if applicable — e.g., autoclicker cap)",
+        "Cost display format defined: number formatting, currency label, position within the row",
+        "Tap interaction specified: what happens on tap (purchase fires, cost deducted, feedback chain), what happens on tap when unaffordable (no-op + feedback)",
+        "Integration with rate-flare system documented: which purchases trigger rate-flare, on which display element",
+        "Mobile layout specified: how the purchase controls adapt to mobile Generators view",
+        "Motion briefs included: purchase confirmation animation, cost update animation, state transitions between affordable/unaffordable",
+        "Accessibility: all text meets WCAG AA contrast, no color-only signals, reduced-motion fallback specified",
+        "Engineer handover section: component props, state derivations from model, event handlers"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        140
+      ]
     }
   ]
 }
