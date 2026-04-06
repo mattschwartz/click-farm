@@ -90,6 +90,7 @@ The player can buy multiple autoclickers per verb. Each autoclicker is an indepe
 - **Autoclickers benefit from BUY (count-driven yield multiplier).** Each autoclicker fire uses the same yield formula as manual taps, so BUY upgrades strengthen both the player's hand and all autoclickers equally.
 - **Manual taps are additive on top.** The player's hand and the autoclickers coexist. The player is never replaced — they're always adding to the army's output.
 - **Burst firing.** All N autoclickers fire simultaneously every base-cooldown interval. The engine computes a single `passive_rate` per tick (see passive formula below). The UX layer may visually stagger the floating-number emissions for a smoother feel — that's a presentation concern, not an engine concern.
+- **Autoclickers contribute to audience mood.** Autoclicker fires generate posts for audience mood pressure, same as manual taps and passive-only generators. More autoclickers = more mood pressure. The idle-income path has a built-in cost: your army agitates your audience as it scales. Implementation must include a **killswitch** — a boolean flag (e.g. `AUTOCLICKERS_AFFECT_MOOD = true`) that lets us disable this without a code change if playtesting reveals the pressure is wrong. The `applyTickPosts` gate changes from `count <= 0` to `count <= 0 && autoclicker_count <= 0` (when killswitch is on).
 
 **Autoclicker internal cooldown (fixed at base):**
 
@@ -206,11 +207,32 @@ All other sections of manual-action-ladder (verb roster, unlock thresholds, plat
 
 4. **UX implications for cooldown and autoclicker display.** LVL UP can show a cooldown preview ("2,000ms → 1,000ms"). BUY can show a multiplier preview ("×1 → ×2"). Autoclicker button needs a cost display and a count badge ("×3 autoclickers"). The floating-number emission from autoclicker fires needs a UX spec — burst fires in the engine, but visual stagger is a UX-layer decision. **Owner: ux-designer**
 
-5. **Autoclicker base cost per verb tier.** Cost formula: `ceil(base_autoclicker_cost × 1.15^autoclicker_count)` — same exponential escalation as BUY. Base costs should follow the ~10× tier progression and be significantly more expensive than a single BUY (autoclickers are permanent passive income). Exact base_autoclicker_cost values per verb are a balance cell to be filled during implementation. **Owner: game-designer**
+5. **[RESOLVED] Autoclicker base cost per verb tier.** Cost formula: `ceil(base_autoclicker_cost × 1.15^autoclicker_count)` — same exponential escalation as BUY. Priced at 5× base_buy_cost (autoclickers are permanent passive income, worth significantly more than a single BUY). Values:
+
+   | Verb | base_buy_cost | base_autoclicker_cost |
+   |---|---|---|
+   | chirps | 5 | 25 |
+   | selfies | 10 | 50 |
+   | livestreams | 130,000 | 650,000 |
+   | podcasts | 1,400,000 | 7,000,000 |
+   | viral_stunts | 20,000,000 | 100,000,000 |
+
+   New `base_autoclicker_cost` field on `GeneratorDef` in static data. Follows the existing ~10× tier progression.
 
 6. **[RESOLVED] Autoclicker and offline progression.** Yes, autoclickers produce engagement offline. They're persistent passive workers. The offline catch-up formula walks the passive_rate formula per algorithm segment, same structure as today, with `autoclicker_count` replacing the old `count`.
 
 7. **[RESOLVED] Autoclicker firing pattern.** Burst mode. Per architect recommendation: all N autoclickers fire simultaneously every base-cooldown interval. Maps cleanly to `passive_rate = autoclicker_count × base_event_rate × yield × modifiers × deltaMs` — zero new state, same formula shape as the existing tick pipeline. The UX layer may visually stagger the floating-number emissions for smoother feel — presentation concern, not engine concern.
+
+---
+## Revision: 2026-04-06 — game-designer (post-engineer-review)
+
+Resolved engineer's two flags, OQ5, and added audience mood detail:
+
+**Flag 1 (LVL UP before BUY):** Yes, allowed. LVL UP drives manual cooldown — faster tapping at base yield is a valid speed-before-power playstyle. The `count <= 0` guard on `upgradeGenerator` (generator/index.ts line 273) must be removed. At count=0 the yield multiplier is `1 + 0 = 1×` — the player taps faster at base yield, which is intentional.
+
+**Flag 2 (Autoclickers and audience mood):** Autoclicker fires contribute to audience mood pressure. They're semantically identical to manual taps (same yield formula, same visual feedback) — the audience doesn't distinguish who posted. The `applyTickPosts` gate changes from `count <= 0` to `count <= 0 && autoclicker_count <= 0`. Implementation must include a killswitch flag (`AUTOCLICKERS_AFFECT_MOOD = true`) so this can be toggled without a code change if playtesting reveals the pressure is wrong.
+
+**OQ5 (Autoclicker base cost):** Resolved. `base_autoclicker_cost` = 5× `base_buy_cost` per verb tier, with `ceil(base_autoclicker_cost × 1.15^autoclicker_count)` escalation. New `base_autoclicker_cost` field on `GeneratorDef`.
 
 ---
 ## Revision: 2026-04-06 — game-designer (post-architect-review)
