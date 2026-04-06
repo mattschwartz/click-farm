@@ -1,5 +1,5 @@
 {
-  "next_id": 147,
+  "next_id": 148,
   "tasks": [
     {
       "id": 1,
@@ -5907,6 +5907,50 @@
       ],
       "open_questions": [],
       "blocked_on": []
+    },
+    {
+      "id": 147,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Define per-tier color ramp for compact number suffixes (K through Dc)",
+      "requester": "game-designer",
+      "complexity": "haiku",
+      "overview": "The compact number formatter uses suffix tiers (K, M, B, T, Qa, Qi, Sx, Sp, Oc, No, Dc) to denote magnitude. Currently all suffixes render in the same text color. The game-designer wants each tier to carry a color that communicates magnitude — the color should feel like the number is 'getting bigger' as you climb the ladder. Intent is a progressive ramp from muted/cool at K to intense/warm at Dc, so the player can read magnitude at a glance from color alone without parsing the suffix letters. This is a visual-only change — the formatter stays a pure string function, but the UI rendering layer applies color to the suffix portion of the formatted number.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/large-number-notation-ladder.md",
+          "purpose": "The accepted notation ladder — defines the tier table and overflow policy"
+        },
+        {
+          "ref": "client/src/ui/format.ts",
+          "purpose": "The formatter — produces the suffix string that the UI will color"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "Base palette and color philosophy the ramp must integrate with"
+        },
+        {
+          "ref": ".frames/sdlc/ux/accent-palette-light-mode.md",
+          "purpose": "Existing accent tokens — the ramp should not collide with functional accents (boost/penalty/mood)"
+        }
+      ],
+      "acceptance_criteria": [
+        "A color token or hex value assigned to each suffix tier from K through Dc (11 tiers)",
+        "The progression reads as 'getting bigger' — muted/cool at the low end, intense/warm at the high end",
+        "All suffix colors pass WCAG 4.5:1 contrast against the game's warm base background",
+        "The ramp does not collide with existing functional color signals (boost green, penalty red, mood edge colors)",
+        "A note on whether the color applies to the suffix only or the entire formatted number (recommendation: suffix only, so '422.39M' has the number in default text color and the 'M' in the tier color)"
+      ],
+      "open_questions": [
+        {
+          "question": "Should the overflow notation (×10^n) have its own color, or inherit the Dc-tier color as the ceiling?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     }
   ]
 }
