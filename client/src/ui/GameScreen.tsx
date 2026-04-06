@@ -31,6 +31,7 @@ import { TopBar } from './TopBar.tsx';
 import { ActionsColumn } from './ActionsColumn.tsx';
 import { GeneratorList } from './GeneratorList.tsx';
 import { PlatformPanel } from './PlatformPanel.tsx';
+import { OfflineGainsModal } from './OfflineGainsModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
 import { CreatorKitPanel } from './CreatorKitPanel.tsx';
@@ -103,6 +104,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     unlock,
     buyAutoclicker,
     offlineResult,
+    clearOfflineResult,
     rebrand,
     pauseLoop,
     resumeLoop,
@@ -420,7 +422,11 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
         </div>
       )}
 
-      {/* Offline gains modal moved to App-level start gate. */}
+      {/* Offline gains — initial load is handled by App-level start gate.
+          Tab-return offline gains show here as an overlay on the running game. */}
+      {offlineResult && offlineResult.durationMs > 60_000 && (
+        <OfflineGainsModal result={offlineResult} onDismiss={clearOfflineResult} />
+      )}
 
       {/* Prestige cluster — bottom-right, two buttons, visually grouped.
           Both buttons render at 3:1 contrast when locked (spec §2.1). */}
