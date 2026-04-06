@@ -15,7 +15,7 @@ import {
   verbCooldownMs,
   verbYieldPerTap,
 } from '../game-loop/index.ts';
-import clickSfx from '../assets/click.wav';
+import { playClick } from './sfx.ts';
 import { GENERATOR_DISPLAY } from './display.ts';
 import { fmtCompact } from './format.ts';
 
@@ -78,39 +78,7 @@ const LADDER_VERBS: GeneratorId[] = [
 // Yield and cooldown formulas are imported from game-loop (single source of
 // truth — verbYieldPerTap, verbCooldownMs). No local copies.
 
-// Click sound via Web Audio API — supports pitch randomization and overlapping.
-// Guard: AudioContext doesn't exist in test environments.
-let clickAudioCtx: AudioContext | null = null;
-let clickBuffer: AudioBuffer | null = null;
 
-if (typeof AudioContext !== 'undefined') {
-  // Lazy-init AudioContext on first user gesture (autoplay policy).
-  // Fetch + decode the wav into a reusable buffer.
-  fetch(clickSfx)
-    .then((r) => r.arrayBuffer())
-    .then((buf) => {
-      clickAudioCtx = new AudioContext();
-      return clickAudioCtx.decodeAudioData(buf);
-    })
-    .then((decoded) => { clickBuffer = decoded; })
-    .catch(() => {}); // silent — sound is non-essential
-}
-
-function playClick() {
-  if (!clickAudioCtx || !clickBuffer) return;
-  // Resume context if suspended (autoplay policy — resumes on user gesture).
-  if (clickAudioCtx.state === 'suspended') {
-    clickAudioCtx.resume().catch(() => {});
-  }
-  const source = clickAudioCtx.createBufferSource();
-  source.buffer = clickBuffer;
-  // Soft pitch randomness: ±8% around 1.0
-  source.playbackRate.value = 0.92 + Math.random() * 0.16;
-  const gain = clickAudioCtx.createGain();
-  gain.gain.value = 0.3;
-  source.connect(gain).connect(clickAudioCtx.destination);
-  source.start();
-}
 
 // ---------------------------------------------------------------------------
 // FloatItem for tap feedback

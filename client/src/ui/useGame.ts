@@ -9,6 +9,7 @@ import { createDriver, type ActionError, type SaveError } from '../driver/index.
 import type { OfflineResult } from '../offline/index.ts';
 import type { RebrandResult } from '../prestige/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
+import { playPurchase } from './sfx.ts';
 
 export interface UseGameResult {
   state: GameState;
@@ -127,17 +128,37 @@ export function useGame(): UseGameResult {
   const actions = useMemo(
     () => ({
       click: (verbId: GeneratorId) => driver.click(verbId),
-      buy: (id: GeneratorId) => driver.buy(id),
-      upgrade: (id: GeneratorId) => driver.upgrade(id),
-      unlock: (verbId: GeneratorId) => driver.unlock(verbId),
+      buy: (id: GeneratorId) => {
+        const before = driver.getState();
+        driver.buy(id);
+        if (driver.getState() !== before) playPurchase();
+      },
+      upgrade: (id: GeneratorId) => {
+        const before = driver.getState();
+        driver.upgrade(id);
+        if (driver.getState() !== before) playPurchase();
+      },
+      unlock: (verbId: GeneratorId) => {
+        const before = driver.getState();
+        driver.unlock(verbId);
+        if (driver.getState() !== before) playPurchase();
+      },
       saveNow: () => driver.saveNow(),
       clearOfflineResult: () => {
         driver.clearOfflineResult();
         setOfflineResult(null);
       },
       rebrand: () => driver.rebrand(),
-      buyCloutUpgrade: (id: UpgradeId) => driver.buyCloutUpgrade(id),
-      buyKitItem: (id: KitItemId) => driver.buyKitItem(id),
+      buyCloutUpgrade: (id: UpgradeId) => {
+        const before = driver.getState();
+        driver.buyCloutUpgrade(id);
+        if (driver.getState() !== before) playPurchase();
+      },
+      buyKitItem: (id: KitItemId) => {
+        const before = driver.getState();
+        driver.buyKitItem(id);
+        if (driver.getState() !== before) playPurchase();
+      },
       clearActionError: () => setLastActionError(null),
       clearSaveError: () => setSaveError(null),
       pauseLoop: () => driver.stop(),
