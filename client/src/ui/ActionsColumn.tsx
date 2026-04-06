@@ -156,12 +156,14 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
     onClick(verbId);
     const id = nextId.current++;
 
-    // Position the float at the mouse cursor relative to the button.
+    // Position the float near the mouse cursor with random scatter.
     const rect = btnRef.current?.getBoundingClientRect();
     let x = 50, y = 40; // fallback center
     if (rect) {
-      x = ((e.clientX - rect.left) / rect.width) * 100;
-      y = ((e.clientY - rect.top) / rect.height) * 100;
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.random() * 25; // 0–25px scatter
+      x = ((e.clientX - rect.left + Math.cos(angle) * radius) / rect.width) * 100;
+      y = ((e.clientY - rect.top + Math.sin(angle) * radius) / rect.height) * 100;
     }
 
     setFloats((prev) => [...prev, { id, value: perTap, x, y }]);

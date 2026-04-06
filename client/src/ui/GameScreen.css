@@ -581,18 +581,33 @@
 .verb-float {
   position: absolute;
   pointer-events: none;
-  font-size: 18px;
-  font-weight: 700;
-  color: #FFFFFF;
-  animation: verb-float-up 500ms ease-out forwards;
+  font-size: 22px;
+  font-weight: 800;
+  color: #FFD66B;
+  animation: verb-float-pop 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   z-index: 3;
   text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.6),
-    0 2px 8px rgba(0, 0, 0, 0.4);
+    0 0 3px rgba(255, 214, 107, 0.9),
+    0 0 8px rgba(255, 214, 107, 0.5),
+    0 0 16px rgba(255, 200, 50, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.6);
 }
-@keyframes verb-float-up {
-  0% { opacity: 1; transform: translate(-50%, 0); }
-  100% { opacity: 0; transform: translate(-50%, -40px); }
+@keyframes verb-float-pop {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.8);
+    filter: brightness(1.5);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: brightness(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+    filter: brightness(1);
+  }
 }
 
 /* Ghost slot — promise state (60px, 0.35 opacity, not tappable). */
