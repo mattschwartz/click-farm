@@ -87,6 +87,7 @@ export function createGeneratorState(
     owned,
     level: 1,
     count: 0,
+    autoclicker_count: 0,
   };
 }
 

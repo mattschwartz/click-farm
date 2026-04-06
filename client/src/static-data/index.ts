@@ -45,11 +45,13 @@ import type {
 // pass (task #88).
 
 const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
-  // §14c — starter verb, unlocked at 0, 0.4s manual cooldown
+  // §14c — starter verb, unlocked at 0. Level-driven cooldown: 1/(level×0.5).
+  // Retuned yield×rate for level-driven-cooldown: yield=1.0, rate=0.5 →
+  // passive 0.5 eng/s at autoclicker_count=1, count=0.
   chirps: {
     id: 'chirps',
-    base_event_yield: 0.2,
-    base_event_rate: 2.5,
+    base_event_yield: 1.0,
+    base_event_rate: 0.5,
     manual_clickable: true,
     follower_conversion_rate: 0.07,
     trend_sensitivity: 0.7,
@@ -58,13 +60,15 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 50,
     max_level: 10,
+    base_autoclicker_cost: 25,
   },
-  // §14a — ladder verb, 2.5s manual cooldown. yield×rate = 1.0 (preserved).
+  // §14a — ladder verb. Retuned: yield=5.0, rate=0.2 → passive 1.0 eng/s
+  // at autoclicker_count=1, count=0.
   // §14d — threshold moved from 0 → 100 (chirps takes the starter position).
   selfies: {
     id: 'selfies',
-    base_event_yield: 2.5,
-    base_event_rate: 0.4,
+    base_event_yield: 5.0,
+    base_event_rate: 0.2,
     manual_clickable: true,
     follower_conversion_rate: 0.10,
     trend_sensitivity: 0.3,  // low — always somewhat relevant
@@ -73,6 +77,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 100,
     max_level: 10,
+    base_autoclicker_cost: 50,
   },
   // §14b — passive-only. yield=1, rate=5.0 (preserved).
   memes: {
@@ -87,6 +92,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 1_000,
     max_level: 10,
+    base_autoclicker_cost: 0,    // passive-only — no manual tap
   },
   // §14b — passive-only. yield=1, rate=12.0 (preserved).
   hot_takes: {
@@ -101,6 +107,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 11_000,
     max_level: 10,
+    base_autoclicker_cost: 0,    // passive-only — no manual tap
   },
   // §14b — passive-only. yield=1, rate=30.0 (preserved).
   tutorials: {
@@ -115,8 +122,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 120_000,
     max_level: 10,
+    base_autoclicker_cost: 0,    // passive-only — no manual tap
   },
-  // §14a — ladder verb, 10s manual cooldown. yield×rate = 80.0 (preserved).
+  // §14a — ladder verb. yield×rate = 80.0 (preserved).
   livestreams: {
     id: 'livestreams',
     base_event_yield: 800,
@@ -129,8 +137,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 1_300_000,
     max_level: 10,
+    base_autoclicker_cost: 650_000,
   },
-  // §14a — ladder verb, 30s manual cooldown. yield×rate ≈ 150.0.
+  // §14a — ladder verb. yield×rate ≈ 150.0.
   podcasts: {
     id: 'podcasts',
     base_event_yield: 4_545,
@@ -143,8 +152,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 14_000_000,
     max_level: 10,
+    base_autoclicker_cost: 7_000_000,
   },
-  // §14a — ladder verb, 120s manual cooldown. yield×rate ≈ 500.0.
+  // §14a — ladder verb. yield×rate ≈ 500.0.
   viral_stunts: {
     id: 'viral_stunts',
     base_event_yield: 60_240,
@@ -157,6 +167,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 200_000_000,
     max_level: 10,
+    base_autoclicker_cost: 100_000_000,
   },
   // -------------------------------------------------------------------------
   // Post-prestige generators — unlocked only via Clout `generator_unlock`
@@ -182,6 +193,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 2_000_000_000,
     max_level: 10,
+    base_autoclicker_cost: 0,    // post-prestige, passive-only
   },
   deepfakes: {
     id: 'deepfakes',
@@ -195,6 +207,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 20_000_000_000,
     max_level: 10,
+    base_autoclicker_cost: 0,    // post-prestige, passive-only
   },
   algorithmic_prophecy: {
     id: 'algorithmic_prophecy',
@@ -208,6 +221,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 200_000_000_000,
     max_level: 10,
+    base_autoclicker_cost: 0,    // post-prestige, passive-only
   },
 };
 

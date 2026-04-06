@@ -161,6 +161,7 @@ export function applyRebrand(
           owned: generatorUnlocks.has(id) || threshold === 0,
           level: 1,
           count: 0,
+          autoclicker_count: 0,
         },
       ];
     }),

@@ -246,14 +246,15 @@ export function buyGenerator(
 
 /**
  * Upgrade a generator to the next level, spending Engagement from the player's
- * balance. Higher levels multiply output via `levelMultiplier(level)`.
+ * balance. Level drives manual cooldown speed (level-driven-cooldown refactor).
  *
  * Throws if:
  * - The generator is not yet unlocked (owned=false).
- * - The generator has no units purchased (count=0). Upgrading a generator with
- *   no units is a no-op from a gameplay perspective, so it is disallowed to
- *   prevent silent engagement drain.
+ * - The generator is already at max level.
  * - The player cannot afford the cost.
+ *
+ * LVL UP is valid at count=0 — the player taps faster at base yield before
+ * buying any units. The old count<=0 guard was removed in task #132.
  *
  * Pure — returns a new GameState; does not mutate the input.
  */
@@ -267,12 +268,6 @@ export function upgradeGenerator(
   if (!gen.owned) {
     throw new Error(
       `upgradeGenerator: generator '${generatorId}' is not yet unlocked`,
-    );
-  }
-
-  if (gen.count <= 0) {
-    throw new Error(
-      `upgradeGenerator: generator '${generatorId}' has no units — buy at least one first`,
     );
   }
 

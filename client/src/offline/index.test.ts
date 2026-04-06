@@ -25,6 +25,8 @@ function makeState(overrides?: {
   memesCount?: number;
 }): GameState {
   const s: GameState = createInitialGameState(STATIC_DATA, T0);
+  const selfiesCount = overrides?.selfiesCount ?? 10;
+  const memesCount = overrides?.memesCount;
   return {
     ...s,
     player: {
@@ -36,11 +38,12 @@ function makeState(overrides?: {
       selfies: {
         ...s.generators.selfies,
         owned: true,
-        count: overrides?.selfiesCount ?? 10,
+        count: selfiesCount,
         level: overrides?.selfiesLevel ?? 1,
+        autoclicker_count: selfiesCount,
       },
-      memes: overrides?.memesCount
-        ? { ...s.generators.memes, owned: true, count: overrides.memesCount, level: 1 }
+      memes: memesCount
+        ? { ...s.generators.memes, owned: true, count: memesCount, level: 1, autoclicker_count: memesCount }
         : s.generators.memes,
     },
     platforms: {
@@ -447,7 +450,7 @@ describe('calculateOffline — rate ordering sanity', () => {
           player: { ...base.player, algorithm_seed: seed },
           generators: {
             ...base.generators,
-            [genId]: { ...base.generators[genId], owned: true, count, level: 1 },
+            [genId]: { ...base.generators[genId], owned: true, count, level: 1, autoclicker_count: count },
           },
         };
         return calculateOffline(state, T0, T0 + windowMs, STATIC_DATA)

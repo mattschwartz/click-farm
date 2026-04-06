@@ -177,6 +177,7 @@ export function DebugApp() {
               <th>Generator</th>
               <th>Status</th>
               <th>Count</th>
+              <th>AC</th>
               <th>Level</th>
               <th>Buy</th>
               <th>Upgrade</th>
@@ -195,19 +196,20 @@ export function DebugApp() {
                   <tr key={id} style={{ opacity: 0.5 }}>
                     <td>{id}</td>
                     <td>{statusText}</td>
-                    <td colSpan={4} />
+                    <td colSpan={5} />
                   </tr>
                 );
               }
               const buyCost = generatorBuyCost(id, g.count, STATIC_DATA);
               const upgradeCost = generatorUpgradeCost(id, g.level, STATIC_DATA);
               const canBuy = state.player.engagement >= buyCost;
-              const canUpgrade = g.count > 0 && state.player.engagement >= upgradeCost;
+              const canUpgrade = state.player.engagement >= upgradeCost;
               return (
                 <tr key={id}>
                   <td>{id}</td>
                   <td>owned</td>
                   <td>{g.count}</td>
+                  <td>{g.autoclicker_count}</td>
                   <td>{g.level}</td>
                   <td>
                     <button

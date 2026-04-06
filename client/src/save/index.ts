@@ -17,7 +17,7 @@ import { recomputeAllRetention } from '../audience-mood/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 10;
+const CURRENT_VERSION = 11;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -266,7 +266,7 @@ export function migrateV3toV4(data: SaveData): SaveData {
   const generators = { ...oldState.generators } as Record<GeneratorId, GeneratorState>;
   for (const id of postPrestige) {
     if (generators[id] === undefined) {
-      generators[id] = { id, owned: false, level: 1, count: 0 };
+      generators[id] = { id, owned: false, level: 1, count: 0, autoclicker_count: 0 };
     }
   }
 
@@ -470,7 +470,7 @@ export function migrateV8toV9(data: SaveData): SaveData {
 
   const generators = { ...oldState.generators } as Record<GeneratorId, GeneratorState>;
   if (generators.chirps === undefined) {
-    generators.chirps = { id: 'chirps', owned: true, level: 1, count: 0 };
+    generators.chirps = { id: 'chirps', owned: true, level: 1, count: 0, autoclicker_count: 0 };
   }
 
   return {
@@ -589,6 +589,34 @@ export function migrateV9toV10(data: SaveData): SaveData {
   };
 }
 
+/**
+ * Migrate a V10 save to V11 — level-driven-cooldown engine refactor.
+ *
+ * Task #132: adds `autoclicker_count: 0` to every GeneratorState. Existing
+ * saves have no autoclickers — passive production is zero until the player
+ * buys one (the new Automate track).
+ */
+export function migrateV10toV11(data: SaveData): SaveData {
+  const oldState = data.state as GameState;
+  const newGenerators: Record<GeneratorId, GeneratorState> = {
+    ...oldState.generators,
+  };
+  for (const id of Object.keys(oldState.generators) as GeneratorId[]) {
+    const gen = oldState.generators[id] as GeneratorState & {
+      autoclicker_count?: number;
+    };
+    newGenerators[id] = {
+      ...gen,
+      autoclicker_count: gen.autoclicker_count ?? 0,
+    };
+  }
+  return {
+    ...data,
+    version: 11,
+    state: { ...oldState, generators: newGenerators },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -626,6 +654,10 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 9) {
     current = migrateV9toV10(current);
+  }
+
+  if (current.version === 10) {
+    current = migrateV10toV11(current);
   }
 
   if (current.version !== CURRENT_VERSION) {

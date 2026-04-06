@@ -33,13 +33,23 @@ function stateWithGenerator(
   id: GeneratorId,
   count: number,
   level: number = 1,
+  autoclicker_count?: number,
 ): GameState {
   const base = createInitialGameState(STATIC_DATA, T0);
   return {
     ...base,
     generators: {
       ...base.generators,
-      [id]: { ...createGeneratorState(id), owned: true, count, level },
+      [id]: {
+        ...createGeneratorState(id),
+        owned: true,
+        count,
+        level,
+        // Default: autoclicker_count mirrors count so tests that relied on
+        // count for passive production continue working after the
+        // level-driven-cooldown refactor (task #132).
+        autoclicker_count: autoclicker_count ?? count,
+      },
     },
     algorithm: { ...base.algorithm, shift_time: T0 + 10_000_000 },
     player: { ...base.player, algorithm_seed: 0xDEADBEEF },
@@ -207,8 +217,8 @@ describe('computeGeneratorEffectiveRate', () => {
     expect(rate).toBe(0);
   });
 
-  it('returns 0 when count is 0', () => {
-    const state = stateWithGenerator('selfies', 0);
+  it('returns 0 when autoclicker_count is 0', () => {
+    const state = stateWithGenerator('selfies', 0, 1, 0);
     const rate = computeGeneratorEffectiveRate(
       state.generators.selfies,
       state,
@@ -217,10 +227,10 @@ describe('computeGeneratorEffectiveRate', () => {
     expect(rate).toBe(0);
   });
 
-  it('applies count, base rate, level, algorithm modifier, and clout', () => {
-    const state = stateWithGenerator('selfies', 2, 1);
-    // base: count=2 × base_rate=1.0 × levelMultiplier(1)=2^0.2 × algo_mod × clout=1
-    // need to compute algo_mod from whatever state the initial algorithm is in
+  it('applies autoclicker_count, base rate, (1+count), algorithm modifier, and clout', () => {
+    const state = stateWithGenerator('selfies', 2, 1, 3);
+    // New formula: autoclicker_count × base_event_rate × base_event_yield
+    //              × (1 + count) × algo_mod × clout
     const selfiesDef = STATIC_DATA.generators.selfies;
     const firstAlgoStateId = Object.keys(STATIC_DATA.algorithmStates)[0];
     const rawMod =
@@ -231,7 +241,9 @@ describe('computeGeneratorEffectiveRate', () => {
       rawMod,
       selfiesDef.trend_sensitivity,
     );
-    const expected = 2 * 1.0 * levelMultiplier(1) * algoMod * 1.0;
+    // autoclicker_count=3, base_rate=0.2, base_yield=5.0, (1+count)=(1+2)=3
+    const expected = 3 * selfiesDef.base_event_rate * selfiesDef.base_event_yield
+      * (1 + 2) * algoMod * 1.0;
     const rate = computeGeneratorEffectiveRate(
       state.generators.selfies,
       state,
@@ -521,12 +533,13 @@ describe('postClick', () => {
     expect(next.player.engagement).toBeGreaterThan(state.player.engagement);
   });
 
-  it('click engagement = base_event_yield × levelMultiplier × algo_mod × clout × kit', () => {
+  it('click engagement = base_event_yield × (1 + count) × algo_mod × clout × kit', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     const def = STATIC_DATA.generators.chirps;
     const rawMod = state.algorithm.state_modifiers.chirps;
     const algoMod = effectiveAlgorithmModifier(rawMod, def.trend_sensitivity);
-    const expected = def.base_event_yield * levelMultiplier(1) * algoMod * 1.0 * 1.0;
+    // count=0 → (1+0)=1
+    const expected = def.base_event_yield * (1 + 0) * algoMod * 1.0 * 1.0;
     const next = postClick(state, STATIC_DATA, 'chirps', T0);
     expect(next.player.engagement - state.player.engagement).toBeCloseTo(expected, 10);
   });
@@ -576,7 +589,7 @@ describe('postClick', () => {
     const selfiesResult = postClick(withSelfies, STATIC_DATA, 'selfies', T0);
     const chirpsGain = chirpsResult.player.engagement;
     const selfiesGain = selfiesResult.player.engagement;
-    // chirps yield=0.2, selfies yield=2.5 → selfies earns more per tap
+    // chirps yield=1.0, selfies yield=5.0 → selfies earns more per tap
     expect(selfiesGain).toBeGreaterThan(chirpsGain);
   });
 
@@ -598,7 +611,7 @@ describe('postClick', () => {
     // First tap succeeds
     const after1 = postClick(state, STATIC_DATA, 'chirps', T0);
     expect(after1.player.engagement).toBeGreaterThan(0);
-    // chirps base_event_rate=2.5, count=0 → max(1,0)=1 → cooldown=1000/2.5=400ms
+    // chirps base_event_rate=0.5, level=1 → cooldown=max(50,1000/(1×0.5))=2000ms
     // Second tap 100ms later → rejected
     const after2 = postClick(after1, STATIC_DATA, 'chirps', T0 + 100);
     expect(after2).toBe(after1);
@@ -607,24 +620,24 @@ describe('postClick', () => {
   it('cooldown gate accepts taps after the cooldown period', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     const after1 = postClick(state, STATIC_DATA, 'chirps', T0);
-    // cooldown = 400ms, tap at +401ms → accepted
-    const after2 = postClick(after1, STATIC_DATA, 'chirps', T0 + 401);
+    // cooldown = max(50, 1000/(1×0.5)) = 2000ms, tap at +2001ms → accepted
+    const after2 = postClick(after1, STATIC_DATA, 'chirps', T0 + 2001);
     expect(after2.player.engagement).toBeGreaterThan(after1.player.engagement);
   });
 
-  it('cooldown shrinks when count increases (Automate effect)', () => {
+  it('cooldown shrinks when level increases (LVL UP effect)', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
-    // Set count=10 → cooldown = 1000/(10 × 2.5) = 40ms
-    const withCount: GameState = {
+    // Set level=10 → cooldown = max(50, 1000/(10 × 0.5)) = max(50, 200) = 200ms
+    const withLevel: GameState = {
       ...state,
       generators: {
         ...state.generators,
-        chirps: { ...state.generators.chirps, count: 10 },
+        chirps: { ...state.generators.chirps, level: 10 },
       },
     };
-    const after1 = postClick(withCount, STATIC_DATA, 'chirps', T0);
-    // Tap 50ms later → accepted (50 > 40ms cooldown)
-    const after2 = postClick(after1, STATIC_DATA, 'chirps', T0 + 50);
+    const after1 = postClick(withLevel, STATIC_DATA, 'chirps', T0);
+    // Tap 250ms later → accepted (250 > 200ms cooldown)
+    const after2 = postClick(after1, STATIC_DATA, 'chirps', T0 + 250);
     expect(after2.player.engagement).toBeGreaterThan(after1.player.engagement);
   });
 });
@@ -634,12 +647,11 @@ describe('postClick', () => {
 // ---------------------------------------------------------------------------
 
 describe('yield/rate split regression', () => {
-  // For passive-only and post-prestige generators, yield=1.0 and
-  // rate=old_base_engagement_rate, so the product is exact. For ladder verbs
-  // (selfies, livestreams), the product is also exact. For podcasts and
-  // viral_stunts, the proposal's rounded values introduce a tiny (<0.02%) diff.
+  // Passive output at autoclicker_count=1, count=0 = base_event_rate × base_event_yield.
+  // These are the target values from the level-driven-cooldown retune table.
   const EXPECTED_PASSIVE_RATES: Record<string, number> = {
-    selfies: 1.0,         // 2.5 × 0.4
+    chirps: 0.5,          // 1.0 × 0.5
+    selfies: 1.0,         // 5.0 × 0.2
     memes: 5.0,           // 1 × 5.0
     hot_takes: 12.0,      // 1 × 12.0
     tutorials: 30.0,      // 1 × 30.0
@@ -652,28 +664,26 @@ describe('yield/rate split regression', () => {
   };
 
   for (const [id, expectedRate] of Object.entries(EXPECTED_PASSIVE_RATES)) {
-    it(`${id}: yield × rate ≈ old base_engagement_rate (${expectedRate})`, () => {
+    it(`${id}: yield × rate ≈ passive output at ac=1, count=0 (${expectedRate})`, () => {
       const def = STATIC_DATA.generators[id as GeneratorId];
       const product = def.base_event_yield * def.base_event_rate;
       expect(product).toBeCloseTo(expectedRate, 1);
     });
   }
 
-  it('computeGeneratorEffectiveRate preserves output for selfies at count=1, level=1', () => {
-    const state = stateWithGenerator('selfies', 1, 1);
+  it('computeGeneratorEffectiveRate output for selfies at ac=1, count=0', () => {
+    // autoclicker_count=1, count=0 → formula: 1 × rate × yield × (1+0) × algoMod × clout × kit
+    const state = stateWithGenerator('selfies', 0, 1, 1);
     const rate = computeGeneratorEffectiveRate(
       state.generators.selfies,
       state,
       STATIC_DATA,
     );
-    // Old formula: count × base_engagement_rate × levelMult × algoMod × clout × kit
-    // New formula: count × base_event_rate × base_event_yield × levelMult × algoMod × clout × kit
-    // Both should yield identical result for selfies (1.0 × 0.4 × 2.5 = 1.0)
     const def = STATIC_DATA.generators.selfies;
     const rawMod = state.algorithm.state_modifiers.selfies;
     const algoMod = effectiveAlgorithmModifier(rawMod, def.trend_sensitivity);
-    const expected = 1 * (def.base_event_rate * def.base_event_yield) *
-      levelMultiplier(1) * algoMod * 1.0 * 1.0;
+    const expected = 1 * def.base_event_rate * def.base_event_yield *
+      (1 + 0) * algoMod * 1.0 * 1.0;
     expect(rate).toBeCloseTo(expected, 10);
   });
 });
@@ -871,8 +881,8 @@ describe('evaluateViralTrigger', () => {
       ...stateReadyToViral(),
       generators: {
         ...stateReadyToViral().generators,
-        memes: { ...createGeneratorState('memes'), owned: true, count: 10, level: 1 },
-        selfies: { ...createGeneratorState('selfies'), owned: false, count: 0, level: 1 },
+        memes: { ...createGeneratorState('memes'), owned: true, count: 10, level: 1, autoclicker_count: 10 },
+        selfies: { ...createGeneratorState('selfies'), owned: false, count: 0, level: 1, autoclicker_count: 0 },
       },
       algorithm: {
         ...stateReadyToViral().algorithm,

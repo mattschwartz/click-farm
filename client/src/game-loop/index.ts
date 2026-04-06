@@ -120,19 +120,18 @@ export function effectiveAlgorithmModifier(
 
 /**
  * Computes effective engagement rate (engagement per second) for a single
- * generator, accounting for count, level, algorithm state, trend sensitivity,
- * and clout bonus.
+ * generator's PASSIVE production, driven by autoclicker_count.
  *
- *   effective_rate = count × base_event_rate × base_event_yield
- *                    × level_multiplier(level)
+ *   effective_rate = autoclicker_count × base_event_rate × base_event_yield
+ *                    × (1 + count)
  *                    × effective_algorithm_modifier × clout_bonus × kit_bonus
  *
- * The yield/rate split is per manual-action-ladder.md §OQ12. For the existing
- * 7 generators, yield × rate = old base_engagement_rate (backward-compatible).
- * count is NOT floored here — count=0 yields zero passive output. The max(1,
- * count) floor applies only to the manual-cooldown gate in postClick.
+ * Level-driven-cooldown refactor (task #132):
+ *   - `autoclicker_count` drives passive production (was `count`)
+ *   - `(1 + count)` is the yield multiplier from the BUY track (was `levelMultiplier(level)`)
+ *   - `level` now drives manual cooldown speed, not passive rate
  *
- * Returns 0 if the generator is not owned or count is 0.
+ * Returns 0 if the generator is not owned or autoclicker_count is 0.
  *
  * Note: platform affinity is NOT applied here — it belongs to the follower
  * distribution step (architecture spec §Engagement-to-Follower Conversion),
@@ -143,7 +142,7 @@ export function computeGeneratorEffectiveRate(
   state: GameState,
   staticData: StaticData,
 ): number {
-  if (!generator.owned || generator.count <= 0) return 0;
+  if (!generator.owned || generator.autoclicker_count <= 0) return 0;
   const def = staticData.generators[generator.id];
   const rawModifier = getAlgorithmModifier(state.algorithm, generator.id);
   const algoMod = effectiveAlgorithmModifier(rawModifier, def.trend_sensitivity);
@@ -152,10 +151,10 @@ export function computeGeneratorEffectiveRate(
   // Order (§3 clout → §4 kit). Camera is the only item in this chain today.
   const kit = kitEngagementBonus(state.player.creator_kit, staticData);
   return (
-    generator.count *
+    generator.autoclicker_count *
     def.base_event_rate *
     def.base_event_yield *
-    levelMultiplier(generator.level) *
+    (1 + generator.count) *
     algoMod *
     clout *
     kit
@@ -551,9 +550,13 @@ export function computeSnapshot(
 // ---------------------------------------------------------------------------
 
 /**
- * Handle a manual click on the given verb (generator). Per-verb yield/rate
- * split from manual-action-ladder.md §OQ12. Cooldown gate per architect's
- * re-review: `cooldownMs = 1000 / (max(1, count) × base_event_rate)`.
+ * Handle a manual click on the given verb (generator).
+ *
+ * Level-driven-cooldown refactor (task #132):
+ *   - Cooldown: `Math.max(50, 1000 / (level × base_event_rate))`
+ *     Level drives speed — higher level = faster taps.
+ *   - Earned: `base_event_yield × (1 + count) × algoMod × clout × kit`
+ *     BUY count drives yield multiplier (was levelMultiplier).
  *
  * Returns state unchanged (silent no-op) when:
  *   - The generator is not manual_clickable
@@ -580,10 +583,10 @@ export function postClick(
   // Gate B: reject unowned generators (verb not yet Unlocked).
   if (!genState.owned) return state;
 
-  // Cooldown gate per architect's snippet: max(1, count) models the player's
-  // hand as the first actor even pre-Automate.
+  // Cooldown gate: level drives tap speed. Floor of 50ms prevents
+  // infinite-speed tapping at very high levels.
   const cooldownMs =
-    1000 / (Math.max(1, genState.count) * def.base_event_rate);
+    Math.max(50, 1000 / (genState.level * def.base_event_rate));
   if (now - (state.player.last_manual_click_at[verbId] ?? 0) < cooldownMs) {
     return state;
   }
@@ -596,7 +599,9 @@ export function postClick(
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
   const kit = kitEngagementBonus(state.player.creator_kit, staticData);
 
-  const earned = def.base_event_yield * levelMultiplier(genState.level) *
+  // BUY count drives yield: (1 + count) so even at count=0 the player
+  // earns base yield from manual taps.
+  const earned = def.base_event_yield * (1 + genState.count) *
     algoMod * clout * kit;
 
   return {

@@ -32,55 +32,32 @@ beforeEach(() => {
 
 describe('integration — end-to-end play loop', () => {
   it('click → engagement → buy → tick → followers → platform unlock', () => {
-    let t = 1_000_000;
-    const driver = createDriver({
-      staticData: STATIC_DATA,
-      now: () => t,
-      loadFromStorage: false,
-      persistToStorage: false,
-    });
+    // Construct a state directly with autoclicker_count > 0 to test the full
+    // passive pipeline. The driver doesn't have buyAutoclicker yet (task E2),
+    // so we seed autoclicker_count manually for this integration test.
+    const T0 = 1_000_000;
+    let state: GameState = createInitialGameState(STATIC_DATA, T0);
+    // Give chirps enough passive production to cross picshift threshold (100 followers)
+    state = {
+      ...state,
+      generators: {
+        ...state.generators,
+        chirps: {
+          ...state.generators.chirps,
+          owned: true,
+          count: 5,
+          autoclicker_count: 10,
+        },
+      },
+      algorithm: { ...state.algorithm, shift_time: T0 + 10_000_000 },
+    };
 
-    // 1. Chirps starts owned (threshold 0); selfies needs unlock at 100 followers.
-    driver.step(1);
-    expect(driver.getState().generators.chirps.owned).toBe(true);
-    expect(driver.getState().generators.selfies.owned).toBe(false);
-
-    // 2. Click to bootstrap engagement past chirps buy cost (5).
-    //    Advance time between clicks to satisfy the per-verb cooldown gate
-    //    (chirps cooldown = 400ms at count=0). chirps yield ~0.34/click.
-    for (let i = 0; i < 20; i++) { t += 500; driver.click('chirps'); }
-    expect(driver.getState().player.engagement).toBeGreaterThanOrEqual(5);
-
-    // 3. Buy chirps — engagement drains.
-    const engBeforeBuy = driver.getState().player.engagement;
-    driver.buy('chirps');
-    expect(driver.getState().player.engagement).toBeLessThan(engBeforeBuy);
-    expect(driver.getState().generators.chirps.count).toBe(1);
-
-    // 4. Advance time — ticks produce engagement AND followers.
-    // Need enough to unlock picshift (100 followers). Buy many selfies
-    // by repeatedly clicking + buying. At level 1 this is slow, so fast-forward.
-    for (let i = 0; i < 200; i++) { t += 500; driver.click('chirps'); }
-    // Buy until a purchase fails (driver surfaces failure via onActionError
-    // rather than throwing). Count-not-changing is a fallback guard.
-    let failed = false;
-    const unsub = driver.onActionError(() => { failed = true; });
-    while (!failed && driver.getState().player.engagement >= 5) {
-      const before = driver.getState().generators.chirps.count;
-      driver.buy('chirps');
-      if (driver.getState().generators.chirps.count === before) break;
-    }
-    unsub();
-
-    // Advance several ticks.
-    for (let step = 0; step < 100; step++) {
-      t += 1000;
-      driver.step(1000);
+    // Run ticks to accumulate engagement → followers → platform unlock.
+    for (let step = 0; step < 200; step++) {
+      state = tick(state, T0 + (step + 1) * 1000, 1000, STATIC_DATA);
     }
 
-    // 5. Chirper accumulated followers. total_followers is the sum across
-    //    all platforms — which may include picshift if it auto-unlocked.
-    const state = driver.getState();
+    // Chirper accumulated followers.
     expect(state.platforms.chirper.followers).toBeGreaterThan(0);
     const platformSum =
       state.platforms.chirper.followers
@@ -89,8 +66,7 @@ describe('integration — end-to-end play loop', () => {
       + state.platforms.podpod.followers;
     expect(state.player.total_followers).toBeCloseTo(platformSum, 4);
 
-    // If we crossed 100 followers, picshift should be unlocked — verifies
-    // the unlock path runs through the driver.
+    // If we crossed 100 followers, picshift should be unlocked.
     if (state.player.total_followers >= 100) {
       expect(state.platforms.picshift.unlocked).toBe(true);
     }
@@ -105,7 +81,7 @@ describe('integration — end-to-end play loop', () => {
       ...state,
       generators: {
         ...state.generators,
-        selfies: { ...state.generators.selfies, owned: true, count: 50, level: 3 },
+        selfies: { ...state.generators.selfies, owned: true, count: 50, level: 3, autoclicker_count: 50 },
       },
       platforms: {
         ...state.platforms,
@@ -140,7 +116,7 @@ describe('integration — end-to-end play loop', () => {
       ...state,
       generators: {
         ...state.generators,
-        memes: { ...state.generators.memes, owned: true, count: 10, level: 1 },
+        memes: { ...state.generators.memes, owned: true, count: 10, level: 1, autoclicker_count: 10 },
       },
       algorithm: {
         ...state.algorithm,
@@ -172,8 +148,9 @@ describe('integration — end-to-end play loop', () => {
       loadFromStorage: false,
       persistToStorage: false,
     });
-    driver.step(1); // unlock selfies + chirps
-    for (let i = 0; i < 50; i++) { t += 500; driver.click('chirps'); }
+    driver.step(1); // unlock chirps
+    // chirps cooldown at level=1 = max(50, 1000/(1×0.5)) = 2000ms
+    for (let i = 0; i < 10; i++) { t += 2100; driver.click('chirps'); }
 
     const before = driver.getState().player.engagement;
     // chirps buy cost at count=0 is ceil(5 × 1.15^0) = 5
@@ -190,19 +167,10 @@ describe('integration — end-to-end play loop', () => {
       loadFromStorage: false,
       persistToStorage: false,
     });
+    // With autoclicker_count=0 (no buyAutoclicker action yet), passive production
+    // is zero. Verify the invariant still holds: total_followers = Σ platform.followers.
     driver.step(1);
-    for (let i = 0; i < 200; i++) { t += 500; driver.click('chirps'); }
-    // Buy until a purchase fails (see comment in upstream integration test).
-    let failed2 = false;
-    const unsub2 = driver.onActionError(() => { failed2 = true; });
-    while (!failed2 && driver.getState().player.engagement >= 5) {
-      const before = driver.getState().generators.chirps.count;
-      driver.buy('chirps');
-      if (driver.getState().generators.chirps.count === before) break;
-    }
-    unsub2();
-    // 200 seconds of ticking.
-    for (let step = 0; step < 200; step++) {
+    for (let step = 0; step < 100; step++) {
       t += 1000;
       driver.step(1000);
     }
@@ -224,7 +192,7 @@ describe('integration — end-to-end play loop', () => {
       ...state,
       generators: {
         ...state.generators,
-        selfies: { ...state.generators.selfies, owned: true, count: 20, level: 2 },
+        selfies: { ...state.generators.selfies, owned: true, count: 20, level: 2, autoclicker_count: 20 },
       },
     };
     const snap = computeSnapshot(state, STATIC_DATA);
