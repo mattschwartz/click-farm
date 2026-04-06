@@ -157,11 +157,14 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
     const id = nextId.current++;
 
     // Position the float near the mouse cursor with random scatter.
+    // Keyboard-triggered clicks have clientX/Y = 0 — fall back to center.
     const rect = btnRef.current?.getBoundingClientRect();
-    let x = 50, y = 40; // fallback center
-    if (rect) {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * 25; // 0–25px scatter
+    const isKeyboard = e.clientX === 0 && e.clientY === 0;
+    const angle = Math.random() * Math.PI * 2;
+    const radius = Math.random() * 25;
+    let x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
+    let y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
+    if (!isKeyboard && rect) {
       x = ((e.clientX - rect.left + Math.cos(angle) * radius) / rect.width) * 100;
       y = ((e.clientY - rect.top + Math.sin(angle) * radius) / rect.height) * 100;
     }
