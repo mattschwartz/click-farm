@@ -139,11 +139,15 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     max_level: 10,
     base_autoclicker_cost: 650_000,
   },
-  // §14a — ladder verb. yield×rate ≈ 150.0.
+  // Ladder verb. Retuned: yield=10,000, rate=0.08 → passive 800 eng/s
+  // at autoclicker_count=1, count=0. 10× livestreams output. L1 cooldown
+  // 12,500ms, L10 cooldown 1,250ms.
+  // TODO(game-designer): buy/upgrade/autoclicker costs are provisional —
+  // retune during balance pass (task #88) to match new output.
   podcasts: {
     id: 'podcasts',
-    base_event_yield: 4_545,
-    base_event_rate: 0.033,
+    base_event_yield: 10_000,
+    base_event_rate: 0.08,
     manual_clickable: true,
     follower_conversion_rate: 0.11,
     trend_sensitivity: 0.2,  // low — slow build, compounding returns
@@ -154,11 +158,15 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     max_level: 10,
     base_autoclicker_cost: 7_000_000,
   },
-  // §14a — ladder verb. yield×rate ≈ 500.0.
+  // Ladder verb. Retuned: yield=200,000, rate=0.04 → passive 8,000 eng/s
+  // at autoclicker_count=1, count=0. 10× podcasts output. L1 cooldown
+  // 25,000ms, L10 cooldown 2,500ms.
+  // TODO(game-designer): buy/upgrade/autoclicker costs are provisional —
+  // retune during balance pass (task #88) to match new output.
   viral_stunts: {
     id: 'viral_stunts',
-    base_event_yield: 60_240,
-    base_event_rate: 0.0083,
+    base_event_yield: 200_000,
+    base_event_rate: 0.04,
     manual_clickable: true,
     follower_conversion_rate: 0.06,
     trend_sensitivity: 1.0,  // maximum — massive spikes, algorithm-dependent
@@ -175,16 +183,15 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // unlock_threshold here is set to Infinity for documentary clarity — the
   // checkGeneratorUnlocks pathway reads from unlockThresholds, not this field.
   //
-  // Stats per clout-upgrade-menu.md (yield×rate relative to viral_stunts:
-  // 8× / 15× / 40×). Backward-compatible seed: yield=1.0, rate=old value.
-  // Buy/upgrade costs continue the ~10× per-tier ramp from the base generators.
+  // Stats relative to viral_stunts (8,000 eng/s base): 8× / 15× / 40×.
+  // Retuned to match viral_stunts output bump. Passive-only (no manual tap).
   // TODO(game-designer): buy/upgrade costs are provisional — tune during
-  // post-prestige balance pass.
+  // post-prestige balance pass (task #88).
   // -------------------------------------------------------------------------
   ai_slop: {
     id: 'ai_slop',
     base_event_yield: 1,
-    base_event_rate: 4_000.0,        // 8× viral_stunts
+    base_event_rate: 64_000.0,       // 8× viral_stunts (8 × 8,000)
     manual_clickable: false,
     follower_conversion_rate: 0.6,
     trend_sensitivity: 0.1,           // nearly algorithm-immune — volume wins
@@ -198,7 +205,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   deepfakes: {
     id: 'deepfakes',
     base_event_yield: 1,
-    base_event_rate: 7_500.0,        // 15× viral_stunts
+    base_event_rate: 120_000.0,      // 15× viral_stunts (15 × 8,000)
     manual_clickable: false,
     follower_conversion_rate: 0.3,
     trend_sensitivity: 0.95,          // highest — volatile, algorithm-dependent
@@ -212,7 +219,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   algorithmic_prophecy: {
     id: 'algorithmic_prophecy',
     base_event_yield: 1,
-    base_event_rate: 20_000.0,       // 40× viral_stunts
+    base_event_rate: 320_000.0,      // 40× viral_stunts (40 × 8,000)
     manual_clickable: false,
     follower_conversion_rate: 0.5,
     trend_sensitivity: 0.5,

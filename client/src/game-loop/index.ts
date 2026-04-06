@@ -546,6 +546,41 @@ export function computeSnapshot(
 }
 
 // ---------------------------------------------------------------------------
+// Manual click helpers — single source of truth for cooldown + yield formulas
+// ---------------------------------------------------------------------------
+
+/**
+ * Cooldown in ms for a manual tap on a verb. Level drives speed.
+ * Floor of 50ms prevents infinite-speed tapping at very high levels.
+ *
+ *   cooldown = max(50, 1000 / (level × base_event_rate))
+ */
+export function verbCooldownMs(
+  level: number,
+  baseEventRate: number,
+): number {
+  return Math.max(50, 1000 / (level * baseEventRate));
+}
+
+/**
+ * Engagement earned from a single manual tap. BUY count drives yield.
+ *
+ *   earned = base_event_yield × (1 + count) × algoMod × clout �� kit
+ */
+export function verbYieldPerTap(
+  generator: GeneratorState,
+  state: GameState,
+  staticData: StaticData,
+): number {
+  const def = staticData.generators[generator.id];
+  const rawModifier = getAlgorithmModifier(state.algorithm, generator.id);
+  const algoMod = effectiveAlgorithmModifier(rawModifier, def.trend_sensitivity);
+  const clout = cloutBonus(state.player.clout_upgrades, staticData);
+  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
+  return def.base_event_yield * (1 + generator.count) * algoMod * clout * kit;
+}
+
+// ---------------------------------------------------------------------------
 // Manual click — "Post" beat of the core loop
 // ---------------------------------------------------------------------------
 
@@ -583,26 +618,13 @@ export function postClick(
   // Gate B: reject unowned generators (verb not yet Unlocked).
   if (!genState.owned) return state;
 
-  // Cooldown gate: level drives tap speed. Floor of 50ms prevents
-  // infinite-speed tapping at very high levels.
-  const cooldownMs =
-    Math.max(50, 1000 / (genState.level * def.base_event_rate));
-  if (now - (state.player.last_manual_click_at[verbId] ?? 0) < cooldownMs) {
+  // Cooldown gate via extracted helper (single source of truth).
+  const cooldown = verbCooldownMs(genState.level, def.base_event_rate);
+  if (now - (state.player.last_manual_click_at[verbId] ?? 0) < cooldown) {
     return state;
   }
 
-  const rawModifier = getAlgorithmModifier(state.algorithm, verbId);
-  const algoMod = effectiveAlgorithmModifier(
-    rawModifier,
-    def.trend_sensitivity,
-  );
-  const clout = cloutBonus(state.player.clout_upgrades, staticData);
-  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
-
-  // BUY count drives yield: (1 + count) so even at count=0 the player
-  // earns base yield from manual taps.
-  const earned = def.base_event_yield * (1 + genState.count) *
-    algoMod * clout * kit;
+  const earned = verbYieldPerTap(genState, state, staticData);
 
   return {
     ...state,

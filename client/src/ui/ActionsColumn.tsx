@@ -12,12 +12,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { GameState, GeneratorId, StaticData } from '../types.ts';
 import {
-  levelMultiplier,
-  effectiveAlgorithmModifier,
-  cloutBonus,
+  verbCooldownMs,
+  verbYieldPerTap,
 } from '../game-loop/index.ts';
-import { getAlgorithmModifier } from '../algorithm/index.ts';
-import { kitEngagementBonus } from '../creator-kit/index.ts';
 import { GENERATOR_DISPLAY } from './display.ts';
 import { fmtCompact } from './format.ts';
 
@@ -77,26 +74,8 @@ const LADDER_VERBS: GeneratorId[] = [
 // ---------------------------------------------------------------------------
 
 /** Compute per-verb yield per tap (same formula as postClick's earned). */
-function yieldPerTap(
-  verbId: GeneratorId,
-  state: GameState,
-  staticData: StaticData,
-): number {
-  const def = staticData.generators[verbId];
-  const genState = state.generators[verbId];
-  const rawMod = getAlgorithmModifier(state.algorithm, verbId);
-  const algoMod = effectiveAlgorithmModifier(rawMod, def.trend_sensitivity);
-  const clout = cloutBonus(state.player.clout_upgrades, staticData);
-  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
-  return def.base_event_yield * levelMultiplier(genState.level) * algoMod * clout * kit;
-}
-
-/** Cooldown in ms for a verb at its current count. */
-function cooldownMs(verbId: GeneratorId, state: GameState, staticData: StaticData): number {
-  const def = staticData.generators[verbId];
-  const count = state.generators[verbId].count;
-  return 1000 / (Math.max(1, count) * def.base_event_rate);
-}
+// Yield and cooldown formulas are imported from game-loop (single source of
+// truth — verbYieldPerTap, verbCooldownMs). No local copies.
 
 // ---------------------------------------------------------------------------
 // FloatItem for tap feedback
@@ -127,8 +106,9 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
   const genState = state.generators[verbId];
   const display = GENERATOR_DISPLAY[verbId];
   const color = VERB_COLOR[verbId] ?? display.color;
-  const perTap = yieldPerTap(verbId, state, staticData);
-  const cdMs = cooldownMs(verbId, state, staticData);
+  const perTap = verbYieldPerTap(state.generators[verbId], state, staticData);
+  const def = staticData.generators[verbId];
+  const cdMs = verbCooldownMs(state.generators[verbId].level, def.base_event_rate);
   const lastTap = state.player.last_manual_click_at[verbId] ?? 0;
 
   // Cooldown progress (0 = just tapped, 1 = ready).
@@ -314,8 +294,8 @@ export function ActionsColumn({ state, staticData, onClickVerb, onUnlockVerb }: 
     LADDER_VERBS
       .filter((id) => state.generators[id].owned)
       .sort((a, b) => {
-        const cdA = 1000 / (Math.max(1, state.generators[a].count) * staticData.generators[a].base_event_rate);
-        const cdB = 1000 / (Math.max(1, state.generators[b].count) * staticData.generators[b].base_event_rate);
+        const cdA = verbCooldownMs(state.generators[a].level, staticData.generators[a].base_event_rate);
+        const cdB = verbCooldownMs(state.generators[b].level, staticData.generators[b].base_event_rate);
         return cdA - cdB;
       }),
     [state.generators, staticData],

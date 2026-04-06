@@ -15,7 +15,7 @@ import { createPortal } from 'react-dom';
 import type { GeneratorId, GeneratorState } from '../types.ts';
 import type { StaticData } from '../types.ts';
 import { generatorUpgradeCost } from '../generator/index.ts';
-import { levelMultiplier } from '../game-loop/index.ts';
+import { verbCooldownMs } from '../game-loop/index.ts';
 import type { GeneratorDisplay } from './display.ts';
 import { fmtCompact } from './format.ts';
 
@@ -82,9 +82,11 @@ export function UpgradeDrawer({
   }, []);
 
   const currentLevel = generatorState.level;
-  const currentMulti = levelMultiplier(currentLevel);
   const def = staticData.generators[id];
   const atMax = currentLevel >= def.max_level;
+
+  // Level drives cooldown speed (task #132). Single source of truth: verbCooldownMs.
+  const currentCooldown = verbCooldownMs(currentLevel, def.base_event_rate);
 
   // Compute next 3 levels. When the generator is at max_level, the preview
   // rows have nothing meaningful to show — clamp them off.
@@ -94,9 +96,9 @@ export function UpgradeDrawer({
         .filter((offset) => currentLevel + offset <= def.max_level)
         .map((offset) => {
           const level = currentLevel + offset;
-          const multi = levelMultiplier(level);
+          const cooldown = verbCooldownMs(level, def.base_event_rate);
           const cost = generatorUpgradeCost(id, level - 1, staticData);
-          return { level, multi, cost };
+          return { level, cooldown, cost };
         });
 
   const nextLevel = levels[0];
@@ -173,7 +175,7 @@ export function UpgradeDrawer({
         <div className="upgrade-drawer-header">
           <div className="upgrade-drawer-title">Upgrade {display.name}</div>
           <div className="upgrade-drawer-current">
-            Current: Level {currentLevel}&nbsp;&nbsp;(×{currentMulti.toFixed(2)} multi.)
+            Current: Level {currentLevel}&nbsp;&nbsp;({(currentCooldown / 1000).toFixed(1)}s cooldown)
           </div>
         </div>
 
@@ -182,7 +184,7 @@ export function UpgradeDrawer({
           {atMax && (
             <div className="upgrade-level-row action-row upgrade-level-max">
               <span className="upgrade-level-lv">MAX</span>
-              <span className="upgrade-level-multi">×{currentMulti.toFixed(2)}</span>
+              <span className="upgrade-level-multi">{(currentCooldown / 1000).toFixed(1)}s</span>
               <span className="upgrade-level-cost">no further upgrades</span>
               <button
                 ref={primaryBtnRef}
@@ -202,7 +204,7 @@ export function UpgradeDrawer({
                 className={`upgrade-level-row${isAction ? ' action-row' : ' preview-row'}`}
               >
                 <span className="upgrade-level-lv">Lv {row.level}</span>
-                <span className="upgrade-level-multi">×{row.multi.toFixed(2)}</span>
+                <span className="upgrade-level-multi">{(row.cooldown / 1000).toFixed(1)}s</span>
                 <span className={`upgrade-level-cost${isAction && !canAfford ? ' insufficient' : ''}`}>
                   cost: {fmtCompact(row.cost)}
                 </span>
