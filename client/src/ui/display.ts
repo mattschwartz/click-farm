@@ -39,7 +39,7 @@ export const GENERATOR_DISPLAY: Record<GeneratorId, GeneratorDisplay> = {
     name: 'Chirps',
     icon: '💬',
     category: 'starter',
-    color: '#4a9dd6',
+    color: '#4d9ef0',
     tagline: 'Quick text posts — your voice in 280 characters.',
   },
   selfies: {

@@ -109,7 +109,7 @@ interface FloatItem {
   y: number; // % from top
 }
 
-const FLOAT_TTL_MS = 500;
+const FLOAT_TTL_MS = 650; // slightly longer than the 600ms CSS animation
 
 // ---------------------------------------------------------------------------
 // LiveVerbButton
@@ -263,7 +263,7 @@ function GhostSlot({ verbId, threshold, canAfford, cost, isAwakened, onUnlock }:
         aria-label={`${display.name} locked at ${threshold} followers`}
       >
         {VERB_IMAGE[verbId]
-          ? <img className="ghost-icon-img" src={VERB_IMAGE[verbId]} alt={display.name} />
+          ? <img className="ghost-icon-img" src={VERB_IMAGE[verbId]} alt="" aria-hidden="true" />
           : <span className="ghost-icon" style={{ color }}>{display.icon}</span>
         }
         <span className="ghost-info">
@@ -283,7 +283,7 @@ function GhostSlot({ verbId, threshold, canAfford, cost, isAwakened, onUnlock }:
       style={{ '--verb-color': color } as React.CSSProperties}
     >
       {VERB_IMAGE[verbId]
-        ? <img className="ghost-icon-img" src={VERB_IMAGE[verbId]} alt={display.name} />
+        ? <img className="ghost-icon-img" src={VERB_IMAGE[verbId]} alt="" aria-hidden="true" />
         : <span className="ghost-icon">{display.icon}</span>
       }
       <span className="ghost-info">
