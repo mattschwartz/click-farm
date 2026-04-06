@@ -26,12 +26,14 @@ import chirpImg from '../assets/chirp.png';
 import selfieImg from '../assets/selfie.png';
 import livestreamImg from '../assets/livestream.png';
 import podcastImg from '../assets/podcast.png';
+import viralStuntsImg from '../assets/viral-stunts.png';
 
 const VERB_IMAGE: Partial<Record<string, string>> = {
   chirps: chirpImg,
   selfies: selfieImg,
   livestreams: livestreamImg,
   podcasts: podcastImg,
+  viral_stunts: viralStuntsImg,
 };
 
 // ---------------------------------------------------------------------------
