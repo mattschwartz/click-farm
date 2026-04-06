@@ -4,7 +4,7 @@ description: A progressive color ramp for compact number suffixes (K through Dc)
 created: 2026-04-06
 author: ux-designer
 status: draft
-reviewers: [engineer]
+reviewers: [game-designer, engineer]
 ---
 
 # Proposal: Compact Number Tier Colors
@@ -21,19 +21,19 @@ Apply a progressive color ramp to the suffix portion of formatted numbers. The n
 
 The ramp moves from **neutral grey through cool blue, into violet-purple, ending at hot magenta**. It avoids the three reserved functional hues: green (boost), amber-orange (penalty), and red (danger/loss).
 
-| Tier | Suffix | Token | Hex | Hue | Contrast on #FFF | Feel |
-|------|--------|-------|-----|-----|-----------------|------|
-| 1 | K | `--tier-k` | `#787878` | Neutral | ~4.6:1 | Mundane — just thousands |
-| 2 | M | `#5B748A` | `--tier-m` | Steel blue | ~4.5:1 | Getting somewhere |
-| 3 | B | `#3E6B8F` | `--tier-b` | Blue | ~4.8:1 | Billions — real money |
-| 4 | T | `#355FA0` | `--tier-t` | Deep blue | ~5.3:1 | Trillions — serious |
-| 5 | Qa | `#4E4FA0` | `--tier-qa` | Indigo | ~5.6:1 | Entering absurd territory |
-| 6 | Qi | `#6640A0` | `--tier-qi` | Violet | ~5.9:1 | Deep space |
-| 7 | Sx | `#7E3090` | `--tier-sx` | Purple | ~6.4:1 | Rich |
-| 8 | Sp | `#922080` | `--tier-sp` | Magenta | ~6.8:1 | Hot |
-| 9 | Oc | `#A01868` | `--tier-oc` | Fuchsia | ~7.0:1 | Burning |
-| 10 | No | `#A81050` | `--tier-no` | Hot pink | ~7.3:1 | Nearly maxed |
-| 11 | Dc | `#B00840` | `--tier-dc` | Crimson-pink | ~7.6:1 | Absurd peak |
+| Tier | Suffix | Token | Hex | Hue | Contrast on #FAF8F5 | Feel |
+|------|--------|-------|-----|-----|-------------------|------|
+| 1 | K | `--tier-k` | `#6E6E6E` | Neutral | 4.8:1 | Mundane — just thousands |
+| 2 | M | `--tier-m` | `#5B748A` | Steel blue | 4.6:1 | Getting somewhere |
+| 3 | B | `--tier-b` | `#3E6B8F` | Blue | 5.3:1 | Billions — real money |
+| 4 | T | `--tier-t` | `#355FA0` | Deep blue | 6.0:1 | Trillions — serious |
+| 5 | Qa | `--tier-qa` | `#4E4FA0` | Indigo | 6.7:1 | Entering absurd territory |
+| 6 | Qi | `--tier-qi` | `#6640A0` | Violet | 7.1:1 | Deep space |
+| 7 | Sx | `--tier-sx` | `#7E3090` | Purple | 7.3:1 | Rich |
+| 8 | Sp | `--tier-sp` | `#922080` | Magenta | 7.2:1 | Hot |
+| 9 | Oc | `--tier-oc` | `#A01868` | Fuchsia | 7.0:1 | Burning |
+| 10 | No | `--tier-no` | `#A81050` | Hot pink | 6.9:1 | Nearly maxed |
+| 11 | Dc | `--tier-dc` | `#B00840` | Crimson-pink | 6.7:1 | Absurd peak |
 
 ### Design rationale
 
@@ -51,10 +51,13 @@ The ramp moves from **neutral grey through cool blue, into violet-purple, ending
 
 | Reserved color | Hex | Where used | Nearest tier | Distance |
 |---------------|-----|-----------|-------------|----------|
-| Boost green | `#2F7A3A` | Algorithm modifier chips | T (`#355FA0`) | Different hue family entirely (green vs blue) |
-| Penalty amber | `#C45A10` | Algorithm modifier chips | None close | Orange family, ramp doesn't enter orange |
-| Danger red | `#B71C1C` | Scandal, loss | Dc (`#B00840`) | Dc is magenta-pink (hue ~340), red is pure red (hue ~0). Visually distinct. |
-| Mood edges | Various | Background vignette | Low risk — mood is at 0.14-0.22 opacity on background, suffixes are foreground text |
+| Accent gold | `#A0730E` | LVL/BUY/AUTO affordance (ready-to-buy), floating number gold | None close | Gold is warm yellow-brown (hue ~43), ramp stays grey→blue→purple→pink |
+| Accent green | `#2F7A3A` | Audience mood recovery, positive rate arrows | T (`#355FA0`) | Different hue family entirely (green vs blue) |
+| Accent amber | `#C45A10` | Audience mood degradation, unaffordable cost labels | None close | Orange family, ramp doesn't enter orange |
+| Accent red | `#B71C1C` | Audience mood critical, loss events | Dc (`#B00840`) | Dc is magenta-pink (hue ~340), red is pure red (hue ~0). Visually distinct. |
+| Viral burst glow | `--glow-halo-rgb` (255,214,107) | Viral event edge glow | None close | Warm gold, foreground text vs background glow — no overlap |
+| Platform card accents | Various per platform | Top-border tint on platform cards | Skroll (`#b84dff`) near Qi/Sx | Tier suffixes are small inline text; platform accents are card-level borders. Different scale, different context. |
+| Generator badge breathing | `--accent-gold` | Lvl-up ready state glow | None close | Gold family |
 
 ### Application rule
 
@@ -91,4 +94,28 @@ No motion involved — this is a static color property. Color-blind players: the
 
 ## Open Questions
 
-1. Should the floating numbers on verb buttons also get tier-colored suffixes, or should they stay gold? The gold color is part of the "you earned something" reward signal — adding tier color might dilute it. Recommendation: floating numbers stay gold, tier colors apply everywhere else. **Owner: game-designer**
+1. **[RESOLVED]** Should the floating numbers on verb buttons also get tier-colored suffixes, or should they stay gold? The gold color is part of the "you earned something" reward signal — adding tier color might dilute it. Recommendation: floating numbers stay gold, tier colors apply everywhere else. **Owner: game-designer**
+  - Answer (game-designer): **Floating numbers stay gold.** Gold is the reward signal — "you earned this." Tier coloring on floating numbers would make them informational instead of celebratory. Tier color belongs on persistent displays (top bar, generator rows, platform cards) where the player is scanning. Floating numbers are momentary dopamine hits where color = "good."
+
+---
+## Revision: 2026-04-06 — ux-designer
+
+Addresses game-designer's three review comments: (1) Fixed table column order — Token before Hex consistently across all rows. (2) Re-measured all contrast ratios against `#FAF8F5` (warm base) instead of `#FFF`. K darkened from `#787878` to `#6E6E6E` to pass 4.5:1 on the warmer surface. (3) Replaced collision avoidance table — removed dead algorithm modifier chips and scandal references, replaced with surviving systems: audience mood colors, viral burst glow, platform card accents, generator badge breathing.
+
+---
+# Review: game-designer
+
+**Date**: 2026-04-06
+**Decision**: Request for Comment
+
+**Comments**
+
+The ramp direction is right — neutral grey at K through hot magenta at Dc reads as "getting bigger." The suffix-only application rule is correct. Three issues need fixing before this can be accepted:
+
+**1. Table formatting error.** Row 1 has columns in Token/Hex order (`--tier-k` | `#787878`), but rows 2–11 swap to Hex/Token (`#5B748A` | `--tier-m`). Pick one column order and apply it consistently.
+
+**2. Contrast measured against wrong background.** The table measures contrast against `#FFF` (pure white), but the game uses a warm rust background (`#FAF8F5` per visual-identity). Contrast ratios must be re-measured against the actual game background. K at 4.6:1 against white may dip below the 4.5:1 WCAG floor against the warmer surface. Re-run the numbers.
+
+**3. Collision avoidance table references dead systems.** "Algorithm modifier chips" (boost green, penalty amber) — the algorithm system is being removed per the accepted Remove Algorithm Weather System proposal. Those chips will not exist. "Scandal, loss" for danger red — scandals were removed and replaced by audience mood. The collision table should reference the systems that actually survive: audience mood edge colors, viral burst glow, generator badge breathing, platform card accents, and the buy/level affordance states.
+
+**OQ1 resolved.** Floating numbers stay gold. Answer written inline.
