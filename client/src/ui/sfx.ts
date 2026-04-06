@@ -82,14 +82,16 @@ async function decodeBuffer(url: string, audioCtx: AudioContext): Promise<AudioB
 let bgMusic: HTMLAudioElement | null = null;
 let bgMusicStarted = false;
 
+/** Create the audio element (if needed) and start playback if unmuted. */
 function ensureBgMusic(): void {
   if (typeof window === 'undefined') return;
+  // Always create the element on gesture so it's ready when unmuted later.
   if (!bgMusic) {
     bgMusic = new Audio(ost1Src);
     bgMusic.loop = true;
-    bgMusic.volume = 0.3;
+    bgMusic.volume = musicVol;
   }
-  if (!bgMusicStarted) {
+  if (!masterMuted && !bgMusicStarted) {
     bgMusic.play().then(() => { bgMusicStarted = true; }).catch(() => {});
   }
 }
@@ -165,15 +167,50 @@ function play(
 }
 
 // ---------------------------------------------------------------------------
+// Volume state — driven by settings via setSfxVolume / setMusicVolume.
+// ---------------------------------------------------------------------------
+
+let masterMuted = false;
+let sfxVol = 0.5;   // 0–1
+let musicVol = 0.3;  // 0–1
+
+/** Called by settings UI when master sound toggle changes. */
+export function setSoundEnabled(enabled: boolean): void {
+  masterMuted = !enabled;
+  if (bgMusic) {
+    if (masterMuted) {
+      bgMusic.pause();
+    } else {
+      // Start or resume — covers both "was playing before" and "never started
+      // because sound was off on load".
+      bgMusic.play().then(() => { bgMusicStarted = true; }).catch(() => {});
+    }
+  }
+}
+
+/** Called by settings UI when music volume slider changes (0–100). */
+export function setMusicVolume(v: number): void {
+  musicVol = Math.max(0, Math.min(1, v / 100));
+  if (bgMusic) bgMusic.volume = musicVol;
+}
+
+/** Called by settings UI when SFX volume slider changes (0–100). */
+export function setSfxVolume(v: number): void {
+  sfxVol = Math.max(0, Math.min(1, v / 100));
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 /** Play the click sound with +-8% pitch randomization. */
 export function playClick(): void {
-  play(clickSfx, 0.3, [0.92, 1.08]);
+  if (masterMuted) return;
+  play(clickSfx, sfxVol * 0.6, [0.92, 1.08]);
 }
 
 /** Play the purchase sound with +-5% pitch randomization. */
 export function playPurchase(): void {
-  play(purchaseSfx, 0.4, [0.95, 1.05]);
+  if (masterMuted) return;
+  play(purchaseSfx, sfxVol * 0.8, [0.95, 1.05]);
 }

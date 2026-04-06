@@ -115,6 +115,8 @@ export function GameScreen() {
     settings,
     setReduceMotion,
     setSound,
+    setMusicVolume,
+    setSfxVolume,
   } = useSettings();
 
   // Render-time derived values --------------------------------------------
@@ -482,6 +484,8 @@ export function GameScreen() {
           settings={settings}
           onSetReduceMotion={setReduceMotion}
           onSetSound={setSound}
+          onSetMusicVolume={setMusicVolume}
+          onSetSfxVolume={setSfxVolume}
           rebrandCount={state.player.rebrand_count}
           onClose={() => setShowSettingsModal(false)}
           onResetRequested={() => {

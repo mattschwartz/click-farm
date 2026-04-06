@@ -45,6 +45,8 @@ interface Props {
   settings: Settings;
   onSetReduceMotion: (v: boolean) => void;
   onSetSound: (v: boolean) => void;
+  onSetMusicVolume: (v: number) => void;
+  onSetSfxVolume: (v: number) => void;
   /** Current rebrand count — drives the export filename. */
   rebrandCount: number;
   onClose: () => void;
@@ -63,6 +65,8 @@ export function SettingsModal({
   settings,
   onSetReduceMotion,
   onSetSound,
+  onSetMusicVolume,
+  onSetSfxVolume,
   rebrandCount,
   onClose,
   onResetRequested,
@@ -216,6 +220,20 @@ export function SettingsModal({
                 checked={settings.sound}
                 onChange={onSetSound}
               />
+              {settings.sound && (
+                <>
+                  <SettingsSlider
+                    label="Music"
+                    value={settings.musicVolume}
+                    onChange={onSetMusicVolume}
+                  />
+                  <SettingsSlider
+                    label="SFX"
+                    value={settings.sfxVolume}
+                    onChange={onSetSfxVolume}
+                  />
+                </>
+              )}
             </div>
           </section>
 
@@ -335,6 +353,35 @@ function SettingsToggle({
       >
         <span className="settings-toggle-thumb" aria-hidden />
       </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Slider subcomponent
+// ---------------------------------------------------------------------------
+
+interface SliderProps {
+  label: string;
+  value: number; // 0–100
+  onChange: (v: number) => void;
+}
+
+function SettingsSlider({ label, value, onChange }: SliderProps) {
+  return (
+    <div className="settings-slider-row">
+      <label className="settings-slider-label">{label}</label>
+      <input
+        type="range"
+        className="settings-slider"
+        min={0}
+        max={100}
+        step={1}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        aria-label={`${label} volume`}
+      />
+      <span className="settings-slider-value">{value}</span>
     </div>
   );
 }

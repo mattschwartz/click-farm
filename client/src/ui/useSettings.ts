@@ -12,12 +12,19 @@ import {
   saveSettings,
   type Settings,
 } from '../settings/index.ts';
+import {
+  setSoundEnabled,
+  setMusicVolume as setSfxMusicVolume,
+  setSfxVolume as setSfxSfxVolume,
+} from './sfx.ts';
 
 export interface UseSettingsResult {
   settings: Settings;
   setReduceTimePressure: (v: boolean) => void;
   setReduceMotion: (v: boolean) => void;
   setSound: (v: boolean) => void;
+  setMusicVolume: (v: number) => void;
+  setSfxVolume: (v: number) => void;
 }
 
 export function useSettings(): UseSettingsResult {
@@ -37,9 +44,12 @@ export function useSettings(): UseSettingsResult {
     }
   }, [settings.reduceMotion]);
 
-  // Persist on every change.
+  // Persist on every change and sync audio state.
   useEffect(() => {
     saveSettings(settings);
+    setSoundEnabled(settings.sound);
+    setSfxMusicVolume(settings.musicVolume);
+    setSfxSfxVolume(settings.sfxVolume);
   }, [settings]);
 
   const setReduceTimePressure = useCallback(
@@ -55,11 +65,21 @@ export function useSettings(): UseSettingsResult {
     (v: boolean) => setSettings((s) => ({ ...s, sound: v })),
     [],
   );
+  const setMusicVolume = useCallback(
+    (v: number) => setSettings((s) => ({ ...s, musicVolume: v })),
+    [],
+  );
+  const setSfxVolume = useCallback(
+    (v: number) => setSettings((s) => ({ ...s, sfxVolume: v })),
+    [],
+  );
 
   return {
     settings,
     setReduceTimePressure,
     setReduceMotion,
     setSound,
+    setMusicVolume,
+    setSfxVolume,
   };
 }
