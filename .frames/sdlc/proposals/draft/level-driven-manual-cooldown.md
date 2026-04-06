@@ -1,6 +1,6 @@
 ---
 name: Level-Driven Manual Cooldown
-description: Swap manual cooldown from count-driven to level-driven so that LVL UP makes tapping faster and BUY purely adds passive workers.
+description: Redefine the two Actions-column buttons so LVL UP controls tap speed (cooldown) and BUY controls tap power (multiplier), with automation deferred to a separate future system.
 created: 2026-04-06
 author: game-designer
 status: draft
@@ -11,49 +11,32 @@ reviewers: [architect, engineer]
 
 ## Problem
 
-The manual-action-ladder's cooldown formula ties tapping speed to automator count:
+The manual-action-ladder proposal tied manual cooldown to automator count (`BUY`) and yield scaling to level (`LVL UP`). This mapping has two problems:
 
-```
-cooldownMs = 1000 / (max(1, count) * base_event_rate)
-```
+1. **It's emotionally backwards.** When a player taps LVL UP, they expect to get *better* at the verb — faster, not just bigger numbers. When they tap BUY, they expect to get *more stuff*, not faster fingers. The current mapping fights universal game literacy.
 
-This means **BUY** (which increases count) makes the player's manual tapping faster, while **LVL UP** (which increases level) only makes each tap worth more engagement. From the player's perspective, this mapping is backwards:
-
-- "I leveled up my chirping... why didn't I get faster?" LVL UP should feel like personal improvement — stronger AND faster.
-- "I bought another automator... why am I tapping faster?" BUY should feel like hiring a worker — more passive output, not a change to what my hands do.
-
-The current mapping is architecturally clean but emotionally wrong. Player intuition expects leveling up to make them better at doing the thing. Buying more units should grow the team, not change the player's personal ability.
+2. **It conflates manual improvement with automation.** BUY currently adds an automator (increases count), which both starts passive income AND reduces manual cooldown. But the Actions column is the *manual tapping* column. Both buttons there should improve the player's manual tapping experience. Automation is a separate system that the player unlocks later through a different surface.
 
 ## Proposal
 
-### Swap the cooldown driver from count to level
+### Two buttons, two axes, both manual-only
 
-**New formula:**
+The Actions column shows two upgrade buttons per verb. Neither spawns a generator or automator. Both improve the player's manual tapping:
+
+| Button | What it does | What it increases | Player feeling |
+|---|---|---|---|
+| **LVL UP** | Reduces cooldown | `level` | "I'm getting faster at this" |
+| **BUY** | Increases yield multiplier | `count` | "Each tap is worth more now" |
+
+### Cooldown formula (level-driven)
 
 ```
 cooldownMs = 1000 / (level * base_event_rate)
 ```
 
-**What changes:**
+Level starts at 1, caps at `max_level` (currently 10). At level 1, cooldown equals the base cooldown from §3 of the manual-action-ladder. Each level-up divides the cooldown further. The player feels every LVL UP in their tapping rhythm immediately.
 
-| Surface | Before (count-driven) | After (level-driven) |
-|---|---|---|
-| Manual cooldown | `1000 / (max(1, count) * base_event_rate)` | `1000 / (level * base_event_rate)` |
-| LVL UP effect | Yield multiplier only | Yield multiplier + cooldown reduction |
-| BUY effect | Passive throughput + cooldown reduction | Passive throughput only |
-| Phantom-hand floor | Required (`max(1, count)` at count=0) | Not needed (level is always >= 1) |
-| Cooldown floor | Asymptotic toward 0.01s hard floor | Caps at max_level (known minimum per verb) |
-
-**What stays the same:**
-
-- Passive production formula: `count * base_event_rate * base_event_yield * levelMultiplier(level) * algoMod * clout * kit` — unchanged.
-- Per-tap earned formula: `base_event_yield * levelMultiplier(level) * algoMod * clout_bonus * kit_bonus` — unchanged.
-- All balance cells (yield, rate, costs, thresholds, algorithm modifiers, platform affinities) — unchanged.
-- The 0.01s hard cooldown floor — still exists as a safety clamp, but most verbs can't reach it since level caps at 10.
-
-### Cooldown progression per verb at each level
-
-Level starts at 1, max is 10. Each level halves, thirds, etc. of the base cooldown:
+**Cooldown progression per verb:**
 
 | Verb | L1 (base) | L2 | L5 | L10 (max) |
 |---|---|---|---|---|
@@ -63,32 +46,51 @@ Level starts at 1, max is 10. Each level halves, thirds, etc. of the base cooldo
 | podcasts | 30,303ms | 15,151ms | 6,060ms | 3,030ms |
 | viral_stunts | 120,482ms | 60,241ms | 24,096ms | 12,048ms |
 
-Each LVL UP is directly felt in the player's hand. The progression is bounded and predictable — no asymptotic tail chasing an infinitesimal floor.
+No phantom-hand floor needed — level is always >= 1, so cooldown is always defined.
+
+### Yield formula (count-driven)
+
+Each BUY increases count. Count multiplies the engagement earned per manual tap:
+
+```
+earned = base_event_yield * count_multiplier(count) * algoMod * clout_bonus * kit_bonus
+```
+
+The exact shape of `count_multiplier(count)` — whether it's linear (`count`), uses the existing `levelMultiplier` curve, or something else — is an architect/engineer question (see OQ1). The design intent is: each BUY makes every tap visibly stronger. The player sees bigger numbers per tap.
+
+**Note:** `levelMultiplier(level)` no longer appears in the per-tap yield formula. Level drives cooldown only. Count drives yield only. One button, one axis. Clean split.
+
+### Automation is separate and deferred
+
+Automators (passive production) are not part of the Actions column. They will be introduced as a separate unlock later in the game's lifecycle, through a different UI surface. When they arrive, they will use their own production formula. Until then, count=0 for passive purposes and all engagement comes from manual tapping.
+
+This means the current passive production formula (`count * base_event_rate * base_event_yield * levelMultiplier * ...`) produces zero for all verbs in the pre-automator game — which is correct. The player's only income source is tapping.
 
 ### Why this is better
 
-1. **Matches player intuition.** "Level up = I get better" is universal game literacy. Every RPG, every upgrade system, every skill tree works this way. Fighting the convention costs us a teaching moment on every single verb unlock.
+1. **One button, one axis.** LVL UP = speed. BUY = power. No overlap, no confusion. The player never wonders "which button makes me tap faster?"
 
-2. **Clean narrative split.** LVL UP = "I personally improve at this verb" (faster + stronger). BUY = "I hire more workers" (passive output scales). Two buttons, two stories, zero overlap.
+2. **Matches universal game literacy.** "Level up = get better at the thing" is how every RPG, every skill tree, every upgrade system works. "Buy more = get more" is equally intuitive.
 
-3. **Bounded cooldown.** Level caps at 10, so cooldown has a known floor per verb. No more asymptotic shrink toward 0.01s as count grows unboundedly. The designer can predict exact cooldown at every level. The UX can show a clean progression bar.
+3. **Actions column is purely manual.** Both buttons improve what your hands do. No automation leaking into the manual tapping surface. When automators arrive, they'll have their own home.
 
-4. **Eliminates the phantom-hand floor.** `max(1, count)` was needed because count=0 is a valid pre-Automate state and cooldown can't be infinite. Level is always >= 1, so the formula just works. One fewer special case in the codebase.
+4. **Bounded cooldown progression.** Level caps at 10, so cooldown has a known floor per verb. No asymptotic shrink. The designer can predict exact cooldowns. The UX can show a clean progression bar.
 
-5. **LVL UP becomes the dual-payoff button.** The manual-action-ladder's original "dual payoff" teaching moment (one purchase improves two things simultaneously) is preserved — it just moves from BUY to LVL UP, where players expect it.
+5. **Eliminates the phantom-hand floor.** `max(1, count)` was needed because count=0 is valid pre-Automate. Level is always >= 1, so the formula just works. One fewer special case.
 
 ### Supersession
 
 This proposal supersedes the following sections of `proposals/accepted/manual-action-ladder.md`:
 
-- **§4 (Automate teaching moment):** The "first BUY halves your cooldown" dual payoff becomes "first LVL UP halves your cooldown." The teaching moment survives; the trigger changes.
+- **§4 (Automate teaching moment):** The dual payoff moves from BUY to LVL UP. The teaching moment ("one purchase improves two things") is no longer relevant — each button improves exactly one axis.
 - **§12 (What This Locks In) — cooldown formula:** `cooldown = 1 / (max(1, count) * base_event_rate)` is replaced by `cooldown = 1 / (level * base_event_rate)`.
-- **§12 — phantom-hand floor scoping:** No longer needed. The `max(1, count)` floor and its passive-production scoping caveat are eliminated entirely.
-- **§14e (automation curve):** The cooldown progression table keyed by count is superseded by the level-keyed progression table above.
-- **§14f (manual-supplementary ratio):** The ratio formula `100 / (N * base_event_rate)` where N=count needs rework. With level-driven cooldown, the supplementary ratio depends on level (bounded) rather than count (unbounded). At max level, manual output per second = `(1/cooldown) * base_event_yield * levelMultiplier(level)`. The 10% ceiling still holds structurally but the count at which it kicks in changes.
-- **Architect re-review (OQ16):** The phantom-hand floor approval and passive-production scoping clarification are moot — the floor is gone.
+- **§12 — phantom-hand floor scoping:** Eliminated. No floor needed.
+- **§12 — per-tap earned formula:** `levelMultiplier(level)` is removed from the earned formula. Replaced by `count_multiplier(count)`.
+- **§14e (automation curve):** The cooldown progression table keyed by count is superseded by the level-keyed table above.
+- **§14f (manual-supplementary ratio):** Moot until automators exist. When they arrive, the ratio will be recalculated against the new formula.
+- **Architect re-review (OQ16):** Phantom-hand floor approval is moot — the floor is gone.
 
-The `postClick` cooldown gate signature changes:
+The `postClick` cooldown gate changes:
 
 ```
 // Before:
@@ -98,17 +100,33 @@ const cooldownMs = 1000 / (Math.max(1, genState.count) * def.base_event_rate);
 const cooldownMs = 1000 / (genState.level * def.base_event_rate);
 ```
 
+The per-tap earned formula changes:
+
+```
+// Before:
+earned = def.base_event_yield * levelMultiplier(genState.level) * algoMod * clout * kit
+
+// After:
+earned = def.base_event_yield * countMultiplier(genState.count) * algoMod * clout * kit
+```
+
 All other sections of manual-action-ladder remain in force.
 
 ## References
 
 1. `.frames/sdlc/proposals/accepted/manual-action-ladder.md` — the accepted proposal this partially supersedes (§4, §12, §14e, §14f)
-2. `.frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md` — generator rate table and cost structure (unchanged by this proposal)
+2. `.frames/sdlc/proposals/accepted/generator-balance-and-algorithm-states.md` — generator rate table and cost structure
 3. `client/src/game-loop/index.ts` — `postClick` implementation with current count-driven cooldown gate
 4. `client/src/static-data/index.ts` — generator definitions with `base_event_rate`, `max_level` fields
 
 ## Open Questions
 
-1. **§14f supplementary ratio rework.** With level-driven cooldown, manual throughput at max level is fixed (not count-dependent). The "manual fades to 10% of passive" dynamic now depends on count growing past a threshold while level is capped. The structural 10% ceiling should still hold but the table needs recalculating. **Owner: game-designer**
+1. **Shape of `count_multiplier(count)`.** Is it linear (`count`), exponential (reuse `levelMultiplier` curve applied to count), or something else? The design intent is "each BUY makes taps visibly stronger" but the exact curve affects pacing. **Owner: architect** (formula shape), **game-designer** (pacing feel)
 
-2. **UX implications for cooldown display.** If cooldown is level-driven, the LVL UP button can show "cooldown: Xms -> Yms" as a preview. This is a cleaner affordance than count-driven cooldown (where the player wouldn't associate BUY with tapping speed). Should the UX spec reflect this? **Owner: ux-designer**
+2. **BUY cost formula.** Currently `ceil(base_buy_cost * 1.15^count_owned)`. Does this still make sense when BUY is a manual-yield upgrade rather than an automator purchase? The exponential scaling may need retuning. **Owner: game-designer**
+
+3. **LVL UP cost formula.** Currently `ceil(base_upgrade_cost * levelMultiplier(level+1))`. If level now drives cooldown instead of yield, should the cost curve change to reflect the value of cooldown reduction at each level? **Owner: game-designer**
+
+4. **UX implications for cooldown display.** LVL UP can show a cooldown preview ("400ms -> 200ms"). BUY can show a multiplier preview ("x1 -> x2"). Both are clean affordances. Should the UX spec reflect this? **Owner: ux-designer**
+
+5. **Passive production formula when automators arrive.** The current formula uses both count and levelMultiplier. With this split, should automators use count (number of workers × rate × yield) while level drives their efficiency? Or is that a future proposal? **Owner: architect**
