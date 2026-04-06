@@ -1,5 +1,5 @@
 {
-  "next_id": 128,
+  "next_id": 130,
   "tasks": [
     {
       "id": 1,
@@ -4890,6 +4890,79 @@
         "GeneratorRow detects unowned manual-clickable generators and routes BuyButton click through onUnlock instead of onBuy",
         "Clicking 'Buy Livestreams' (or any unowned manual-clickable generator) in the middle panel successfully unlocks the generator without throwing",
         "Existing onBuy path for owned generators (additional purchases) is unchanged"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 128,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Implement glass generator sheet — single frosted panel with mood bleed-through",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Replace the individual opaque white generator cards with a single continuous frosted-glass panel. The entire Generators column is ONE glass sheet — rows are separated by hairline dividers, not card boundaries. The glass lets the algorithm-mood vignette tint through, so the sheet takes on the mood's color. Section headers (STARTER/MID/LATE) are quiet labels on the sheet. BUY/LVL buttons and modifier pills remain opaque elements sitting on top of the glass. This completes the three-column material hierarchy: arcade slabs (actions) / glass clipboard (generators) / opaque editorial (platforms).",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260406-glass-generator-sheet.md",
+          "purpose": "Accepted proposal — full spec with CSS values, hairline dividers, section headers, contrast analysis, fallback, mood bleed-through table"
+        },
+        {
+          "ref": "proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "Sibling proposal — arcade slabs on actions column, establishes the material contrast"
+        },
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "Zone map, generators column positioning and flex behavior"
+        },
+        {
+          "ref": "proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "Mood-edge vignette colors that bleed through the glass"
+        },
+        {
+          "ref": "proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "Base palette and text colors used on the sheet"
+        }
+      ],
+      "acceptance_criteria": [
+        "Generators column renders as ONE continuous panel with `background: rgba(255,255,255,0.55)`, `backdrop-filter: blur(20px)`, `-webkit-backdrop-filter: blur(20px)`, `border: 1px solid rgba(255,255,255,0.3)`, `border-radius: 16px`",
+        "Float shadow applied: `0 2px 8px -2px rgba(0,0,0,0.08), 0 8px 24px -4px rgba(0,0,0,0.05)`",
+        "Individual generator rows separated by `1px solid rgba(0,0,0,0.06)` hairline dividers — no card gaps, no individual card backgrounds",
+        "Section labels (STARTER/MID/LATE) styled: Space Grotesk 500, 11px, uppercase, `letter-spacing: 0.08em`, `color: rgba(26,26,26,0.4)`",
+        "Mood vignettes visibly tint the glass sheet when an algorithm mood is active",
+        "BUY/LVL buttons and modifier pills remain opaque elements on top of the glass — no contrast regression",
+        "`@supports` fallback: `rgba(255,255,255,0.9)` background + `1px solid #E8E4DF` border when backdrop-filter is unsupported",
+        "Actions column (arcade slabs) and Platform cards (opaque editorial) remain completely untouched",
+        "Creator Kit section is NOT part of the glass sheet — stays its own element"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 129,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Add dark gradient scrim to action buttons for text readability",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "The pixel art illustrations on action buttons compete with the white text labels. Add a bottom-third dark gradient scrim (transparent to rgba(0,0,0,0.55)) so the verb name and eng/tap label sit on a consistently dark zone. Same pattern as Netflix thumbnails — vivid image top, readable text bottom.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "Parent spec for action button visual treatment — this is an additive fix on top of it"
+        }
+      ],
+      "acceptance_criteria": [
+        "Each action button has a `::after` pseudo-element gradient scrim: `linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.55) 100%)`, covering the bottom 55% of the button, with `pointer-events: none` and matching bottom border-radius",
+        "Verb name and eng/tap text remain white (`#FFFFFF`) and sit within the darkened scrim zone",
+        "Pixel art illustration remains fully vivid in the top portion of the button — the gradient only darkens the lower half",
+        "Ghost slots are excluded — they have no pixel art, scrim is unnecessary",
+        "Scrim does not interfere with the press/spring-back translateY interaction from the physicality spec"
       ],
       "open_questions": [],
       "blocked_on": []
