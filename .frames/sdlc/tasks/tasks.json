@@ -4945,7 +4945,7 @@
       "id": 129,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Add dark gradient scrim to action buttons for text readability",
       "requester": "ux-designer",
@@ -4965,7 +4965,8 @@
         "Scrim does not interfere with the press/spring-back translateY interaction from the physicality spec"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     }
   ]
 }
