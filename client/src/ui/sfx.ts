@@ -12,6 +12,7 @@
 
 import clickSfx from '../assets/click.wav';
 import purchaseSfx from '../assets/purchase.wav';
+import ost1Src from '../assets/ost1.mp3';
 
 // ---------------------------------------------------------------------------
 // Raw data pre-fetch (no AudioContext required)
@@ -74,9 +75,30 @@ async function decodeBuffer(url: string, audioCtx: AudioContext): Promise<AudioB
 }
 
 // ---------------------------------------------------------------------------
+// Background music — HTML Audio element (streams, no decode needed).
+// Starts on first user gesture and loops indefinitely.
+// ---------------------------------------------------------------------------
+
+let bgMusic: HTMLAudioElement | null = null;
+let bgMusicStarted = false;
+
+function ensureBgMusic(): void {
+  if (typeof window === 'undefined') return;
+  if (!bgMusic) {
+    bgMusic = new Audio(ost1Src);
+    bgMusic.loop = true;
+    bgMusic.volume = 0.3;
+  }
+  if (!bgMusicStarted) {
+    bgMusic.play().then(() => { bgMusicStarted = true; }).catch(() => {});
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Global gesture listener — create context + resume on ANY user interaction.
 // This ensures the context is running before play() is called, avoiding the
 // async gap between resume() and source.start() that drops the first sound.
+// Also starts background music on first gesture.
 // ---------------------------------------------------------------------------
 
 if (typeof window !== 'undefined') {
@@ -85,6 +107,7 @@ if (typeof window !== 'undefined') {
     if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
+    ensureBgMusic();
   };
   for (const evt of ['click', 'touchstart', 'keydown']) {
     window.addEventListener(evt, onGesture, { capture: true, passive: true });
