@@ -126,6 +126,25 @@
   background: var(--surface-panel);
   border-bottom: 1px solid var(--border-default);
   backdrop-filter: blur(6px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Pixel-art skyline backdrop — atmospheric, behind all top-bar content. */
+.top-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('../assets/backdrop.png') center / cover no-repeat;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure all top-bar children sit above the backdrop. */
+.top-bar > * {
+  position: relative;
+  z-index: 1;
 }
 
 .top-bar-icon {
