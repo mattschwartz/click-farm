@@ -1,5 +1,5 @@
 {
-  "next_id": 125,
+  "next_id": 126,
   "tasks": [
     {
       "id": 1,
@@ -4599,7 +4599,7 @@
       "alias": "E4",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Actions-column ladder UI wiring: per-verb ladder + ghost slot + spotlight + remove click() shim",
       "requester": "architect",
@@ -4666,7 +4666,8 @@
         "npm run build succeeds; no TypeScript errors; all tests pass"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 122,
@@ -4760,6 +4761,50 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-05"
+    },
+    {
+      "id": 125,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Implement glass material on Actions-column verb buttons",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Apply a frosted-glass CSS treatment to the Actions-column verb buttons (manual-action-ladder). Glass is scoped exclusively to the action buttons — generators, platform cards, and all other panels stay opaque. The mood-edge vignettes bleed through the translucent surface, tinting the buttons with the active algorithm mood for free. Ghost slots get a more transparent variant. The spotlight slot gets a slightly more opaque variant + subtle shadow to stay elevated. Fallback for browsers without backdrop-filter support is included.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260406-glass-action-buttons.md",
+          "purpose": "Accepted proposal — full spec with CSS values, contrast analysis, fallback, and edge cases"
+        },
+        {
+          "ref": "ux/manual-action-ladder.md",
+          "purpose": "Actions-column UX spec — button anatomy, ghost slots, spotlight slot, class naming conventions"
+        },
+        {
+          "ref": "ux/accent-palette-light-mode.md",
+          "purpose": "Accent token contrast values — amber-on-glass is the tight edge case (see §5 of proposal)"
+        },
+        {
+          "ref": "proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "Base palette and WCAG targets"
+        },
+        {
+          "ref": "proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "Mood-edge vignette colors and opacities that bleed through the glass"
+        }
+      ],
+      "acceptance_criteria": [
+        "All Actions-column verb buttons use `background: rgba(255,255,255,0.6)` + `backdrop-filter: blur(16px)` + `-webkit-backdrop-filter: blur(16px)` + `border: 1px solid rgba(255,255,255,0.35)`",
+        "Ghost slots use the more transparent variant: `rgba(255,255,255,0.4)` background, `rgba(255,255,255,0.2)` border",
+        "Spotlight slot uses the elevated variant: `rgba(255,255,255,0.8)` background + `box-shadow: 0 2px 8px rgba(0,0,0,0.06)`",
+        "Generators column, platform cards, and all other panels remain opaque `#FFFFFF`",
+        "@supports fallback renders `rgba(255,255,255,0.92)` + `border: 1px solid #E8E4DF` when backdrop-filter is unsupported",
+        "Any amber accent text (`--accent-amber`) appearing on action buttons sits on an opaque white chip/pill, not directly on the glass surface",
+        "Visual verification: mood-edge vignette tints are visible through the glass buttons when an algorithm mood is active"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }
