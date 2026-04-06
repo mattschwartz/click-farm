@@ -373,6 +373,7 @@ export function GameScreen() {
               staticData={STATIC_DATA}
               onBuy={buy}
               onUpgrade={upgrade}
+              onUnlock={unlock}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
               onDrawerOpenChange={setUpgradeDrawerOpen}
             />

@@ -205,9 +205,6 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
           <span className="verb-name">{display.name.toUpperCase()}</span>
         </span>
 
-      <span className="verb-data">
-        <span className="verb-yield">{fmtCompact(perTap)} eng/tap</span>
-      </span>
 
       {(isReady || atFloor) && state.player.engagement === 0 && (
         <span className="verb-pulse">READY</span>
@@ -285,7 +282,7 @@ function GhostSlot({ verbId, threshold, canAfford, cost, isAwakened, onUnlock }:
       <span className="ghost-info">
         <span className="ghost-name">{display.name.toUpperCase()}</span>
         <span className={`ghost-cost${!canAfford ? ' ghost-cost-disabled' : ''}`}>
-          Tap to unlock — {cost} engagement
+          Tap to unlock — {fmtCompact(cost)} engagement
         </span>
       </span>
     </button>
