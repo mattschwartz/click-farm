@@ -1,10 +1,10 @@
 # Manual Action Ladder — UX Spec
 
-> **Scope:** Defines the Actions-column layout, ghost-slot anatomy, live-verb-button anatomy, spotlight-slot transition, mobile anchor dynamics, scroll affordance, empty/edge states, per-verb iconography, motion briefs, and accessibility for the 5-verb manual action ladder (chirps → selfies → livestreams → podcasts → viral_stunts). This is the player-facing surface of the Unlock → Upgrade → Automate lifecycle.
+> **Scope:** Defines the Actions-column layout, ghost-slot anatomy, live-verb-button anatomy, spotlight-slot transition, mobile anchor dynamics, scroll affordance, empty/edge states, per-verb iconography, motion briefs, and accessibility for the 5-verb manual action ladder (chirps → selfies → livestreams → podcasts → viral_stunts). This is the player-facing surface of the three-axis investment model: LVL UP (speed) / BUY (power) / Autoclicker (passive), per `proposals/accepted/level-driven-manual-cooldown.md`.
 >
-> **Not in scope:** Upgrade/Automate purchase UI (lives in the Upgrades middle column — separate spec pass needed). Brand-deal card (see `ux/brand-deal-card.md`, `ux/gig-cards.md`). Upgrade purchase flow (see `ux/purchase-feedback-and-rate-visibility.md`). Platform affinity visuals on verb cards (deferred — see §12 OQ2).
+> **Not in scope:** LVL UP / BUY / Autoclicker purchase UI — all three tracks live in the Generators center column per `proposals/accepted/20260406-purchase-button-location.md`; the action button slab carries no purchase controls (separate spec pass needed for Generators-column layout). Brand-deal card (see `ux/brand-deal-card.md`, `ux/gig-cards.md`). Upgrade purchase flow (see `ux/purchase-feedback-and-rate-visibility.md`). Platform affinity visuals on verb cards (deferred — see §12 OQ2).
 >
-> **Implements:** `proposals/accepted/manual-action-ladder.md` — ux-designer follow-up commitment (review log lines 578–580, OQ3 + OQ6 resolutions).
+> **Implements:** `proposals/accepted/manual-action-ladder.md` — ux-designer follow-up commitment (review log lines 578–580, OQ3 + OQ6 resolutions). Updated per `proposals/accepted/level-driven-manual-cooldown.md` — badge semantics (Gap 1), autoclicker floating numbers (Gap 2), cooldown threshold (Gap 5), yield display formula (Gap 6).
 >
 > **Against contract:** `proposals/accepted/manual-action-ladder.md` §2, §4, §12, §14 (locked-in data contracts and balance cells); `proposals/accepted/actions-column.md` §4 (80px minimum tap target, internal scroll at 5+).
 >
@@ -18,7 +18,7 @@ Calls this spec makes beyond what the accepted proposal locked in. Each is flagg
 
 1. **Live-verb button height is 80px, ghost-slot height is 60px.** 80px is the `actions-column.md` OQ4 minimum and matches `ux/mobile-layout.md` §7's generator row height lineage. 60px ghost is *below* the tap-target minimum by design because ghost slots are not tappable until the condition is met — at which point the slot opacifies and **grows to 80px** before accepting the Unlock tap. Ghost height before condition-met signals "this is a preview, not an instrument."
 2. **Cooldown visualization is a left-edge fill ring, not a circular ring.** A circular progress ring competes with per-verb iconography for the primary visual slot. A left-edge vertical fill (3px stripe that drains top-to-bottom as cooldown progresses) reads at a glance from peripheral vision, does not occlude the icon, and parallels the existing brand-deal corporate-green edge stripe pattern in `ux/brand-deal-card.md` §2.2.
-3. **Automate-level badge is a count pill, not a level-up chevron.** The badge shows integer automator count (`×3`, `×47`) — the same grammar as the existing generators-column `×N` convention (`ux/core-game-screen.md` §2). Reusing the `×N` read keeps the player's mental model consistent: *automator count* is the quantity being tracked, same as it is in the Upgrades column.
+3. **Autoclicker badge is a count pill showing army size, not yield multiplier.** The badge shows `autoclicker_count` (`×3`, `×47`) — the number of passive auto-tappers firing on this verb. The yield multiplier (`1 + count`) is communicated through the yield display instead. Rationale: when autoclickers fire and the badge pulses, the number on the badge answers "how many workers just fired?" — that's the visually active question. The yield multiplier is a static modifier the player checks in the yield display.
 4. **The spotlight slot visually identifies itself via a 2px top-border accent in the verb's color lane, not via background tint or size change.** Size-change would violate the 80px floor. Background tint would fight per-verb color identity. A thin top-border accent (color lane, 100% opacity) is a recessive-but-legible spotlight signal that survives across all 5 verb colors.
 5. **The ghost slot's condition-met moment plays a dedicated "awakening" animation, not just an opacity change.** Condition-met is the most important progression moment in the ladder — it earns its own motion signature (opacity climb + height grow + subtle chromatic bloom in the verb's color lane). This is separate from normal scroll motion so the player catches it in peripheral vision even when their hand is on another verb.
 6. **Mobile bottom-anchor verb is the spotlight slot (sticky), with older verbs scrolling above it.** This inverts desktop's "sticky top" because mobile thumbs work from the bottom up — the most-recently-unlocked verb should be under the thumb, not at the top of the scroll region where it would be thumb-unreachable.
@@ -29,7 +29,7 @@ Calls this spec makes beyond what the accepted proposal locked in. Each is flagg
 
 ## 1. Emotional Arc — The Ladder Moment
 
-The ladder's progression arc is **per-verb** (unlock → upgrade → automate) and **session-wide** (1 verb → 5 verbs + ghost → full instrument panel). Every element in the column should know which beat of which arc it serves.
+The ladder's progression arc is **per-verb** (unlock → LVL UP → BUY → autoclicker) and **session-wide** (1 verb → 5 verbs + ghost → full instrument panel). Every element in the column should know which beat of which arc it serves.
 
 ### Session-level arc
 
@@ -39,7 +39,7 @@ The ladder's progression arc is **per-verb** (unlock → upgrade → automate) a
 | **First unlock** (selfies, ~100 followers) | Rewarded, curious | The ghost awakens. The player taps it. A new live verb enters the column with its own rhythm. The spotlight accent signals "this one is newest." |
 | **Interleaved tapping** (2–4 verbs live) | Performing, deciding | The column is an instrument panel. Multiple cooldown rings drain at different speeds. The player's hand rotates between verbs, choosing which to enrich. |
 | **Crowding** (5 live + ghost = 6 items) | Orchestrating | Internal scroll activates. The spotlight slot carries progression recency; older verbs scroll. Density does not collapse — every verb retains its 80px identity. |
-| **Full ladder** (5 live, ghost slot terminated) | Mastery | The ghost slot is gone. The column is a stable 5-verb instrument panel. Progression now lives in the Upgrades column (Automate counts, Upgrade levels). |
+| **Full ladder** (5 live, ghost slot terminated) | Mastery | The ghost slot is gone. The column is a stable 5-verb instrument panel. Progression now lives in the Generators column (LVL UP, BUY, Autoclicker purchases). |
 
 ### Per-verb arc
 
@@ -51,7 +51,7 @@ The ladder's progression arc is **per-verb** (unlock → upgrade → automate) a
 | **Ready** | Cooldown elapsed | Pulse indicator on. Cooldown ring at 100%. Brightest state. |
 | **Mid-cooldown** | `now - last_tap < cooldownMs` | Cooldown ring draining top-to-bottom. Button still legible, slightly desaturated (see §6.4). |
 | **Just-tapped** | `now - last_tap < 120ms` | Rate-flare fires in engagement counter (§5.1 purchase-feedback spec). No button-level flash. |
-| **Automating** | `count >= 1` | Automate-level badge (`×N`) visible in button. Cooldown ring drains + refills continuously as automator fires. |
+| **Automating** | `autoclicker_count >= 1` | Autoclicker badge (`×N`) visible in button. Floating numbers emit on each autoclicker burst (§4.6). Cooldown ring continues to show the player's manual cooldown only. |
 
 ---
 
@@ -190,13 +190,13 @@ The live verb button is the permanent, tappable 80px element that replaces the P
 - **Cooldown fill ring** (3px left edge, full verb color lane): vertical stripe on the button's left edge. Fill drains top-to-bottom as cooldown elapses (see §4.4 interaction states). At 100% fill, the stripe is solid verb-color. At 0% fill, the stripe is an empty 3px channel at the same position (background-tinted slightly darker than column bg). The stripe is *the* cooldown signal.
 - **Verb icon** (32px, left-anchored after the cooldown ring, 16px from left edge): per §11 iconography — each verb's icon in its color-lane token.
 - **Verb name** (Space Grotesk 500, 14px uppercase, full opacity): the verb's display name, left-aligned after the icon.
-- **Automate-level badge** (`×N` pill, right-aligned in header row): shows `genState.count` as the automator count. Pill structure: 13px Space Grotesk 700, verb color-lane text on a `rgba(verb-color, 0.25)` background, 4px border-radius, 4px horizontal padding, 2px vertical padding. Hidden when `count === 0`.
-- **Yield display** (Space Grotesk 400, 11px, 4.5:1 contrast): format `"{base_event_yield × level_multiplier(level)} eng/tap"` — the engagement yielded per manual tap (live-computed from the per-verb formula in `manual-action-ladder.md` §12). Left-aligned in the data row.
+- **Autoclicker badge** (`×N` pill, right-aligned in header row): shows `genState.autoclicker_count` — the number of passive auto-tappers firing on this verb. The badge answers "how many workers do I have?" at a glance. Pill structure: 13px Space Grotesk 700, verb color-lane text on a `rgba(verb-color, 0.25)` background, 4px border-radius, 4px horizontal padding, 2px vertical padding. Hidden when `autoclicker_count === 0`. **Note:** the yield multiplier (`1 + count`) is communicated through the yield display below, not through the badge. One badge, one meaning.
+- **Yield display** (Space Grotesk 400, 11px, 4.5:1 contrast): format `"{base_event_yield × (1 + count)} eng/tap"` — the engagement yielded per manual tap (live-computed; `count` is the BUY count, not the autoclicker count). Left-aligned in the data row. When the player purchases a BUY, the yield display updates immediately and triggers a rate-flare per `ux/purchase-feedback-and-rate-visibility.md` §5 (semantic swap: rate-flare previously fired on Upgrade, which drove yield under the old model; it now fires on BUY, which drives yield under the three-axis model).
 - **Pulse indicator** ("ready" label or pulsing dot): right-aligned in data row. See §4.4.
 
 ### 4.3 Number formatting
 
-Yield display uses the engagement counter's number-formatting rules (see `ux/purchase-feedback-and-rate-visibility.md`): thousands get a comma separator, millions abbreviate to `12.4M`, etc. For the chirps-floor case where `base_event_yield × level_multiplier` is `1`, the display reads `"1 eng/tap"` — the small number is legible and honest.
+Yield display uses the engagement counter's number-formatting rules (see `ux/purchase-feedback-and-rate-visibility.md`): thousands get a comma separator, millions abbreviate to `12.4M`, etc. For the chirps-floor case where `base_event_yield × (1 + count)` at count=0 is `1`, the display reads `"1 eng/tap"` — the small number is legible and honest.
 
 ### 4.4 Interaction states
 
@@ -223,17 +223,35 @@ Four states, driven by cooldown timer and `last_manual_click_at[verbId]`:
 - Pulse indicator: hidden.
 - No button-level flash; the rate-flare on the engagement counter carries tap feedback (per `ux/purchase-feedback-and-rate-visibility.md` §5.1).
 
-**Note on automator ticks:** when an automator fires (every `1/(count × base_event_rate)` seconds), the cooldown ring animates *only* for the player's separate manual cooldown timer. The automator's internal timer is NOT visualized in the ring, because the ring represents the player's own cooldown, not the automator's. Players see automator output via the global engagement counter's climb rate, not via the button. This keeps the button's signal "is MY hand ready?" clean.
+**Note on autoclicker ticks:** when autoclickers fire (every `1/base_event_rate` seconds — the L1 base cooldown, not the player's leveled-up cooldown), the cooldown ring animates *only* for the player's separate manual cooldown timer. The autoclicker's internal timer is NOT visualized in the ring, because the ring represents the player's own cooldown, not the autoclickers'. Players see autoclicker output via floating numbers (§4.6) and the global engagement counter's climb rate. This keeps the button's signal "is MY hand ready?" clean.
 
-**Automator-tick subtle signal:** on each automator firing, the Automate-level badge (`×N`) performs a subtle chromatic scale-pulse (scale 1.0 → 1.05 → 1.0 over 200ms, ease-out). This gives the player a peripheral confirmation that the automator is active without cluttering the cooldown ring. Once `cooldown_manual ≤ 0.2s` (late-game deep-automation), the badge pulse may visually merge into a continuous shimmer — acceptable, since by that stage the player is reading the global rate counter, not per-verb cadence.
+**Autoclicker-tick subtle signal:** on each autoclicker burst firing, the autoclicker badge (`×N`) performs a subtle chromatic scale-pulse (scale 1.0 → 1.05 → 1.0 over 200ms, ease-out). This gives the player a peripheral confirmation that the autoclickers are active without cluttering the cooldown ring. At high autoclicker counts where the burst interval is short, the badge pulse may visually merge into a continuous shimmer — acceptable, since by that stage the player is reading the global rate counter, not per-verb cadence.
 
-### 4.5 When cooldown crosses the 0.01s floor (deep automation)
+### 4.5 Cooldown floor and ring behavior at max level
 
-At `count` values where `cooldown_manual` reaches the 0.01s floor (per `manual-action-ladder.md` §14e), the cooldown ring would drain 100 times per second — unreadable and CPU-costly.
+Under the level-driven cooldown formula (`max(50, 1000 / (level × base_event_rate))`), the fastest manual cooldown is chirps at L10 = 200ms. No verb ever reaches sub-100ms cooldowns. The 50ms hard floor from `proposals/accepted/level-driven-manual-cooldown.md` is the safety clamp but is unreachable at max_level=10 for all current verbs.
 
-**Resolution:** when `cooldownMs <= 100`, stop animating the ring and render it at 100% solid verb-color permanently. Pulse indicator remains on. The player can tap at their natural maximum (~10/sec) and every tap is ready. The "cooldown is essentially gone" state is communicated by the *absence* of drain animation — the button reads as "always ready, all the time." This matches the player's actual experience at the floor.
+**Implication for the cooldown ring:** the ring always has a human-readable drain duration (≥200ms at the fastest). The old §4.5 rule ("stop animating the ring at ≤100ms") is dead code — the threshold is never hit. The ring animates normally at all reachable cooldown values.
 
-**Threshold:** 100ms is chosen because (a) it is the human-perception floor for discrete motion, (b) it covers all 5 verbs at their floor-reached counts per §14e, and (c) it saves meaningful CPU at the stage of the game with the highest automator-tick density.
+**If max_level is ever raised** beyond 10, the fastest cooldown would shrink. If a future balance change pushes any verb's cooldown below 100ms, re-add the "ring stops animating" rule at that threshold. For now: not needed, not implemented.
+
+### 4.6 Autoclicker floating-number emissions
+
+When autoclickers fire, the verb's action button emits floating numbers showing engagement generated — per `proposals/accepted/level-driven-manual-cooldown.md` §4. Autoclicker fires are burst-mode: all N autoclickers fire simultaneously every `1/base_event_rate` seconds. The UX layer visually staggers the emissions for a smoother feel.
+
+**Stagger timing:** when N autoclickers fire in a burst, the floating numbers are emitted over a stagger window of `min(N × 60ms, 400ms)`. At 3 autoclickers: numbers pop at T+0, T+60ms, T+120ms. At 10+: numbers spread across 400ms (the cap prevents the stagger from bleeding into the next burst). Each number gets a random horizontal offset per §8.3 rapid-click stacking rules.
+
+**Density cap:** when `autoclicker_count > 8`, stop showing individual floating numbers. Instead, show a single batched float: `+{total} ×{N}` (e.g., `+240 ×12`). The batched float uses the same drift-up animation but at 1.1× the standard size to carry the aggregate weight. The threshold of 8 is chosen because: (a) 8 staggered numbers across 400ms is visually busy but legible, (b) above 8, the numbers overlap into an unreadable stream, (c) the player at 8+ autoclickers has graduated from "counting my workers" to "reading the total."
+
+**Visual differentiation from manual taps:**
+- **Size:** autoclicker floats render at 80% of the manual float's font-size (currently 22px × 0.8 = ~18px). The player's hand is always the biggest number on the button.
+- **Opacity:** autoclicker floats render at 0.7 opacity vs manual's 1.0. Slightly recessed — the army is background production, the hand is foreground.
+- **Color:** same gold (`#FFD66B`) as manual floats. No hue differentiation — both are "you earned something." The size + opacity difference carries the distinction.
+- **Batched floats** (at 8+ autoclickers): render at the standard manual float size (22px) but with a `×N` suffix in a slightly smaller weight (Space Grotesk 400 vs the number's 800). Opacity 0.85 — between manual and individual autoclicker floats.
+
+**Interaction with manual taps:** manual and autoclicker floats coexist. If the player taps during an autoclicker burst, the manual float renders at full size and opacity, visually dominant over any concurrent autoclicker floats. No collision avoidance needed — the horizontal offset randomization from §8.3 handles spatial distribution.
+
+**Reduced-motion fallback:** under `prefers-reduced-motion: reduce`, autoclicker floats are suppressed entirely. The autoclicker badge pulse (§4.4) is also suppressed under reduced motion. Autoclicker activity is communicated solely through the engagement counter's climb rate — which is always visible and non-animated. Manual tap floats still appear (they snap to position without drift animation, per §9.5's retained state-change principle).
 
 ---
 
@@ -378,17 +396,9 @@ When viral_stunts is unlocked, the ghost slot is removed permanently. The column
 
 **Terminator animation:** 200ms after the spotlight transition completes (T+1100ms total), any residual ghost-slot DOM unmounts with a 200ms fade-out. The fade is slow enough to be noticed in peripheral vision but not slow enough to feel like lag.
 
-### 7.3 Automate purchase crosses cooldown floor
+### 7.3 Cooldown floor crossing (reserved)
 
-When the player buys their final Automate level that pushes `cooldown_manual` from >100ms to ≤100ms (see §4.5), the cooldown ring stops animating and renders permanently full.
-
-**Transition animation (one-time, plays on the purchase):**
-- **T+0ms:** purchase confirmed, `count` increments.
-- **T+0 → 400ms:** the cooldown ring transitions from its current drain animation to a "full and still" state. The drain visibly decelerates (ease-out over 400ms) and the ring settles at 100% fill.
-- **T+400ms:** drain animation deactivates permanently for this verb. Pulse indicator stays on continuously.
-- **T+400 → 700ms:** the verb's Automate-level badge (`×N`) scale-pulses once (1.0 → 1.15 → 1.0 over 300ms, ease-out) with a brief chromatic bloom in the verb color lane, confirming the purchase that crossed the floor.
-
-The player understands "this verb is now always ready" without text — the ring simply stops draining.
+Under the current level-driven cooldown formula, no verb reaches the ≤100ms threshold where the cooldown ring would need to stop animating (see §4.5). This edge case is reserved for future balance changes that raise `max_level` beyond 10. If triggered, the transition animation should: decelerate the ring drain to full-and-still over 400ms, then pulse the autoclicker badge once (1.0 → 1.15 → 1.0 over 300ms) to confirm the floor-crossing purchase.
 
 ### 7.4 Insufficient engagement for Unlock
 
@@ -410,13 +420,15 @@ Consolidated reference — each motion was defined in its section above; this is
 | Ready pulse (glow + dot) | cooldown = 100% | 1.2s loop | sine | this is tappable |
 | Tap-not-ready shake | tap while mid-cooldown | — | — | (no shake — rejected per §4.4) |
 | Insufficient-engagement shake | tap ghost unlock without funds | 120ms | horizontal oscillation | purchase blocked |
-| Automator-tick badge pulse | automator fires | 200ms | ease-out | automator active |
+| Autoclicker-tick badge pulse | autoclicker burst fires | 200ms | ease-out | autoclickers active |
+| Autoclicker float — individual | autoclicker burst (≤8 autoclickers) | 500ms per float, staggered over min(N×60ms, 400ms) | ease-out | passive earn attribution |
+| Autoclicker float — batched | autoclicker burst (>8 autoclickers) | 500ms | ease-out | aggregate passive earn |
 | Spotlight demote — accent fade | new verb unlocked | 200ms (T+100→300) | ease-out | old recency loss |
 | Spotlight promote — reorder | new verb unlocked | 300ms (T+300→600) | ease-out | new verb in place |
 | Spotlight promote — accent fade-in | new verb unlocked | 300ms (T+600→900) | ease-out | new recency set |
 | Column auto-scroll to spotlight | new verb unlocked | 400ms | ease-in-out | attention recentered |
-| Floor-crossed settle | Automate purchase crosses 100ms cooldown | 400ms | ease-out | permanent-ready |
-| Floor-crossed badge celebration | same | 300ms (T+400→700) | ease-out | purchase confirmed |
+| Floor-crossed settle (reserved) | cooldown crosses ≤100ms (unreachable at current max_level) | 400ms | ease-out | permanent-ready |
+| Floor-crossed badge celebration (reserved) | same | 300ms (T+400→700) | ease-out | purchase confirmed |
 | Ghost slot termination | viral_stunts awakened + unlocked | 200ms (T+1100→1300) | fade-out | ladder complete |
 | Scroll edge gradient | internal scroll active | static | — | more content above/below |
 
@@ -431,7 +443,7 @@ Consolidated reference — each motion was defined in its section above; this is
 - Live-verb button: 80px height × 320px width. Exceeds iOS 44px minimum, exceeds WCAG 2.5.5 recommended 44px, exceeds `actions-column.md` OQ4 80px floor.
 - Ghost slot (pre-awakening): 60px, not tappable — no tap-target concern.
 - Ghost slot (post-awakening): transitions to 80px before tap is accepted.
-- Automate-level badge: not independently tappable — part of the button hit area.
+- Autoclicker badge: not independently tappable — part of the button hit area.
 - Ready-pulse dot: not independently tappable — decorative.
 
 All tap targets satisfy the 44px iOS minimum and the 80px Actions-column floor.
@@ -449,7 +461,8 @@ Every color signal is paired with a non-color signal:
 | Spotlight slot | top-border accent (color lane) | position (sticky top/bottom) |
 | Insufficient-engagement | disabled-amber text | shake motion on tap |
 | Ghost slot | 0.35 opacity | silhouette rendering, "at N followers" text |
-| Automator active | badge color | `×N` count number |
+| Autoclicker active | badge color | `×N` count number + badge pulse motion |
+| Autoclicker float vs manual float | opacity (0.7 vs 1.0) | size (18px vs 22px) |
 
 No state in this spec is communicated by color alone.
 
@@ -457,7 +470,7 @@ No state in this spec is communicated by color alone.
 
 - Live-verb button text (verb name, yield, pulse label): 4.5:1 against column background `#0b0d12`. Each color-lane token's text variant was verified in `ux/visual-identity.md` §2 for the 4 existing verbs; chirps needs verification (§11).
 - Live-verb cooldown fill ring: 3:1 against column background (WCAG 1.4.11). Color-lane tokens pass at 100% opacity per `ux/visual-identity.md`.
-- Automate-level badge: 4.5:1 text on a `rgba(verb-color, 0.25)` background. Verify per-verb in implementation — the 0.25 alpha may require lightening the text variant.
+- Autoclicker badge: 4.5:1 text on a `rgba(verb-color, 0.25)` background. Verify per-verb in implementation — the 0.25 alpha may require lightening the text variant.
 - Ghost slot text: **2.5:1 — below 4.5:1 minimum, accepted knowingly** (see §3.3).
 - Disabled-amber (insufficient engagement): `#c45a10` at 60% opacity. Effective contrast ~3:1 — passes 1.4.11 for UI components.
 
@@ -472,7 +485,9 @@ Within the Actions column, the spotlight slot's top-border accent is always the 
 Per `prefers-reduced-motion: reduce`:
 
 - Ready-pulse glow/dot: disabled (static ready label instead).
-- Automator-tick badge pulse: disabled.
+- Autoclicker-tick badge pulse: disabled.
+- Autoclicker floating numbers: suppressed entirely. Autoclicker activity communicated solely through the engagement counter's climb rate (always visible, non-animated).
+- Manual tap floating numbers: still appear but snap to position without drift animation (instant appear + fade-out only).
 - Cooldown drain animation: retained (it is the state, not decoration).
 - Ghost awakening: plays but compressed to 200ms opacity change only, no bloom, no height animation.
 - Spotlight transition: position change happens instantly; accent fade-in plays at 100ms.
@@ -487,7 +502,7 @@ The reduced-motion mode preserves all state information; it only removes decorat
 - Ghost slot before awakening: rendered as non-interactive `<div>` with `aria-label="{verb name} locked at {threshold} followers"`.
 - Ghost slot after awakening: rendered as `<button>` with `aria-label="Unlock {verb name} for {cost} engagement"`.
 - Cooldown state is announced via `aria-live="polite"` on state change ready→cooldown and cooldown→ready. Polite (not assertive) because the player does not need urgent interruption.
-- Automate-level badge: included in the button's aria-label update when count changes.
+- Autoclicker badge: included in the button's aria-label as "{autoclicker_count} autoclickers" when `autoclicker_count > 0`. Updated on purchase.
 
 ---
 
@@ -496,15 +511,18 @@ The reduced-motion mode preserves all state information; it only removes decorat
 Explicit handover — engineer task E4 (Actions-column ladder UI wiring) should find these in this doc:
 
 1. **Component tree:** `<ActionsColumn>` renders a `<GhostSlot>` (0-or-1) and N `<LiveVerbButton>` components, plus the existing `<BrandDealSlot>` from `ux/brand-deal-card.md`.
-2. **Per-verb data contract:** `LiveVerbButton` props = `{ verbId, yieldPerTap, automatorCount, cooldownMs, lastTapAt, isSpotlight, colorLane, icon }`. Derived from the `GeneratorDef` + `GeneratorState` union, per `manual-action-ladder.md` §12.
+2. **Per-verb data contract:** `LiveVerbButton` props = `{ verbId, yieldPerTap, autoclickerCount, count, cooldownMs, lastTapAt, isSpotlight, colorLane, icon }`. Derived from the `GeneratorDef` + `GeneratorState` union, per `manual-action-ladder.md` §12. Note: `autoclickerCount` drives the badge (§4.2); `count` drives the yield display formula (`base_event_yield × (1 + count)`); both are needed.
 3. **Per-verb state machine:** `idle | ready | mid-cooldown | just-tapped | automating` — states drive ring fill + pulse indicator + badge pulse.
 4. **Awakening state machine:** `promise | awakening | unlocked-pending-purchase` for ghost slots.
 5. **Spotlight transition choreography:** §5.2 sequence, 900ms total.
 6. **Motion specs:** all durations + easings in §8 Motion Briefs table.
 7. **Sticky positioning rules:** spotlight top (desktop) / bottom (mobile), brand-deal sticky bottom (unchanged).
 8. **Scroll affordance:** 12px gradient scroll edges, native momentum, no scrollbar.
-9. **Reduced-motion fallbacks:** §9.5 list.
+9. **Reduced-motion fallbacks:** §9.5 list (note: autoclicker floats fully suppressed under reduced motion).
 10. **Per-verb color lane tokens:** reuse from `ux/visual-identity.md` §2.1–2.7 for the 4 existing verbs; chirps per §11 below.
+11. **Autoclicker floating-number emission contract (§4.6):** stagger window = `min(N × 60ms, 400ms)`, density cap at 8 (switch to batched `+total ×N` format), visual differentiation = 80% size + 0.7 opacity vs manual. Reduced-motion: suppress all autoclicker floats.
+12. **Yield display formula:** `base_event_yield × (1 + count)` — updates on BUY purchase, triggers rate-flare per `ux/purchase-feedback-and-rate-visibility.md` §5.
+13. **Badge semantics:** `×N` badge shows `autoclicker_count` (army size), hidden when 0. Badge pulses on each autoclicker burst (200ms scale 1.0→1.05→1.0).
 
 Engineer should NOT need to make visual or interaction judgment calls implementing E4. If ambiguity surfaces, it is a spec bug — flag back to ux-designer.
 

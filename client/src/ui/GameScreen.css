@@ -326,7 +326,7 @@
 .actions-scroll-region {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
   overflow-y: auto;
   padding: 10px 10px 8px;
   min-height: 0;
@@ -345,7 +345,7 @@
   justify-content: center;
   gap: 2px;
   width: 100%;
-  height: 80px;
+  height: 100px;
   padding: 12px 16px;
   border-radius: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.25);
@@ -440,13 +440,17 @@
   .live-verb-btn:active { transition: none; }
 }
 
-/* Header row: icon + name + badge */
+/* Header row: anchored to bottom of the button */
 .verb-header {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
-  position: relative;
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
   z-index: 2;
+  padding: 0;
 }
 .verb-icon { font-size: 20px; flex-shrink: 0; }
 .verb-icon-img {
@@ -471,35 +475,41 @@
   filter: grayscale(1);
 }
 .verb-name {
-  font-size: 14px; font-weight: 500; letter-spacing: 0.04em;
+  font-size: 24px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  /* Glassy text: semi-transparent white with frosted edge highlights */
+  color: rgba(255, 255, 255, 0.55);
+
   text-shadow:
-    -2px -2px 0 rgba(0, 0, 0, 0.8),
-    2px -2px 0 rgba(0, 0, 0, 0.8),
-    -2px 2px 0 rgba(0, 0, 0, 0.8),
-    2px 2px 0 rgba(0, 0, 0, 0.8),
-    -1px -1px 0 rgba(0, 0, 0, 0.8),
-    1px -1px 0 rgba(0, 0, 0, 0.8),
-    -1px 1px 0 rgba(0, 0, 0, 0.8),
-    1px 1px 0 rgba(0, 0, 0, 0.8),
-    0 2px 6px rgba(0, 0, 0, 0.65);
+    0 1px 0 rgba(255, 255, 255, 0.15),
+    0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 0 10px rgba(255, 255, 255, 0.08);
 }
 .verb-name-group {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 1px 12px 1px 16px;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 0 0 8px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 .verb-rate {
-  font-size: 11px;
+  font-size: 13px;
   font-style: italic;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.25);
   text-shadow:
-    -1px -1px 0 rgba(0, 0, 0, 0.7),
-    1px -1px 0 rgba(0, 0, 0, 0.7),
-    -1px 1px 0 rgba(0, 0, 0, 0.7),
-    1px 1px 0 rgba(0, 0, 0, 0.7),
-    0 1px 4px rgba(0, 0, 0, 0.5);
+    0 0 6px rgba(255, 255, 255, 0.06);
 }
 .verb-btn-wrap {
   position: relative;
@@ -683,7 +693,7 @@
   overflow: hidden;
 }
 .ghost-promise {
-  height: 80px;
+  height: 100px;
   opacity: 0.5;
   cursor: default;
   background: #E8E4DF;
@@ -698,7 +708,7 @@
 /* Ghost slot — awakened state (80px, full opacity, tappable).
  * Muted grey slab, raised to match live-verb depth. */
 .ghost-awakened {
-  height: 80px;
+  height: 100px;
   opacity: 1;
   cursor: pointer;
   border: none;
@@ -1118,9 +1128,48 @@
   transition: opacity 400ms ease-out, filter 400ms ease-out;
 }
 
+/* Gradient top-border override — paints a gradient bar inside the card
+   that covers the solid border-top. Stays inside overflow:hidden. */
+.platform-card[style*="--platform-accent-gradient"] {
+  border-top: none;
+  padding-top: 17px; /* 14px original + 3px to compensate removed border */
+}
+.platform-card[style*="--platform-accent-gradient"]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--platform-accent-gradient);
+  z-index: 2;
+}
+
 .platform-card.locked {
   opacity: 0.42;
   filter: grayscale(1);
+}
+
+/* Platform card background art — pixel-art asset fading in from the right.
+   The left ~40% of the card stays fully clear for text; the image fades in
+   across the right half at low opacity so it's atmospheric, not a hero. */
+.platform-bg-art {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: auto;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.18;
+  mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 70%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 70%);
+}
+
+.platform-card.locked .platform-bg-art {
+  filter: grayscale(1);
+  opacity: 0.08;
 }
 
 .platform-card .platform-header {
@@ -1128,6 +1177,8 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .platform-card .platform-icon {
@@ -1145,6 +1196,8 @@
   display: flex;
   align-items: baseline;
   gap: 6px;
+  position: relative;
+  z-index: 1;
 }
 
 .platform-card .platform-followers {
@@ -1170,6 +1223,8 @@
   font-size: 11px;
   color: var(--text-secondary);
   margin-top: 2px;
+  position: relative;
+  z-index: 1;
 }
 
 /* Affinity row — min 8px gutter from follower count above (§4.3). */
@@ -3068,6 +3123,35 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   outline-offset: 2px;
 }
 
+/* Volume sliders. */
+.settings-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.settings-slider-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-width: 44px;
+}
+
+.settings-slider {
+  flex: 1;
+  height: 4px;
+  accent-color: rgba(var(--kit-accent-rgb), 0.85);
+  cursor: pointer;
+}
+
+.settings-slider-value {
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 28px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Save-section buttons. */
 .settings-btn {
   font-family: inherit;
@@ -3296,4 +3380,115 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   animation: none;
   box-shadow: 0 0 8px 1px rgba(var(--glow-halo-rgb),0.35);
 }
+
+/* ---------------------------------------------------------------------------
+ * AUTO purchase pill — generator-purchase-pills.md §2–3
+ * Pill-shaped button: 44px min-width, 28px height, fully rounded ends.
+ * Three affordance states: affordable (verb-tinted), unaffordable (grey).
+ * --------------------------------------------------------------------------- */
+
+.purchase-pill {
+  min-width: 44px;
+  height: 28px;
+  border-radius: 14px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 28px;
+  cursor: pointer;
+  border: 1px solid;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 80ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  vertical-align: middle;
+}
+
+.purchase-pill:active {
+  transform: scale(0.93);
+  transition: transform 30ms ease-in;
+}
+
+/* Affordable — verb-tinted per §3.1 */
+.purchase-pill-affordable {
+  background: rgba(var(--pill-color-rgb), 0.15);
+  color: var(--pill-color);
+  border-color: rgba(var(--pill-color-rgb), 0.30);
+}
+
+/* Unaffordable — receded grey per §3.2 */
+.purchase-pill-unaffordable {
+  background: transparent;
+  color: #9B9B9B;
+  border-color: rgba(240, 236, 231, 0.60);
+  cursor: default;
+}
+.purchase-pill-unaffordable:active {
+  transform: none;
+}
+
+/* Label flash on purchase (§5.2) — 120ms bright flash */
+.purchase-pill-flash .pill-label {
+  color: #FFFFFF;
+  transition: color 120ms linear;
+}
+
+.pill-label {
+  letter-spacing: 0.03em;
+}
+
+.pill-count {
+  font-weight: 700;
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+/* ---------------------------------------------------------------------------
+ * Autoclicker badge on verb action buttons — manual-action-ladder.md §4.2
+ * Pill showing army size (×N). Verb-colored text on rgba background.
+ * Pulses on each autoclicker burst (§4.4).
+ * --------------------------------------------------------------------------- */
+
+.verb-auto-badge {
+  /* Inline with verb name — inherits font family, weight, italic from .verb-name */
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  display: inline;
+  transition: transform 200ms ease-out;
+}
+
+@keyframes auto-badge-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.verb-auto-badge-pulse {
+  animation: auto-badge-pulse 200ms ease-out;
+}
+
+/* Autoclicker float visual differentiation (§4.6) */
+.verb-float-auto {
+  font-weight: 600;
+}
+
+/* Reduced motion — suppress autoclicker floats and badge pulse */
+@media (prefers-reduced-motion: reduce) {
+  .verb-auto-badge-pulse { animation: none; }
+  .verb-float-auto { display: none; }
+  .purchase-pill,
+  .purchase-pill:active { transition: none; }
+}
+
+html[data-reduce-motion="true"] .verb-auto-badge-pulse { animation: none; }
+html[data-reduce-motion="true"] .verb-float-auto { display: none; }
+html[data-reduce-motion="true"] .purchase-pill,
+html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
 

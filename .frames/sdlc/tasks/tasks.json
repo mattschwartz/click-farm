@@ -1,5 +1,5 @@
 {
-  "next_id": 131,
+  "next_id": 146,
   "tasks": [
     {
       "id": 1,
@@ -3014,7 +3014,7 @@
       "id": 91,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Platform Identity & Affinity Matrix proposal",
       "requester": "game-designer",
@@ -3055,7 +3055,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 92,
@@ -3109,7 +3110,7 @@
       "id": 93,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Late-game content arc: generators 8+ and satirical voice ladder",
       "requester": "game-designer",
@@ -3146,7 +3147,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 94,
@@ -3186,7 +3188,7 @@
       "id": 95,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Tension audit: post-Audience-Mood felt stakes review",
       "requester": "game-designer",
@@ -3219,7 +3221,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 96,
@@ -4713,7 +4716,7 @@
       "id": 123,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Decide multiplier-pill magnitude encoding + LVL↑ status-line threshold",
       "requester": "ux-designer",
@@ -4731,7 +4734,8 @@
         "Both decisions moved from the Open Questions table (§5) to their respective sections so the engineer can implement without ambiguity."
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 124,
@@ -4973,7 +4977,7 @@
       "id": 130,
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Plan level-driven-manual-cooldown implementation",
       "requester": "game-designer",
@@ -5028,6 +5032,750 @@
         "UX-designer spec-update tasks filed for the 6 gaps identified in their review (badge semantics, floating-number density, counter-bump scope, purchase button location, cooldown ring threshold, yield display formula)",
         "Dependency ordering specified — which tasks block which",
         "Supersession edits to manual-action-ladder.md called out as a separate task"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 131,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Rename platforms (instasham→picshift, grindset→skroll) + add new platform podpod",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Rename two existing platforms and add a fourth. instasham becomes picshift, grindset becomes skroll, and podpod is a new platform. This touches the PlatformId union, static data, display metadata, save migration, upgrade IDs, and every Record<PlatformId, ...> across the codebase.\n\nThe rename is a structural find-and-replace plus a save migration to remap persisted keys. The new platform needs full static data (content_affinity, unlock_threshold) and display metadata authored by game-designer — use placeholder values if not provided.",
+      "related_items": [
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "PlatformId union (line 26): rename 'instasham'→'picshift', 'grindset'→'skroll', add 'podpod'. Also UpgradeId: rename platform_headstart_instasham→platform_headstart_picshift, platform_headstart_grindset→platform_headstart_skroll, possibly add platform_headstart_podpod"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "PLATFORM_DEFS (3 entries → 4): rename keys, update id fields, add podpod def with content_affinity for all 11 generators + unlock_threshold. CLOUT_UPGRADE_DEFS: rename platform_headstart keys + platform_id references. unlockThresholds.platforms: rename keys + add podpod entry"
+        },
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "PLATFORM_DISPLAY (line 161): rename entries, add podpod with name/icon/accent/tagline. PLATFORM_ORDER (line 182): rename entries, add podpod"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "ALL_PLATFORM_IDS array (line 38): rename + add. createPlayer UpgradeId list (line 45): rename headstart upgrade IDs"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "New migrateV9toV10: remap platform keys in state.platforms (instasham→picshift, grindset→skroll), seed state.platforms.podpod, remap player.clout_upgrades keys, bump CURRENT_VERSION to 10"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "applyRebrand references platform IDs when resetting — needs renamed keys"
+        },
+        {
+          "ref": "client/src/ui/CloutShopModal.tsx",
+          "purpose": "References platform_headstart_instasham/grindset upgrade IDs — rename"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "May reference platform IDs directly"
+        },
+        {
+          "ref": "client/src/ui/DebugApp.tsx",
+          "purpose": "References instasham/grindset by name"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Context label references platform names"
+        },
+        {
+          "ref": "client/src/game-loop/index.test.ts",
+          "purpose": "~26 occurrences of instasham/grindset in test fixtures"
+        },
+        {
+          "ref": "client/src/integration.test.ts",
+          "purpose": "~15 occurrences"
+        },
+        {
+          "ref": "client/src/platform/index.test.ts",
+          "purpose": "~35 occurrences"
+        },
+        {
+          "ref": "client/src/save/index.test.ts",
+          "purpose": "~7 occurrences + version assertions"
+        },
+        {
+          "ref": "client/src/prestige/index.test.ts",
+          "purpose": "~13 occurrences"
+        },
+        {
+          "ref": "client/src/audience-mood/index.test.ts",
+          "purpose": "~21 occurrences"
+        },
+        {
+          "ref": "client/src/creator-kit/index.test.ts",
+          "purpose": "~17 occurrences"
+        },
+        {
+          "ref": "client/src/offline/index.test.ts",
+          "purpose": "~23 occurrences"
+        },
+        {
+          "ref": "client/src/ui/CloutShopModal.test.ts",
+          "purpose": "~12 occurrences"
+        },
+        {
+          "ref": "client/src/ui/RebrandCeremonyModal.test.ts",
+          "purpose": "~4 occurrences"
+        },
+        {
+          "ref": "client/src/ui/eulogy-templates.test.ts",
+          "purpose": "~4 occurrences"
+        }
+      ],
+      "acceptance_criteria": [
+        "PlatformId union is 'chirper' | 'picshift' | 'skroll' | 'podpod' — no references to 'instasham' or 'grindset' remain in src/",
+        "UpgradeId union renames platform_headstart_instasham→platform_headstart_picshift, platform_headstart_grindset→platform_headstart_skroll",
+        "PLATFORM_DEFS has 4 entries with correct ids, content_affinity maps (11 generators each), and unlock_thresholds",
+        "PLATFORM_DISPLAY has 4 entries with name/icon/accent/tagline for picshift, skroll, podpod",
+        "ALL_PLATFORM_IDS and PLATFORM_ORDER updated to 4 entries",
+        "CLOUT_UPGRADE_DEFS keys and platform_id fields renamed",
+        "migrateV9toV10 remaps instasham→picshift and grindset→skroll in state.platforms, remaps clout_upgrade keys, seeds state.platforms.podpod, bumps CURRENT_VERSION to 10",
+        "Every Record<PlatformId, ...> across the codebase gains a podpod entry (TypeScript compiler enforces this)",
+        "All ~224 occurrences of 'instasham'/'grindset' in src/ are renamed",
+        "All existing tests pass with updated platform names",
+        "npm run build succeeds; no TypeScript errors",
+        "Game-designer to provide: podpod display name, icon, accent color, tagline, content_affinity values, unlock_threshold, and whether it gets a clout headstart upgrade"
+      ],
+      "open_questions": [
+        {
+          "question": "What are podpod's balance values? content_affinity for each of the 11 generators, unlock_threshold, and any clout headstart upgrade?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "What is podpod's display metadata? Name, icon/emoji, accent color, tagline?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Should Chirper also be renamed to Skroll (as mentioned in the manual-action-ladder UX spec §11.1)?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 132,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Engine formula refactor + data model + migration + static data retune for level-driven cooldown",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the core engine changes from the level-driven-manual-cooldown proposal. This is the foundation task — every other task in this plan depends on it (directly or transitively). The proposal redefines: LVL UP drives cooldown (speed), BUY drives yield multiplier (power), and a new `autoclicker_count` field drives passive production. The change surface spans 9 of the engineer's 10 traced code sites (all except the new buyAutoclicker action, which is E2).\n\nKey formula changes:\n- `computeGeneratorEffectiveRate`: leading `count` → `autoclicker_count`, `levelMultiplier(level)` → `(1 + count)`, early-return guard `count <= 0` → `autoclicker_count <= 0`\n- `postClick` cooldown: `1000 / (Math.max(1, genState.count) * def.base_event_rate)` → `Math.max(50, 1000 / (genState.level * def.base_event_rate))`\n- `postClick` earned: `def.base_event_yield * levelMultiplier(genState.level) * algoMod * clout * kit` → `def.base_event_yield * (1 + genState.count) * algoMod * clout * kit`\n- Passive tick formula becomes: `autoclicker_count × base_event_rate × base_event_yield × (1 + count) × algoMod × clout × kit`\n\n`levelMultiplier` function stays — still used in `generatorUpgradeCost` for cost scaling. Do not delete it.\n\nThe offline calculator (`offline/index.ts`) calls `computeAllGeneratorEffectiveRates` which inherits the formula change — no separate code change needed there, but verify with a test.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Source proposal — formulas in §2-§4, data model in §Data Model, passive formula in §Passive Tick Formula, rate retune table in §2"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Add autoclicker_count to GeneratorState (line 163-171), add base_autoclicker_cost to GeneratorDef (line 272-325)"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "computeGeneratorEffectiveRate (line 141-163) — 3 simultaneous changes. postClick (line 567-613) — cooldown + earned formula swap"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "chirps rate 2.5→0.5 yield 0.2→1.0, selfies rate 0.4→0.2 yield 2.5→5.0, add base_autoclicker_cost to all generator defs"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "v9→v10 migration: seed autoclicker_count=0 on all generators. CURRENT_VERSION bump at line 20"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "applyRebrand (line 117+) must reset autoclicker_count to 0 alongside existing field resets"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "createInitialGameState must seed autoclicker_count=0 for all generators"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "Remove count<=0 guard on upgradeGenerator (line 273-276) — level now drives cooldown, works at count=0"
+        }
+      ],
+      "acceptance_criteria": [
+        "GeneratorState has autoclicker_count: number field, seeded to 0 in createInitialGameState and migration",
+        "GeneratorDef has base_autoclicker_cost: number field, populated for all generators per proposal OQ5 table (chirps=25, selfies=50, livestreams=650000, podcasts=7000000, viral_stunts=100000000; passive-only and post-prestige generators get a placeholder value e.g. 0 since they are not manual-clickable)",
+        "computeGeneratorEffectiveRate uses: autoclicker_count × base_event_rate × base_event_yield × (1 + count) × algoMod × clout × kit. Early-return guard checks autoclicker_count <= 0 (not count <= 0)",
+        "postClick cooldown formula is Math.max(50, 1000 / (genState.level * def.base_event_rate))",
+        "postClick earned formula is def.base_event_yield * (1 + genState.count) * algoMod * clout * kit",
+        "Static data: chirps base_event_rate=0.5, base_event_yield=1.0; selfies base_event_rate=0.2, base_event_yield=5.0. All other generators unchanged",
+        "Regression test: passive output for each generator at count=1 (now autoclicker_count=1), level=1 matches the preserved passive output values from the proposal rate retune table (chirps=0.5, selfies=1.0, livestreams=80, podcasts=150, viral_stunts=500 eng/s before modifiers)",
+        "save/index.ts: migrateV9toV10 seeds autoclicker_count=0 on all generators; CURRENT_VERSION bumped to 10",
+        "applyRebrand resets autoclicker_count to 0 for all generators",
+        "upgradeGenerator no longer throws when count=0 — the count<=0 guard is removed. LVL UP is valid at count=0 (player taps faster at base yield)",
+        "levelMultiplier function is preserved (still used in generatorUpgradeCost) — do NOT delete",
+        "Offline calculator produces correct results via inheriting the updated computeGeneratorEffectiveRate — add a regression test",
+        "All existing tests updated for the formula changes; new regression tests cover passive output equivalence",
+        "npm run build succeeds; full test suite passes; zero TypeScript errors"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 133,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "buyAutoclicker action + driver wiring",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Add the new buyAutoclicker purchase action — the third purchase track per the level-driven-manual-cooldown proposal. This is a focused addition: one new function in generator/index.ts, one new cost helper, one new driver method. Follows the same pattern as buyGenerator.\n\nCost formula: `ceil(base_autoclicker_cost × 1.15^autoclicker_count)` — same exponential escalation as BUY.\n\nThe function increments `autoclicker_count` on the generator and deducts engagement. Guards: not manual_clickable → throw, not owned → throw, can't afford → throw.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "OQ5 resolution — base_autoclicker_cost values and cost formula"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "Add buyAutoclicker function alongside existing buyGenerator (line 212+)"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Add driver.buyAutoclicker(verbId) method, route through runAction"
+        }
+      ],
+      "acceptance_criteria": [
+        "New buyAutoclicker(state, verbId, staticData) function in generator/index.ts",
+        "Cost helper: autoclickerBuyCost(generatorId, currentAutoclickerCount, staticData) returns ceil(base_autoclicker_cost × 1.15^currentAutoclickerCount)",
+        "buyAutoclicker throws if: generator not manual_clickable, generator not owned, insufficient engagement",
+        "buyAutoclicker increments autoclicker_count by 1 and deducts cost from player.engagement",
+        "driver.buyAutoclicker(verbId) added to GameDriver interface, routes through runAction with action name 'buyAutoclicker'",
+        "'buyAutoclicker' added to ActionName union in types",
+        "Tests cover: success path (cost deducted, autoclicker_count incremented), all three error paths, cost formula correctness at several autoclicker_count values",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 134,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Audience mood gate change + AUTOCLICKERS_AFFECT_MOOD killswitch",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Update the applyTickPosts gate in audience-mood/index.ts so autoclicker fires contribute to audience mood pressure. The current gate (line 295) skips generators where `count <= 0`. Under the level-driven-cooldown model, a generator with count=0 but autoclicker_count > 0 has active autoclickers producing engagement. The gate changes to `count <= 0 && autoclicker_count <= 0`.\n\nPer the game-designer's resolution: autoclicker fires are semantically identical to manual taps — the audience doesn't distinguish who posted. Implementation must include a killswitch boolean flag (`AUTOCLICKERS_AFFECT_MOOD`) in static data or as a module-level constant, so this behavior can be toggled without a code change if playtesting reveals the pressure is wrong.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Revision 2026-04-06 post-engineer-review — Flag 2 resolution and killswitch requirement"
+        },
+        {
+          "ref": "client/src/audience-mood/index.ts",
+          "purpose": "applyTickPosts (line 284+), gate at line 295"
+        },
+        {
+          "ref": "client/src/audience-mood/index.test.ts",
+          "purpose": "Existing applyTickPosts tests (line 293+) need updating"
+        }
+      ],
+      "acceptance_criteria": [
+        "applyTickPosts skips a generator only when BOTH count <= 0 AND autoclicker_count <= 0 (when killswitch is on)",
+        "AUTOCLICKERS_AFFECT_MOOD boolean flag exists (module-level constant or in StaticData.audience_mood) — when false, the gate reverts to the old behavior (skip when count <= 0, ignoring autoclicker_count)",
+        "Default value of AUTOCLICKERS_AFFECT_MOOD is true",
+        "Test: generator with count=0, autoclicker_count=3 contributes to mood when killswitch is on",
+        "Test: generator with count=0, autoclicker_count=3 does NOT contribute to mood when killswitch is off",
+        "Test: generator with count=0, autoclicker_count=0 does not contribute regardless of killswitch",
+        "All existing audience-mood tests pass (updated for new gate semantics)",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 135,
+      "alias": "E4",
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "UI wiring for autoclicker model: purchase button, floating numbers, badge update",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Wire the autoclicker model into the UI layer. This is the final integration task — it makes the three-axis investment model (LVL UP / BUY / Autoclicker) visible and interactive to the player.\n\nThree sub-deliverables:\n1. **Autoclicker purchase button** — location and layout per U2's design decision. Wires to driver.buyAutoclicker(verbId) from E2. Shows cost, count badge.\n2. **Floating number emissions for autoclicker fires** — per U1's density/stagger spec. Engine fires in burst mode; UX layer may visually stagger. Need density cap and visual differentiation rules from U1.\n3. **Badge semantics update** — the ×N badge on verb buttons changes meaning per U1's spec (likely shows autoclicker_count, not BUY count). Yield display formula changes to show `base_event_yield × (1 + count)` instead of `base_event_yield × levelMultiplier(level)`.\n\nThis task depends on E2 (buyAutoclicker action exists), U1 (UX spec for badge/floating numbers/yield display), and U2 (purchase button location decision).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Three-axis model and visual feedback requirements"
+        },
+        {
+          "ref": ".frames/sdlc/ux/manual-action-ladder.md",
+          "purpose": "§4.2 badge semantics, §4.4 interaction states, §4.6 autoclicker floating numbers, §10 engineer handover"
+        },
+        {
+          "ref": ".frames/sdlc/ux/generator-purchase-pills.md",
+          "purpose": "Purchase pill spec — pill anatomy, affordance states, cost ghost label, tap interaction, feedback chains, engineer handover §10"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-purchase-button-location.md",
+          "purpose": "Location decision — all three tracks in Generators column"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "§5 counter-bump is manual-tap-only (per task #138 amendment)"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "Live-verb-button rendering — badge, yield display, floating numbers"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "perClick yield preview computation needs formula update"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Generator rows — purchase pills render here"
+        }
+      ],
+      "acceptance_criteria": [
+        "Autoclicker purchase button renders per U2's location decision, shows cost via autoclickerBuyCost, wired to driver.buyAutoclicker(verbId)",
+        "Autoclicker count badge displays on verb buttons per U1's badge semantics spec",
+        "Floating number emissions for autoclicker fires follow U1's density cap, stagger timing, and visual differentiation rules",
+        "Yield display formula updated: shows base_event_yield × (1 + count) (not levelMultiplier)",
+        "perClick yield preview in GameScreen.tsx uses the new earned formula",
+        "Counter-bump (from action-button-physicality spec) fires on manual tap ONLY — autoclicker fires do not trigger counter-bump (per U3)",
+        "Cooldown ring animates per the updated formula: max(50, 1000 / (level × base_event_rate))",
+        "Reduced-motion support for autoclicker floating numbers per U1 spec",
+        "Component tests cover: autoclicker purchase flow, badge display, floating number emission, yield display correctness",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 136,
+      "alias": "U1",
+      "role": "ux-designer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Update manual-action-ladder UX spec for autoclicker model (Gaps 1, 2, 5, 6)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Update ux/manual-action-ladder.md to reflect the level-driven-manual-cooldown proposal's three-axis model. Four UX gaps identified in the ux-designer's review need resolution:\n\n**Gap 1 — Badge semantics (§4.2, §4.4, §10):** The ×N badge previously showed automator count (old `count`). Under the new model, `count` = BUY count (yield multiplier) and `autoclicker_count` = army size. Decide what the badge shows. UX-designer's instinct from review: badge shows autoclicker_count (army size — 'that's 3 workers firing'). Yield multiplier communicated through yield display.\n\n**Gap 2 — Floating-number spec for autoclicker fires:** No spec exists for autoclicker-emitted floating numbers. Need: stagger timing (visual stagger even though engine fires in burst), density cap (at what N do you batch?), visual differentiation (size/opacity vs manual taps?), reduced-motion fallback.\n\n**Gap 5 — Cooldown ring threshold (§4.5):** The 100ms threshold where 'ring stops animating' is unreachable under the new formula (fastest is chirps L10 = 200ms). Section can be simplified or removed.\n\n**Gap 6 — Yield display formula (§4.2):** Display changes from `base_event_yield × levelMultiplier(level)` to `base_event_yield × (1 + count)`. Also confirm rate-flare fires on BUY (it previously fired on Upgrade which drove yield).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Source proposal — ux-designer review (line 488+) identifies all 6 gaps with detail"
+        },
+        {
+          "ref": ".frames/sdlc/ux/manual-action-ladder.md",
+          "purpose": "Target spec file — §4.2 (badge), §4.4 (interaction states), §4.5 (cooldown ring threshold), §10 (engineer handover)"
+        },
+        {
+          "ref": ".frames/sdlc/ux/purchase-feedback-and-rate-visibility.md",
+          "purpose": "§5 rate-flare — needs to fire on BUY instead of Upgrade for yield changes"
+        }
+      ],
+      "acceptance_criteria": [
+        "§4.2 badge semantics updated: specifies what the ×N badge shows under the three-axis model (autoclicker_count or count or both), with rationale",
+        "New section or subsection specifying autoclicker floating-number emissions: stagger timing, density cap threshold, visual differentiation from manual taps, reduced-motion fallback",
+        "§4.5 updated to reflect that the 100ms threshold is unreachable (simplified or removed). 50ms hard floor from proposal noted as the new safety clamp",
+        "§4.2 yield display formula updated to base_event_yield × (1 + count). Rate-flare trigger updated (BUY purchase, not Upgrade)",
+        "§10 engineer handover updated: LiveVerbButton props include autoclicker_count, yield display formula reference, floating-number emission contract",
+        "All changes are consistent with the accepted level-driven-manual-cooldown proposal's formulas"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 137,
+      "alias": "U2",
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Decide purchase button location for LVL UP / BUY / Autoclicker (Gap 4)",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "The level-driven-manual-cooldown proposal introduces three purchase tracks per verb (LVL UP, BUY, Autoclicker) but does not specify where these purchase buttons live in the UI. The old model placed Upgrade and Automate in the Upgrades middle column.\n\nOptions from the ux-designer's review:\n- (a) All three in the Upgrades column (current pattern — action button is tap-only)\n- (b) On the action button itself (risks cluttering the 80px arcade slab)\n- (c) Hybrid — some on the button, some in Upgrades\n\nThis is a game-designer + ux-designer co-decision per the review. The answer determines how the engineer builds E4 (UI wiring). This should be a quick decision — a short proposal or inline resolution, not a deep deliberation.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "ux-designer review Gap 4 (line 545+) — full context on the layout question"
+        },
+        {
+          "ref": ".frames/sdlc/ux/manual-action-ladder.md",
+          "purpose": "Current layout spec — §4 live-verb-button anatomy (80px), §2 scroll region"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "Arcade-slab button spec — layout constraints"
+        }
+      ],
+      "acceptance_criteria": [
+        "Decision made and written down: where do LVL UP, BUY, and Autoclicker purchase buttons live (Actions column, Upgrades column, or hybrid)?",
+        "Rationale addresses: arcade-slab clutter concern, co-location of 'three feelings' with tap target, consistency with existing Upgrades column pattern",
+        "Decision is referenced in ux/manual-action-ladder.md or a new spec so the engineer can implement E4"
+      ],
+      "open_questions": [
+        {
+          "question": "Does the game-designer have a preference for co-locating all three buttons with the verb vs keeping purchases in the Upgrades column?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 138,
+      "alias": "U3",
+      "role": "ux-designer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Amend action-button-physicality spec: counter-bump is manual-tap-only (Gap 3)",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "The action-button-physicality spec (proposals/accepted/20260406-action-button-physicality.md) defines a counter-bump (scale(1.15) pulse) on button press. Under the autoclicker model, autoclicker fires also generate engagement. If autoclicker fires trigger counter-bumps, the counter becomes a seizure machine at high autoclicker counts.\n\nPer the ux-designer's review (Gap 3): counter-bump is player-tap-only. Autoclicker fires get their own distinct signal (floating numbers + badge pulse from §4.4).\n\nThis is a small spec amendment — one clarification sentence in §5.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "§5 — counter-bump definition, needs manual-tap-only clarification"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "ux-designer review Gap 3 (line 535+)"
+        }
+      ],
+      "acceptance_criteria": [
+        "action-button-physicality spec §5 explicitly states counter-bump fires on manual tap only, not on autoclicker fires",
+        "Autoclicker-fire visual feedback is noted as a separate signal (floating numbers + badge pulse), cross-referenced to the manual-action-ladder UX spec"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 139,
+      "alias": "A1",
+      "role": "architect",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Supersession edits to manual-action-ladder.md for level-driven-cooldown",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Apply supersession back-references to the accepted manual-action-ladder.md for sections superseded by level-driven-manual-cooldown.md. Same bookkeeping pattern as task #117.\n\nSections to mark superseded (per the proposal's Supersession section):\n- §2 (three-state lifecycle) → now three parallel tracks\n- §4 (Automate teaching moment) → replaced by Autoclicker first-purchase\n- §12 (cooldown formula, phantom-hand floor, per-tap earned formula) → new formulas\n- §14a (yield/rate split for chirps + selfies) → retuned values\n- §14e (automation curve) → level-keyed cooldown table\n- §14f (manual-supplementary ratio) → new ratio model\n- Passive tick formula → new formula with autoclicker_count\n\nEach edit adds a back-reference to level-driven-manual-cooldown.md at the point of supersession. Preserve historical context — mark inline, do not delete.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Supersession section (line 155-168) — lists exactly what's superseded"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "Target document — sections §2, §4, §12, §14a, §14e, §14f to be marked superseded"
+        }
+      ],
+      "acceptance_criteria": [
+        "manual-action-ladder.md §2 marked superseded with back-reference to level-driven-manual-cooldown.md",
+        "manual-action-ladder.md §4 marked superseded with back-reference",
+        "manual-action-ladder.md §12 cooldown formula, phantom-hand floor, and per-tap earned formula marked superseded with back-references",
+        "manual-action-ladder.md §14a chirps and selfies rows marked superseded (rate retune) with back-reference",
+        "manual-action-ladder.md §14e marked superseded with back-reference",
+        "manual-action-ladder.md §14f marked superseded with back-reference",
+        "All superseded text preserved (not deleted) — marked inline with supersession note",
+        "Each edit includes a reference to level-driven-manual-cooldown.md so future readers can trace the decision"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 140,
+      "alias": "U4",
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Design three-track purchase row layout in Generators column",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "The purchase-button-location proposal (accepted) decided that LVL UP, BUY, and Autoclicker purchase controls live in the Generators center column — not on the action button slab. But it explicitly leaves open two layout questions: (1) compact inline vs expandable tray vs dedicated sub-rows, and (2) grouping by verb (all three tracks in one generator row) vs by track type (all LVL UPs together, etc.). These are design decisions that affect how the center column scales from 1 to 5 verbs, how purchase affordances compete for attention against generator modifier chips and rate displays, and whether the strategic ledger reading of the column survives. The wrong layout will make the column feel like a spreadsheet or hide purchase affordances behind too many taps.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-purchase-button-location.md",
+          "purpose": "Source decision — locks in Generators column, leaves layout open"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Three-axis model definition — LVL UP (speed), BUY (power), Autoclicker (passive)"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§4 Generators column layout, §3 information hierarchy, modifier chips spec"
+        },
+        {
+          "ref": ".frames/sdlc/ux/manual-action-ladder.md",
+          "purpose": "Actions column spec — the other side of the spatial grammar"
+        },
+        {
+          "ref": ".frames/sdlc/ux/purchase-feedback-and-rate-visibility.md",
+          "purpose": "Rate-flare and purchase feedback patterns — purchase controls must integrate with these"
+        },
+        {
+          "ref": ".frames/sdlc/ux/upgrade-curve-drawer-spec.md",
+          "purpose": "Existing upgrade drawer — how level-up currently surfaces in the generator row"
+        }
+      ],
+      "acceptance_criteria": [
+        "Layout format decided: compact inline, expandable tray, or dedicated sub-rows — with rationale addressing column density at 5 verbs",
+        "Grouping decided: by verb or by track type — with rationale addressing player mental model ('invest in this verb' vs 'compare all speeds')",
+        "Affordance states sketched for each track: affordable, unaffordable, maxed — enough detail for the follow-up spec task to elaborate",
+        "Mobile adaptation direction noted: how the layout adapts to the mobile Generators view",
+        "Proposal written to proposals/draft/ per template"
+      ],
+      "open_questions": [
+        {
+          "question": "Does the existing upgrade-curve-drawer interaction (tap generator row → drawer opens) survive, merge with the new purchase controls, or get replaced?",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "At 5 verbs × 3 tracks = 15 purchase affordances visible — is that too dense for the center column, or does the ledger reading hold?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 141,
+      "alias": "U5",
+      "role": "ux-designer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Write Generators column purchase controls UX spec",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Write the full UX spec for the three-track purchase controls (LVL UP, BUY, Autoclicker) in the Generators center column, based on the layout decision from U4. This spec is the engineer's implementation reference for task #135 (UI wiring). It must cover: row anatomy with dimensions, visual states per track (affordable/unaffordable/maxed/first-available), cost display formatting, tap interaction and feedback, integration with existing rate-flare and modifier chip systems, mobile layout, motion briefs, reduced-motion fallback, accessibility (contrast, color independence), and a clean engineer handover section with component props and state derivations.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-purchase-button-location.md",
+          "purpose": "Source decision — Generators column confirmed"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "Generator row anatomy, modifier chips, information hierarchy"
+        },
+        {
+          "ref": ".frames/sdlc/ux/purchase-feedback-and-rate-visibility.md",
+          "purpose": "Rate-flare integration — purchase feedback must chain with existing patterns"
+        },
+        {
+          "ref": ".frames/sdlc/ux/upgrade-curve-drawer-spec.md",
+          "purpose": "Existing upgrade drawer spec — must integrate or supersede"
+        },
+        {
+          "ref": ".frames/sdlc/ux/visual-identity.md",
+          "purpose": "Color tokens, contrast requirements"
+        },
+        {
+          "ref": ".frames/sdlc/ux/accent-palette-light-mode.md",
+          "purpose": "Accent palette for affordance states"
+        }
+      ],
+      "acceptance_criteria": [
+        "Spec written to ux/ directory with full row anatomy: dimensions, padding, typography, color tokens for each purchase track",
+        "Three affordance states per track specified: affordable (tap to purchase), unaffordable (cost visible, visually recessed), maxed (if applicable — e.g., autoclicker cap)",
+        "Cost display format defined: number formatting, currency label, position within the row",
+        "Tap interaction specified: what happens on tap (purchase fires, cost deducted, feedback chain), what happens on tap when unaffordable (no-op + feedback)",
+        "Integration with rate-flare system documented: which purchases trigger rate-flare, on which display element",
+        "Mobile layout specified: how the purchase controls adapt to mobile Generators view",
+        "Motion briefs included: purchase confirmation animation, cost update animation, state transitions between affordable/unaffordable",
+        "Accessibility: all text meets WCAG AA contrast, no color-only signals, reduced-motion fallback specified",
+        "Engineer handover section: component props, state derivations from model, event handlers"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 142,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Design ratio-scaled manual tap floating numbers (size + brightness by significance)",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "When the player taps a verb action button, the floating +N number currently pops at fixed size (22px) and fixed color (gold #FFD66B) regardless of value. This proposal: scale the float's font-size and color brightness based on `perClick / currentEngagement` — the ratio of what the tap earned to the player's current balance. Significant taps (high ratio) render large and bright gold. Insignificant taps (low ratio) render small and dim gold. The hue stays gold throughout — no green/yellow/red gradient, because gold is the established 'you earned something' color and introducing hue shifts creates a judgment signal that undermines the reward beat.\n\nKey design decisions needed:\n- Min/max font size (e.g., 14px–32px) and the log-scale mapping from ratio to size\n- Gold brightness range (dim gold floor → bright gold ceiling) — must maintain WCAG contrast at the dim end\n- Whether the size floor (smallest float) is perceptually legible at endgame against busy autoclicker animations\n- How this interacts with task #136's autoclicker floating number spec — manual floats must remain visually distinct from autoclicker floats at ALL sizes, so the player always knows 'this was my hand'\n- Reduced-motion fallback (size scaling is fine under reduced-motion; brightness scaling is fine; no new animation needed)\n\nGame-designer alignment: supports the mechanic, endorsed gold-brightness over green→yellow, flagged that the player's hand should never become perceptually invisible. Hard design principle: manual tap floats stay distinct from autoclicker floats at every size.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "Current verb-float rendering — line 204, fixed className 'verb-float'"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Current .verb-float styles — fixed 22px, fixed #FFD66B gold"
+        },
+        {
+          "ref": "client/src/ui/PostZone.tsx",
+          "purpose": "PostZone float-number rendering — same pattern, also fixed size/color"
+        },
+        {
+          "ref": ".frames/sdlc/ux/core-game-screen.md",
+          "purpose": "§8.2 click floating number spec (500ms, drift up, fade), §8.3 rapid click stacking"
+        },
+        {
+          "ref": ".frames/sdlc/ux/purchase-feedback-and-rate-visibility.md",
+          "purpose": "§4.1 floating delta number spec — must stay consistent"
+        }
+      ],
+      "acceptance_criteria": [
+        "Ratio-to-size mapping defined: formula (log-scale), min size, max size, with rationale for the range",
+        "Gold brightness range defined: dim gold token and bright gold token, both passing WCAG AA contrast against the button background",
+        "Manual vs autoclicker float distinction principle stated — how manual floats stay visually distinct at the smallest size",
+        "Interaction with task #136 autoclicker float spec noted — the two specs must not conflict on visual weight or color",
+        "Reduced-motion behavior confirmed (size/brightness scaling is non-motion, no new animation needed)",
+        "Proposal written to proposals/draft/"
+      ],
+      "open_questions": [
+        {
+          "question": "Should the brightness floor be tied to a specific engagement threshold (e.g., 'taps never dim below X until autoclickers are active') or purely ratio-driven?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 143,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Implement ratio-scaled manual tap floating numbers",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Scale the verb-float's font-size and gold brightness based on tap significance (perClick / currentEngagement). The proposal is accepted and the engineer confirmed ~30 min implementation. The change is contained to ActionsColumn.tsx (inline style on the verb-float span) and GameScreen.css (defaults become overridable).\n\nFormulas:\n- ratio = perClick / max(1, currentEngagement)\n- t = clamp((log10(ratio) + 6) / 6, 0, 1)\n- fontSize = lerp(16, 32, t)\n- saturation = lerp(40, 100, t), lightness = lerp(52, 71, t)\n- color = hsl(43, saturation%, lightness%)\n\nAutoclicker floats (§4.6) scale to 80% of the current manual float size. Density-cap batched floats stay fixed at 22px.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-ratio-scaled-manual-tap-floats.md",
+          "purpose": "Accepted proposal — full spec with formulas, color tokens, accessibility notes"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "verb-float span (line 204) — add inline style for fontSize and color"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": ".verb-float rule — font-size and color become defaults overridden by inline styles"
+        },
+        {
+          "ref": ".frames/sdlc/ux/manual-action-ladder.md",
+          "purpose": "§4.6 autoclicker float spec — autoclicker floats scale to 80% of manual float size"
+        }
+      ],
+      "acceptance_criteria": [
+        "verb-float font-size scales from 16px (t=0, negligible tap) to 32px (t=1, significant tap) based on log-scale ratio formula",
+        "verb-float color scales from dim gold hsl(43,40%,52%) to bright gold hsl(43,100%,71%) using the same t value",
+        "Text-shadow on .verb-float stays fixed (contrast mechanism, not significance signal)",
+        "Autoclicker individual floats render at 80% of the current manual float fontSize (not fixed 80% of 22px)",
+        "Density-cap batched floats (+total ×N at 8+ autoclickers) stay at fixed 22px per §4.6",
+        "First tap (currentEngagement ≤ 1) produces t=1.0 — biggest, brightest float",
+        "No new animation introduced — size and brightness are static at emission time",
+        "Reduced-motion: no change needed (size/brightness are not motion)",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 144,
+      "role": "architect",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Update core-systems.md after algorithm weather system removal",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The algorithm weather system removal (proposal: 20260406-remove-algorithm-weather-system.md) strips a major subsystem from the codebase. The core-systems architecture doc must be updated to reflect the new reality. This is not a design task — the decisions are already made in the accepted proposal. This is a doc update to keep the architecture spec honest.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "The architecture doc being updated"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/20260406-remove-algorithm-weather-system.md",
+          "purpose": "The proposal defining what was removed and what stays"
+        }
+      ],
+      "acceptance_criteria": [
+        "AlgorithmState entity section removed from Data Model",
+        "Generator table: trend_sensitivity field removed",
+        "Player table: algorithm_seed field removed",
+        "SnapshotState table: algorithm_state_index field removed",
+        "GameState interface: algorithm field removed",
+        "StaticData interface: algorithmStates and algorithmSchedule removed",
+        "OfflineResult interface: algorithmAdvances and newAlgorithmState removed",
+        "Effective engagement rate formula updated (algoMod factor removed)",
+        "Offline calculator contract comment rewritten — per-segment algorithm recomputation rationale no longer applies",
+        "Generator↔Algorithm coupling section removed",
+        "OfflineCalculator↔Algorithm coupling section removed",
+        "Seeded PRNG technology decision removed or marked dormant",
+        "Assumption #5 (algorithm states are a fixed set per seed) removed",
+        "CloutUpgrade UpgradeEffect union: algorithm_insight variant removed",
+        "Open question #1 updated if it references algorithm"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 145,
+      "role": "engineer",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Review proposal: Remove Algorithm Weather System",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The game designer has proposed removing the algorithm weather system entirely. The architect has reviewed and aligned. The engineer is the final reviewer — once aligned, the proposal moves to accepted. Review from the engineer's perspective: implementation feasibility, save migration approach, anything missed in the removal list, and whether the offline calculator simplification is as clean as described.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/20260406-remove-algorithm-weather-system.md",
+          "purpose": "The proposal to review"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Architecture spec showing current algorithm integration points"
+        },
+        {
+          "ref": "client/src/algorithm/",
+          "purpose": "The module being removed"
+        }
+      ],
+      "acceptance_criteria": [
+        "Proposal reviewed from engineer perspective and review log entry appended",
+        "Frontmatter updated per review outcome"
       ],
       "open_questions": [],
       "blocked_on": []

@@ -2,7 +2,7 @@
 
 > **Scope:** Sharpens the feel of rate visibility and the purchase-moment delta. Targets a specific feel gap observed in the running game: button presses feel imperceptible, rate isn't surfaced, generators don't communicate that they're running. This spec is an extension and sharpening of patterns already defined in `core-game-screen.md` — not a replacement.
 >
-> **Not in scope:** Overall layout (see core-game-screen.md §2), the broader click-to-post flow (§8), the upgrade drawer pattern (§6.3, see also `ux/upgrade-curve-drawer-spec.md` when available).
+> **Not in scope:** Overall layout (see core-game-screen.md §2), the broader click-to-post flow (§8), the upgrade drawer pattern (§6.3, see `ux/upgrade-curve-drawer-spec.md`), purchase pill layout (see `ux/generator-purchase-pills.md`).
 >
 > **Implements:** The feel target from `proposals/accepted/core-game-identity-and-loop.md` §1 (Target aesthetic: *Submission* — "the satisfying trance of numbers climbing and systems humming").
 >
@@ -279,7 +279,7 @@ This spec:
 - **Extends §6.2** by specifying the breathing pulse on owned generator rows
 - **Extends §6.4** by specifying the first-purchase animation and the subsequent breathing state
 - **Extends §8.2** by sharpening the Post button's confirmation flash
-- **Adds** the Buy button spec (the main spec didn't cover it — purchase was routed through the upgrade drawer)
+- **Adds** the Buy button spec (the main spec didn't cover it — purchase controls now live as inline pills per `ux/generator-purchase-pills.md`)
 - **Adds** the delta moment choreography (rate flare + delta readout)
 - **Adds** the counter tick animation requirements (including fractional display for low rates)
 

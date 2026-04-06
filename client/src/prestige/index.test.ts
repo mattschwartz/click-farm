@@ -119,8 +119,8 @@ describe('applyRebrand — reset completeness', () => {
       platforms: {
         ...base.platforms,
         chirper: { ...base.platforms.chirper, unlocked: true, followers: 20_000 },
-        instasham: { ...base.platforms.instasham, unlocked: true, followers: 18_000 },
-        grindset: { ...base.platforms.grindset, unlocked: true, followers: 2_000 },
+        picshift: { ...base.platforms.picshift, unlocked: true, followers: 18_000 },
+        skroll: { ...base.platforms.skroll, unlocked: true, followers: 2_000 },
       },
     };
   }
@@ -138,8 +138,8 @@ describe('applyRebrand — reset completeness', () => {
     const next = applyRebrand(state, result, STATIC_DATA, T0 + 1000);
     expect(next.player.total_followers).toBe(0);
     expect(next.platforms.chirper.followers).toBe(0);
-    expect(next.platforms.instasham.followers).toBe(0);
-    expect(next.platforms.grindset.followers).toBe(0);
+    expect(next.platforms.picshift.followers).toBe(0);
+    expect(next.platforms.skroll.followers).toBe(0);
   });
 
   it('resets generators: count=0, level=1, and owned only for threshold=0 (mirrors fresh start)', () => {
@@ -157,8 +157,8 @@ describe('applyRebrand — reset completeness', () => {
     const state = setupMidRun();
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
     expect(next.platforms.chirper.unlocked).toBe(true);   // threshold = 0
-    expect(next.platforms.instasham.unlocked).toBe(false); // threshold = 100
-    expect(next.platforms.grindset.unlocked).toBe(false);  // threshold = 500
+    expect(next.platforms.picshift.unlocked).toBe(false); // threshold = 100
+    expect(next.platforms.skroll.unlocked).toBe(false);  // threshold = 500
   });
 
   it('resets viralBurst to a clean default (prevents doTick crash on next tick)', () => {
@@ -258,19 +258,19 @@ describe('applyRebrand — preservation of meta', () => {
 describe('applyRebrand — meta-upgrade effects', () => {
   it('platform_headstart unlocks the named platform on the new run', () => {
     const state = seedState({ total_followers: 1_000 });
-    state.player.clout_upgrades.platform_headstart_instasham = 1;
+    state.player.clout_upgrades.platform_headstart_picshift = 1;
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
-    expect(next.platforms.instasham.unlocked).toBe(true);
-    expect(next.platforms.grindset.unlocked).toBe(false); // not purchased
+    expect(next.platforms.picshift.unlocked).toBe(true);
+    expect(next.platforms.skroll.unlocked).toBe(false); // not purchased
   });
 
   it('multiple platform_headstart upgrades all apply', () => {
     const state = seedState({ total_followers: 1_000 });
-    state.player.clout_upgrades.platform_headstart_instasham = 1;
-    state.player.clout_upgrades.platform_headstart_grindset = 1;
+    state.player.clout_upgrades.platform_headstart_picshift = 1;
+    state.player.clout_upgrades.platform_headstart_skroll = 1;
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
-    expect(next.platforms.instasham.unlocked).toBe(true);
-    expect(next.platforms.grindset.unlocked).toBe(true);
+    expect(next.platforms.picshift.unlocked).toBe(true);
+    expect(next.platforms.skroll.unlocked).toBe(true);
   });
 
   it('generator_unlock grants owned=true on the new run (via stub upgrade)', () => {

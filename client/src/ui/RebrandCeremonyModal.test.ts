@@ -159,7 +159,7 @@ describe('buildResetItems', () => {
   });
 
   it('counts unlocked platforms', () => {
-    const state = makeState({ unlockedPlatforms: ['chirper', 'instasham'] });
+    const state = makeState({ unlockedPlatforms: ['chirper', 'picshift'] });
     const items = buildResetItems(state);
     const platItem = items.find((r) => r.label === 'Platforms unlocked');
     expect(platItem?.value).toBe('2 platforms');
@@ -200,8 +200,8 @@ describe('buildPersistItems', () => {
       ownedUpgrades: {
         engagement_boost: 2,
         algorithm_insight: 0,
-        platform_headstart_instasham: 1,
-        platform_headstart_grindset: 0,
+        platform_headstart_picshift: 1,
+        platform_headstart_skroll: 0,
         ai_slop_unlock: 0,
         deepfakes_unlock: 0,
         algorithmic_prophecy_unlock: 0,
@@ -209,7 +209,7 @@ describe('buildPersistItems', () => {
     });
     const items = buildPersistItems(state);
     const upgradeItem = items.find((r) => r.label === 'Clout upgrades');
-    // engagement_boost (2) and platform_headstart_instasham (1) → 2 owned
+    // engagement_boost (2) and platform_headstart_picshift (1) → 2 owned
     expect(upgradeItem?.value).toBe('2 owned');
   });
 });

@@ -21,7 +21,7 @@ import type {
 } from '../types.ts';
 import { purchaseKitItem } from '../creator-kit/index.ts';
 import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
-import { buyGenerator, upgradeGenerator, unlockGenerator } from '../generator/index.ts';
+import { buyGenerator, upgradeGenerator, unlockGenerator, buyAutoclicker } from '../generator/index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { clearSave, load, save } from '../save/index.ts';
 import { calculateOffline, type OfflineResult } from '../offline/index.ts';
@@ -53,7 +53,7 @@ export type StateListener = (state: GameState) => void;
 export type ViralBurstListener = (payload: ViralBurstPayload) => void;
 
 /** Which driver action was attempted when the error fired. */
-export type ActionName = 'click' | 'buy' | 'upgrade' | 'unlock' | 'buyCloutUpgrade' | 'buyKitItem';
+export type ActionName = 'click' | 'buy' | 'upgrade' | 'unlock' | 'buyAutoclicker' | 'buyCloutUpgrade' | 'buyKitItem';
 
 /**
  * Fired when a player-triggered action throws out of the model layer. The
@@ -114,6 +114,8 @@ export interface GameDriver {
   upgrade(generatorId: GeneratorId): void;
   /** Unlock a manual-clickable generator (pays base_buy_cost, flips owned=true). */
   unlock(verbId: GeneratorId): void;
+  /** Buy one autoclicker for a manual-clickable generator. */
+  buyAutoclicker(verbId: GeneratorId): void;
   /** Force a single tick using the driver's clock. Test/debug utility. */
   step(deltaMs?: number): void;
   /** Persist to storage now (also captures current-rate snapshot). */
@@ -380,6 +382,12 @@ export function createDriver(options: DriverOptions): GameDriver {
     unlock(verbId) {
       runAction('unlock', { verbId }, () => {
         applyState(unlockGenerator(state, verbId, staticData));
+      });
+    },
+
+    buyAutoclicker(verbId) {
+      runAction('buyAutoclicker', { verbId }, () => {
+        applyState(buyAutoclicker(state, verbId, staticData));
       });
     },
 

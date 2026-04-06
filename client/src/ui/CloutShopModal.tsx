@@ -53,16 +53,22 @@ export const UPGRADE_DISPLAY: Record<UpgradeId, UpgradeDisplay> = {
     description: 'Reveal upcoming Algorithm shifts before they arrive.',
     category: 'INSIGHT',
   },
-  platform_headstart_instasham: {
-    name: 'InstaSham Head Start',
+  platform_headstart_picshift: {
+    name: 'PicShift Head Start',
     icon: '📸',
-    description: 'Start each run with InstaSham already unlocked.',
+    description: 'Start each run with PicShift already unlocked.',
     category: 'UNLOCKS',
   },
-  platform_headstart_grindset: {
-    name: 'Grindset Head Start',
-    icon: '💼',
-    description: 'Start each run with Grindset already unlocked.',
+  platform_headstart_skroll: {
+    name: 'Skroll Head Start',
+    icon: '📱',
+    description: 'Start each run with Skroll already unlocked.',
+    category: 'UNLOCKS',
+  },
+  platform_headstart_podpod: {
+    name: 'PodPod Head Start',
+    icon: '🎧',
+    description: 'Start each run with PodPod already unlocked.',
     category: 'UNLOCKS',
   },
   ai_slop_unlock: {

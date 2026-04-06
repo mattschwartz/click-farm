@@ -12,6 +12,7 @@ import {
   migrateV5toV6,
   migrateV6toV7,
   migrateV7toV8,
+  migrateV9toV10,
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -80,15 +81,15 @@ describe('save and load', () => {
       platforms: {
         ...state.platforms,
         chirper: { ...state.platforms.chirper, followers: 1234 },
-        instasham: { ...state.platforms.instasham, followers: 567 },
+        picshift: { ...state.platforms.picshift, followers: 567 },
       },
     };
     save(stateWithFollowers);
     const loaded = expectLoaded(load());
 
     expect(loaded.platforms.chirper.followers).toBe(1234);
-    expect(loaded.platforms.instasham.followers).toBe(567);
-    expect(loaded.platforms.grindset.followers).toBe(0);
+    expect(loaded.platforms.picshift.followers).toBe(567);
+    expect(loaded.platforms.skroll.followers).toBe(0);
   });
 
   it('preserves algorithm state', () => {
@@ -117,7 +118,24 @@ describe('save and load', () => {
 
   it('injects viralBurst when the field is absent in a v2 save', () => {
     // Simulates a save written as v2 before viralBurst was part of the schema.
-    const state = createInitialGameState(STATIC_DATA, 0);
+    // Must use old platform names (instasham/grindset, no podpod) since the
+    // migration chain V9→V10 expects to remap them.
+    const base = createInitialGameState(STATIC_DATA, 0);
+    const oldPlatforms = {
+      chirper: base.platforms.chirper,
+      instasham: { ...base.platforms.picshift, id: 'instasham' },
+      grindset: { ...base.platforms.skroll, id: 'grindset' },
+    };
+    const oldUpgrades = {
+      ...base.player.clout_upgrades,
+      platform_headstart_instasham: base.player.clout_upgrades.platform_headstart_picshift,
+      platform_headstart_grindset: base.player.clout_upgrades.platform_headstart_skroll,
+    };
+    const state = {
+      ...base,
+      platforms: oldPlatforms,
+      player: { ...base.player, clout_upgrades: oldUpgrades },
+    };
     const { viralBurst: _dropped, ...stateWithoutViral } = state as typeof state & { viralBurst?: unknown };
     const rawSave = JSON.stringify({
       version: 2,
@@ -242,16 +260,16 @@ describe('importSaveJSON', () => {
 // ---------------------------------------------------------------------------
 
 describe('migrate', () => {
-  it('passes through current-version (v8) data unchanged', () => {
+  it('passes through current-version (v11) data unchanged', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const data: SaveData = {
-      version: 8,
+      version: 11,
       state,
       lastCloseTime: 0,
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(9);
+    expect(result.version).toBe(11);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -311,15 +329,23 @@ describe('migrateV1toV2', () => {
 
 describe('migrateV3toV4', () => {
   function makeV3SaveData(): SaveData {
-    // Build a V3 state shape using the v4 createInitialGameState as a base,
-    // then overwrite the fields that changed in v4 (clout_upgrades keys +
-    // post-prestige generator entries) with their pre-v4 equivalents.
+    // Build a V3 state shape. V3 saves had 3 platforms named chirper,
+    // instasham, grindset — and no post-prestige generators. We construct
+    // this manually to simulate a real V3 save rather than using
+    // createInitialGameState (which produces the current schema).
     const base = createInitialGameState(STATIC_DATA, 0);
     const { ai_slop: _a, deepfakes: _d, algorithmic_prophecy: _p, ...preV4Gens } =
       base.generators;
+    // Rebuild platforms with old names (instasham/grindset, no podpod).
+    const oldPlatforms = {
+      chirper: { ...base.platforms.chirper },
+      instasham: { ...base.platforms.picshift, id: 'instasham' },
+      grindset: { ...base.platforms.skroll, id: 'grindset' },
+    };
     const state = {
       ...base,
       generators: preV4Gens,
+      platforms: oldPlatforms,
       player: {
         ...base.player,
         clout_upgrades: {
@@ -365,8 +391,9 @@ describe('migrateV3toV4', () => {
   it('preserves algorithm_insight and other platform_headstart levels', () => {
     const result = migrateV3toV4(makeV3SaveData());
     expect(result.state.player.clout_upgrades.algorithm_insight).toBe(1);
-    expect(result.state.player.clout_upgrades.platform_headstart_instasham).toBe(1);
-    expect(result.state.player.clout_upgrades.platform_headstart_grindset).toBe(0);
+    // V3→V4 output still uses the old platform names — V9→V10 renames them.
+    expect((result.state.player.clout_upgrades as Record<string, number>).platform_headstart_instasham).toBe(1);
+    expect((result.state.player.clout_upgrades as Record<string, number>).platform_headstart_grindset).toBe(0);
   });
 
   it('adds new generator_unlock upgrade keys at level 0', () => {
@@ -389,7 +416,7 @@ describe('migrateV3toV4', () => {
 
   it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(9);
+    expect(result.version).toBe(11);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
     expect(result.state.player.creator_kit).toEqual({});
@@ -403,11 +430,29 @@ describe('migrateV3toV4', () => {
 describe('migrateV4toV5', () => {
   function makeV4SaveData(): SaveData {
     const base = createInitialGameState(STATIC_DATA, 0);
-    // Simulate a v4 save by stripping creator_kit from the player.
+    // Simulate a v4 save: strip creator_kit + use old platform names.
     const { creator_kit: _ck, ...playerWithoutKit } = base.player as typeof base.player & { creator_kit?: unknown };
+    // V4 saves had instasham/grindset, no podpod.
+    const oldPlatforms = {
+      chirper: base.platforms.chirper,
+      instasham: { ...base.platforms.picshift, id: 'instasham' },
+      grindset: { ...base.platforms.skroll, id: 'grindset' },
+    };
     const state = {
       ...base,
-      player: playerWithoutKit,
+      platforms: oldPlatforms,
+      player: {
+        ...playerWithoutKit,
+        clout_upgrades: {
+          engagement_boost: 0,
+          algorithm_insight: 0,
+          platform_headstart_instasham: 0,
+          platform_headstart_grindset: 0,
+          ai_slop_unlock: 0,
+          deepfakes_unlock: 0,
+          algorithmic_prophecy_unlock: 0,
+        },
+      },
     } as unknown as SaveData['state'];
     return { version: 4, state, lastCloseTime: 0, lastCloseState: null };
   }
@@ -419,7 +464,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version via the chain', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(9);
+    expect(result.version).toBe(11);
     expect(result.state.player.creator_kit).toEqual({});
   });
 
@@ -448,7 +493,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(9);
+    expect(result.version).toBe(11);
     expect(result.state.player.creator_kit).toEqual({});
   });
 });
@@ -528,12 +573,17 @@ describe('migrateV5toV6', () => {
     expect(result.state.generators.selfies.count).toBe(42);
   });
 
-  it('integrates with migrate() — a v1 save reaches v8 via the full chain', () => {
-    // Start with a v1-shaped save. Post-Scandals-removal, a V1 save cannot
-    // have scandal fields (they were introduced in V3 and stripped in V7).
+  it('integrates with migrate() — a v1 save reaches v10 via the full chain', () => {
+    // Start with a v1-shaped save with old platform names (instasham/grindset).
     const base = createInitialGameState(STATIC_DATA, 0);
+    const oldPlatforms = {
+      chirper: base.platforms.chirper,
+      instasham: { ...base.platforms.picshift, id: 'instasham' },
+      grindset: { ...base.platforms.skroll, id: 'grindset' },
+    };
     const v1State = {
       ...base,
+      platforms: oldPlatforms,
       player: { ...base.player },
     } as unknown as SaveData['state'];
     // Corrupt engagement to verify the full chain still lands the clamp.
@@ -545,7 +595,7 @@ describe('migrateV5toV6', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(9);
+    expect(result.version).toBe(11);
     expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
 });
@@ -724,6 +774,82 @@ describe('migrateV7toV8', () => {
     const result = migrateV7toV8(data);
     expect(result.version).toBe(8);
     expect(result.state.platforms.chirper.retention).toBe(1.0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// migrateV9toV10 — platform renames + podpod
+// ---------------------------------------------------------------------------
+
+describe('migrateV9toV10', () => {
+  function makeV9SaveData(): SaveData {
+    const base = createInitialGameState(STATIC_DATA, 0);
+    // Rebuild with old platform names (instasham/grindset, no podpod).
+    const oldPlatforms = {
+      chirper: base.platforms.chirper,
+      instasham: { ...base.platforms.picshift, id: 'instasham', followers: 500 },
+      grindset: { ...base.platforms.skroll, id: 'grindset', followers: 200 },
+    };
+    const oldUpgrades = {
+      engagement_boost: 1,
+      algorithm_insight: 0,
+      platform_headstart_instasham: 1,
+      platform_headstart_grindset: 0,
+      ai_slop_unlock: 0,
+      deepfakes_unlock: 0,
+      algorithmic_prophecy_unlock: 0,
+    };
+    const state = {
+      ...base,
+      platforms: oldPlatforms,
+      player: {
+        ...base.player,
+        clout_upgrades: oldUpgrades,
+      },
+    } as unknown as SaveData['state'];
+    return { version: 9, state, lastCloseTime: 0, lastCloseState: null };
+  }
+
+  it('bumps version from 9 to 10', () => {
+    const result = migrateV9toV10(makeV9SaveData());
+    expect(result.version).toBe(10);
+  });
+
+  it('remaps instasham → picshift in platforms', () => {
+    const result = migrateV9toV10(makeV9SaveData());
+    expect(result.state.platforms.picshift).toBeDefined();
+    expect(result.state.platforms.picshift.id).toBe('picshift');
+    expect(result.state.platforms.picshift.followers).toBe(500);
+    expect((result.state.platforms as Record<string, unknown>).instasham).toBeUndefined();
+  });
+
+  it('remaps grindset → skroll in platforms', () => {
+    const result = migrateV9toV10(makeV9SaveData());
+    expect(result.state.platforms.skroll).toBeDefined();
+    expect(result.state.platforms.skroll.id).toBe('skroll');
+    expect(result.state.platforms.skroll.followers).toBe(200);
+    expect((result.state.platforms as Record<string, unknown>).grindset).toBeUndefined();
+  });
+
+  it('seeds podpod as a locked platform with 0 followers', () => {
+    const result = migrateV9toV10(makeV9SaveData());
+    expect(result.state.platforms.podpod).toBeDefined();
+    expect(result.state.platforms.podpod.unlocked).toBe(false);
+    expect(result.state.platforms.podpod.followers).toBe(0);
+    expect(result.state.platforms.podpod.retention).toBe(1.0);
+  });
+
+  it('remaps clout upgrade keys', () => {
+    const result = migrateV9toV10(makeV9SaveData());
+    expect(result.state.player.clout_upgrades.platform_headstart_picshift).toBe(1);
+    expect(result.state.player.clout_upgrades.platform_headstart_skroll).toBe(0);
+    expect(result.state.player.clout_upgrades.platform_headstart_podpod).toBe(0);
+    expect((result.state.player.clout_upgrades as Record<string, unknown>).platform_headstart_instasham).toBeUndefined();
+  });
+
+  it('preserves chirper unchanged', () => {
+    const result = migrateV9toV10(makeV9SaveData());
+    expect(result.state.platforms.chirper.id).toBe('chirper');
   });
 });
 

@@ -3,7 +3,7 @@ name: Level-Driven Manual Cooldown
 description: Redefine the Actions-column buttons so LVL UP controls tap speed, BUY controls tap power, and stackable Autoclickers add passive auto-tapping with visible feedback on the verb button.
 created: 2026-04-06
 author: game-designer
-status: accepted
+status: implementation
 reviewers: []
 ---
 

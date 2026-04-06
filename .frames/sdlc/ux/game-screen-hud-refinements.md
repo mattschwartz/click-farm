@@ -78,18 +78,17 @@ The row multiplier pills (×1.06, ×1.64, ×0.96, ×0.90, etc.) have two problem
 
 Pair the numeric multiplier with a **single inline magnitude cue** — not a replacement for the number, an addition to it.
 
-**Option A (preferred): intensity via chevron count.**
+**Decision (game-designer, 2026-04-06): Option A — chevron count.**
+
 - `|Δ| < 0.10` → single chevron (▲ or ▼)
 - `0.10 ≤ |Δ| < 0.25` → double chevron (▲▲ or ▼▼)
 - `|Δ| ≥ 0.25` → triple chevron (▲▲▲ or ▼▼▼)
 
 So ×0.96 shows ▼ ×0.96, ×0.90 shows ▼ ×0.90 still — but ×1.64 shows ▲▲▲ ×1.64 and ×1.06 shows ▲ ×1.06. The player reads *magnitude* in the glyph and *exact value* in the number.
 
-**Option B (fallback): pill fill intensity.**
-- Map `|Δ|` to opacity/saturation of the pill fill (capped: 0.60 → 1.00).
-- Simpler to implement, weaker signal, more prone to accessibility failure.
+**Rationale:** Chevrons are discrete, countable, and accessible. ▲▲▲ reads as "strong boost" instantly; ▲ reads as "mild." No need to parse continuous opacity or compare saturations — count glyphs. Option B (fill opacity) requires distinguishing subtle saturation differences on small pills, which fails for colorblind players and anyone glancing quickly. Standard game UI vocabulary.
 
-Game-designer confirmation needed on Option A vs. B — flagging below.
+Option B (pill fill intensity, mapping `|Δ|` to opacity/saturation) was rejected.
 
 ### 2.4 Acceptance Check
 
@@ -125,6 +124,8 @@ BUY is the **frequent, expected action** of the early-to-mid game. LVL↑ is a *
 - When the player is ≥50% of the level-up price, chrome returns and it becomes armed (amber border per existing `ready`/`armed` states).
 - When affordable, it goes fully gold (per `core-game-screen.md` affordance rules).
 - When L=max, it becomes the platinum plaque per `generator-max-level-state.md`.
+
+**Threshold decision (game-designer, 2026-04-06): 50% confirmed.** LVL UP is a rare milestone under the level-driven-cooldown model (speed axis, 10 levels max, super-exponential cost). It should be quiet most of the time and announce itself when genuinely approaching. 50% is the "I can see it coming" moment — early enough to build anticipation, late enough to keep the row clean during the long save-up. Earlier (25%) adds visual noise during a period where the player can't act. Later (75%) suppresses the anticipation beat.
 
 Effect: under normal play, **only BUY is button-shaped** on most rows. LVL↑ steps forward when it's relevant.
 
@@ -184,8 +185,8 @@ Follower counts and influencer icons must not share pixels. Recommend:
 
 | # | Question | Owner |
 |---|----------|-------|
-| 1 | Multiplier magnitude encoding — Option A (chevron count) or Option B (fill intensity)? | game-designer |
-| 2 | LVL↑ "flat status line" threshold — is 50% the right tip-over point, or earlier/later? | game-designer |
+| 1 | ~~Multiplier magnitude encoding — Option A (chevron count) or Option B (fill intensity)?~~ **RESOLVED: Option A (chevron count).** See §2.3. | game-designer |
+| 2 | ~~LVL↑ "flat status line" threshold — is 50% the right tip-over point, or earlier/later?~~ **RESOLVED: 50% confirmed.** See §3.2. | game-designer |
 | 3 | Does the existing `--accent-penalty` token hit 3:1 on the current rust background, or does `ux/accent-palette-light-mode.md` need a darker penalty hue? | ux-designer (self, via measurement) |
 
 ---

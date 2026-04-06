@@ -9,15 +9,13 @@
 // Each live button shows: verb icon, name, yield/tap, cooldown fill ring,
 // automate-level badge, and pulse indicator.
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GameState, GeneratorId, StaticData } from '../types.ts';
 import {
-  levelMultiplier,
-  effectiveAlgorithmModifier,
-  cloutBonus,
+  verbCooldownMs,
+  verbYieldPerTap,
 } from '../game-loop/index.ts';
-import { getAlgorithmModifier } from '../algorithm/index.ts';
-import { kitEngagementBonus } from '../creator-kit/index.ts';
+import { playClick } from './sfx.ts';
 import { GENERATOR_DISPLAY } from './display.ts';
 import { fmtCompact } from './format.ts';
 
@@ -77,25 +75,36 @@ const LADDER_VERBS: GeneratorId[] = [
 // ---------------------------------------------------------------------------
 
 /** Compute per-verb yield per tap (same formula as postClick's earned). */
-function yieldPerTap(
-  verbId: GeneratorId,
-  state: GameState,
-  staticData: StaticData,
-): number {
-  const def = staticData.generators[verbId];
-  const genState = state.generators[verbId];
-  const rawMod = getAlgorithmModifier(state.algorithm, verbId);
-  const algoMod = effectiveAlgorithmModifier(rawMod, def.trend_sensitivity);
-  const clout = cloutBonus(state.player.clout_upgrades, staticData);
-  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
-  return def.base_event_yield * levelMultiplier(genState.level) * algoMod * clout * kit;
+// Yield and cooldown formulas are imported from game-loop (single source of
+// truth — verbYieldPerTap, verbCooldownMs). No local copies.
+
+
+
+// ---------------------------------------------------------------------------
+// Ratio-scaled float sizing (proposal: ratio-scaled-manual-tap-floats)
+// ---------------------------------------------------------------------------
+
+/** Linearly interpolate between a and b by t (0–1). */
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
 }
 
-/** Cooldown in ms for a verb at its current count. */
-function cooldownMs(verbId: GeneratorId, state: GameState, staticData: StaticData): number {
-  const def = staticData.generators[verbId];
-  const count = state.generators[verbId].count;
-  return 1000 / (Math.max(1, count) * def.base_event_rate);
+/** Clamp value to [min, max]. */
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * Compute ratio-scaled inline styles for a verb float.
+ * Returns fontSize (px) and color (HSL gold) based on tap significance.
+ */
+export function floatStyle(perClick: number, currentEngagement: number): { fontSize: number; color: string } {
+  const ratio = perClick / Math.max(1, currentEngagement);
+  const t = clamp((Math.log10(ratio) + 6) / 6, 0, 1);
+  const fontSize = lerp(16, 32, t);
+  const saturation = lerp(40, 100, t);
+  const lightness = lerp(52, 71, t);
+  return { fontSize, color: `hsl(43, ${saturation}%, ${lightness}%)` };
 }
 
 // ---------------------------------------------------------------------------
@@ -107,6 +116,10 @@ interface FloatItem {
   value: number;
   x: number; // % from left
   y: number; // % from top
+  /** True for autoclicker-emitted floats (smaller, dimmer per §4.6). */
+  isAutoclick?: boolean;
+  /** For batched autoclicker floats (>8), the army size suffix. */
+  batchCount?: number;
 }
 
 const FLOAT_TTL_MS = 650; // slightly longer than the 600ms CSS animation
@@ -123,12 +136,16 @@ interface LiveVerbButtonProps {
   onClick: (verbId: GeneratorId) => void;
 }
 
+/** Density cap for individual autoclicker floats (§4.6). Above this, batch. */
+const AUTO_FLOAT_DENSITY_CAP = 8;
+
 function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: LiveVerbButtonProps) {
   const genState = state.generators[verbId];
   const display = GENERATOR_DISPLAY[verbId];
   const color = VERB_COLOR[verbId] ?? display.color;
-  const perTap = yieldPerTap(verbId, state, staticData);
-  const cdMs = cooldownMs(verbId, state, staticData);
+  const perTap = verbYieldPerTap(state.generators[verbId], state, staticData);
+  const def = staticData.generators[verbId];
+  const cdMs = verbCooldownMs(state.generators[verbId].level, def.base_event_rate);
   const lastTap = state.player.last_manual_click_at[verbId] ?? 0;
 
   // Cooldown progress (0 = just tapped, 1 = ready).
@@ -141,11 +158,79 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
   // At the cooldown floor (<=100ms), stop animating — always ready.
   const atFloor = cdMs <= 100;
 
-  // Float feedback
+  // Float feedback (manual taps + autoclicker emissions)
   const [floats, setFloats] = useState<FloatItem[]>([]);
   const nextId = useRef(0);
 
   const btnRef = useRef<HTMLButtonElement>(null);
+
+  // Badge pulse — fires on each autoclicker burst (§4.4).
+  const [badgePulsing, setBadgePulsing] = useState(false);
+
+  // Reduced-motion check — read from the html attribute set by useSettings.
+  const prefersReducedMotion = typeof window !== 'undefined' &&
+    (document.documentElement.getAttribute('data-reduce-motion') === 'true' ||
+     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+
+  // ---------------------------------------------------------------------------
+  // Autoclicker burst emission timer (§4.6)
+  // Fires every 1/base_event_rate seconds when autoclicker_count > 0.
+  // Emits floating numbers showing engagement generated by the autoclicker army.
+  // ---------------------------------------------------------------------------
+  const autoCount = genState.autoclicker_count;
+  const burstIntervalMs = def.base_event_rate > 0 ? 1000 / def.base_event_rate : Infinity;
+
+  useEffect(() => {
+    if (autoCount <= 0 || burstIntervalMs === Infinity) return;
+
+    const emitBurst = () => {
+      // Badge pulse on every burst (200ms scale 1.0→1.05→1.0).
+      if (!prefersReducedMotion) {
+        setBadgePulsing(true);
+        window.setTimeout(() => setBadgePulsing(false), 200);
+      }
+
+      // Suppress floating numbers under reduced-motion (§9.5).
+      if (prefersReducedMotion) return;
+
+      const rect = btnRef.current?.getBoundingClientRect();
+      const perAutoTap = perTap; // same yield formula for autoclicker fires
+
+      if (autoCount > AUTO_FLOAT_DENSITY_CAP) {
+        // Batched float: +total ×N
+        const total = perAutoTap * autoCount;
+        const id = nextId.current++;
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.random() * 25;
+        const x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
+        const y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
+        setFloats((prev) => [...prev, { id, value: total, x, y, isAutoclick: true, batchCount: autoCount }]);
+        window.setTimeout(() => {
+          setFloats((prev) => prev.filter((f) => f.id !== id));
+        }, FLOAT_TTL_MS);
+      } else {
+        // Individual staggered floats: min(N × 60ms, 400ms) stagger window.
+        const staggerMs = Math.min(autoCount * 60, 400);
+        const perItemDelay = autoCount > 1 ? staggerMs / (autoCount - 1) : 0;
+        for (let i = 0; i < autoCount; i++) {
+          window.setTimeout(() => {
+            const id = nextId.current++;
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * 25;
+            const x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
+            const y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
+            setFloats((prev) => [...prev, { id, value: perAutoTap, x, y, isAutoclick: true }]);
+            window.setTimeout(() => {
+              setFloats((prev) => prev.filter((f) => f.id !== id));
+            }, FLOAT_TTL_MS);
+          }, i * perItemDelay);
+        }
+      }
+    };
+
+    const interval = window.setInterval(emitBurst, burstIntervalMs);
+    return () => window.clearInterval(interval);
+  }, [autoCount, burstIntervalMs, perTap, prefersReducedMotion]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     // Only show float feedback if the cooldown gate will accept the tap.
@@ -153,6 +238,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
     const lastTapNow = state.player.last_manual_click_at[verbId] ?? 0;
     if (cdNow - lastTapNow < cdMs) return;
 
+    playClick();
     onClick(verbId);
     const id = nextId.current++;
 
@@ -177,6 +263,9 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
 
   const fillHeight = atFloor ? 100 : progress * 100;
 
+  // Autoclicker count for badge and aria — per §4.2 the badge shows army size.
+  const autoCountForBadge = genState.autoclicker_count;
+
   return (
     <div className="verb-btn-wrap">
       <span className="verb-badge">+{fmtCompact(perTap)}</span>
@@ -190,7 +279,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
           '--cd-fill': `${fillHeight}%`,
         } as React.CSSProperties}
         onClick={handleClick}
-        aria-label={`${display.name}, ${fmtCompact(perTap)} engagement per tap, cooldown ${Math.round(cdMs)}ms`}
+        aria-label={`${display.name}, ${fmtCompact(perTap)} engagement per tap, cooldown ${Math.round(cdMs)}ms${autoCountForBadge > 0 ? `, ${autoCountForBadge} autoclickers` : ''}`}
       >
 
         {/* Background image — direct child so it positions relative to the button */}
@@ -201,8 +290,16 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
         <span className="verb-header">
           {!VERB_IMAGE[verbId] && <span className="verb-icon">{display.icon}</span>}
           <span className="verb-name-group">
-            <span className="verb-name">{display.name.toUpperCase()}</span>
-            {genState.count > 0 && <span className="verb-rate">x{genState.count}</span>}
+            <span className="verb-name">
+              {display.name.toUpperCase()}
+              {/* Autoclicker badge — shows army size (§4.2). Hidden when 0.
+                  Pulses on each autoclicker burst (§4.4). */}
+              {autoCountForBadge > 0 && (
+                <span className={`verb-auto-badge${badgePulsing ? ' verb-auto-badge-pulse' : ''}`}>
+                  {' '}×{autoCountForBadge}
+                </span>
+              )}
+            </span>
           </span>
         </span>
 
@@ -217,16 +314,28 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
         </span>
       )}
 
-      {/* Float feedback */}
-      {floats.map((f) => (
-        <span
-          key={f.id}
-          className="verb-float"
-          style={{ left: `${f.x}%`, top: `${f.y}%` }}
-        >
-          +{fmtCompact(f.value)}
-        </span>
-      ))}
+      {/* Float feedback — ratio-scaled size & brightness.
+          Autoclicker floats render at 80% size, 0.7 opacity (§4.6). */}
+      {floats.map((f) => {
+        const fs = floatStyle(f.value, state.player.engagement);
+        const autoScale = f.isAutoclick && !f.batchCount ? 0.8 : 1;
+        const autoOpacity = f.isAutoclick ? (f.batchCount ? 0.85 : 0.7) : 1;
+        return (
+          <span
+            key={f.id}
+            className={`verb-float${f.isAutoclick ? ' verb-float-auto' : ''}`}
+            style={{
+              left: `${f.x}%`,
+              top: `${f.y}%`,
+              fontSize: fs.fontSize * autoScale,
+              color: fs.color,
+              opacity: autoOpacity,
+            }}
+          >
+            +{fmtCompact(f.value)}{f.batchCount ? ` ×${f.batchCount}` : ''}
+          </span>
+        );
+      })}
     </button>
     </div>
   );
@@ -314,8 +423,8 @@ export function ActionsColumn({ state, staticData, onClickVerb, onUnlockVerb }: 
     LADDER_VERBS
       .filter((id) => state.generators[id].owned)
       .sort((a, b) => {
-        const cdA = 1000 / (Math.max(1, state.generators[a].count) * staticData.generators[a].base_event_rate);
-        const cdB = 1000 / (Math.max(1, state.generators[b].count) * staticData.generators[b].base_event_rate);
+        const cdA = verbCooldownMs(state.generators[a].level, staticData.generators[a].base_event_rate);
+        const cdB = verbCooldownMs(state.generators[b].level, staticData.generators[b].base_event_rate);
         return cdA - cdB;
       }),
     [state.generators, staticData],

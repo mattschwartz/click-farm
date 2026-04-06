@@ -33,6 +33,10 @@ export interface Settings {
   reduceMotion: boolean;
   /** Master audio toggle per §4.1. */
   sound: boolean;
+  /** Music volume 0–100. Default 30. */
+  musicVolume: number;
+  /** SFX volume 0–100. Default 50. */
+  sfxVolume: number;
 }
 
 interface StoredSettings {
@@ -56,6 +60,8 @@ export function getDefaultSettings(osReduceMotion = false): Settings {
     reduceTimePressure: false,
     reduceMotion: osReduceMotion,
     sound: true,
+    musicVolume: 30,
+    sfxVolume: 50,
   };
 }
 
@@ -113,6 +119,10 @@ export function loadSettings(osReduceMotion = readOsReduceMotion()): Settings {
         : defaults.reduceMotion,
     sound:
       typeof stored.sound === 'boolean' ? stored.sound : defaults.sound,
+    musicVolume:
+      typeof stored.musicVolume === 'number' ? stored.musicVolume : defaults.musicVolume,
+    sfxVolume:
+      typeof stored.sfxVolume === 'number' ? stored.sfxVolume : defaults.sfxVolume,
   };
 }
 

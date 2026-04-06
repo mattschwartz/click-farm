@@ -17,7 +17,7 @@ import { recomputeAllRetention } from '../audience-mood/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 9;
+const CURRENT_VERSION = 11;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -248,7 +248,10 @@ export function migrateV3toV4(data: SaveData): SaveData {
     oldUpgrades.faster_engagement ?? 0,
     3, // new max_level for engagement_boost
   );
-  const newUpgrades: Record<UpgradeId, number> = {
+  // Type is Record<string, number> rather than Record<UpgradeId, number>
+  // because this migration produces the V4 shape — later migrations (V9→V10)
+  // will remap keys like platform_headstart_instasham → picshift.
+  const newUpgrades: Record<string, number> = {
     engagement_boost: engagementBoostLevel,
     algorithm_insight: oldUpgrades.algorithm_insight ?? 0,
     platform_headstart_instasham: oldUpgrades.platform_headstart_instasham ?? 0,
@@ -263,7 +266,7 @@ export function migrateV3toV4(data: SaveData): SaveData {
   const generators = { ...oldState.generators } as Record<GeneratorId, GeneratorState>;
   for (const id of postPrestige) {
     if (generators[id] === undefined) {
-      generators[id] = { id, owned: false, level: 1, count: 0 };
+      generators[id] = { id, owned: false, level: 1, count: 0, autoclicker_count: 0 };
     }
   }
 
@@ -467,7 +470,7 @@ export function migrateV8toV9(data: SaveData): SaveData {
 
   const generators = { ...oldState.generators } as Record<GeneratorId, GeneratorState>;
   if (generators.chirps === undefined) {
-    generators.chirps = { id: 'chirps', owned: true, level: 1, count: 0 };
+    generators.chirps = { id: 'chirps', owned: true, level: 1, count: 0, autoclicker_count: 0 };
   }
 
   return {
@@ -483,6 +486,134 @@ export function migrateV8toV9(data: SaveData): SaveData {
           ({} as Record<GeneratorId, number>),
       },
     },
+  };
+}
+
+/**
+ * Migrate a V9 save to V10 — platform renames + new platform podpod.
+ *
+ * Task #131: instasham→picshift, grindset→skroll. podpod added as a 4th
+ * platform. Clout upgrade keys renamed to match.
+ *
+ * - `state.platforms`: keys remapped, ids updated; podpod seeded (locked,
+ *   0 followers, healthy audience mood defaults).
+ * - `state.player.clout_upgrades`: headstart keys remapped; podpod headstart
+ *   seeded at 0.
+ * - Snapshot `platform_rates`: keys remapped; podpod seeded at 0.
+ */
+export function migrateV9toV10(data: SaveData): SaveData {
+  const oldState = data.state as GameState & {
+    platforms: Record<string, PlatformState>;
+    player: GameState['player'] & {
+      clout_upgrades: Record<string, number>;
+      last_close_state: {
+        platform_rates: Record<string, number>;
+        [k: string]: unknown;
+      } | null;
+    };
+  };
+
+  // 1) Remap platforms: instasham→picshift, grindset→skroll, seed podpod.
+  const oldPlatforms = oldState.platforms;
+  const newPlatforms: Record<PlatformId, PlatformState> = {
+    chirper: oldPlatforms.chirper as PlatformState,
+    picshift: { ...(oldPlatforms.instasham as PlatformState), id: 'picshift' as PlatformId },
+    skroll: { ...(oldPlatforms.grindset as PlatformState), id: 'skroll' as PlatformId },
+    podpod: {
+      id: 'podpod' as PlatformId,
+      unlocked: false,
+      followers: 0,
+      retention: 1.0,
+      content_fatigue: {},
+      neglect: 0,
+      algorithm_misalignment: 0,
+    },
+  };
+
+  // 2) Remap clout_upgrades.
+  const oldUpgrades = oldState.player.clout_upgrades;
+  const newUpgrades: Record<UpgradeId, number> = {
+    engagement_boost: oldUpgrades.engagement_boost ?? 0,
+    algorithm_insight: oldUpgrades.algorithm_insight ?? 0,
+    platform_headstart_picshift: oldUpgrades.platform_headstart_instasham ?? 0,
+    platform_headstart_skroll: oldUpgrades.platform_headstart_grindset ?? 0,
+    platform_headstart_podpod: 0,
+    ai_slop_unlock: oldUpgrades.ai_slop_unlock ?? 0,
+    deepfakes_unlock: oldUpgrades.deepfakes_unlock ?? 0,
+    algorithmic_prophecy_unlock: oldUpgrades.algorithmic_prophecy_unlock ?? 0,
+  };
+
+  // 3) Remap snapshot platform_rates if present.
+  let newCloseState = oldState.player.last_close_state;
+  if (newCloseState) {
+    const oldRates = newCloseState.platform_rates;
+    newCloseState = {
+      ...newCloseState,
+      platform_rates: {
+        chirper: oldRates.chirper ?? 0,
+        picshift: oldRates.instasham ?? 0,
+        skroll: oldRates.grindset ?? 0,
+        podpod: 0,
+      },
+    };
+  }
+
+  // Also remap the top-level lastCloseState on SaveData if present.
+  let newLastCloseState = data.lastCloseState;
+  if (newLastCloseState) {
+    const oldTopRates = (newLastCloseState as { platform_rates: Record<string, number> }).platform_rates;
+    newLastCloseState = {
+      ...newLastCloseState,
+      platform_rates: {
+        chirper: oldTopRates.chirper ?? 0,
+        picshift: oldTopRates.instasham ?? 0,
+        skroll: oldTopRates.grindset ?? 0,
+        podpod: 0,
+      } as Record<PlatformId, number>,
+    };
+  }
+
+  return {
+    ...data,
+    version: 10,
+    lastCloseState: newLastCloseState,
+    state: {
+      ...oldState,
+      platforms: newPlatforms,
+      player: {
+        ...oldState.player,
+        clout_upgrades: newUpgrades,
+        last_close_state: newCloseState as GameState['player']['last_close_state'],
+      },
+    },
+  };
+}
+
+/**
+ * Migrate a V10 save to V11 — level-driven-cooldown engine refactor.
+ *
+ * Task #132: adds `autoclicker_count: 0` to every GeneratorState. Existing
+ * saves have no autoclickers — passive production is zero until the player
+ * buys one (the new Automate track).
+ */
+export function migrateV10toV11(data: SaveData): SaveData {
+  const oldState = data.state as GameState;
+  const newGenerators: Record<GeneratorId, GeneratorState> = {
+    ...oldState.generators,
+  };
+  for (const id of Object.keys(oldState.generators) as GeneratorId[]) {
+    const gen = oldState.generators[id] as GeneratorState & {
+      autoclicker_count?: number;
+    };
+    newGenerators[id] = {
+      ...gen,
+      autoclicker_count: gen.autoclicker_count ?? 0,
+    };
+  }
+  return {
+    ...data,
+    version: 11,
+    state: { ...oldState, generators: newGenerators },
   };
 }
 
@@ -519,6 +650,14 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 8) {
     current = migrateV8toV9(current);
+  }
+
+  if (current.version === 9) {
+    current = migrateV9toV10(current);
+  }
+
+  if (current.version === 10) {
+    current = migrateV10toV11(current);
   }
 
   if (current.version !== CURRENT_VERSION) {

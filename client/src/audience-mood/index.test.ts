@@ -15,25 +15,28 @@ import {
   recomputeRetention,
   recomputeAllRetention,
   applyTickPosts,
+  AUTOCLICKERS_AFFECT_MOOD,
+  isGeneratorProducing,
 } from './index.ts';
 
 const T0 = 1_700_000_000_000;
 
 function freshState(): GameState {
   const s = createInitialGameState(STATIC_DATA, T0);
-  // Force all three platforms unlocked for tests that need cross-platform
+  // Force all platforms unlocked for tests that need cross-platform
   // routing. Followers stay 0.
   return {
     ...s,
     platforms: {
       chirper: { ...s.platforms.chirper, unlocked: true },
-      instasham: { ...s.platforms.instasham, unlocked: true },
-      grindset: { ...s.platforms.grindset, unlocked: true },
+      picshift: { ...s.platforms.picshift, unlocked: true },
+      skroll: { ...s.platforms.skroll, unlocked: true },
+      podpod: { ...s.platforms.podpod, unlocked: true },
     },
   };
 }
 
-function withPlatform(state: GameState, id: 'chirper' | 'instasham' | 'grindset', patch: Partial<PlatformState>): GameState {
+function withPlatform(state: GameState, id: 'chirper' | 'picshift' | 'skroll' | 'podpod', patch: Partial<PlatformState>): GameState {
   return {
     ...state,
     platforms: {
@@ -124,7 +127,7 @@ describe('advanceNeglect', () => {
     const cfg = STATIC_DATA.audience_mood;
     const s1 = advanceNeglect(s0, STATIC_DATA, 10);
     expect(s1.platforms.chirper.neglect).toBeCloseTo(cfg.neglect_per_tick * 10, 10);
-    expect(s1.platforms.instasham.neglect).toBeCloseTo(cfg.neglect_per_tick * 10, 10);
+    expect(s1.platforms.picshift.neglect).toBeCloseTo(cfg.neglect_per_tick * 10, 10);
     // Saturate.
     const s2 = advanceNeglect(s1, STATIC_DATA, 1_000_000);
     expect(s2.platforms.chirper.neglect).toBe(1);
@@ -132,11 +135,11 @@ describe('advanceNeglect', () => {
 
   it('skips locked platforms', () => {
     const base = createInitialGameState(STATIC_DATA, T0);
-    // chirper unlocked (threshold=0), instasham/grindset locked.
+    // chirper unlocked (threshold=0), picshift/skroll locked.
     const s1 = advanceNeglect(base, STATIC_DATA, 10);
     expect(s1.platforms.chirper.neglect).toBeGreaterThan(0);
-    expect(s1.platforms.instasham.neglect).toBe(0);
-    expect(s1.platforms.grindset.neglect).toBe(0);
+    expect(s1.platforms.picshift.neglect).toBe(0);
+    expect(s1.platforms.skroll.neglect).toBe(0);
   });
 
   it('recomputes retention on touched platforms', () => {
@@ -270,18 +273,18 @@ describe('recomputeAllRetention', () => {
           retention: 1.0,
           neglect: 0.5,
         },
-        instasham: {
-          ...base.platforms.instasham,
+        picshift: {
+          ...base.platforms.picshift,
           retention: 1.0,
           content_fatigue: { memes: 0.5 },
         },
-        grindset: base.platforms.grindset,
+        skroll: base.platforms.skroll,
       },
     };
     const s1 = recomputeAllRetention(mutated, STATIC_DATA);
     expect(s1.platforms.chirper.retention).toBeLessThan(1.0);
-    expect(s1.platforms.instasham.retention).toBeLessThan(1.0);
-    expect(s1.platforms.grindset.retention).toBe(1.0);
+    expect(s1.platforms.picshift.retention).toBeLessThan(1.0);
+    expect(s1.platforms.skroll.retention).toBe(1.0);
   });
 
   it('is a no-op (reference-equal) when nothing changes', () => {
@@ -293,7 +296,7 @@ describe('recomputeAllRetention', () => {
 describe('applyTickPosts', () => {
   it('routes one post per owned generator to its highest-affinity unlocked platform', () => {
     // Hand-build a state with selfies owned+count>0. Selfies has highest
-    // affinity on instasham (2.0) vs chirper (0.8) vs grindset (0.5).
+    // affinity on picshift (2.0) vs chirper (0.8) vs skroll (0.5).
     const s0 = freshState();
     const withSelfies: GameState = {
       ...s0,
@@ -303,8 +306,8 @@ describe('applyTickPosts', () => {
       },
     };
     const s1 = applyTickPosts(withSelfies, STATIC_DATA);
-    // instasham should have received the post.
-    expect(s1.platforms.instasham.content_fatigue.selfies ?? 0).toBeGreaterThan(0);
+    // picshift should have received the post.
+    expect(s1.platforms.picshift.content_fatigue.selfies ?? 0).toBeGreaterThan(0);
     expect(s1.platforms.chirper.content_fatigue.selfies ?? 0).toBe(0);
   });
 
@@ -314,8 +317,9 @@ describe('applyTickPosts', () => {
       ...STATIC_DATA,
       platforms: {
         chirper: { ...STATIC_DATA.platforms.chirper, content_affinity: { ...STATIC_DATA.platforms.chirper.content_affinity, selfies: 1.0 } },
-        instasham: { ...STATIC_DATA.platforms.instasham, content_affinity: { ...STATIC_DATA.platforms.instasham.content_affinity, selfies: 1.0 } },
-        grindset: { ...STATIC_DATA.platforms.grindset, content_affinity: { ...STATIC_DATA.platforms.grindset.content_affinity, selfies: 1.0 } },
+        picshift: { ...STATIC_DATA.platforms.picshift, content_affinity: { ...STATIC_DATA.platforms.picshift.content_affinity, selfies: 1.0 } },
+        skroll: { ...STATIC_DATA.platforms.skroll, content_affinity: { ...STATIC_DATA.platforms.skroll.content_affinity, selfies: 1.0 } },
+        podpod: { ...STATIC_DATA.platforms.podpod, content_affinity: { ...STATIC_DATA.platforms.podpod.content_affinity, selfies: 1.0 } },
       },
     };
     const s0 = freshState();
@@ -329,12 +333,12 @@ describe('applyTickPosts', () => {
     const s1 = applyTickPosts(withSelfies, altStatic);
     // chirper is declared first in static data → wins on tie.
     expect(s1.platforms.chirper.content_fatigue.selfies ?? 0).toBeGreaterThan(0);
-    expect(s1.platforms.instasham.content_fatigue.selfies ?? 0).toBe(0);
+    expect(s1.platforms.picshift.content_fatigue.selfies ?? 0).toBe(0);
   });
 
-  it('skips generators that are unowned or count=0', () => {
+  it('skips generators that are unowned or have no production', () => {
     const s0 = freshState();
-    // selfies owned=false, count=0 — nothing posts.
+    // selfies owned=false, count=0, autoclicker_count=0 — nothing posts.
     const s1 = applyTickPosts(s0, STATIC_DATA);
     // Reference-equal because nothing changed.
     expect(s1).toBe(s0);
@@ -345,8 +349,9 @@ describe('applyTickPosts', () => {
       ...STATIC_DATA,
       platforms: {
         chirper: { ...STATIC_DATA.platforms.chirper, content_affinity: { ...STATIC_DATA.platforms.chirper.content_affinity, selfies: 0 } },
-        instasham: { ...STATIC_DATA.platforms.instasham, content_affinity: { ...STATIC_DATA.platforms.instasham.content_affinity, selfies: 0 } },
-        grindset: { ...STATIC_DATA.platforms.grindset, content_affinity: { ...STATIC_DATA.platforms.grindset.content_affinity, selfies: 0 } },
+        picshift: { ...STATIC_DATA.platforms.picshift, content_affinity: { ...STATIC_DATA.platforms.picshift.content_affinity, selfies: 0 } },
+        skroll: { ...STATIC_DATA.platforms.skroll, content_affinity: { ...STATIC_DATA.platforms.skroll.content_affinity, selfies: 0 } },
+        podpod: { ...STATIC_DATA.platforms.podpod, content_affinity: { ...STATIC_DATA.platforms.podpod.content_affinity, selfies: 0 } },
       },
     };
     const s0 = freshState();
@@ -358,8 +363,72 @@ describe('applyTickPosts', () => {
       },
     };
     const s1 = applyTickPosts(withSelfies, altStatic);
-    for (const pid of ['chirper', 'instasham', 'grindset'] as const) {
+    for (const pid of ['chirper', 'picshift', 'skroll', 'podpod'] as const) {
       expect(s1.platforms[pid].content_fatigue.selfies ?? 0).toBe(0);
     }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Autoclicker mood gate (task #134)
+  // ---------------------------------------------------------------------------
+
+  it('autoclicker-only generator (count=0, ac>0) contributes to mood when killswitch is on', () => {
+    // AUTOCLICKERS_AFFECT_MOOD defaults to true
+    expect(AUTOCLICKERS_AFFECT_MOOD).toBe(true);
+    const s0 = freshState();
+    const withAC: GameState = {
+      ...s0,
+      generators: {
+        ...s0.generators,
+        selfies: { ...s0.generators.selfies, owned: true, count: 0, autoclicker_count: 3 },
+      },
+    };
+    const s1 = applyTickPosts(withAC, STATIC_DATA);
+    // selfies should have posted — picshift has highest affinity for selfies
+    expect(s1.platforms.picshift.content_fatigue.selfies ?? 0).toBeGreaterThan(0);
+  });
+
+  it('generator with count=0 AND autoclicker_count=0 does not contribute regardless', () => {
+    const s0 = freshState();
+    const noProduction: GameState = {
+      ...s0,
+      generators: {
+        ...s0.generators,
+        selfies: { ...s0.generators.selfies, owned: true, count: 0, autoclicker_count: 0 },
+      },
+    };
+    const s1 = applyTickPosts(noProduction, STATIC_DATA);
+    // No posts — no fatigue anywhere for selfies
+    for (const pid of ['chirper', 'picshift', 'skroll', 'podpod'] as const) {
+      expect(s1.platforms[pid].content_fatigue.selfies ?? 0).toBe(0);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isGeneratorProducing — killswitch gate (task #134)
+// ---------------------------------------------------------------------------
+
+describe('isGeneratorProducing', () => {
+  it('AUTOCLICKERS_AFFECT_MOOD defaults to true', () => {
+    expect(AUTOCLICKERS_AFFECT_MOOD).toBe(true);
+  });
+
+  it('count>0 is producing regardless of killswitch', () => {
+    expect(isGeneratorProducing(1, 0, true)).toBe(true);
+    expect(isGeneratorProducing(1, 0, false)).toBe(true);
+  });
+
+  it('count=0, ac>0 is producing when killswitch is on', () => {
+    expect(isGeneratorProducing(0, 3, true)).toBe(true);
+  });
+
+  it('count=0, ac>0 is NOT producing when killswitch is off', () => {
+    expect(isGeneratorProducing(0, 3, false)).toBe(false);
+  });
+
+  it('count=0, ac=0 is not producing regardless of killswitch', () => {
+    expect(isGeneratorProducing(0, 0, true)).toBe(false);
+    expect(isGeneratorProducing(0, 0, false)).toBe(false);
   });
 });

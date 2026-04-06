@@ -34,6 +34,8 @@ The remaining generators in the roster (`memes`, `hot_takes`, `tutorials`) are *
 
 ### 2. Per-Verb Lifecycle: Unlock → Upgrade → Automate
 
+**[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: The lifecycle is no longer sequential (Unlock → Upgrade → Automate). Instead, after Unlock, three parallel investment tracks become available: LVL UP (cooldown), BUY (yield), and Autoclicker purchase (passive workers). All three are available simultaneously, not sequential stages.]**
+
 Every verb passes through three purchase states:
 
 | State | Purchase | Effect |
@@ -59,6 +61,8 @@ Every verb has *some* starting cooldown so that every verb's Automate track has 
 The skill layer: spam Chirp between Selfie cooldowns; time Livestream for maximum impact. This is the decision texture the current single-Post design lacks. Because verbs stay manual forever, this rhythm decision exists at every stage of the game — early (when few verbs exist and none are automated), mid (when the player interleaves manual clicks between running automators), and late (when the player chooses whether to add manual yield on top of fast automators, or let them run).
 
 ### 4. The Automator Is a Parallel Actor
+
+**[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: This section describes count-driven cooldown where "the automator is a parallel actor on the verb's shared cooldown." The new model replaces this: Autoclickers are now stackable, independent workers (each with its own count) that fire at the verb's base cooldown (L1 speed, not the player's leveled-up speed). The player's hand is still always available, but Autoclickers are now first-purchase workers, not cooldown-reducing upgrades. The "first Automate purchase halves your cooldown" dual payoff is gone; now each button does exactly one thing.]**
 
 An automator is not a replacement for the player's hand. It is a second actor pressing the same verb, on its own independent cooldown. Both contribute yield; neither interrupts the other.
 
@@ -155,8 +159,14 @@ No concerns.
 - Every unlocked verb remains permanently manual-clickable — no button is ever retired.
 - Automators are parallel actors with their own independent cooldown timers; manual and auto stack by construction.
 - **Manual-tap cooldown is a derived view:** `cooldown_manual = 1 / (max(1, count) × base_event_rate)`. The `max(1, count)` floor models the player's own hand as the first actor on every unlocked verb, so manual cooldown is defined from the moment of Unlock (pre-Automate). Upgrading Automate (count) shrinks the manual cooldown; first Automate level halves it. Cooldown floor is ~0.01s.
+  
+  **[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: cooldown formula is now `max(50, 1000 / (level × base_event_rate))`. Level drives cooldown, not count. The phantom-hand floor (`max(1, count)`) is eliminated because level is always ≥ 1, so cooldown is always defined. Hard floor is 50ms instead of 0.01s.]**
 - **The `max(1, count)` floor is scoped to manual-cooldown derivation ONLY.** The passive-rate tick formula stays unfloored — `effective_rate = count × base_event_rate × base_event_yield × level_multiplier × algoMod × clout × kit`. Floor at `postClick`'s cooldown gate and any manual-cooldown display; NO floor at `computeGeneratorEffectiveRate`. Otherwise count=0 generators would spuriously produce 1-actor-worth of passive output.
+  
+  **[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: passive tick formula is now `effective_rate = autoclicker_count × base_event_rate × base_event_yield × (1 + count) × algoMod × clout × kit`. Leading factor changes from `count` to `autoclicker_count` (new field representing stackable autoclicker workers). `level_multiplier` is removed entirely, replaced by `(1 + count)` which makes count-driven yield apply uniformly to both manual taps and passive/autoclicker generation.]**
 - **Per-manual-tap earned formula:** `earned = base_event_yield × level_multiplier(level) × algoMod × clout_bonus × kit_bonus`. No platform-affinity term at tap time — platform routing applies downstream at `computeFollowerDistribution`. Symmetric with passive generator treatment.
+  
+  **[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: per-tap yield formula is now `base_event_yield × (1 + count) × algoMod × clout × kit`. Level no longer scales per-tap yield; level drives cooldown only. Count (via `1 + count` multiplier) drives per-tap yield instead.]**
 - **Cooldown gate signature:** `postClick` rejects when `now - (state.player.last_manual_click_at[verbId] ?? 0) < cooldownMs`. The `?? 0` makes "never clicked" explicit.
 - Every verb starts with some cooldown so that every verb's Automate track has dual payoff (passive rate + manual tap rate).
 - Verbs are differentiated by starting yield and starting cooldown, not reskinned.
@@ -171,6 +181,8 @@ No concerns.
 All values below are the design target. Engineer implements these as the seeded static-data for the refactor. Playtest-driven fine-tuning may adjust them, but the structural relationships (yield × rate = preserved passive output; cooldown = `1/(max(1,count) × base_event_rate)`) are fixed.
 
 #### 14a. Yield/Rate Split — 5 Ladder Verbs
+
+**[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: Chirps and selfies are retuned. Chirps: rate 2.5→0.5, yield 0.2→1.0. Selfies: rate 0.4→0.2, yield 2.5→5.0. This retuning produces the new design-intent base cooldowns (2,000ms for chirps, 5,000ms for selfies) while preserving passive output via the compensating yield split. Other verbs (livestreams, podcasts, viral_stunts) remain unchanged.]**
 
 The split is chosen so each ladder verb's **pre-Automate manual cooldown** matches §3's design target, while **`base_event_yield × base_event_rate` equals the verb's old `base_rate`** — preserving passive-economy output unchanged.
 
@@ -256,6 +268,8 @@ Doubling the onramp cost per ladder verb is inside the existing cost curve: at e
 
 #### 14e. Automation Curve (OQ2 Resolution)
 
+**[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: The count-driven cooldown table below is superseded. Cooldown is now level-keyed: `max(50, 1000 / (level × base_event_rate))`. Automation is now autoclicker-count-driven (stackable workers), not cooldown-scaling. Each autoclicker fires at the base cooldown (L1 speed), while the player's hand is governed by level (L1 through L10, where L10 is 10× faster than L1 base cooldown). The existing `count` purchase cost formula remains; it now controls yield multiplier `(1 + count)` instead of cooldown scaling.]**
+
 Automation = `count` purchases. Cost follows the existing accepted formula `ceil(base_buy_cost × 1.15^count_owned)` unchanged. No new curve. The manual-cooldown rate-reduction emerges from the derived-view formula `cooldown = 1/(max(1,count) × base_event_rate)`:
 
 | Verb | count=1 | count=10 | count=100 | Floor reached at count |
@@ -267,6 +281,8 @@ Automation = `count` purchases. Cost follows the existing accepted formula `ceil
 | viral_stunts | 120s | 12s | 1.2s | 12,048 |
 
 #### 14f. Manual-Supplementary Ratio at the Cooldown Floor (OQ15 Resolution)
+
+**[SUPERSEDED by proposals/accepted/level-driven-manual-cooldown.md: The old ratio model (manual yield as a percentage of passive throughput at the cooldown floor) is replaced. With level-driven cooldown and fixed-speed autoclickers, the manual-to-passive ratio now depends on: level (bounded at L1–L10, where L10 = 10× faster base cooldown) vs. autoclicker_count (unbounded). At max level, the player taps 10× faster than any single autoclicker; the manual share = L10_rate / (L10_rate + N × L1_rate), where N is autoclicker count. Manual yield naturally fades as the autoclicker army grows, but the player's hand is always the single fastest tapper per verb.]**
 
 At the 0.01s cooldown floor, max human tap = 100/sec and passive throughput scales linearly with count. The 10% ceiling (manual ≤ 10% passive) emerges naturally from the cooldown floor + yield-preserving split — **no separate per-verb yield tuning needed**. The ratio is `100 / (N × base_event_rate)`:
 

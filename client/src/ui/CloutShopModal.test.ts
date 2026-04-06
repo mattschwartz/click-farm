@@ -69,8 +69,8 @@ describe('formatCloutBalance', () => {
 
 describe('isOneShot', () => {
   it('returns true for single-level upgrades (headstart + generator unlocks)', () => {
-    expect(isOneShot('platform_headstart_instasham', STATIC_DATA)).toBe(true);
-    expect(isOneShot('platform_headstart_grindset', STATIC_DATA)).toBe(true);
+    expect(isOneShot('platform_headstart_picshift', STATIC_DATA)).toBe(true);
+    expect(isOneShot('platform_headstart_skroll', STATIC_DATA)).toBe(true);
     expect(isOneShot('ai_slop_unlock', STATIC_DATA)).toBe(true);
     expect(isOneShot('deepfakes_unlock', STATIC_DATA)).toBe(true);
     expect(isOneShot('algorithmic_prophecy_unlock', STATIC_DATA)).toBe(true);
@@ -231,8 +231,8 @@ describe('buildCategorizedRows', () => {
     expect(ids).toContain('ai_slop_unlock');
     expect(ids).toContain('deepfakes_unlock');
     expect(ids).toContain('algorithmic_prophecy_unlock');
-    expect(ids).toContain('platform_headstart_instasham');
-    expect(ids).toContain('platform_headstart_grindset');
+    expect(ids).toContain('platform_headstart_picshift');
+    expect(ids).toContain('platform_headstart_skroll');
   });
 
   it('places algorithm_insight in INSIGHT', () => {
@@ -246,22 +246,23 @@ describe('buildCategorizedRows', () => {
     const state = makeState();
     const result = buildCategorizedRows(state, STATIC_DATA);
     const unlocks = result.find((g) => g.category === 'UNLOCKS')!;
-    // Costs: instasham=20, ai_slop=25, grindset=50, deepfakes=60, prophecy=100
-    expect(unlocks.rows[0].upgradeId).toBe('platform_headstart_instasham');
+    // Costs: picshift=20, ai_slop=25, skroll=50, deepfakes=60, podpod=80, prophecy=100
+    expect(unlocks.rows[0].upgradeId).toBe('platform_headstart_picshift');
     expect(unlocks.rows[1].upgradeId).toBe('ai_slop_unlock');
-    expect(unlocks.rows[2].upgradeId).toBe('platform_headstart_grindset');
+    expect(unlocks.rows[2].upgradeId).toBe('platform_headstart_skroll');
     expect(unlocks.rows[3].upgradeId).toBe('deepfakes_unlock');
-    expect(unlocks.rows[4].upgradeId).toBe('algorithmic_prophecy_unlock');
+    expect(unlocks.rows[4].upgradeId).toBe('platform_headstart_podpod');
+    expect(unlocks.rows[5].upgradeId).toBe('algorithmic_prophecy_unlock');
   });
 
   it('sinks maxed rows to the bottom of their category', () => {
     const state = makeState({
-      ownedUpgrades: { platform_headstart_instasham: 1 }, // maxed (cost was 20)
+      ownedUpgrades: { platform_headstart_picshift: 1 }, // maxed (cost was 20)
     });
     const result = buildCategorizedRows(state, STATIC_DATA);
     const unlocks = result.find((g) => g.category === 'UNLOCKS')!;
     // Instasham (cheapest) is now maxed, should move to bottom.
-    expect(unlocks.rows[unlocks.rows.length - 1].upgradeId).toBe('platform_headstart_instasham');
+    expect(unlocks.rows[unlocks.rows.length - 1].upgradeId).toBe('platform_headstart_picshift');
   });
 });
 
@@ -304,8 +305,9 @@ describe('isShopAllMaxed', () => {
       ownedUpgrades: {
         engagement_boost: 3,
         algorithm_insight: 2,
-        platform_headstart_instasham: 1,
-        platform_headstart_grindset: 1,
+        platform_headstart_picshift: 1,
+        platform_headstart_skroll: 1,
+        platform_headstart_podpod: 1,
         ai_slop_unlock: 1,
         deepfakes_unlock: 1,
         algorithmic_prophecy_unlock: 1,

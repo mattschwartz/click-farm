@@ -23,7 +23,7 @@ export type GeneratorId =
   | 'deepfakes'
   | 'algorithmic_prophecy';
 
-export type PlatformId = 'chirper' | 'instasham' | 'grindset';
+export type PlatformId = 'chirper' | 'picshift' | 'skroll' | 'podpod';
 
 // Audience Mood pressure families. See architecture/audience-mood.md §Data Model.
 export type PressureId = 'content_fatigue' | 'neglect' | 'algorithm_misalignment';
@@ -40,8 +40,9 @@ export type AlgorithmStateId =
 export type UpgradeId =
   | 'engagement_boost'
   | 'algorithm_insight'
-  | 'platform_headstart_instasham'
-  | 'platform_headstart_grindset'
+  | 'platform_headstart_picshift'
+  | 'platform_headstart_skroll'
+  | 'platform_headstart_podpod'
   | 'ai_slop_unlock'
   | 'deepfakes_unlock'
   | 'algorithmic_prophecy_unlock';
@@ -166,8 +167,14 @@ export interface GeneratorState {
   owned: boolean;
   /** Upgrade level. ≥ 1 when owned. */
   level: number;
-  /** Number of this generator purchased. ≥ 0. */
+  /** Number of this generator purchased (BUY track — yield multiplier). ≥ 0. */
   count: number;
+  /**
+   * Number of autoclickers purchased (passive production units). ≥ 0.
+   * Drives passive rate: autoclicker_count × base_event_rate × base_event_yield × (1 + count).
+   * See proposals/accepted/manual-action-ladder.md §level-driven-cooldown.
+   */
+  autoclicker_count: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -322,6 +329,13 @@ export interface GeneratorDef {
    * (L=14 overflows Number.MAX_SAFE_INTEGER under the full effect stack).
    */
   max_level: number;
+  /**
+   * Engagement cost to buy the first autoclicker unit.
+   * Subsequent units cost more: base_autoclicker_cost × buy_cost_multiplier^autoclicker_count.
+   * 0 for passive-only and post-prestige generators (not manual-clickable).
+   * See proposals/accepted/manual-action-ladder.md §level-driven-cooldown OQ5.
+   */
+  base_autoclicker_cost: number;
 }
 
 export interface PlatformDef {

@@ -45,11 +45,13 @@ import type {
 // pass (task #88).
 
 const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
-  // §14c — starter verb, unlocked at 0, 0.4s manual cooldown
+  // §14c — starter verb, unlocked at 0. Level-driven cooldown: 1/(level×0.5).
+  // Retuned yield×rate for level-driven-cooldown: yield=1.0, rate=0.5 →
+  // passive 0.5 eng/s at autoclicker_count=1, count=0.
   chirps: {
     id: 'chirps',
-    base_event_yield: 0.2,
-    base_event_rate: 2.5,
+    base_event_yield: 1.0,
+    base_event_rate: 0.5,
     manual_clickable: true,
     follower_conversion_rate: 0.07,
     trend_sensitivity: 0.7,
@@ -58,13 +60,15 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 50,
     max_level: 10,
+    base_autoclicker_cost: 25,
   },
-  // §14a — ladder verb, 2.5s manual cooldown. yield×rate = 1.0 (preserved).
+  // §14a — ladder verb. Retuned: yield=5.0, rate=0.2 → passive 1.0 eng/s
+  // at autoclicker_count=1, count=0.
   // §14d — threshold moved from 0 → 100 (chirps takes the starter position).
   selfies: {
     id: 'selfies',
-    base_event_yield: 2.5,
-    base_event_rate: 0.4,
+    base_event_yield: 5.0,
+    base_event_rate: 0.2,
     manual_clickable: true,
     follower_conversion_rate: 0.10,
     trend_sensitivity: 0.3,  // low — always somewhat relevant
@@ -73,6 +77,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 100,
     max_level: 10,
+    base_autoclicker_cost: 50,
   },
   // §14b — passive-only. yield=1, rate=5.0 (preserved).
   memes: {
@@ -87,6 +92,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 1_000,
     max_level: 10,
+    base_autoclicker_cost: 0,    // passive-only — no manual tap
   },
   // §14b — passive-only. yield=1, rate=12.0 (preserved).
   hot_takes: {
@@ -101,6 +107,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 11_000,
     max_level: 10,
+    base_autoclicker_cost: 0,    // passive-only — no manual tap
   },
   // §14b — passive-only. yield=1, rate=30.0 (preserved).
   tutorials: {
@@ -115,8 +122,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 120_000,
     max_level: 10,
+    base_autoclicker_cost: 0,    // passive-only — no manual tap
   },
-  // §14a — ladder verb, 10s manual cooldown. yield×rate = 80.0 (preserved).
+  // §14a — ladder verb. yield×rate = 80.0 (preserved).
   livestreams: {
     id: 'livestreams',
     base_event_yield: 800,
@@ -129,12 +137,17 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 1_300_000,
     max_level: 10,
+    base_autoclicker_cost: 650_000,
   },
-  // §14a — ladder verb, 30s manual cooldown. yield×rate ≈ 150.0.
+  // Ladder verb. Retuned: yield=10,000, rate=0.08 → passive 800 eng/s
+  // at autoclicker_count=1, count=0. 10× livestreams output. L1 cooldown
+  // 12,500ms, L10 cooldown 1,250ms.
+  // TODO(game-designer): buy/upgrade/autoclicker costs are provisional —
+  // retune during balance pass (task #88) to match new output.
   podcasts: {
     id: 'podcasts',
-    base_event_yield: 4_545,
-    base_event_rate: 0.033,
+    base_event_yield: 10_000,
+    base_event_rate: 0.08,
     manual_clickable: true,
     follower_conversion_rate: 0.11,
     trend_sensitivity: 0.2,  // low — slow build, compounding returns
@@ -143,12 +156,17 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 14_000_000,
     max_level: 10,
+    base_autoclicker_cost: 7_000_000,
   },
-  // §14a — ladder verb, 120s manual cooldown. yield×rate ≈ 500.0.
+  // Ladder verb. Retuned: yield=200,000, rate=0.04 → passive 8,000 eng/s
+  // at autoclicker_count=1, count=0. 10× podcasts output. L1 cooldown
+  // 25,000ms, L10 cooldown 2,500ms.
+  // TODO(game-designer): buy/upgrade/autoclicker costs are provisional —
+  // retune during balance pass (task #88) to match new output.
   viral_stunts: {
     id: 'viral_stunts',
-    base_event_yield: 60_240,
-    base_event_rate: 0.0083,
+    base_event_yield: 200_000,
+    base_event_rate: 0.04,
     manual_clickable: true,
     follower_conversion_rate: 0.06,
     trend_sensitivity: 1.0,  // maximum — massive spikes, algorithm-dependent
@@ -157,6 +175,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 200_000_000,
     max_level: 10,
+    base_autoclicker_cost: 100_000_000,
   },
   // -------------------------------------------------------------------------
   // Post-prestige generators — unlocked only via Clout `generator_unlock`
@@ -164,16 +183,15 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // unlock_threshold here is set to Infinity for documentary clarity — the
   // checkGeneratorUnlocks pathway reads from unlockThresholds, not this field.
   //
-  // Stats per clout-upgrade-menu.md (yield×rate relative to viral_stunts:
-  // 8× / 15× / 40×). Backward-compatible seed: yield=1.0, rate=old value.
-  // Buy/upgrade costs continue the ~10× per-tier ramp from the base generators.
+  // Stats relative to viral_stunts (8,000 eng/s base): 8× / 15× / 40×.
+  // Retuned to match viral_stunts output bump. Passive-only (no manual tap).
   // TODO(game-designer): buy/upgrade costs are provisional — tune during
-  // post-prestige balance pass.
+  // post-prestige balance pass (task #88).
   // -------------------------------------------------------------------------
   ai_slop: {
     id: 'ai_slop',
     base_event_yield: 1,
-    base_event_rate: 4_000.0,        // 8× viral_stunts
+    base_event_rate: 64_000.0,       // 8× viral_stunts (8 × 8,000)
     manual_clickable: false,
     follower_conversion_rate: 0.6,
     trend_sensitivity: 0.1,           // nearly algorithm-immune — volume wins
@@ -182,11 +200,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 2_000_000_000,
     max_level: 10,
+    base_autoclicker_cost: 0,    // post-prestige, passive-only
   },
   deepfakes: {
     id: 'deepfakes',
     base_event_yield: 1,
-    base_event_rate: 7_500.0,        // 15× viral_stunts
+    base_event_rate: 120_000.0,      // 15× viral_stunts (15 × 8,000)
     manual_clickable: false,
     follower_conversion_rate: 0.3,
     trend_sensitivity: 0.95,          // highest — volatile, algorithm-dependent
@@ -195,11 +214,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 20_000_000_000,
     max_level: 10,
+    base_autoclicker_cost: 0,    // post-prestige, passive-only
   },
   algorithmic_prophecy: {
     id: 'algorithmic_prophecy',
     base_event_yield: 1,
-    base_event_rate: 20_000.0,       // 40× viral_stunts
+    base_event_rate: 320_000.0,      // 40× viral_stunts (40 × 8,000)
     manual_clickable: false,
     follower_conversion_rate: 0.5,
     trend_sensitivity: 0.5,
@@ -208,14 +228,16 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 200_000_000_000,
     max_level: 10,
+    base_autoclicker_cost: 0,    // post-prestige, passive-only
   },
 };
 
 // ---------------------------------------------------------------------------
-// Platforms — 3 at launch
+// Platforms — 4 at launch
 // chirper: text/hot-takes platform (Twitter analog)
-// instasham: photo/visual platform (Instagram analog)
-// grindset: professional/evergreen platform (LinkedIn analog)
+// picshift: photo/visual platform (Instagram analog) — renamed from instasham
+// skroll: short-form video platform (TikTok analog) — renamed from grindset
+// podpod: long-form audio platform (podcast aggregator analog)
 // ---------------------------------------------------------------------------
 
 const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
@@ -238,8 +260,8 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
     },
     unlock_threshold: 0,
   },
-  instasham: {
-    id: 'instasham',
+  picshift: {
+    id: 'picshift',
     content_affinity: {
       chirps: 1.0,             // §14c — neutral
       selfies: 2.0,
@@ -255,8 +277,8 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
     },
     unlock_threshold: 100,
   },
-  grindset: {
-    id: 'grindset',
+  skroll: {
+    id: 'skroll',
     content_affinity: {
       chirps: 0.6,             // §14c — too ephemeral
       selfies: 0.5,
@@ -271,6 +293,25 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       algorithmic_prophecy: 1.0,
     },
     unlock_threshold: 500,
+  },
+  // BALANCE: placeholder — all podpod values below. Game-designer owns final
+  // content_affinity and unlock_threshold (task #131 open question #1).
+  podpod: {
+    id: 'podpod',
+    content_affinity: {
+      chirps: 0.5,
+      selfies: 0.3,
+      memes: 0.4,
+      hot_takes: 0.8,
+      tutorials: 1.5,
+      livestreams: 0.9,
+      podcasts: 2.0,           // home turf — podcast-native
+      viral_stunts: 0.5,
+      ai_slop: 1.0,
+      deepfakes: 1.0,
+      algorithmic_prophecy: 1.0,
+    },
+    unlock_threshold: 2_000,
   },
 };
 
@@ -387,17 +428,24 @@ const CLOUT_UPGRADE_DEFS: Record<UpgradeId, CloutUpgradeDef> = {
     max_level: 2,
     effect: { type: 'algorithm_insight', lookaheads: [1, 2] },
   },
-  platform_headstart_instasham: {
-    id: 'platform_headstart_instasham',
+  platform_headstart_picshift: {
+    id: 'platform_headstart_picshift',
     cost: [20],
     max_level: 1,
-    effect: { type: 'platform_headstart', platform_id: 'instasham' },
+    effect: { type: 'platform_headstart', platform_id: 'picshift' },
   },
-  platform_headstart_grindset: {
-    id: 'platform_headstart_grindset',
+  platform_headstart_skroll: {
+    id: 'platform_headstart_skroll',
     cost: [50],
     max_level: 1,
-    effect: { type: 'platform_headstart', platform_id: 'grindset' },
+    effect: { type: 'platform_headstart', platform_id: 'skroll' },
+  },
+  // BALANCE: placeholder cost — game-designer owns final value (task #131 OQ #1).
+  platform_headstart_podpod: {
+    id: 'platform_headstart_podpod',
+    cost: [80],
+    max_level: 1,
+    effect: { type: 'platform_headstart', platform_id: 'podpod' },
   },
   ai_slop_unlock: {
     id: 'ai_slop_unlock',
@@ -561,8 +609,9 @@ export const STATIC_DATA: StaticData = {
     },
     platforms: {
       chirper: PLATFORM_DEFS.chirper.unlock_threshold,
-      instasham: PLATFORM_DEFS.instasham.unlock_threshold,
-      grindset: PLATFORM_DEFS.grindset.unlock_threshold,
+      picshift: PLATFORM_DEFS.picshift.unlock_threshold,
+      skroll: PLATFORM_DEFS.skroll.unlock_threshold,
+      podpod: PLATFORM_DEFS.podpod.unlock_threshold,
     },
   },
   viralBurst: VIRAL_BURST_CONFIG,

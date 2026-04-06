@@ -96,6 +96,7 @@ export function GameScreen() {
     buy,
     upgrade,
     unlock,
+    buyAutoclicker,
     offlineResult,
     clearOfflineResult,
     rebrand,
@@ -114,6 +115,8 @@ export function GameScreen() {
     settings,
     setReduceMotion,
     setSound,
+    setMusicVolume,
+    setSfxVolume,
   } = useSettings();
 
   // Render-time derived values --------------------------------------------
@@ -374,6 +377,7 @@ export function GameScreen() {
               onBuy={buy}
               onUpgrade={upgrade}
               onUnlock={unlock}
+              onBuyAutoclicker={buyAutoclicker}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
               onDrawerOpenChange={setUpgradeDrawerOpen}
             />
@@ -480,6 +484,8 @@ export function GameScreen() {
           settings={settings}
           onSetReduceMotion={setReduceMotion}
           onSetSound={setSound}
+          onSetMusicVolume={setMusicVolume}
+          onSetSfxVolume={setSfxVolume}
           rebrandCount={state.player.rebrand_count}
           onClose={() => setShowSettingsModal(false)}
           onResetRequested={() => {

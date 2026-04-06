@@ -20,11 +20,13 @@ function makeState(overrides?: {
   seed?: number;
   selfiesCount?: number;
   selfiesLevel?: number;
-  instashamUnlocked?: boolean;
-  grindsetUnlocked?: boolean;
+  picshiftUnlocked?: boolean;
+  skrollUnlocked?: boolean;
   memesCount?: number;
 }): GameState {
   const s: GameState = createInitialGameState(STATIC_DATA, T0);
+  const selfiesCount = overrides?.selfiesCount ?? 10;
+  const memesCount = overrides?.memesCount;
   return {
     ...s,
     player: {
@@ -36,22 +38,23 @@ function makeState(overrides?: {
       selfies: {
         ...s.generators.selfies,
         owned: true,
-        count: overrides?.selfiesCount ?? 10,
+        count: selfiesCount,
         level: overrides?.selfiesLevel ?? 1,
+        autoclicker_count: selfiesCount,
       },
-      memes: overrides?.memesCount
-        ? { ...s.generators.memes, owned: true, count: overrides.memesCount, level: 1 }
+      memes: memesCount
+        ? { ...s.generators.memes, owned: true, count: memesCount, level: 1, autoclicker_count: memesCount }
         : s.generators.memes,
     },
     platforms: {
       ...s.platforms,
-      instasham: {
-        ...s.platforms.instasham,
-        unlocked: overrides?.instashamUnlocked ?? false,
+      picshift: {
+        ...s.platforms.picshift,
+        unlocked: overrides?.picshiftUnlocked ?? false,
       },
-      grindset: {
-        ...s.platforms.grindset,
-        unlocked: overrides?.grindsetUnlocked ?? false,
+      skroll: {
+        ...s.platforms.skroll,
+        unlocked: overrides?.skrollUnlocked ?? false,
       },
     },
   };
@@ -131,19 +134,19 @@ describe('calculateOffline — single segment (no shifts)', () => {
   });
 
   it('distributes followers to unlocked platforms only', () => {
-    const state = makeState({ selfiesCount: 10, instashamUnlocked: true });
+    const state = makeState({ selfiesCount: 10, picshiftUnlocked: true });
     const { result } = calculateOffline(
       state,
       T0,
       T0 + 60_000,
       STATIC_DATA,
     );
-    // chirper and instasham unlocked; grindset locked.
+    // chirper and picshift unlocked; skroll locked.
     expect(result.followersGained.chirper).toBeGreaterThan(0);
-    expect(result.followersGained.instasham).toBeGreaterThan(0);
-    expect(result.followersGained.grindset).toBe(0);
-    // selfies: chirper affinity 0.8, instasham 2.0 → instasham > chirper.
-    expect(result.followersGained.instasham).toBeGreaterThan(
+    expect(result.followersGained.picshift).toBeGreaterThan(0);
+    expect(result.followersGained.skroll).toBe(0);
+    // selfies: chirper affinity 0.8, picshift 2.0 → picshift > chirper.
+    expect(result.followersGained.picshift).toBeGreaterThan(
       result.followersGained.chirper,
     );
   });
@@ -254,7 +257,7 @@ describe('calculateOffline — state application', () => {
   });
 
   it('applies follower gains to per-platform followers', () => {
-    const state = makeState({ selfiesCount: 10, instashamUnlocked: true });
+    const state = makeState({ selfiesCount: 10, picshiftUnlocked: true });
     const { result, newState } = calculateOffline(
       state,
       T0,
@@ -265,14 +268,14 @@ describe('calculateOffline — state application', () => {
       state.platforms.chirper.followers + result.followersGained.chirper,
       6,
     );
-    expect(newState.platforms.instasham.followers).toBeCloseTo(
-      state.platforms.instasham.followers + result.followersGained.instasham,
+    expect(newState.platforms.picshift.followers).toBeCloseTo(
+      state.platforms.picshift.followers + result.followersGained.picshift,
       6,
     );
   });
 
   it('total_followers is kept in sync with platform sums', () => {
-    const state = makeState({ selfiesCount: 10, instashamUnlocked: true });
+    const state = makeState({ selfiesCount: 10, picshiftUnlocked: true });
     const { newState } = calculateOffline(
       state,
       T0,
@@ -281,8 +284,9 @@ describe('calculateOffline — state application', () => {
     );
     const sum =
       newState.platforms.chirper.followers +
-      newState.platforms.instasham.followers +
-      newState.platforms.grindset.followers;
+      newState.platforms.picshift.followers +
+      newState.platforms.skroll.followers +
+      newState.platforms.podpod.followers;
     expect(newState.player.total_followers).toBeCloseTo(sum, 6);
   });
 
@@ -329,10 +333,10 @@ describe('calculateOffline — state application', () => {
 // ---------------------------------------------------------------------------
 
 describe('calculateOffline — unlocks', () => {
-  it('unlocks instasham platform if total_followers crosses 100 during offline', () => {
+  it('unlocks picshift platform if total_followers crosses 100 during offline', () => {
     // Bootstrap with enough selfies + long window to cross 100 followers.
     const state = makeState({ selfiesCount: 100, selfiesLevel: 3 });
-    expect(state.platforms.instasham.unlocked).toBe(false);
+    expect(state.platforms.picshift.unlocked).toBe(false);
     const { newState } = calculateOffline(
       state,
       T0,
@@ -340,7 +344,7 @@ describe('calculateOffline — unlocks', () => {
       STATIC_DATA,
     );
     expect(newState.player.total_followers).toBeGreaterThan(100);
-    expect(newState.platforms.instasham.unlocked).toBe(true);
+    expect(newState.platforms.picshift.unlocked).toBe(true);
   });
 
   it('unlocks memes generator if total_followers crosses 50 during offline', () => {
@@ -446,7 +450,7 @@ describe('calculateOffline — rate ordering sanity', () => {
           player: { ...base.player, algorithm_seed: seed },
           generators: {
             ...base.generators,
-            [genId]: { ...base.generators[genId], owned: true, count, level: 1 },
+            [genId]: { ...base.generators[genId], owned: true, count, level: 1, autoclicker_count: count },
           },
         };
         return calculateOffline(state, T0, T0 + windowMs, STATIC_DATA)

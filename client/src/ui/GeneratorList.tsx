@@ -19,6 +19,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { GameState, GeneratorId, StaticData } from '../types.ts';
 import {
+  autoclickerBuyCost,
   generatorBuyCost,
   generatorUpgradeCost,
 } from '../generator/index.ts';
@@ -45,6 +46,8 @@ interface Props {
   onUpgrade: (id: GeneratorId) => void;
   /** Unlock a manual-clickable generator (pays base_buy_cost, flips owned). */
   onUnlock: (id: GeneratorId) => void;
+  /** Purchase an autoclicker for a manual-clickable verb. */
+  onBuyAutoclicker: (verbId: GeneratorId) => void;
   /** When set, the matching row gets a pulsing gold halo (UX §9.2 Phase 1–2). */
   viralGeneratorId?: GeneratorId | null;
   /**
@@ -136,7 +139,7 @@ const BADGE_SHAPE: Record<GeneratorCategory, string> = {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, viralGeneratorId, onDrawerOpenChange }: Props) {
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, onBuyAutoclicker, viralGeneratorId, onDrawerOpenChange }: Props) {
   // Track modifier pulses — when the algorithm state index changes, each
   // affected row pulses once (UX §4.4).
   const [pulseKey, setPulseKey] = useState(0);
@@ -218,6 +221,7 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, v
                 onBuy={onBuy}
                 onUpgrade={onUpgrade}
                 onUnlock={onUnlock}
+                onBuyAutoclicker={onBuyAutoclicker}
                 pulseKey={pulseKey}
                 viralHalo={viralGeneratorId === id}
                 isDrawerOpen={openDrawerId === id}
@@ -254,6 +258,7 @@ interface RowProps {
   onBuy: (id: GeneratorId) => void;
   onUpgrade: (id: GeneratorId) => void;
   onUnlock: (id: GeneratorId) => void;
+  onBuyAutoclicker: (verbId: GeneratorId) => void;
   pulseKey: number;
   /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
   viralHalo?: boolean;
@@ -273,6 +278,7 @@ function GeneratorRow({
   onBuy,
   onUnlock,
   onUpgrade: _onUpgrade, // kept in RowProps for GeneratorList to wire to drawer; not called directly by row
+  onBuyAutoclicker,
   pulseKey,
   viralHalo,
   isDrawerOpen,
@@ -403,6 +409,9 @@ function GeneratorRow({
   const buyCost = generatorBuyCost(id, g.count, staticData);
   const upgradeCost = upgradeCostUnconditional;
   const canBuy = state.player.engagement >= buyCost;
+  // Autoclicker cost — only relevant for manual-clickable generators.
+  const autoCost = def.manual_clickable ? autoclickerBuyCost(id, g.autoclicker_count, staticData) : 0;
+  const canBuyAuto = def.manual_clickable && state.player.engagement >= autoCost;
   // Upgrading requires at least one unit. This can be 0 post-rebrand when a
   // generator_unlock head-start grants owned=true without any units.
   const canOpenDrawer = g.count > 0;
@@ -504,8 +513,75 @@ function GeneratorRow({
           )}
           {lvlState === 'maxed' ? 'MAX' : fmtCompact(upgradeCost)}
         </button>
+        {/* AUTO pill — per generator-purchase-pills.md §2–3.
+            Only rendered for manual-clickable generators. Pill shape: 44px
+            min-width, 28px height, 14px border-radius. Three affordance
+            states: affordable (verb-tinted), unaffordable (receded grey),
+            maxed (not currently capped). */}
+        {def.manual_clickable && (
+          <AutoPill
+            costLabel={fmtCompact(autoCost)}
+            canBuy={canBuyAuto}
+            autoclickerCount={g.autoclicker_count}
+            verbColor={display.color}
+            onBuy={() => onBuyAutoclicker(id)}
+            generatorName={display.name}
+          />
+        )}
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Auto pill — purchase button for autoclickers (generator-purchase-pills.md).
+
+interface AutoPillProps {
+  costLabel: string;
+  canBuy: boolean;
+  autoclickerCount: number;
+  verbColor: string;
+  onBuy: () => void;
+  generatorName: string;
+}
+
+/** Parse hex to "R, G, B" string for rgba() compositing. */
+function hexToRgbPill(hex: string): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `${(n >> 16) & 0xff}, ${(n >> 8) & 0xff}, ${n & 0xff}`;
+}
+
+function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, generatorName }: AutoPillProps) {
+  const [glowing, setGlowing] = useState(false);
+  const rgb = hexToRgbPill(verbColor);
+
+  const handleClick = () => {
+    if (!canBuy) return; // no-op, no shake (per pills spec §5.3)
+    setGlowing(true);
+    window.setTimeout(() => setGlowing(false), 120);
+    onBuy();
+  };
+
+  return (
+    <button
+      className={`purchase-pill purchase-pill-auto${canBuy ? ' purchase-pill-affordable' : ' purchase-pill-unaffordable'}${glowing ? ' purchase-pill-flash' : ''}`}
+      style={canBuy ? {
+        '--pill-color': verbColor,
+        '--pill-color-rgb': rgb,
+      } as React.CSSProperties : undefined}
+      onClick={handleClick}
+      aria-label={
+        canBuy
+          ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costLabel} engagement`
+          : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costLabel} engagement`
+      }
+      title={`Buy autoclicker for ${costLabel} engagement`}
+    >
+      <span className="pill-label">AUTO</span>
+      {autoclickerCount > 0 && (
+        <span className="pill-count">×{autoclickerCount}</span>
+      )}
+    </button>
   );
 }
 

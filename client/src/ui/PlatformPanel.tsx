@@ -105,13 +105,16 @@ function PlatformCard({
 
   const style = {
     '--platform-accent': display.accent,
+    ...(display.accentGradient ? { '--platform-accent-gradient': display.accentGradient } : {}),
   } as React.CSSProperties;
 
   if (!unlocked) {
     return (
       <div className="platform-card locked" style={style}>
+        {display.image && (
+          <img className="platform-bg-art" src={display.image} alt="" aria-hidden="true" />
+        )}
         <div className="platform-header">
-          <span className="platform-icon">{display.icon}</span>
           <span className="platform-name">{display.name}</span>
         </div>
         <div className="unlock-teaser">
@@ -123,8 +126,10 @@ function PlatformCard({
 
   return (
     <div className={`platform-card${viralIlluminate ? ' viral-illuminate' : ''}`} style={style}>
+      {display.image && (
+        <img className="platform-bg-art" src={display.image} alt="" aria-hidden="true" />
+      )}
       <div className="platform-header">
-        <span className="platform-icon">{display.icon}</span>
         <span className="platform-name">{display.name}</span>
       </div>
       <div className="platform-followers-row">
@@ -133,7 +138,7 @@ function PlatformCard({
           {ratePerSec > 0 ? `▲ +${fmtCompact(ratePerSec)}/s` : '— stalled'}
         </span>
       </div>
-      <div className="platform-sub-label">followers</div>
+      <div className="platform-sub-label">{display.audienceLabel ?? 'followers'}</div>
 
       <div className="affinity-row">
         {topAffinities.map((a) => {
@@ -163,8 +168,9 @@ function computeHeaviestContributor(
 ): Record<PlatformId, GeneratorId | null> {
   const out: Record<PlatformId, GeneratorId | null> = {
     chirper: null,
-    instasham: null,
-    grindset: null,
+    picshift: null,
+    skroll: null,
+    podpod: null,
   };
   const entries = Object.entries(engagementRates) as [GeneratorId, number][];
   for (const pid of Object.keys(platforms) as PlatformId[]) {

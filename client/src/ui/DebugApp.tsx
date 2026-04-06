@@ -24,8 +24,9 @@ import '../App.css';
 const UPGRADE_ORDER: UpgradeId[] = [
   'engagement_boost',
   'algorithm_insight',
-  'platform_headstart_instasham',
-  'platform_headstart_grindset',
+  'platform_headstart_picshift',
+  'platform_headstart_skroll',
+  'platform_headstart_podpod',
   'ai_slop_unlock',
   'deepfakes_unlock',
   'algorithmic_prophecy_unlock',
@@ -44,7 +45,7 @@ const GENERATOR_ORDER: GeneratorId[] = [
   'algorithmic_prophecy',
 ];
 
-const PLATFORM_ORDER: PlatformId[] = ['chirper', 'instasham', 'grindset'];
+const PLATFORM_ORDER: PlatformId[] = ['chirper', 'picshift', 'skroll', 'podpod'];
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
@@ -176,6 +177,7 @@ export function DebugApp() {
               <th>Generator</th>
               <th>Status</th>
               <th>Count</th>
+              <th>AC</th>
               <th>Level</th>
               <th>Buy</th>
               <th>Upgrade</th>
@@ -194,19 +196,20 @@ export function DebugApp() {
                   <tr key={id} style={{ opacity: 0.5 }}>
                     <td>{id}</td>
                     <td>{statusText}</td>
-                    <td colSpan={4} />
+                    <td colSpan={5} />
                   </tr>
                 );
               }
               const buyCost = generatorBuyCost(id, g.count, STATIC_DATA);
               const upgradeCost = generatorUpgradeCost(id, g.level, STATIC_DATA);
               const canBuy = state.player.engagement >= buyCost;
-              const canUpgrade = g.count > 0 && state.player.engagement >= upgradeCost;
+              const canUpgrade = state.player.engagement >= upgradeCost;
               return (
                 <tr key={id}>
                   <td>{id}</td>
                   <td>owned</td>
                   <td>{g.count}</td>
+                  <td>{g.autoclicker_count}</td>
                   <td>{g.level}</td>
                   <td>
                     <button

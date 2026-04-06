@@ -71,6 +71,8 @@ describe('loadSettings', () => {
       reduceTimePressure: true,
       reduceMotion: true,
       sound: false,
+      musicVolume: 30,
+      sfxVolume: 50,
     };
     saveSettings(chosen);
     expect(loadSettings(false)).toEqual(chosen);
@@ -96,6 +98,8 @@ describe('loadSettings', () => {
       reduceTimePressure: false,
       reduceMotion: false,
       sound: true,
+      musicVolume: 30,
+      sfxVolume: 50,
     });
     // OS pref is true, but the saved explicit false should win.
     expect(loadSettings(true).reduceMotion).toBe(false);
@@ -104,7 +108,7 @@ describe('loadSettings', () => {
 
 describe('saveSettings', () => {
   it('persists values that loadSettings can read back', () => {
-    saveSettings({ reduceTimePressure: true, reduceMotion: true, sound: false });
+    saveSettings({ reduceTimePressure: true, reduceMotion: true, sound: false, musicVolume: 30, sfxVolume: 50 });
     const raw = localStorage.getItem('click_farm_settings');
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw as string) as {
@@ -117,7 +121,7 @@ describe('saveSettings', () => {
 
 describe('clearSettings', () => {
   it('removes the stored key', () => {
-    saveSettings({ reduceTimePressure: false, reduceMotion: true, sound: true });
+    saveSettings({ reduceTimePressure: false, reduceMotion: true, sound: true, musicVolume: 30, sfxVolume: 50 });
     expect(localStorage.getItem('click_farm_settings')).not.toBeNull();
     clearSettings();
     expect(localStorage.getItem('click_farm_settings')).toBeNull();

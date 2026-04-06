@@ -75,7 +75,7 @@ describe('createGeneratorState', () => {
 
 describe('createPlatformState', () => {
   it('starts locked by default', () => {
-    const platform = createPlatformState('instasham');
+    const platform = createPlatformState('picshift');
     expect(platform.unlocked).toBe(false);
     expect(platform.followers).toBe(0);
   });
@@ -94,8 +94,8 @@ describe('createInitialGameState', () => {
   it('unlocks platforms with threshold 0, locks others', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     expect(state.platforms.chirper.unlocked).toBe(true);
-    expect(state.platforms.instasham.unlocked).toBe(false);
-    expect(state.platforms.grindset.unlocked).toBe(false);
+    expect(state.platforms.picshift.unlocked).toBe(false);
+    expect(state.platforms.skroll.unlocked).toBe(false);
   });
 
   it('starts threshold-0 generators owned, others unowned', () => {
@@ -314,8 +314,8 @@ describe('earnFollowers', () => {
     };
 
     expect(state.platforms.chirper.followers).toBe(100);
-    expect(state.platforms.instasham.followers).toBe(0);
-    expect(state.platforms.grindset.followers).toBe(0);
+    expect(state.platforms.picshift.followers).toBe(0);
+    expect(state.platforms.skroll.followers).toBe(0);
   });
 
   it('updates lifetime_followers but not total_followers (derived)', () => {
@@ -337,7 +337,7 @@ describe('earnFollowers', () => {
   it('throws when platform is locked', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     expect(() =>
-      earnFollowers(state.platforms.instasham, state.player, 10)
+      earnFollowers(state.platforms.picshift, state.player, 10)
     ).toThrow();
   });
 
@@ -372,8 +372,8 @@ describe('syncTotalFollowers', () => {
     const platforms = {
       ...state.platforms,
       chirper: { ...state.platforms.chirper, followers: 100 },
-      instasham: { ...state.platforms.instasham, followers: 200 },
-      grindset: { ...state.platforms.grindset, followers: 50 },
+      picshift: { ...state.platforms.picshift, followers: 200 },
+      skroll: { ...state.platforms.skroll, followers: 50 },
     };
 
     const player = syncTotalFollowers(state.player, platforms);
