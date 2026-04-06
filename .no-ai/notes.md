@@ -72,7 +72,7 @@ Polly's other thoughts on using vague directives intentionally
 - [observation] taking advantage of different ways agents can "see" - how they view data and instructions. using the file system to derive status of proposals, or frontmatter to load minimal context for routing. Best practice to only give the agent exactly what they need (between knowledge AND behavior).
   - theory (from polly) is that it "dilutes the signal". it's more noise for the agent to have to sift through.
 - [theory] spend more context on the specific task. use the background as general behaviors and knowledge
-- [observation] maintaining these is going to be *hard* if the jr devs can't help effectively or unintentionally make things worse
+- [observation] maintaining these is going to be *hard* if jr devs (in general) can't help effectively or unintentionally make things worse
 - [observation] avoid context bleed - unrelated instructions from another file being brought in unnecessarily
 - [observation] context poisoning - how seeing "pricing_engine.yml" in the examples caused the AI to start using an imaginary pricing engine in its examples
 - [theory] prompt injection through context discovery. web searches. don't let it pull from web if you don't trust the source
@@ -87,7 +87,7 @@ Polly's other thoughts on using vague directives intentionally
   - they will inevitably grow too large for the context window 
 - [learning] AI do not always write better instructions for other AI than humans
   - they do seem to do well at objective knowledge though? Maybe instructions are too subjective to be written by an AI
-- [theory] we need to continue showing the jr devs the effectiveness of using AI and it can't just be "code faster"
+- [theory] the industry needs to keep showing jr devs the effectiveness of using AI and it can't just be "code faster"
 - [theory] easier handoff
   - next person can ask the agent question and you get more data about the project, reasons why decisions were made, if they were done thorugh the brainstorming agent
   - but if that process isnt used, the whole thing breaks down so its fragile rn without people reliably using it
