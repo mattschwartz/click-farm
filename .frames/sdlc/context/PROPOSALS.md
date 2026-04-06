@@ -4,7 +4,7 @@ This file instructs you on how to structure proposal files so that agents can be
 
 # Writing a proposal
 
-Start with a conversation with the user to understand the full context of the problem and solution at hand. Ask the user questions whenever you are unsure. The proposal MUST capture the full problem statement, solution (the proposal itself), any open questions, in addition to the frontmatter that describes the state of the document.
+Start with a conversation with the user to understand the full context of the problem and solution at hand. Ask the user questions whenever you are unsure. The proposal MUST capture the full problem statement, solution (the proposal itself), any open questions, in addition to the frontmatter that describes the state of the document. The proposal MUST be prefixed with today's date (YYYYMMDD). Example: `YYYYMMDD-proposal-topic-name.md`.
 
 # Reviewing a proposal
 

@@ -1,0 +1,372 @@
+// Actions Column — per-verb manual action ladder (UX spec manual-action-ladder.md).
+//
+// Replaces the single PostZone button with a per-verb ladder of live buttons
+// and a ghost slot for the next unlockable verb. Layout:
+//   1. Spotlight slot (most-recently-unlocked verb, sticky top on desktop)
+//   2. Other live verbs (unlock order)
+//   3. Ghost slot (next threshold-met-but-unowned verb)
+//
+// Each live button shows: verb icon, name, yield/tap, cooldown fill ring,
+// automate-level badge, and pulse indicator.
+
+import { useCallback, useMemo, useRef, useState } from 'react';
+import type { GameState, GeneratorId, StaticData } from '../types.ts';
+import {
+  levelMultiplier,
+  effectiveAlgorithmModifier,
+  cloutBonus,
+} from '../game-loop/index.ts';
+import { getAlgorithmModifier } from '../algorithm/index.ts';
+import { kitEngagementBonus } from '../creator-kit/index.ts';
+import { GENERATOR_DISPLAY } from './display.ts';
+import { fmtCompact } from './format.ts';
+
+// Verb icon images — imported via Vite so they resolve to hashed asset URLs.
+import chirpImg from '../assets/chirp.png';
+import selfieImg from '../assets/selfie.png';
+import livestreamImg from '../assets/livestream.png';
+import podcastImg from '../assets/podcast.png';
+import viralStuntsImg from '../assets/viral-stunts.png';
+
+const VERB_IMAGE: Partial<Record<string, string>> = {
+  chirps: chirpImg,
+  selfies: selfieImg,
+  livestreams: livestreamImg,
+  podcasts: podcastImg,
+  viral_stunts: viralStuntsImg,
+};
+
+// ---------------------------------------------------------------------------
+// Verb color lanes — per UX spec §11
+// ---------------------------------------------------------------------------
+
+const VERB_COLOR: Record<string, string> = {
+  chirps: '#4d9ef0',
+  selfies: '#e07040',
+  livestreams: '#9a3adf',
+  podcasts: '#5a6adf',
+  viral_stunts: '#df3a5a',
+};
+
+/** Parse hex to "R, G, B" string for rgba() compositing. */
+function hexToRgb(hex: string): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `${(n >> 16) & 0xff}, ${(n >> 8) & 0xff}, ${n & 0xff}`;
+}
+
+/** Darken a hex color by a factor (0–1) for the bottom depth shadow. */
+function darkenHex(hex: string, factor: number = 0.3): string {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round(((n >> 16) & 0xff) * (1 - factor));
+  const g = Math.round(((n >> 8) & 0xff) * (1 - factor));
+  const b = Math.round((n & 0xff) * (1 - factor));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+}
+
+// Manual-clickable ladder verbs in unlock order (proposal §14d).
+const LADDER_VERBS: GeneratorId[] = [
+  'chirps',
+  'selfies',
+  'livestreams',
+  'podcasts',
+  'viral_stunts',
+];
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Compute per-verb yield per tap (same formula as postClick's earned). */
+function yieldPerTap(
+  verbId: GeneratorId,
+  state: GameState,
+  staticData: StaticData,
+): number {
+  const def = staticData.generators[verbId];
+  const genState = state.generators[verbId];
+  const rawMod = getAlgorithmModifier(state.algorithm, verbId);
+  const algoMod = effectiveAlgorithmModifier(rawMod, def.trend_sensitivity);
+  const clout = cloutBonus(state.player.clout_upgrades, staticData);
+  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
+  return def.base_event_yield * levelMultiplier(genState.level) * algoMod * clout * kit;
+}
+
+/** Cooldown in ms for a verb at its current count. */
+function cooldownMs(verbId: GeneratorId, state: GameState, staticData: StaticData): number {
+  const def = staticData.generators[verbId];
+  const count = state.generators[verbId].count;
+  return 1000 / (Math.max(1, count) * def.base_event_rate);
+}
+
+// ---------------------------------------------------------------------------
+// FloatItem for tap feedback
+// ---------------------------------------------------------------------------
+
+interface FloatItem {
+  id: number;
+  value: number;
+  x: number; // % from left
+  y: number; // % from top
+}
+
+const FLOAT_TTL_MS = 650; // slightly longer than the 600ms CSS animation
+
+// ---------------------------------------------------------------------------
+// LiveVerbButton
+// ---------------------------------------------------------------------------
+
+interface LiveVerbButtonProps {
+  verbId: GeneratorId;
+  state: GameState;
+  staticData: StaticData;
+  isSpotlight: boolean;
+  onClick: (verbId: GeneratorId) => void;
+}
+
+function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: LiveVerbButtonProps) {
+  const genState = state.generators[verbId];
+  const display = GENERATOR_DISPLAY[verbId];
+  const color = VERB_COLOR[verbId] ?? display.color;
+  const perTap = yieldPerTap(verbId, state, staticData);
+  const cdMs = cooldownMs(verbId, state, staticData);
+  const lastTap = state.player.last_manual_click_at[verbId] ?? 0;
+
+  // Cooldown progress (0 = just tapped, 1 = ready).
+  // Use Date.now() at render time — re-renders at 10Hz via tick.
+  const now = Date.now();
+  const elapsed = now - lastTap;
+  const progress = lastTap === 0 ? 1 : Math.min(1, elapsed / cdMs);
+  const isReady = progress >= 1;
+
+  // At the cooldown floor (<=100ms), stop animating — always ready.
+  const atFloor = cdMs <= 100;
+
+  // Float feedback
+  const [floats, setFloats] = useState<FloatItem[]>([]);
+  const nextId = useRef(0);
+
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    // Only show float feedback if the cooldown gate will accept the tap.
+    const cdNow = Date.now();
+    const lastTapNow = state.player.last_manual_click_at[verbId] ?? 0;
+    if (cdNow - lastTapNow < cdMs) return;
+
+    onClick(verbId);
+    const id = nextId.current++;
+
+    // Position the float near the mouse cursor with random scatter.
+    // Keyboard-triggered clicks have clientX/Y = 0 — fall back to center.
+    const rect = btnRef.current?.getBoundingClientRect();
+    const isKeyboard = e.clientX === 0 && e.clientY === 0;
+    const angle = Math.random() * Math.PI * 2;
+    const radius = Math.random() * 25;
+    let x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
+    let y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
+    if (!isKeyboard && rect) {
+      x = ((e.clientX - rect.left + Math.cos(angle) * radius) / rect.width) * 100;
+      y = ((e.clientY - rect.top + Math.sin(angle) * radius) / rect.height) * 100;
+    }
+
+    setFloats((prev) => [...prev, { id, value: perTap, x, y }]);
+    window.setTimeout(() => {
+      setFloats((prev) => prev.filter((f) => f.id !== id));
+    }, FLOAT_TTL_MS);
+  }, [onClick, verbId, perTap, cdMs, state.player.last_manual_click_at]);
+
+  const fillHeight = atFloor ? 100 : progress * 100;
+
+  return (
+    <div className="verb-btn-wrap">
+      <span className="verb-badge">+{fmtCompact(perTap)}</span>
+      <button
+        ref={btnRef}
+        className={`live-verb-btn${isSpotlight ? ' live-verb-spotlight' : ''}${isReady || atFloor ? ' live-verb-ready' : ' live-verb-cooldown'}`}
+        style={{
+          '--verb-color': color,
+          '--verb-color-dark': darkenHex(color),
+          '--verb-color-rgb': hexToRgb(color),
+          '--cd-fill': `${fillHeight}%`,
+        } as React.CSSProperties}
+        onClick={handleClick}
+        aria-label={`${display.name}, ${fmtCompact(perTap)} engagement per tap, cooldown ${Math.round(cdMs)}ms`}
+      >
+
+        {/* Background image — direct child so it positions relative to the button */}
+        {VERB_IMAGE[verbId] && (
+          <img className="verb-icon-img" src={VERB_IMAGE[verbId]} alt="" aria-hidden="true" />
+        )}
+
+        <span className="verb-header">
+          {!VERB_IMAGE[verbId] && <span className="verb-icon">{display.icon}</span>}
+          <span className="verb-name-group">
+            <span className="verb-name">{display.name.toUpperCase()}</span>
+            {genState.count > 0 && <span className="verb-rate">x{genState.count}</span>}
+          </span>
+        </span>
+
+
+      {(isReady || atFloor) && state.player.engagement === 0 && (
+        <span className="verb-pulse">READY</span>
+      )}
+
+      {!isReady && !atFloor && cdMs > 500 && (
+        <span className="verb-cooldown-timer">
+          {((cdMs - elapsed) / 1000).toFixed(cdMs >= 10000 ? 0 : 1)}s
+        </span>
+      )}
+
+      {/* Float feedback */}
+      {floats.map((f) => (
+        <span
+          key={f.id}
+          className="verb-float"
+          style={{ left: `${f.x}%`, top: `${f.y}%` }}
+        >
+          +{fmtCompact(f.value)}
+        </span>
+      ))}
+    </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// GhostSlot
+// ---------------------------------------------------------------------------
+
+interface GhostSlotProps {
+  verbId: GeneratorId;
+  threshold: number;
+  canAfford: boolean;
+  cost: number;
+  isAwakened: boolean;
+  onUnlock: (verbId: GeneratorId) => void;
+}
+
+function GhostSlot({ verbId, threshold, canAfford, cost, isAwakened, onUnlock }: GhostSlotProps) {
+  const display = GENERATOR_DISPLAY[verbId];
+  const color = VERB_COLOR[verbId] ?? display.color;
+
+  const handleClick = useCallback(() => {
+    if (isAwakened && canAfford) {
+      onUnlock(verbId);
+    }
+  }, [isAwakened, canAfford, verbId, onUnlock]);
+
+  if (!isAwakened) {
+    // Promise state — silhouette, 0.35 opacity, not tappable.
+    return (
+      <div
+        className="ghost-slot ghost-promise"
+        aria-label={`${display.name} locked at ${threshold} followers`}
+      >
+        {VERB_IMAGE[verbId]
+          ? <img className="ghost-icon-img" src={VERB_IMAGE[verbId]} alt="" aria-hidden="true" />
+          : <span className="ghost-icon" style={{ color }}>{display.icon}</span>
+        }
+        <span className="ghost-info">
+          <span className="ghost-name">{display.name.toUpperCase()}</span>
+          <span className="ghost-condition">at {threshold.toLocaleString()} followers</span>
+        </span>
+      </div>
+    );
+  }
+
+  // Awakened state — full opacity, 80px, tappable.
+  return (
+    <button
+      className={`ghost-slot ghost-awakened${!canAfford ? ' ghost-disabled' : ''}`}
+      onClick={handleClick}
+      aria-label={`Unlock ${display.name} for ${cost} engagement`}
+      style={{ '--verb-color': color } as React.CSSProperties}
+    >
+      {VERB_IMAGE[verbId]
+        ? <img className="ghost-icon-img" src={VERB_IMAGE[verbId]} alt="" aria-hidden="true" />
+        : <span className="ghost-icon">{display.icon}</span>
+      }
+      <span className="ghost-info">
+        <span className="ghost-name">{display.name.toUpperCase()}</span>
+        <span className={`ghost-cost${!canAfford ? ' ghost-cost-disabled' : ''}`}>
+          Tap to unlock — {fmtCompact(cost)} engagement
+        </span>
+      </span>
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ActionsColumn
+// ---------------------------------------------------------------------------
+
+interface ActionsColumnProps {
+  state: GameState;
+  staticData: StaticData;
+  onClickVerb: (verbId: GeneratorId) => void;
+  onUnlockVerb: (verbId: GeneratorId) => void;
+}
+
+export function ActionsColumn({ state, staticData, onClickVerb, onUnlockVerb }: ActionsColumnProps) {
+  // Owned ladder verbs (live buttons), sorted by cooldown ascending
+  // (shortest cooldown at top, longest at bottom).
+  const liveVerbs = useMemo(() =>
+    LADDER_VERBS
+      .filter((id) => state.generators[id].owned)
+      .sort((a, b) => {
+        const cdA = 1000 / (Math.max(1, state.generators[a].count) * staticData.generators[a].base_event_rate);
+        const cdB = 1000 / (Math.max(1, state.generators[b].count) * staticData.generators[b].base_event_rate);
+        return cdA - cdB;
+      }),
+    [state.generators, staticData],
+  );
+
+  // Ghost: next un-owned verb whose threshold is met (or whose threshold is
+  // not yet met — show it as a promise).
+  const ghostVerb = useMemo(() => {
+    for (const id of LADDER_VERBS) {
+      if (!state.generators[id].owned) return id;
+    }
+    return null; // full ladder
+  }, [state.generators]);
+
+  // Spotlight disabled — cooldown-sorted ordering makes position-based
+  // spotlight meaningless. All verbs render in the scroll region.
+
+  // Ghost eligibility
+  const ghostThreshold = ghostVerb
+    ? staticData.unlockThresholds.generators[ghostVerb] ?? Infinity
+    : Infinity;
+  const ghostAwakened = ghostVerb !== null && state.player.total_followers >= ghostThreshold;
+  const ghostCost = ghostVerb ? staticData.generators[ghostVerb].base_buy_cost : 0;
+  const ghostCanAfford = ghostVerb !== null && state.player.engagement >= ghostCost;
+
+  return (
+    <section className="actions-column">
+      <div className="actions-scroll-region">
+        {liveVerbs.map((id) => (
+          <LiveVerbButton
+            key={id}
+            verbId={id}
+            state={state}
+            staticData={staticData}
+            isSpotlight={false}
+            onClick={onClickVerb}
+          />
+        ))}
+
+        {/* Ghost slot */}
+        {ghostVerb && (
+          <GhostSlot
+            verbId={ghostVerb}
+            threshold={ghostThreshold}
+            canAfford={ghostCanAfford}
+            cost={ghostCost}
+            isAwakened={ghostAwakened}
+            onUnlock={onUnlockVerb}
+          />
+        )}
+      </div>
+    </section>
+  );
+}

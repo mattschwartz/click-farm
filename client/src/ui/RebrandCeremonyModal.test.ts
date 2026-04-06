@@ -153,8 +153,9 @@ describe('buildResetItems', () => {
     const state = makeState({ ownedGenerators: ['selfies', 'memes', 'ai_slop'] });
     const items = buildResetItems(state);
     const genItem = items.find((r) => r.label === 'Generators owned');
-    // ai_slop is post-prestige and should be excluded from count
-    expect(genItem?.value).toBe('2 types');
+    // ai_slop is post-prestige and should be excluded from count.
+    // chirps (from initial state, threshold=0) + selfies + memes = 3 main-list.
+    expect(genItem?.value).toBe('3 types');
   });
 
   it('counts unlocked platforms', () => {

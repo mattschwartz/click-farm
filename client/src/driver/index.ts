@@ -21,7 +21,7 @@ import type {
 } from '../types.ts';
 import { purchaseKitItem } from '../creator-kit/index.ts';
 import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
-import { buyGenerator, upgradeGenerator } from '../generator/index.ts';
+import { buyGenerator, upgradeGenerator, unlockGenerator } from '../generator/index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { clearSave, load, save } from '../save/index.ts';
 import { calculateOffline, type OfflineResult } from '../offline/index.ts';
@@ -53,7 +53,7 @@ export type StateListener = (state: GameState) => void;
 export type ViralBurstListener = (payload: ViralBurstPayload) => void;
 
 /** Which driver action was attempted when the error fired. */
-export type ActionName = 'click' | 'buy' | 'upgrade' | 'buyCloutUpgrade' | 'buyKitItem';
+export type ActionName = 'click' | 'buy' | 'upgrade' | 'unlock' | 'buyCloutUpgrade' | 'buyKitItem';
 
 /**
  * Fired when a player-triggered action throws out of the model layer. The
@@ -105,9 +105,15 @@ export interface GameDriver {
   /** Subscribe to state changes. Returns unsubscribe. */
   subscribe(listener: StateListener): Unsubscribe;
   /** Player actions — each returns void and triggers a state update. */
-  click(): void;
+  /**
+   * Manual click on a specific verb (generator). Dispatches through postClick
+   * with cooldown gating and per-verb yield.
+   */
+  click(verbId: GeneratorId): void;
   buy(generatorId: GeneratorId): void;
   upgrade(generatorId: GeneratorId): void;
+  /** Unlock a manual-clickable generator (pays base_buy_cost, flips owned=true). */
+  unlock(verbId: GeneratorId): void;
   /** Force a single tick using the driver's clock. Test/debug utility. */
   step(deltaMs?: number): void;
   /** Persist to storage now (also captures current-rate snapshot). */
@@ -353,9 +359,9 @@ export function createDriver(options: DriverOptions): GameDriver {
       return () => listeners.delete(listener);
     },
 
-    click() {
-      runAction('click', {}, () => {
-        applyState(postClick(state, staticData));
+    click(verbId: GeneratorId) {
+      runAction('click', { verbId }, () => {
+        applyState(postClick(state, staticData, verbId, now()));
       });
     },
 
@@ -368,6 +374,12 @@ export function createDriver(options: DriverOptions): GameDriver {
     upgrade(generatorId) {
       runAction('upgrade', { generatorId }, () => {
         applyState(upgradeGenerator(state, generatorId, staticData));
+      });
+    },
+
+    unlock(verbId) {
+      runAction('unlock', { verbId }, () => {
+        applyState(unlockGenerator(state, verbId, staticData));
       });
     },
 

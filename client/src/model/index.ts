@@ -21,6 +21,7 @@ import type {
 // ---------------------------------------------------------------------------
 
 const ALL_GENERATOR_IDS: GeneratorId[] = [
+  'chirps',
   'selfies',
   'memes',
   'hot_takes',
@@ -64,6 +65,7 @@ export function createPlayer(seed: number, now: number = Date.now()): Player {
     rebrand_count: 0,
     clout_upgrades,
     creator_kit: {} as Record<KitItemId, number>,
+    last_manual_click_at: {} as Record<GeneratorId, number>,
     algorithm_seed: seed,
     run_start_time: now,
     last_close_time: null,

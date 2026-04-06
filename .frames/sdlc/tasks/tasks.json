@@ -1,5 +1,5 @@
 {
-  "next_id": 124,
+  "next_id": 131,
   "tasks": [
     {
       "id": 1,
@@ -4456,7 +4456,7 @@
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Engine refactor: yield/rate split, postClick(verbId), chirps seed, v8→v9 migration, click() shim",
       "requester": "architect",
@@ -4524,14 +4524,15 @@
         "npm run build succeeds; no TypeScript errors"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 120,
       "alias": "E3",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Unlock-as-purchase lifecycle: new unlock action, checkGeneratorUnlocks split, selfies threshold change",
       "requester": "architect",
@@ -4590,16 +4591,15 @@
         "npm run build succeeds; no TypeScript errors"
       ],
       "open_questions": [],
-      "blocked_on": [
-        119
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 121,
       "alias": "E4",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Actions-column ladder UI wiring: per-verb ladder + ghost slot + spotlight + remove click() shim",
       "requester": "architect",
@@ -4666,10 +4666,8 @@
         "npm run build succeeds; no TypeScript errors; all tests pass"
       ],
       "open_questions": [],
-      "blocked_on": [
-        119,
-        120
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 122,
@@ -4731,6 +4729,305 @@
         "Decision recorded: multiplier magnitude encoding — Option A (chevron count: 1/2/3 chevrons by |Δ| banding) or Option B (pill fill opacity mapped to |Δ|). Write the decision and rationale directly into §2.3 of the spec.",
         "Decision recorded: LVL↑ flat-status-line threshold — confirm 50% of level-up cost as the tip-over point, or specify an alternative (earlier for more chrome visibility, later for longer quiet periods). Write the decision and rationale directly into §3.2 of the spec.",
         "Both decisions moved from the Open Questions table (§5) to their respective sections so the engineer can implement without ambiguity."
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 124,
+      "role": "game-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Balance pass: chirps base_buy_cost and early-game payback curve",
+      "requester": "engineer",
+      "complexity": "haiku",
+      "overview": "Chirps' current balance cells (base_buy_cost=2, base_event_yield=1, base_event_rate=2.5) produce a 0.8-second payback on the first automator purchase — far faster than any other generator (selfies is ~10s). At 2.5 eng/sec passive output for a cost of 2 engagement, the player can chain-buy chirps automators almost instantly, which makes the early game feel trivially cheap. The values were seeded from proposal §14c but feel overpowered in practice. Needs a game-designer eye on whether base_buy_cost should increase, base_event_rate should decrease, or both.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "§14c defines chirps balance cells — base_buy_cost=2, yield=1, rate=2.5"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Live chirps GeneratorDef with the values to retune"
+        }
+      ],
+      "acceptance_criteria": [
+        "Chirps early-game payback time feels comparable to other starter-tier generators (~5-15s range)",
+        "Updated base_buy_cost and/or base_event_rate values committed to static-data/index.ts",
+        "Manual-action-ladder proposal §14c updated to reflect the new values"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
+    },
+    {
+      "id": 125,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "[SUPERSEDED] Implement glass material on Actions-column verb buttons",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "SUPERSEDED by action-button-physicality proposal. Glass approach was rejected — see proposals/rejected/20260406-glass-action-buttons.md. Do not implement. Pick up the replacement task instead.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260406-glass-action-buttons.md",
+          "purpose": "Accepted proposal — full spec with CSS values, contrast analysis, fallback, and edge cases"
+        },
+        {
+          "ref": "ux/manual-action-ladder.md",
+          "purpose": "Actions-column UX spec — button anatomy, ghost slots, spotlight slot, class naming conventions"
+        },
+        {
+          "ref": "ux/accent-palette-light-mode.md",
+          "purpose": "Accent token contrast values — amber-on-glass is the tight edge case (see §5 of proposal)"
+        },
+        {
+          "ref": "proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "Base palette and WCAG targets"
+        },
+        {
+          "ref": "proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "Mood-edge vignette colors and opacities that bleed through the glass"
+        }
+      ],
+      "acceptance_criteria": [
+        "All Actions-column verb buttons use `background: rgba(255,255,255,0.6)` + `backdrop-filter: blur(16px)` + `-webkit-backdrop-filter: blur(16px)` + `border: 1px solid rgba(255,255,255,0.35)`",
+        "Ghost slots use the more transparent variant: `rgba(255,255,255,0.4)` background, `rgba(255,255,255,0.2)` border",
+        "Spotlight slot uses the elevated variant: `rgba(255,255,255,0.8)` background + `box-shadow: 0 2px 8px rgba(0,0,0,0.06)`",
+        "Generators column, platform cards, and all other panels remain opaque `#FFFFFF`",
+        "@supports fallback renders `rgba(255,255,255,0.92)` + `border: 1px solid #E8E4DF` when backdrop-filter is unsupported",
+        "Any amber accent text (`--accent-amber`) appearing on action buttons sits on an opaque white chip/pill, not directly on the glass surface",
+        "Visual verification: mood-edge vignette tints are visible through the glass buttons when an algorithm mood is active"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 126,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Implement action button physicality — raised slabs with press/spring-back",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Replace flat white action-button cards with raised, colored slabs that depress on tap and spring back. Each verb gets its own color-lane face. The buttons should feel heavy and satisfying — like pressing a physical arcade button. Press is fast (40ms), release is spring-loaded with overshoot (100ms). On press, the engagement counter does a scale bump to register the hit. Ghost slots are muted grey slabs. Spotlight slot gets extra depth. Reduced-motion fallback removes transitions but preserves visual state change.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "Accepted proposal — complete spec with all CSS values, color table, press/release physics, ghost/spotlight variants, reduced motion, and counter-bump animation"
+        },
+        {
+          "ref": "ux/manual-action-ladder.md",
+          "purpose": "Actions-column UX spec — button anatomy, ghost slots, spotlight slot, class names"
+        },
+        {
+          "ref": "ux/visual-identity.md",
+          "purpose": "Generator color lanes — verb face colors derive from §2 + §4"
+        },
+        {
+          "ref": "proposals/rejected/20260406-glass-action-buttons.md",
+          "purpose": "Prior glass approach — rejected, do NOT implement this"
+        }
+      ],
+      "acceptance_criteria": [
+        "Each action button face uses its verb's color lane: Chirps `#4d9ef0`, Selfies `#e07040`, Livestreams `#9a3adf`, Podcasts `#5a6adf`, Viral Stunts `#df3a5a`",
+        "Resting state: 4px bottom depth shadow in darkened verb color + 1px top border in lightened verb color + soft ambient shadow",
+        "Pressed state (on pointerdown): translateY(3px), shadow compresses to 1px, transition 40ms ease-in",
+        "Release state (on pointerup): spring-back with `cubic-bezier(0.34, 1.56, 0.64, 1)` over 100ms — overshoots slightly then settles",
+        "Counter bump: on the press frame, the verb's engagement counter scales to 1.15 and settles back over 150ms ease-out",
+        "Ghost slots: muted warm grey (`#E8E4DF`) slab at 0.5 opacity, same raised shape, no press interaction",
+        "Spotlight slot: 5px depth shadow (1px deeper), subtle 2% scale bump, stronger ambient shadow",
+        "Reduced motion: all transitions set to `none`, counter-bump animation removed, static visual state change preserved (shadow shift still visible)",
+        "Button text is white (`#FFFFFF`) on all verb faces — Space Grotesk 600, 14px+",
+        "Cooldown ring renders on the colored face as `rgba(255,255,255,0.3)` overlay",
+        "Generators, platform cards, top bar remain completely untouched — physicality is exclusive to the Actions column"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 127,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Buy button for unowned manual-clickable generators throws instead of unlocking",
+      "requester": "engineer",
+      "complexity": "haiku",
+      "overview": "When a manual-clickable generator (e.g. livestreams) reaches its follower threshold and becomes buyable in the middle panel (GeneratorList), clicking 'Buy Livestreams' throws an error because the BuyButton calls onBuy(id) → driver.buy() → buyGenerator(), which rejects with 'must be unlocked first — use unlockGenerator'. The GeneratorList component has no onUnlock prop wired, so there is no code path to call unlockGenerator for these rows.\n\nThe left panel (ActionsColumn) handles this correctly via its GhostSlot → onUnlockVerb → driver.unlock() → unlockGenerator(). The middle panel never got the same wiring.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "BuyButton on line 389 calls onBuy(id) for unowned manual-clickable generators — should call onUnlock instead"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Parent wires onBuy={buy} but does not pass an onUnlock prop to GeneratorList"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "buyGenerator (line 219) throws when owned=false for manual-clickable gens; unlockGenerator (line 150) is the correct entry point"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "driver.unlock() dispatches unlockGenerator; driver.buy() dispatches buyGenerator"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "GhostSlot correctly uses onUnlock for the same action — reference implementation"
+        }
+      ],
+      "acceptance_criteria": [
+        "GeneratorList accepts an onUnlock prop (verbId: GeneratorId) => void",
+        "GameScreen passes the existing unlock callback as onUnlock to GeneratorList",
+        "GeneratorRow detects unowned manual-clickable generators and routes BuyButton click through onUnlock instead of onBuy",
+        "Clicking 'Buy Livestreams' (or any unowned manual-clickable generator) in the middle panel successfully unlocks the generator without throwing",
+        "Existing onBuy path for owned generators (additional purchases) is unchanged"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 128,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Implement glass generator sheet — single frosted panel with mood bleed-through",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Replace the individual opaque white generator cards with a single continuous frosted-glass panel. The entire Generators column is ONE glass sheet — rows are separated by hairline dividers, not card boundaries. The glass lets the algorithm-mood vignette tint through, so the sheet takes on the mood's color. Section headers (STARTER/MID/LATE) are quiet labels on the sheet. BUY/LVL buttons and modifier pills remain opaque elements sitting on top of the glass. This completes the three-column material hierarchy: arcade slabs (actions) / glass clipboard (generators) / opaque editorial (platforms).",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260406-glass-generator-sheet.md",
+          "purpose": "Accepted proposal — full spec with CSS values, hairline dividers, section headers, contrast analysis, fallback, mood bleed-through table"
+        },
+        {
+          "ref": "proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "Sibling proposal — arcade slabs on actions column, establishes the material contrast"
+        },
+        {
+          "ref": "ux/core-game-screen.md",
+          "purpose": "Zone map, generators column positioning and flex behavior"
+        },
+        {
+          "ref": "proposals/accepted/algorithm-mood-visibility.md",
+          "purpose": "Mood-edge vignette colors that bleed through the glass"
+        },
+        {
+          "ref": "proposals/accepted/visual-identity-light-mode.md",
+          "purpose": "Base palette and text colors used on the sheet"
+        }
+      ],
+      "acceptance_criteria": [
+        "Generators column renders as ONE continuous panel with `background: rgba(255,255,255,0.55)`, `backdrop-filter: blur(20px)`, `-webkit-backdrop-filter: blur(20px)`, `border: 1px solid rgba(255,255,255,0.3)`, `border-radius: 16px`",
+        "Float shadow applied: `0 2px 8px -2px rgba(0,0,0,0.08), 0 8px 24px -4px rgba(0,0,0,0.05)`",
+        "Individual generator rows separated by `1px solid rgba(0,0,0,0.06)` hairline dividers — no card gaps, no individual card backgrounds",
+        "Section labels (STARTER/MID/LATE) styled: Space Grotesk 500, 11px, uppercase, `letter-spacing: 0.08em`, `color: rgba(26,26,26,0.4)`",
+        "Mood vignettes visibly tint the glass sheet when an algorithm mood is active",
+        "BUY/LVL buttons and modifier pills remain opaque elements on top of the glass — no contrast regression",
+        "`@supports` fallback: `rgba(255,255,255,0.9)` background + `1px solid #E8E4DF` border when backdrop-filter is unsupported",
+        "Actions column (arcade slabs) and Platform cards (opaque editorial) remain completely untouched",
+        "Creator Kit section is NOT part of the glass sheet — stays its own element"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 129,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Add dark gradient scrim to action buttons for text readability",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "The pixel art illustrations on action buttons compete with the white text labels. Add a bottom-third dark gradient scrim (transparent to rgba(0,0,0,0.55)) so the verb name and eng/tap label sit on a consistently dark zone. Same pattern as Netflix thumbnails — vivid image top, readable text bottom.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "Parent spec for action button visual treatment — this is an additive fix on top of it"
+        }
+      ],
+      "acceptance_criteria": [
+        "Each action button has a `::after` pseudo-element gradient scrim: `linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.55) 100%)`, covering the bottom 55% of the button, with `pointer-events: none` and matching bottom border-radius",
+        "Verb name and eng/tap text remain white (`#FFFFFF`) and sit within the darkened scrim zone",
+        "Pixel art illustration remains fully vivid in the top portion of the button — the gradient only darkens the lower half",
+        "Ghost slots are excluded — they have no pixel art, scrim is unnecessary",
+        "Scrim does not interfere with the press/spring-back translateY interaction from the physicality spec"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 130,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Plan level-driven-manual-cooldown implementation",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Decompose the accepted level-driven-manual-cooldown proposal into concrete build tasks. The proposal redefines the Actions column: LVL UP drives cooldown (speed), BUY drives yield multiplier (power), and stackable Autoclickers add passive auto-tapping at base cooldown. Three distinct GeneratorState fields (level, count, autoclicker_count). The engineer's review includes a full 10-point change surface trace across the codebase.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "The accepted proposal — contains formulas, data model, supersession notes, and all three reviews"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "The predecessor proposal partially superseded — §2, §4, §12, §14a/e/f affected"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "postClick cooldown gate + computeGeneratorEffectiveRate — both formulas change"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "chirps/selfies rate retune + new base_autoclicker_cost field on GeneratorDef"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "GeneratorState needs autoclicker_count field"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "New buyAutoclicker function, remove count<=0 guard on upgradeGenerator"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Save migration — seed autoclicker_count=0"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "applyRebrand must reset autoclicker_count"
+        },
+        {
+          "ref": "client/src/audience-mood/index.ts",
+          "purpose": "applyTickPosts gate change + AUTOCLICKERS_AFFECT_MOOD killswitch"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "UI wiring for autoclicker purchase button + floating number emissions"
+        }
+      ],
+      "acceptance_criteria": [
+        "Decompose into discrete build tasks covering: engine formula refactor (cooldown + yield + passive), data model + save migration, autoclicker purchase action, audience mood gate + killswitch, static data retune, and test updates",
+        "Each task is assigned to exactly one role (engineer or ux-designer) with one state (build)",
+        "Tasks reference the engineer's 10-point change surface from their review so nothing is missed",
+        "UX-designer spec-update tasks filed for the 6 gaps identified in their review (badge semantics, floating-number density, counter-bump scope, purchase button location, cooldown ring threshold, yield display formula)",
+        "Dependency ordering specified — which tasks block which",
+        "Supersession edits to manual-action-ladder.md called out as a separate task"
       ],
       "open_questions": [],
       "blocked_on": []

@@ -8,7 +8,8 @@
 // ---------------------------------------------------------------------------
 
 export type GeneratorId =
-  // 7 base generators (unlocked progressively via follower thresholds)
+  // 8 base generators (unlocked progressively via follower thresholds)
+  | 'chirps'
   | 'selfies'
   | 'memes'
   | 'hot_takes'
@@ -144,6 +145,11 @@ export interface Player {
   algorithm_seed: number;
   /** Epoch ms when the current run began. */
   run_start_time: number;
+  /**
+   * Epoch ms of the last manual click per generator, for cooldown gating.
+   * Missing keys read as 0 (never clicked). See manual-action-ladder.md.
+   */
+  last_manual_click_at: Record<GeneratorId, number>;
   /** Epoch ms when the player last closed the game. Null on first session. */
   last_close_time: number | null;
   /** Production snapshot at last close. Used for offline calc. Null on first session. */
@@ -265,8 +271,25 @@ export interface GameState {
 
 export interface GeneratorDef {
   id: GeneratorId;
-  /** Engagement per second per unit at level 1. */
-  base_engagement_rate: number;
+  /**
+   * Engagement produced per event (manual tap or passive tick).
+   * Scaled by level_multiplier(level) — the Upgrade track.
+   * See proposals/accepted/manual-action-ladder.md §OQ12.
+   */
+  base_event_yield: number;
+  /**
+   * Events per second (passive rate per unit).
+   * Scaled by count — the Automate track.
+   * Manual cooldown derived as 1 / (max(1, count) × base_event_rate).
+   */
+  base_event_rate: number;
+  /**
+   * Whether the player can manually tap this generator in the Actions column.
+   * true for ladder verbs (chirps, selfies, livestreams, podcasts, viral_stunts).
+   * false for passive-only generators (memes, hot_takes, tutorials) and
+   * post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy).
+   */
+  manual_clickable: boolean;
   /** Fraction of engagement that converts to followers. (0, 1]. */
   follower_conversion_rate: number;
   /** How much Algorithm state affects output. [0, 1]. */

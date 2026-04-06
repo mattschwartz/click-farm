@@ -176,7 +176,7 @@ The split is chosen so each ladder verb's **pre-Automate manual cooldown** match
 
 | Verb | Cooldown target (count=0) | `base_event_rate` | `base_event_yield` | Passive at count=1, level=1 |
 |---|---|---|---|---|
-| chirps | 0.4s | 2.5 | 1 | 2.5 eng/sec *(new generator)* |
+| chirps | 0.4s | 2.5 | 0.2 | 0.5 eng/sec *(new generator — below selfies tier)* |
 | selfies | 2.5s | 0.4 | 2.5 | 1.0 eng/sec *(preserved from old base_rate)* |
 | livestreams | 10s | 0.1 | 800 | 80 eng/sec *(preserved)* |
 | podcasts | 30s | 0.033 | 4,545 | 150 eng/sec *(preserved)* |
@@ -198,11 +198,11 @@ Not manual-clickable, so base_event_rate doesn't need to meet a cooldown target.
 |---|---|
 | `unlock_threshold` | 0 |
 | `base_event_rate` | 2.5 |
-| `base_event_yield` | 1 |
+| `base_event_yield` | 0.2 |
 | `fcr` (follower conversion rate) | 0.07 |
 | `trend_sensitivity` | 0.7 |
-| `base_buy_cost` | 2 |
-| `base_upgrade_cost` | 20 |
+| `base_buy_cost` | 5 |
+| `base_upgrade_cost` | 50 |
 | `manual_clickable` | `true` |
 
 **Chirps algorithm-state modifiers:**
@@ -690,3 +690,10 @@ OQ2 (per-verb automation tuning curve), OQ4 (verb-to-platform coupling), OQ5 (un
 - UI wiring (per-verb Actions buttons): separate follow-up task gated on ux-designer's ladder UX spec.
 
 Removing engineer from reviewers. Game-designer remains per RFC loop self-inclusion and because OQ2/4/5/14/15 are theirs to close. Proposal stays in `draft/` — cannot move to `accepted/` while open questions remain, per review-state rules.
+
+---
+## Revision: 2026-04-05 — game-designer (task #124 — chirps payback curve fix)
+
+Chirps' original balance cells (yield=1, cost=2) produced 2.5 eng/s passive output and a 0.8s payback — both broken. Passive output inverted tier ordering (chirps 2.5 > selfies 1.0), and payback was 12× faster than the ~10s design target. Root cause: yield/rate split was optimised for the 0.4s cooldown target but not cross-checked against tier ordering.
+
+Fix: `base_event_yield` 1 → 0.2, `base_buy_cost` 2 → 5, `base_upgrade_cost` 20 → 50. Passive output drops to 0.5 eng/s (properly below selfies' 1.0), payback hits 10s, cost progression is 5 → 10 → 100 → 1100 (clean). Manual feel preserved: each chirp tap yields 0.2 eng at 0.4s cadence = 0.5 manual eng/s, vs selfies' 2.5 eng at 2.5s = 1.0 manual eng/s — consistent 2:1 tier ratio across both manual and passive surfaces. §14a and §14c updated. §14f unchanged (yield cancels from ratio formula). Static-data `index.ts` updated to match.

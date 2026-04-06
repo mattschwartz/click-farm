@@ -191,6 +191,9 @@ export function applyRebrand(
     algorithm_seed: result.newSeed,
     run_start_time: now,
     creator_kit: {} as Record<KitItemId, number>,
+    // last_manual_click_at reset — per arch spec, cooldown timestamps are
+    // meaningless after rebrand wipes generator count and level.
+    last_manual_click_at: {} as Record<GeneratorId, number>,
     // last_close_time / last_close_state preserved — they reflect
     // serialization state, not run state.
   };

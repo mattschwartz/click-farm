@@ -78,12 +78,10 @@ When the proposal is written and confirmed:
 
 1. Update the `reviewers` field with all roles who need to weigh in
 2. Do NOT move the proposal out of `draft/` — that is the reviewer's responsibility
-3. Commit the proposal file:
+3. When the user is ready to move on, commit the proposal file:
    - You MUST stage only the proposal file — use its explicit path with `git add`
    - You MUST verify with `git status` before committing
    - You MUST write a commit message following the project commit format (see `context/COMMITS.md`)
-
-If the user is not ready to commit: stay in Step 2. Do not force formalization.
 
 ---
 

@@ -81,8 +81,14 @@ export function generatorUpgradeCost(
 
 /**
  * Returns an updated generators map with any newly-unlocked generators based
- * on the current total follower count. A generator becomes available in the
- * shop (owned=true) once total_followers meets its unlock_threshold.
+ * on the current total follower count.
+ *
+ * Behavior splits by `manual_clickable` (per manual-action-ladder arch spec):
+ *   - `manual_clickable: false` (passive-only): threshold-met → owned=true
+ *     (today's behavior, unchanged).
+ *   - `manual_clickable: true` (ladder verbs): threshold-met does NOT auto-flip
+ *     owned. The player must pay the Unlock cost via `unlockGenerator`. The UI
+ *     shows a ghost slot when threshold-met && !owned.
  *
  * Returns the same reference when nothing changes so callers can use reference
  * equality to skip unnecessary re-renders.
@@ -101,6 +107,9 @@ export function checkGeneratorUnlocks(
       // Missing entry = generator is never unlocked by follower threshold
       // (e.g. post-prestige generators, which unlock via Clout upgrades).
       if (threshold !== undefined && totalFollowers >= threshold) {
+        // Manual-clickable generators require an explicit Unlock purchase —
+        // threshold-met only makes them eligible (ghost-slot visible in UI).
+        if (staticData.generators[id].manual_clickable) continue;
         next[id] = { ...generators[id], owned: true };
         changed = true;
       }
@@ -108,6 +117,83 @@ export function checkGeneratorUnlocks(
   }
 
   return changed ? next : generators;
+}
+
+/**
+ * Whether a manual-clickable generator is eligible for the Unlock purchase.
+ * Pure derived view — no state mutation.
+ */
+export function canUnlockGenerator(
+  verbId: GeneratorId,
+  state: GameState,
+  staticData: StaticData,
+): boolean {
+  const def = staticData.generators[verbId];
+  if (!def.manual_clickable) return false;
+  if (state.generators[verbId].owned) return false;
+  const threshold = staticData.unlockThresholds.generators[verbId];
+  return threshold !== undefined && state.player.total_followers >= threshold;
+}
+
+/**
+ * Unlock a manual-clickable generator. Pays the Unlock cost (base_buy_cost per
+ * D1 resolution) and flips owned=true.
+ *
+ * Throws if:
+ * - The generator is not manual_clickable (passive-only gens use buyGenerator).
+ * - The generator is already owned (already unlocked).
+ * - The follower threshold is not yet met.
+ * - The player cannot afford the Unlock cost.
+ *
+ * Pure — returns a new GameState; does not mutate the input.
+ */
+export function unlockGenerator(
+  state: GameState,
+  verbId: GeneratorId,
+  staticData: StaticData,
+): GameState {
+  const def = staticData.generators[verbId];
+
+  if (!def.manual_clickable) {
+    throw new Error(
+      `unlockGenerator: generator '${verbId}' is not manual-clickable — use buyGenerator for passive generators`,
+    );
+  }
+
+  const gen = state.generators[verbId];
+
+  if (gen.owned) {
+    throw new Error(
+      `unlockGenerator: generator '${verbId}' is already unlocked`,
+    );
+  }
+
+  const threshold = staticData.unlockThresholds.generators[verbId];
+  if (threshold === undefined || state.player.total_followers < threshold) {
+    throw new Error(
+      `unlockGenerator: generator '${verbId}' threshold not met — ` +
+        `need ${threshold ?? '(no threshold)'} followers, have ${state.player.total_followers}`,
+    );
+  }
+
+  // Unlock cost reuses base_buy_cost per D1 resolution (A2 assumption).
+  const cost = def.base_buy_cost;
+
+  if (!canAffordEngagement(state.player, cost)) {
+    throw new Error(
+      `unlockGenerator: cannot afford to unlock '${verbId}' — ` +
+        `cost ${cost}, have ${state.player.engagement}`,
+    );
+  }
+
+  return {
+    ...state,
+    player: spendEngagement(state.player, cost),
+    generators: {
+      ...state.generators,
+      [verbId]: { ...gen, owned: true },
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -131,8 +217,11 @@ export function buyGenerator(
   const gen = state.generators[generatorId];
 
   if (!gen.owned) {
+    const def = staticData.generators[generatorId];
     throw new Error(
-      `buyGenerator: generator '${generatorId}' is not yet unlocked`,
+      def.manual_clickable
+        ? `buyGenerator: generator '${generatorId}' must be unlocked first — use unlockGenerator`
+        : `buyGenerator: generator '${generatorId}' is not yet unlocked — check follower thresholds`,
     );
   }
 

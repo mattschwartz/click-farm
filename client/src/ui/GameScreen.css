@@ -128,6 +128,13 @@
   backdrop-filter: blur(6px);
 }
 
+.top-bar-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
 /* Zone A — algorithm label (max 40% width, §1.2). */
 .algo-label {
   display: flex;
@@ -307,107 +314,417 @@
   color: var(--accent-red);
 }
 
-/* --- Post zone (UX §8) --------------------------------------------------- */
+/* --- Actions Column — per-verb manual ladder (UX manual-action-ladder.md) --- */
 
-.post-zone {
-  background: var(--surface-panel);
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
-  padding: 24px;
+.actions-column {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  position: relative;
-  overflow: hidden;
+  gap: 12px;
+  min-height: 0;
 }
 
-/* Post-button — primary click CTA.
- * NOTE (task #108, light-mode flip): the dark gradient (#1d2230→#12151e) was
- * the dark-mode CTA island. Flipped here to a light panel with a strong
- * border + shadow for lift, consistent with visual-identity-light-mode §2
- * ("design doesn't compete with the content"). If ux-designer prefers a
- * dark CTA island, flip --surface-panel back to a dark gradient and
- * text to --text-inverse. Flagged for ux QA post-build. */
-.post-button {
-  width: 100%;
-  max-width: 260px;
-  height: 220px;
-  border-radius: 12px;
-  border: 2px solid var(--border-default);
-  background: var(--surface-panel);
-  color: var(--text-primary);
-  box-shadow: var(--panel-shadow);
-  font-family: inherit;
-  cursor: pointer;
+.actions-scroll-region {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 12px;
+  overflow-y: auto;
+  padding: 10px 10px 8px;
+  min-height: 0;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.actions-scroll-region::-webkit-scrollbar { display: none; }
+
+/* Live verb button — raised colored slab with arcade-button physicality
+ * (task #126). Each verb uses its color-lane face. Press is fast (40ms),
+ * release springs back with overshoot (100ms). */
+.live-verb-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
+  gap: 2px;
+  width: 100%;
+  height: 80px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  border-bottom: none;
+  background: var(--verb-color);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Resting: 4px bottom depth + ambient shadow */
+  box-shadow:
+    0 4px 0 0 var(--verb-color-dark),
+    0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(0);
+  transition: transform 100ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 100ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Pressed: depress 3px, shadow compresses to 1px. Fast 40ms ease-in. */
+.live-verb-btn:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 0 var(--verb-color-dark),
+    0 1px 4px rgba(0, 0, 0, 0.08);
+  transition: transform 40ms ease-in, box-shadow 40ms ease-in;
+}
+
+/* Cooldown: cursor default, no press. Grayscale is handled per-element below. */
+.live-verb-cooldown {
+  cursor: default;
+  transform: translateY(2px);
+  box-shadow:
+    0 2px 0 0 var(--verb-color-dark),
+    0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* During cooldown, desaturate the background image. The ::before overlay
+ * restores color on the filled portion by being transparent there. */
+.live-verb-cooldown .verb-icon-img {
+  filter: grayscale(1) brightness(0.7);
+}
+
+.live-verb-cooldown:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 2px 0 0 var(--verb-color-dark),
+    0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Spotlight — extra depth (5px shadow) + subtle scale bump. */
+.live-verb-spotlight {
+  box-shadow:
+    inset 0 -32px 16px rgba(0, 0, 0, 0.35),
+    0 5px 0 0 var(--verb-color-dark),
+    0 5px 16px rgba(0, 0, 0, 0.16);
+  transform: scale(1.02);
+}
+
+/* Cooldown fill — color restoration sweep over the grayscale image.
+ * --cd-fill: 0% = just tapped (fully grey), 100% = ready (fully colored).
+ * The filled portion (left, up to --cd-fill) paints verb color back over
+ * the grayscale image. The unfilled portion stays transparent (grey shows).
+ * At 100% (ready), the image filter removes grayscale so no overlay needed.
+ * z-index: 1 layers above the background image (z-index: 0),
+ * text sits at z-index: 2. */
+.live-verb-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to right,
+    rgba(var(--verb-color-rgb, 0,0,0), 0.45) var(--cd-fill),
+    transparent var(--cd-fill)
+  );
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* When ready, no overlay needed — image is full color. */
+.live-verb-ready::before {
+  background: none;
+}
+
+/* Reduced motion: no transitions, static shadow shift preserved. */
+@media (prefers-reduced-motion: reduce) {
+  .live-verb-btn { transition: none; }
+  .live-verb-btn:active { transition: none; }
+}
+
+/* Header row: icon + name + badge */
+.verb-header {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  transition: transform 120ms ease-out, border-color 120ms ease-out;
+  position: relative;
+  z-index: 2;
+}
+.verb-icon { font-size: 20px; flex-shrink: 0; }
+.verb-icon-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 0;
+}
+.ghost-icon-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+.verb-name {
+  font-size: 14px; font-weight: 500; letter-spacing: 0.04em;
+  text-shadow:
+    -2px -2px 0 rgba(0, 0, 0, 0.8),
+    2px -2px 0 rgba(0, 0, 0, 0.8),
+    -2px 2px 0 rgba(0, 0, 0, 0.8),
+    2px 2px 0 rgba(0, 0, 0, 0.8),
+    -1px -1px 0 rgba(0, 0, 0, 0.8),
+    1px -1px 0 rgba(0, 0, 0, 0.8),
+    -1px 1px 0 rgba(0, 0, 0, 0.8),
+    1px 1px 0 rgba(0, 0, 0, 0.8),
+    0 2px 6px rgba(0, 0, 0, 0.65);
+}
+.verb-name-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+.verb-rate {
+  font-size: 11px;
+  font-style: italic;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow:
+    -1px -1px 0 rgba(0, 0, 0, 0.7),
+    1px -1px 0 rgba(0, 0, 0, 0.7),
+    -1px 1px 0 rgba(0, 0, 0, 0.7),
+    1px 1px 0 rgba(0, 0, 0, 0.7),
+    0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.verb-btn-wrap {
   position: relative;
 }
 
-.post-button:hover {
-  transform: scale(1.02);
-  border-color: var(--border-emphasis);
+.verb-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 4;
+  font-size: 11px; font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  line-height: 1.2;
+  color: #FFFFFF;
+  background: #E53E3E;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  text-shadow:
+    -1px -1px 0 rgba(0, 0, 0, 0.8),
+    1px -1px 0 rgba(0, 0, 0, 0.8),
+    -1px 1px 0 rgba(0, 0, 0, 0.8),
+    1px 1px 0 rgba(0, 0, 0, 0.8);
 }
 
-.post-button:active {
-  transform: scale(0.97);
-  transition: transform 60ms ease-out;
+/* Data row: yield + pulse */
+.verb-data {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 28px; /* align with verb-name */
+  position: relative;
+  z-index: 2;
 }
-
-.post-button .primary {
-  font-size: 32px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+.verb-yield {
+  font-size: 11px; color: rgba(255, 255, 255, 0.8);
+  text-shadow:
+    -2px -2px 0 rgba(0, 0, 0, 0.8),
+    2px -2px 0 rgba(0, 0, 0, 0.8),
+    -2px 2px 0 rgba(0, 0, 0, 0.8),
+    2px 2px 0 rgba(0, 0, 0, 0.8),
+    -1px -1px 0 rgba(0, 0, 0, 0.8),
+    1px -1px 0 rgba(0, 0, 0, 0.8),
+    -1px 1px 0 rgba(0, 0, 0, 0.8),
+    1px 1px 0 rgba(0, 0, 0, 0.8),
+    0 2px 6px rgba(0, 0, 0, 0.65);
 }
-
-.post-button .context {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-secondary);
+.verb-pulse {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 2;
+  font-size: 24px;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  color: #6ECF8E;
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.5);
+  text-shadow:
+    0 0 6px rgba(110, 207, 142, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.6);
+  display: none;
+  padding: 2px 12px;
+  background: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.15) 20%, rgba(0, 0, 0, 0.25) 35%, rgba(0, 0, 0, 0.35) 100%);
+  transform: skewX(-8deg);
+  border-radius: 3px;
 }
+@keyframes verb-pulse-anim {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.live-verb-ready .verb-pulse { display: block; opacity: 1; }
 
-.post-rate {
+.verb-cooldown-timer {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 2;
   font-size: 14px;
-  color: var(--text-secondary);
+  font-weight: 600;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-/* Confirm flash on post button click (§4.1) — 10% lightness bump, 150ms. */
-.post-button.post-confirm-flash {
-  animation: post-confirm 150ms ease-out;
+/* Ready border chase — a light sweeps the button edge once when cooldown
+ * completes. Fires on cooldown→ready transition (class swap re-triggers
+ * the animation). Uses conic-gradient rotated via @property, masked to
+ * a 2px border ring. */
+
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
 }
 
-@keyframes post-confirm {
-  0%   { filter: brightness(1); }
-  30%  { filter: brightness(1.25); }
-  100% { filter: brightness(1); }
+.live-verb-ready::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--border-angle),
+    transparent 0%,
+    transparent 55%,
+    rgba(255, 255, 255, 0.6) 73%,
+    white 78%,
+    rgba(255, 255, 255, 0.6) 83%,
+    transparent 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  animation: border-chase 600ms ease-in-out forwards;
 }
 
-/* Click feedback floaters */
-.float-number {
+@keyframes border-chase {
+  0%   { --border-angle: 0deg;   opacity: 0; }
+  10%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { --border-angle: 360deg; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-verb-ready::after { animation: none; display: none; }
+}
+
+/* Float feedback on tap */
+.verb-float {
   position: absolute;
   pointer-events: none;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--accent-gold);
-  animation: float-up 500ms ease-out forwards;
-  z-index: 2;
-  text-shadow: 0 1px 3px rgba(var(--palette-near-black-rgb),0.15);
+  font-size: 22px;
+  font-weight: 800;
+  color: #FFD66B;
+  animation: verb-float-pop 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 3;
+  text-shadow:
+    0 0 3px rgba(255, 214, 107, 0.9),
+    0 0 8px rgba(255, 214, 107, 0.5),
+    0 0 16px rgba(255, 200, 50, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.6);
 }
-
-@keyframes float-up {
+@keyframes verb-float-pop {
   0% {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translate(-50%, -50%) scale(1.8);
+    filter: brightness(1.5);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: brightness(1);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -56px);
+    transform: translate(-50%, -50%) scale(1);
+    filter: brightness(1);
   }
+}
+
+/* Ghost slot — promise state (60px, 0.35 opacity, not tappable). */
+.ghost-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+}
+.ghost-promise {
+  height: 80px;
+  opacity: 0.5;
+  cursor: default;
+  background: #E8E4DF;
+  border-radius: 8px;
+  box-shadow: 0 3px 0 0 #D5D0CA, 0 3px 8px rgba(0, 0, 0, 0.06);
+}
+.ghost-icon { font-size: 20px; flex-shrink: 0; }
+.ghost-info { display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; z-index: 1; }
+.ghost-name { font-size: 13px; font-weight: 500; letter-spacing: 0.04em; }
+.ghost-condition { font-size: 11px; color: var(--text-secondary); }
+
+/* Ghost slot — awakened state (80px, full opacity, tappable).
+ * Muted grey slab, raised to match live-verb depth. */
+.ghost-awakened {
+  height: 80px;
+  opacity: 1;
+  cursor: pointer;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  background: #E8E4DF;
+  border-radius: 8px;
+  box-shadow: 0 4px 0 0 #D5D0CA, 0 4px 12px rgba(0, 0, 0, 0.08);
+  font-family: inherit;
+  color: var(--text-primary);
+  transition: opacity 400ms ease-out, height 400ms ease-out;
+}
+.ghost-awakened:hover { background: var(--surface-hover); }
+.ghost-cost { font-size: 11px; color: var(--text-secondary); }
+.ghost-cost-disabled {
+  color: var(--accent-amber);
+  opacity: 0.6;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+.ghost-disabled { cursor: default; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .verb-pulse { animation: none; opacity: 1; }
+  .ghost-awakened { transition: none; }
 }
 
 /* --- Generator column (list + kit panel stack) ------------------------- */
@@ -426,22 +743,36 @@
 
 /* --- Generator list (UX §6) --------------------------------------------- */
 
+/* Glass clipboard — single frosted panel for the entire generator list.
+ * Mood vignettes bleed through the translucent surface (task #128). */
 .generator-list {
-  background: var(--surface-panel);
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  box-shadow:
+    0 2px 8px -2px rgba(0, 0, 0, 0.08),
+    0 8px 24px -4px rgba(0, 0, 0, 0.05);
   padding: 16px;
   overflow-y: auto;
 }
 
+@supports not (backdrop-filter: blur(1px)) {
+  .generator-list {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #E8E4DF;
+  }
+}
+
 .category-divider {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: rgba(26, 26, 26, 0.4);
   text-transform: uppercase;
   padding: 12px 4px 6px;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: none;
   margin-bottom: 4px;
 }
 
@@ -455,7 +786,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 4px;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   transition: opacity 200ms ease-out, background 120ms ease-out;
 }
 

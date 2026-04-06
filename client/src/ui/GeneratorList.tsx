@@ -43,6 +43,8 @@ interface Props {
   staticData: StaticData;
   onBuy: (id: GeneratorId) => void;
   onUpgrade: (id: GeneratorId) => void;
+  /** Unlock a manual-clickable generator (pays base_buy_cost, flips owned). */
+  onUnlock: (id: GeneratorId) => void;
   /** When set, the matching row gets a pulsing gold halo (UX §9.2 Phase 1–2). */
   viralGeneratorId?: GeneratorId | null;
   /**
@@ -134,7 +136,7 @@ const BADGE_SHAPE: Record<GeneratorCategory, string> = {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGeneratorId, onDrawerOpenChange }: Props) {
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, viralGeneratorId, onDrawerOpenChange }: Props) {
   // Track modifier pulses — when the algorithm state index changes, each
   // affected row pulses once (UX §4.4).
   const [pulseKey, setPulseKey] = useState(0);
@@ -215,6 +217,7 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, viralGenera
                 staticData={staticData}
                 onBuy={onBuy}
                 onUpgrade={onUpgrade}
+                onUnlock={onUnlock}
                 pulseKey={pulseKey}
                 viralHalo={viralGeneratorId === id}
                 isDrawerOpen={openDrawerId === id}
@@ -250,6 +253,7 @@ interface RowProps {
   staticData: StaticData;
   onBuy: (id: GeneratorId) => void;
   onUpgrade: (id: GeneratorId) => void;
+  onUnlock: (id: GeneratorId) => void;
   pulseKey: number;
   /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
   viralHalo?: boolean;
@@ -267,6 +271,7 @@ function GeneratorRow({
   state,
   staticData,
   onBuy,
+  onUnlock,
   onUpgrade: _onUpgrade, // kept in RowProps for GeneratorList to wire to drawer; not called directly by row
   pulseKey,
   viralHalo,
@@ -372,8 +377,12 @@ function GeneratorRow({
 
   if (!g.owned) {
     // Unowned, threshold met — show a full buy affordance per spec §4.2.
-    const buyCost = generatorBuyCost(id, 0, staticData);
+    // Manual-clickable gens route through unlock; passive gens through buy.
+    const def = staticData.generators[id];
+    const buyCost = def.manual_clickable ? def.base_buy_cost : generatorBuyCost(id, 0, staticData);
     const canBuy = state.player.engagement >= buyCost;
+    const handleBuy = () => def.manual_clickable ? onUnlock(id) : onBuy(id);
+    const label = def.manual_clickable ? `Unlock ${display.name}` : `Buy ${display.name}`;
     return (
       <div className="generator-row generator-row-unowned" style={style}>
         <div className={`badge hollow ${badgeShape}`}>{display.icon}</div>
@@ -382,10 +391,10 @@ function GeneratorRow({
           <ModifierChip value={effMod} pulseKey={pulseKey} />
         </div>
         <BuyButton
-          label={`Buy ${display.name}`}
+          label={label}
           costLabel={`cost: ${fmtCompact(buyCost)} engagement`}
           canBuy={canBuy}
-          onBuy={() => onBuy(id)}
+          onBuy={handleBuy}
         />
       </div>
     );

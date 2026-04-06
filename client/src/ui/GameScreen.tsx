@@ -21,17 +21,13 @@ import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useGame } from './useGame.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import {
-  CLICK_BASE_ENGAGEMENT,
-  cloutBonus,
   computeAllGeneratorEffectiveRates,
-  effectiveAlgorithmModifier,
 } from '../game-loop/index.ts';
-import { getAlgorithmModifier } from '../algorithm/index.ts';
 import { cloutForRebrand } from '../prestige/index.ts';
 import type { ActiveViralEvent, GeneratorId } from '../types.ts';
 import { AlgorithmBackground } from './AlgorithmBackground.tsx';
 import { TopBar } from './TopBar.tsx';
-import { PostZone } from './PostZone.tsx';
+import { ActionsColumn } from './ActionsColumn.tsx';
 import { GeneratorList } from './GeneratorList.tsx';
 import { PlatformPanel } from './PlatformPanel.tsx';
 import { OfflineGainsModal } from './OfflineGainsModal.tsx';
@@ -40,7 +36,7 @@ import { CloutShopModal } from './CloutShopModal.tsx';
 import { CreatorKitPanel } from './CreatorKitPanel.tsx';
 import { SettingsModal } from './SettingsModal.tsx';
 import { useSettings } from './useSettings.ts';
-import { GENERATOR_DISPLAY, PLATFORM_DISPLAY } from './display.ts';
+import { PLATFORM_DISPLAY } from './display.ts';
 import { fmtCompactInt } from './format.ts';
 import './GameScreen.css';
 
@@ -99,6 +95,7 @@ export function GameScreen() {
     click,
     buy,
     upgrade,
+    unlock,
     offlineResult,
     clearOfflineResult,
     rebrand,
@@ -129,31 +126,7 @@ export function GameScreen() {
     return total;
   }, [state]);
 
-  // Per-click engagement yield, accounting for algorithm state + clout.
-  const perClick = useMemo(() => {
-    const def = STATIC_DATA.generators.selfies;
-    const raw = getAlgorithmModifier(state.algorithm, 'selfies');
-    const algoMod = effectiveAlgorithmModifier(raw, def.trend_sensitivity);
-    const clout = cloutBonus(state.player.clout_upgrades, STATIC_DATA);
-    return CLICK_BASE_ENGAGEMENT * algoMod * clout;
-  }, [state.algorithm, state.player.clout_upgrades]);
-
-  // Derive the context sub-label: "Selfie → Chirper" or "+ auto".
-  // The "default" here is heuristic: the player's first-unlocked platform
-  // and the generator whose current contribution would land most followers
-  // on that platform. Auto-posting is active once any generator has count ≥ 1.
-  const contextLabel = useMemo(() => {
-    const anyActive = (Object.keys(state.generators) as GeneratorId[]).some(
-      (id) => state.generators[id].owned && state.generators[id].count > 0,
-    );
-    const firstPlatform = (['chirper', 'instasham', 'grindset'] as const).find(
-      (id) => state.platforms[id].unlocked,
-    );
-    const label = firstPlatform
-      ? `${GENERATOR_DISPLAY.selfies.name} → ${PLATFORM_DISPLAY[firstPlatform].name}`
-      : GENERATOR_DISPLAY.selfies.name;
-    return anyActive ? `${label}  ·  + auto` : label;
-  }, [state.generators, state.platforms]);
+  // Per-verb yield preview is now computed per-button inside ActionsColumn.
 
   // ---------------------------------------------------------------------------
   // Viral burst orchestration (UX §9)
@@ -388,10 +361,11 @@ export function GameScreen() {
         )}
 
         <div className="game-body">
-          <PostZone
-            onClick={click}
-            perClick={perClick}
-            contextLabel={contextLabel}
+          <ActionsColumn
+            state={state}
+            staticData={STATIC_DATA}
+            onClickVerb={click}
+            onUnlockVerb={unlock}
           />
           <div className="generator-column">
             <GeneratorList
@@ -399,6 +373,7 @@ export function GameScreen() {
               staticData={STATIC_DATA}
               onBuy={buy}
               onUpgrade={upgrade}
+              onUnlock={unlock}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
               onDrawerOpenChange={setUpgradeDrawerOpen}
             />

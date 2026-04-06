@@ -102,7 +102,8 @@ describe('driver — lifecycle & actions', () => {
     driver.subscribe(() => { callCount++; });
 
     const before = driver.getState().player.engagement;
-    driver.click();
+    s.advance(500); // advance past cooldown
+    driver.click('chirps');
     expect(driver.getState().player.engagement).toBeGreaterThan(before);
     expect(callCount).toBe(1);
   });
@@ -117,10 +118,12 @@ describe('driver — lifecycle & actions', () => {
     });
     let count = 0;
     const unsub = driver.subscribe(() => { count++; });
-    driver.click();
+    s.advance(500);
+    driver.click('chirps');
     expect(count).toBe(1);
     unsub();
-    driver.click();
+    s.advance(500);
+    driver.click('chirps');
     expect(count).toBe(1);
   });
 
@@ -132,20 +135,20 @@ describe('driver — lifecycle & actions', () => {
       setInterval: s.setInterval,
       clearInterval: s.clearInterval,
     });
-    // selfies threshold is 0 → starts owned. Try to buy without engagement.
+    // chirps threshold is 0 → starts owned. Try to buy without engagement.
     const errors: ActionError[] = [];
     driver.onActionError((e) => errors.push(e));
     // Suppress the default console.error for the expected failure.
     const origError = console.error;
     console.error = () => {};
     try {
-      expect(() => driver.buy('selfies')).not.toThrow();
+      expect(() => driver.buy('chirps')).not.toThrow();
     } finally {
       console.error = origError;
     }
     expect(errors).toHaveLength(1);
     expect(errors[0].action).toBe('buy');
-    expect(errors[0].context).toEqual({ generatorId: 'selfies' });
+    expect(errors[0].context).toEqual({ generatorId: 'chirps' });
     expect(errors[0].error.message).toMatch(/cannot afford/);
   });
 
@@ -162,10 +165,10 @@ describe('driver — lifecycle & actions', () => {
     const origError = console.error;
     console.error = () => {};
     try {
-      driver.buy('selfies'); // unaffordable → fires listener
+      driver.buy('chirps'); // unaffordable → fires listener
       expect(errors).toHaveLength(1);
       unsub();
-      driver.buy('selfies'); // unaffordable again → listener is gone
+      driver.buy('chirps'); // unaffordable again → listener is gone
       expect(errors).toHaveLength(1);
     } finally {
       console.error = origError;
@@ -189,13 +192,13 @@ describe('driver — tick loop', () => {
     });
     driver.start();
 
-    // Step #1: first tick should unlock selfies (threshold 0).
+    // Step #1: chirps + selfies start owned (threshold 0).
     s.advance(200);
-    // Bootstrap engagement via clicks so we can buy selfies.
-    for (let i = 0; i < 20; i++) driver.click();
-    expect(driver.getState().generators.selfies.owned).toBe(true);
-    driver.buy('selfies');
-    expect(driver.getState().generators.selfies.count).toBe(1);
+    // Bootstrap engagement via clicks (advance past cooldown each time).
+    for (let i = 0; i < 20; i++) { s.advance(500); driver.click('chirps'); }
+    expect(driver.getState().generators.chirps.owned).toBe(true);
+    driver.buy('chirps');
+    expect(driver.getState().generators.chirps.count).toBe(1);
 
     const before = driver.getState().player.engagement;
     s.advance(5_000); // 5 seconds of ticking
@@ -237,10 +240,10 @@ describe('driver — persistence', () => {
       clearInterval: s.clearInterval,
       loadFromStorage: false,
     });
-    // Generate some state
+    // Generate some state — advance clock between clicks for cooldown gate
     driver.step(1);
-    for (let i = 0; i < 20; i++) driver.click();
-    driver.buy('selfies');
+    for (let i = 0; i < 20; i++) { s.advance(500); driver.click('chirps'); }
+    driver.buy('chirps');
 
     driver.saveNow();
 
@@ -258,7 +261,7 @@ describe('driver — persistence', () => {
       setInterval: s.setInterval,
       clearInterval: s.clearInterval,
     });
-    for (let i = 0; i < 5; i++) driverA.click();
+    for (let i = 0; i < 5; i++) { s.advance(500); driverA.click('chirps'); }
     const savedEngagement = driverA.getState().player.engagement;
     driverA.saveNow();
 
@@ -290,9 +293,9 @@ describe('driver — persistence', () => {
       staticData: STATIC_DATA,
       ...sA,
     });
-    driverA.step(1);                       // unlock selfies
-    for (let i = 0; i < 30; i++) driverA.click();
-    driverA.buy('selfies');
+    driverA.step(1);                       // unlock selfies + chirps
+    for (let i = 0; i < 30; i++) { t += 500; driverA.click('chirps'); }
+    driverA.buy('chirps');
     // Tick once so there's a rate to persist in the snapshot.
     t += 1000;
     driverA.step(1000);
@@ -332,8 +335,8 @@ describe('driver — persistence', () => {
       clearInterval: () => {},
     });
     driverA.step(1);
-    for (let i = 0; i < 30; i++) driverA.click();
-    driverA.buy('selfies');
+    for (let i = 0; i < 30; i++) { t += 500; driverA.click('chirps'); }
+    driverA.buy('chirps');
     driverA.saveNow();
 
     t += 60_000;
@@ -356,7 +359,7 @@ describe('driver — persistence', () => {
       setInterval: () => 0,
       clearInterval: () => {},
     });
-    driverA.click();
+    driverA.click('chirps');
     driverA.saveNow();
     // Reopen at the same time.
     const driverB = createDriver({
@@ -380,7 +383,7 @@ describe('driver — persistence', () => {
     });
     // Bootstrap some state: enough engagement to look mid-run, some followers.
     driver.step(1);
-    for (let i = 0; i < 50; i++) driver.click();
+    for (let i = 0; i < 50; i++) driver.click('chirps');
     driver.buy('selfies');
     // Force a big follower count so rebrand awards nontrivial clout.
     const s0 = driver.getState();
@@ -411,11 +414,12 @@ describe('driver — persistence', () => {
     expect(driver.getState().player.rebrand_count).toBe(beforeRebrandCount + 1);
     expect(driver.getState().player.engagement).toBe(0);
     expect(driver.getState().player.total_followers).toBe(0);
-    // All generators reset: selfies stays owned post-rebrand because its
-    // threshold is 0 (matches fresh-start behavior).
-    expect(driver.getState().generators.selfies.owned).toBe(true);
-    expect(driver.getState().generators.selfies.count).toBe(0);
-    expect(driver.getState().generators.selfies.level).toBe(1);
+    // Chirps stays owned post-rebrand (threshold=0). Selfies is now
+    // threshold=100 and manual_clickable, so it resets to unowned.
+    expect(driver.getState().generators.chirps.owned).toBe(true);
+    expect(driver.getState().generators.chirps.count).toBe(0);
+    expect(driver.getState().generators.chirps.level).toBe(1);
+    expect(driver.getState().generators.selfies.owned).toBe(false);
   });
 
   it('buyCloutUpgrade emits an ActionError when player has no clout', () => {
@@ -504,7 +508,7 @@ describe('driver — persistence', () => {
       loadFromStorage: false,
       persistToStorage: false,
     });
-    driver.click();
+    driver.click('chirps');
     driver.saveNow();
     expect(localStorage.getItem('click_farm_save')).toBeNull();
   });
@@ -634,7 +638,7 @@ describe('driver — onSaveError', () => {
     });
     const received: SaveError[] = [];
     driver.onSaveError((e) => received.push(e));
-    driver.click();
+    driver.click('chirps');
     driver.saveNow();
     expect(received).toHaveLength(0);
     // A fresh driver loading the just-written save also emits nothing.

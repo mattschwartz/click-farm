@@ -67,9 +67,10 @@ describe('save and load', () => {
     save(state);
     const loaded = expectLoaded(load());
 
-    // selfies (threshold=0) starts owned per fresh-state rules.
-    expect(loaded.generators.selfies.owned).toBe(true);
-    expect(loaded.generators.selfies.count).toBe(0);
+    // chirps (threshold=0) starts owned; selfies (threshold=100) starts unowned.
+    expect(loaded.generators.chirps.owned).toBe(true);
+    expect(loaded.generators.chirps.count).toBe(0);
+    expect(loaded.generators.selfies.owned).toBe(false);
   });
 
   it('preserves platform follower counts independently', () => {
@@ -250,7 +251,7 @@ describe('migrate', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(8);
+    expect(result.version).toBe(9);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -388,7 +389,7 @@ describe('migrateV3toV4', () => {
 
   it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(8);
+    expect(result.version).toBe(9);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
     expect(result.state.player.creator_kit).toEqual({});
@@ -418,7 +419,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version via the chain', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(8);
+    expect(result.version).toBe(9);
     expect(result.state.player.creator_kit).toEqual({});
   });
 
@@ -447,7 +448,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(8);
+    expect(result.version).toBe(9);
     expect(result.state.player.creator_kit).toEqual({});
   });
 });
@@ -544,7 +545,7 @@ describe('migrateV5toV6', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(8);
+    expect(result.version).toBe(9);
     expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
 });

@@ -17,7 +17,7 @@ import { recomputeAllRetention } from '../audience-mood/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 8;
+const CURRENT_VERSION = 9;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -447,6 +447,45 @@ export function migrateV7toV8(data: SaveData): SaveData {
   };
 }
 
+/**
+ * Migrate a V8 save to V9 — manual-action-ladder engine refactor.
+ *
+ * Seeds two new fields:
+ *   1. `player.last_manual_click_at = {}` — empty record, no prior clicks.
+ *   2. `generators.chirps` — new starter generator (threshold=0 → owned=true,
+ *      level=1, count=0).
+ *
+ * See proposals/accepted/manual-action-ladder.md and task #119.
+ */
+export function migrateV8toV9(data: SaveData): SaveData {
+  const oldState = data.state as GameState & {
+    player: GameState['player'] & {
+      last_manual_click_at?: Record<string, number>;
+    };
+    generators: Record<string, GeneratorState>;
+  };
+
+  const generators = { ...oldState.generators } as Record<GeneratorId, GeneratorState>;
+  if (generators.chirps === undefined) {
+    generators.chirps = { id: 'chirps', owned: true, level: 1, count: 0 };
+  }
+
+  return {
+    ...data,
+    version: 9,
+    state: {
+      ...oldState,
+      generators,
+      player: {
+        ...oldState.player,
+        last_manual_click_at:
+          oldState.player.last_manual_click_at ??
+          ({} as Record<GeneratorId, number>),
+      },
+    },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -476,6 +515,10 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 7) {
     current = migrateV7toV8(current);
+  }
+
+  if (current.version === 8) {
+    current = migrateV8toV9(current);
   }
 
   if (current.version !== CURRENT_VERSION) {

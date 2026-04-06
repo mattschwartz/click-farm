@@ -131,7 +131,7 @@ export function DebugApp() {
       {/* Click --------------------------------------------------------- */}
       <section style={{ marginBottom: 16 }}>
         <button
-          onClick={click}
+          onClick={() => click('chirps')}
           style={{ padding: '12px 24px', fontSize: 16, cursor: 'pointer' }}
         >
           Post content (+engagement)

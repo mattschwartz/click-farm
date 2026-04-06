@@ -41,27 +41,6 @@ import {
 import { advanceNeglect, applyTickPosts } from '../audience-mood/index.ts';
 
 // ---------------------------------------------------------------------------
-// Tuning constants
-// ---------------------------------------------------------------------------
-
-/**
- * Base engagement produced per manual click ("one post").
- *
- * TODO(game-designer): This is a provisional tuning value. The architecture
- * spec defines generator formulas but does not specify a click formula. 1.0
- * mirrors the selfies base_engagement_rate, so hand-clicking is roughly
- * comparable to one unit of selfies-per-second. Revisit during balance pass.
- */
-export const CLICK_BASE_ENGAGEMENT = 1.0;
-
-/**
- * The generator whose algorithm modifier and trend_sensitivity are applied to
- * manual clicks. Selfies is the always-available starting generator, so the
- * click mechanic inherits its "feel".
- */
-const CLICK_GENERATOR_ID: GeneratorId = 'selfies';
-
-// ---------------------------------------------------------------------------
 // Formula helpers
 // ---------------------------------------------------------------------------
 
@@ -144,8 +123,14 @@ export function effectiveAlgorithmModifier(
  * generator, accounting for count, level, algorithm state, trend sensitivity,
  * and clout bonus.
  *
- *   effective_rate = count × base_rate × level_multiplier(level)
- *                    × effective_algorithm_modifier × clout_bonus
+ *   effective_rate = count × base_event_rate × base_event_yield
+ *                    × level_multiplier(level)
+ *                    × effective_algorithm_modifier × clout_bonus × kit_bonus
+ *
+ * The yield/rate split is per manual-action-ladder.md §OQ12. For the existing
+ * 7 generators, yield × rate = old base_engagement_rate (backward-compatible).
+ * count is NOT floored here — count=0 yields zero passive output. The max(1,
+ * count) floor applies only to the manual-cooldown gate in postClick.
  *
  * Returns 0 if the generator is not owned or count is 0.
  *
@@ -168,7 +153,8 @@ export function computeGeneratorEffectiveRate(
   const kit = kitEngagementBonus(state.player.creator_kit, staticData);
   return (
     generator.count *
-    def.base_engagement_rate *
+    def.base_event_rate *
+    def.base_event_yield *
     levelMultiplier(generator.level) *
     algoMod *
     clout *
@@ -565,33 +551,63 @@ export function computeSnapshot(
 // ---------------------------------------------------------------------------
 
 /**
- * Handle a manual click. Produces CLICK_BASE_ENGAGEMENT worth of engagement
- * modified by the current algorithm state (through selfies' trend_sensitivity)
- * and any clout_bonus.
+ * Handle a manual click on the given verb (generator). Per-verb yield/rate
+ * split from manual-action-ladder.md §OQ12. Cooldown gate per architect's
+ * re-review: `cooldownMs = 1000 / (max(1, count) × base_event_rate)`.
+ *
+ * Returns state unchanged (silent no-op) when:
+ *   - The generator is not manual_clickable
+ *   - The cooldown gate rejects (tap too soon)
  *
  * Does not produce followers directly — followers come from engagement flowing
  * through the tick pipeline.
+ *
+ * @param now Injectable clock, defaults to Date.now(). Used for cooldown gate.
  */
 export function postClick(
   state: GameState,
   staticData: StaticData,
+  verbId: GeneratorId,
+  now: number = Date.now(),
 ): GameState {
-  const selfiesDef = staticData.generators[CLICK_GENERATOR_ID];
-  const rawModifier = getAlgorithmModifier(state.algorithm, CLICK_GENERATOR_ID);
+  const def = staticData.generators[verbId];
+
+  // Gate A: reject non-manual generators (silent no-op).
+  if (!def.manual_clickable) return state;
+
+  const genState = state.generators[verbId];
+
+  // Gate B: reject unowned generators (verb not yet Unlocked).
+  if (!genState.owned) return state;
+
+  // Cooldown gate per architect's snippet: max(1, count) models the player's
+  // hand as the first actor even pre-Automate.
+  const cooldownMs =
+    1000 / (Math.max(1, genState.count) * def.base_event_rate);
+  if (now - (state.player.last_manual_click_at[verbId] ?? 0) < cooldownMs) {
+    return state;
+  }
+
+  const rawModifier = getAlgorithmModifier(state.algorithm, verbId);
   const algoMod = effectiveAlgorithmModifier(
     rawModifier,
-    selfiesDef.trend_sensitivity,
+    def.trend_sensitivity,
   );
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
   const kit = kitEngagementBonus(state.player.creator_kit, staticData);
 
-  const earned = CLICK_BASE_ENGAGEMENT * algoMod * clout * kit;
+  const earned = def.base_event_yield * levelMultiplier(genState.level) *
+    algoMod * clout * kit;
 
   return {
     ...state,
     player: {
       ...state.player,
       engagement: clampEngagement(state.player.engagement + earned),
+      last_manual_click_at: {
+        ...state.player.last_manual_click_at,
+        [verbId]: now,
+      },
     },
   };
 }

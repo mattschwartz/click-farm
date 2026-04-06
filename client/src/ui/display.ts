@@ -35,6 +35,13 @@ export interface GeneratorDisplay {
 }
 
 export const GENERATOR_DISPLAY: Record<GeneratorId, GeneratorDisplay> = {
+  chirps: {
+    name: 'Chirps',
+    icon: '💬',
+    category: 'starter',
+    color: '#4d9ef0',
+    tagline: 'Quick text posts — your voice in 280 characters.',
+  },
   selfies: {
     name: 'Selfies',
     icon: '🤳',
@@ -113,6 +120,7 @@ export const GENERATOR_DISPLAY: Record<GeneratorId, GeneratorDisplay> = {
  * grouped under category dividers." Muscle memory builds from this.
  */
 export const GENERATOR_ORDER: readonly GeneratorId[] = [
+  'chirps',
   'selfies',
   'memes',
   'hot_takes',
