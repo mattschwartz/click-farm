@@ -3308,8 +3308,37 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   bottom: 16px;
   left: 16px;
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   z-index: 100;
+}
+
+.alpha-label {
+  width: 100%;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 54px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.55);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.15),
+    0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 0 10px rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.alpha-version {
+  width: 100%;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.55);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.15),
+    0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 0 10px rgba(255, 255, 255, 0.08);
+  pointer-events: none;
 }
 
 /* --- Settings / mute button ---------------------------------------------- */

@@ -502,6 +502,8 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
           4s hold, 600ms fade-out. Never shown after rebrand_count >= 2. */}
       {/* Floating bottom-left toolbar — mute + settings */}
       <div className="floating-toolbar">
+        <span className="alpha-label">ALPHA</span>
+        <span className="alpha-version">v0.1.0</span>
         <button
           type="button"
           className="settings-gear-btn"
