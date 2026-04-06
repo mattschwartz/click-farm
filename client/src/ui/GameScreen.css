@@ -625,7 +625,7 @@
   overflow: hidden;
 }
 .ghost-promise {
-  height: 60px;
+  height: 80px;
   opacity: 0.5;
   cursor: default;
   background: #E8E4DF;
