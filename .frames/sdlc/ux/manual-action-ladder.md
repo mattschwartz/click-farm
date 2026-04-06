@@ -2,7 +2,7 @@
 
 > **Scope:** Defines the Actions-column layout, ghost-slot anatomy, live-verb-button anatomy, spotlight-slot transition, mobile anchor dynamics, scroll affordance, empty/edge states, per-verb iconography, motion briefs, and accessibility for the 5-verb manual action ladder (chirps → selfies → livestreams → podcasts → viral_stunts). This is the player-facing surface of the Unlock → Upgrade → Automate lifecycle.
 >
-> **Not in scope:** LVL UP / BUY / Autoclicker purchase UI — all three tracks live in the Generators center column per `proposals/draft/20260406-purchase-button-location.md`; the action button slab carries no purchase controls (separate spec pass needed for Generators-column layout). Brand-deal card (see `ux/brand-deal-card.md`, `ux/gig-cards.md`). Upgrade purchase flow (see `ux/purchase-feedback-and-rate-visibility.md`). Platform affinity visuals on verb cards (deferred — see §12 OQ2).
+> **Not in scope:** LVL UP / BUY / Autoclicker purchase UI — all three tracks live in the Generators center column per `proposals/accepted/20260406-purchase-button-location.md`; the action button slab carries no purchase controls (separate spec pass needed for Generators-column layout). Brand-deal card (see `ux/brand-deal-card.md`, `ux/gig-cards.md`). Upgrade purchase flow (see `ux/purchase-feedback-and-rate-visibility.md`). Platform affinity visuals on verb cards (deferred — see §12 OQ2).
 >
 > **Implements:** `proposals/accepted/manual-action-ladder.md` — ux-designer follow-up commitment (review log lines 578–580, OQ3 + OQ6 resolutions).
 >
