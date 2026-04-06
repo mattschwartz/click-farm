@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(bash .frames/sdlc/tools/board.sh*)",
-      "Bash(bash .frames/sdlc/tools/task.sh*)"
+      "Bash(bash .frames/sdlc/tools/task.sh*)",
+      "Bash(bash .frames/sdlc/tools/accessibility-checker.sh*)"
     ]
   },
   "env": {
