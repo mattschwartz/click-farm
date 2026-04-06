@@ -11,7 +11,7 @@
 //    so the context is always running by the time play() fires.
 
 import clickSfx from '../assets/click.wav';
-import purchaseSfx from '../assets/purchase.wav';
+import purchaseSfx from '../assets/purchase.mp3';
 import ost01 from '../assets/djart-ost/djartmusic-8-bit-console-from-my-childhood-301286.mp3';
 import ost02 from '../assets/djart-ost/djartmusic-best-game-console-301284.mp3';
 import ost03 from '../assets/djart-ost/djartmusic-fun-with-my-8-bit-game-301278.mp3';
