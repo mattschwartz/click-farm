@@ -24,8 +24,12 @@ import type {
 } from '../types.ts';
 
 // ---------------------------------------------------------------------------
-// Generators — 7 base content types (selfies through viral_stunts)
+// Generators — 8 base content types (chirps through viral_stunts)
 // Unlock thresholds create a progressive arc. Balance values are provisional.
+//
+// base_event_yield × base_event_rate = passive engagement/sec at count=1,
+// level=1. For the existing 7, this product preserves the old
+// base_engagement_rate. See manual-action-ladder.md §14a/§14b/§OQ12.
 // ---------------------------------------------------------------------------
 
 // Generator buy/upgrade costs follow two formulas:
@@ -41,9 +45,26 @@ import type {
 // pass (task #88).
 
 const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
+  // §14c — starter verb, unlocked at 0, 0.4s manual cooldown
+  chirps: {
+    id: 'chirps',
+    base_event_yield: 1,
+    base_event_rate: 2.5,
+    manual_clickable: true,
+    follower_conversion_rate: 0.07,
+    trend_sensitivity: 0.7,
+    unlock_threshold: 0,
+    base_buy_cost: 2,
+    buy_cost_multiplier: 1.15,
+    base_upgrade_cost: 20,
+    max_level: 10,
+  },
+  // §14a — ladder verb, 2.5s manual cooldown. yield×rate = 1.0 (preserved).
   selfies: {
     id: 'selfies',
-    base_engagement_rate: 1.0,
+    base_event_yield: 2.5,
+    base_event_rate: 0.4,
+    manual_clickable: true,
     follower_conversion_rate: 0.10,
     trend_sensitivity: 0.3,  // low — always somewhat relevant
     unlock_threshold: 0,
@@ -52,9 +73,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 100,
     max_level: 10,
   },
+  // §14b — passive-only. yield=1, rate=5.0 (preserved).
   memes: {
     id: 'memes',
-    base_engagement_rate: 5.0,
+    base_event_yield: 1,
+    base_event_rate: 5.0,
+    manual_clickable: false,
     follower_conversion_rate: 0.08,
     trend_sensitivity: 0.8,  // high — very trend-sensitive
     unlock_threshold: 50,
@@ -63,9 +87,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 1_000,
     max_level: 10,
   },
+  // §14b — passive-only. yield=1, rate=12.0 (preserved).
   hot_takes: {
     id: 'hot_takes',
-    base_engagement_rate: 12.0,
+    base_event_yield: 1,
+    base_event_rate: 12.0,
+    manual_clickable: false,
     follower_conversion_rate: 0.05,
     trend_sensitivity: 0.9,  // very high — peaks hard, tanks hard
     unlock_threshold: 200,
@@ -74,9 +101,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 11_000,
     max_level: 10,
   },
+  // §14b — passive-only. yield=1, rate=30.0 (preserved).
   tutorials: {
     id: 'tutorials',
-    base_engagement_rate: 30.0,
+    base_event_yield: 1,
+    base_event_rate: 30.0,
+    manual_clickable: false,
     follower_conversion_rate: 0.07,
     trend_sensitivity: 0.1,  // nearly immune — steady, reliable, boring
     unlock_threshold: 1_000,
@@ -85,9 +115,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 120_000,
     max_level: 10,
   },
+  // §14a — ladder verb, 10s manual cooldown. yield×rate = 80.0 (preserved).
   livestreams: {
     id: 'livestreams',
-    base_engagement_rate: 80.0,
+    base_event_yield: 800,
+    base_event_rate: 0.1,
+    manual_clickable: true,
     follower_conversion_rate: 0.09,
     trend_sensitivity: 0.6,  // moderate — benefits from trending but survives without
     unlock_threshold: 5_000,
@@ -96,9 +129,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 1_300_000,
     max_level: 10,
   },
+  // §14a — ladder verb, 30s manual cooldown. yield×rate ≈ 150.0.
   podcasts: {
     id: 'podcasts',
-    base_engagement_rate: 150.0,
+    base_event_yield: 4_545,
+    base_event_rate: 0.033,
+    manual_clickable: true,
     follower_conversion_rate: 0.11,
     trend_sensitivity: 0.2,  // low — slow build, compounding returns
     unlock_threshold: 20_000,
@@ -107,9 +143,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 14_000_000,
     max_level: 10,
   },
+  // §14a — ladder verb, 120s manual cooldown. yield×rate ≈ 500.0.
   viral_stunts: {
     id: 'viral_stunts',
-    base_engagement_rate: 500.0,
+    base_event_yield: 60_240,
+    base_event_rate: 0.0083,
+    manual_clickable: true,
     follower_conversion_rate: 0.06,
     trend_sensitivity: 1.0,  // maximum — massive spikes, algorithm-dependent
     unlock_threshold: 100_000,
@@ -124,15 +163,17 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // unlock_threshold here is set to Infinity for documentary clarity — the
   // checkGeneratorUnlocks pathway reads from unlockThresholds, not this field.
   //
-  // Stats per clout-upgrade-menu.md (base_engagement_rate relative to
-  // viral_stunts: 8× / 15× / 40×). Buy/upgrade costs continue the ~10× per-
-  // tier ramp from the base generators.
+  // Stats per clout-upgrade-menu.md (yield×rate relative to viral_stunts:
+  // 8× / 15× / 40×). Backward-compatible seed: yield=1.0, rate=old value.
+  // Buy/upgrade costs continue the ~10× per-tier ramp from the base generators.
   // TODO(game-designer): buy/upgrade costs are provisional — tune during
   // post-prestige balance pass.
   // -------------------------------------------------------------------------
   ai_slop: {
     id: 'ai_slop',
-    base_engagement_rate: 4_000.0,   // 8× viral_stunts
+    base_event_yield: 1,
+    base_event_rate: 4_000.0,        // 8× viral_stunts
+    manual_clickable: false,
     follower_conversion_rate: 0.6,
     trend_sensitivity: 0.1,           // nearly algorithm-immune — volume wins
     unlock_threshold: Infinity,
@@ -143,7 +184,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   },
   deepfakes: {
     id: 'deepfakes',
-    base_engagement_rate: 7_500.0,   // 15× viral_stunts
+    base_event_yield: 1,
+    base_event_rate: 7_500.0,        // 15× viral_stunts
+    manual_clickable: false,
     follower_conversion_rate: 0.3,
     trend_sensitivity: 0.95,          // highest — volatile, algorithm-dependent
     unlock_threshold: Infinity,
@@ -154,7 +197,9 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   },
   algorithmic_prophecy: {
     id: 'algorithmic_prophecy',
-    base_engagement_rate: 20_000.0,  // 40× viral_stunts
+    base_event_yield: 1,
+    base_event_rate: 20_000.0,       // 40× viral_stunts
+    manual_clickable: false,
     follower_conversion_rate: 0.5,
     trend_sensitivity: 0.5,
     unlock_threshold: Infinity,
@@ -176,6 +221,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
   chirper: {
     id: 'chirper',
     content_affinity: {
+      chirps: 1.5,             // §14c — tweet-native
       selfies: 0.8,
       memes: 1.6,
       hot_takes: 2.0,
@@ -194,6 +240,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
   instasham: {
     id: 'instasham',
     content_affinity: {
+      chirps: 1.0,             // §14c — neutral
       selfies: 2.0,
       memes: 1.2,
       hot_takes: 0.5,
@@ -210,6 +257,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
   grindset: {
     id: 'grindset',
     content_affinity: {
+      chirps: 0.6,             // §14c — too ephemeral
       selfies: 0.5,
       memes: 0.5,
       hot_takes: 0.7,
@@ -239,6 +287,7 @@ const ALGORITHM_STATE_DEFS: Record<AlgorithmStateId, AlgorithmStateDef> = {
   short_form_surge: {
     id: 'short_form_surge',
     state_modifiers: {
+      chirps: 1.7,             // §14c
       selfies: 1.2,
       memes: 1.8,
       hot_takes: 1.6,
@@ -254,6 +303,7 @@ const ALGORITHM_STATE_DEFS: Record<AlgorithmStateId, AlgorithmStateDef> = {
   authenticity_era: {
     id: 'authenticity_era',
     state_modifiers: {
+      chirps: 0.8,             // §14c
       selfies: 1.8,
       memes: 0.7,
       hot_takes: 0.5,
@@ -269,6 +319,7 @@ const ALGORITHM_STATE_DEFS: Record<AlgorithmStateId, AlgorithmStateDef> = {
   engagement_bait: {
     id: 'engagement_bait',
     state_modifiers: {
+      chirps: 1.5,             // §14c
       selfies: 0.8,
       memes: 1.5,
       hot_takes: 2.0,
@@ -284,6 +335,7 @@ const ALGORITHM_STATE_DEFS: Record<AlgorithmStateId, AlgorithmStateDef> = {
   nostalgia_wave: {
     id: 'nostalgia_wave',
     state_modifiers: {
+      chirps: 1.0,             // §14c
       selfies: 1.5,
       memes: 1.7,
       hot_takes: 0.8,
@@ -299,6 +351,7 @@ const ALGORITHM_STATE_DEFS: Record<AlgorithmStateId, AlgorithmStateDef> = {
   corporate_takeover: {
     id: 'corporate_takeover',
     state_modifiers: {
+      chirps: 0.7,             // §14c
       selfies: 0.7,
       memes: 0.6,
       hot_takes: 0.9,
@@ -496,6 +549,7 @@ export const STATIC_DATA: StaticData = {
     // upgrades in applyRebrand, never by follower threshold. See
     // architecture/core-systems.md §CloutUpgrade.
     generators: {
+      chirps: GENERATOR_DEFS.chirps.unlock_threshold,
       selfies: GENERATOR_DEFS.selfies.unlock_threshold,
       memes: GENERATOR_DEFS.memes.unlock_threshold,
       hot_takes: GENERATOR_DEFS.hot_takes.unlock_threshold,

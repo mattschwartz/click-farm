@@ -105,6 +105,17 @@ export interface GameDriver {
   /** Subscribe to state changes. Returns unsubscribe. */
   subscribe(listener: StateListener): Unsubscribe;
   /** Player actions — each returns void and triggers a state update. */
+  /**
+   * Manual click on a specific verb (generator). Dispatches through postClick
+   * with cooldown gating and per-verb yield.
+   */
+  click(verbId: GeneratorId): void;
+  /**
+   * Zero-arg shim — routes to click('chirps'). Temporary compatibility bridge
+   * for existing call sites (GameScreen, tests) until the per-verb UI ladder
+   * ships in E4 and replaces all zero-arg click() calls.
+   * TODO(E4): remove this shim when the Actions column ladder is wired.
+   */
   click(): void;
   buy(generatorId: GeneratorId): void;
   upgrade(generatorId: GeneratorId): void;
@@ -353,9 +364,11 @@ export function createDriver(options: DriverOptions): GameDriver {
       return () => listeners.delete(listener);
     },
 
-    click() {
-      runAction('click', {}, () => {
-        applyState(postClick(state, staticData));
+    click(verbId?: GeneratorId) {
+      // TODO(E4): remove zero-arg shim when the Actions column ladder is wired.
+      const id = verbId ?? 'chirps';
+      runAction('click', { verbId: id }, () => {
+        applyState(postClick(state, staticData, id, now()));
       });
     },
 

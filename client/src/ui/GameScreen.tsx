@@ -21,11 +21,12 @@ import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useGame } from './useGame.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import {
-  CLICK_BASE_ENGAGEMENT,
   cloutBonus,
   computeAllGeneratorEffectiveRates,
   effectiveAlgorithmModifier,
+  levelMultiplier,
 } from '../game-loop/index.ts';
+import { kitEngagementBonus } from '../creator-kit/index.ts';
 import { getAlgorithmModifier } from '../algorithm/index.ts';
 import { cloutForRebrand } from '../prestige/index.ts';
 import type { ActiveViralEvent, GeneratorId } from '../types.ts';
@@ -129,14 +130,18 @@ export function GameScreen() {
     return total;
   }, [state]);
 
-  // Per-click engagement yield, accounting for algorithm state + clout.
+  // Per-click engagement yield for chirps (the default verb during the shim
+  // window). Uses the per-verb formula: base_event_yield × level_multiplier ×
+  // algoMod × clout × kit. TODO(E4): generalise for the full action ladder.
   const perClick = useMemo(() => {
-    const def = STATIC_DATA.generators.selfies;
-    const raw = getAlgorithmModifier(state.algorithm, 'selfies');
+    const def = STATIC_DATA.generators.chirps;
+    const genState = state.generators.chirps;
+    const raw = getAlgorithmModifier(state.algorithm, 'chirps');
     const algoMod = effectiveAlgorithmModifier(raw, def.trend_sensitivity);
     const clout = cloutBonus(state.player.clout_upgrades, STATIC_DATA);
-    return CLICK_BASE_ENGAGEMENT * algoMod * clout;
-  }, [state.algorithm, state.player.clout_upgrades]);
+    const kit = kitEngagementBonus(state.player.creator_kit, STATIC_DATA);
+    return def.base_event_yield * levelMultiplier(genState.level) * algoMod * clout * kit;
+  }, [state.algorithm, state.player.clout_upgrades, state.player.creator_kit, state.generators.chirps]);
 
   // Derive the context sub-label: "Selfie → Chirper" or "+ auto".
   // The "default" here is heuristic: the player's first-unlocked platform
@@ -150,8 +155,8 @@ export function GameScreen() {
       (id) => state.platforms[id].unlocked,
     );
     const label = firstPlatform
-      ? `${GENERATOR_DISPLAY.selfies.name} → ${PLATFORM_DISPLAY[firstPlatform].name}`
-      : GENERATOR_DISPLAY.selfies.name;
+      ? `${GENERATOR_DISPLAY.chirps.name} → ${PLATFORM_DISPLAY[firstPlatform].name}`
+      : GENERATOR_DISPLAY.chirps.name;
     return anyActive ? `${label}  ·  + auto` : label;
   }, [state.generators, state.platforms]);
 

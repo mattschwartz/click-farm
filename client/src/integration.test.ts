@@ -45,7 +45,9 @@ describe('integration — end-to-end play loop', () => {
     expect(driver.getState().generators.selfies.owned).toBe(true);
 
     // 2. Click to bootstrap engagement past selfies buy cost (10).
-    for (let i = 0; i < 15; i++) driver.click();
+    //    Advance time between clicks to satisfy the per-verb cooldown gate
+    //    (chirps cooldown = 400ms at count=0).
+    for (let i = 0; i < 15; i++) { t += 500; driver.click(); }
     expect(driver.getState().player.engagement).toBeGreaterThanOrEqual(10);
 
     // 3. Buy selfies — engagement drains.
@@ -57,7 +59,7 @@ describe('integration — end-to-end play loop', () => {
     // 4. Advance time — ticks produce engagement AND followers.
     // Need enough to unlock instasham (100 followers). Buy many selfies
     // by repeatedly clicking + buying. At level 1 this is slow, so fast-forward.
-    for (let i = 0; i < 200; i++) driver.click();
+    for (let i = 0; i < 200; i++) { t += 500; driver.click(); }
     // Buy until a purchase fails (driver surfaces failure via onActionError
     // rather than throwing). Count-not-changing is a fallback guard.
     let failed = false;
@@ -160,21 +162,21 @@ describe('integration — end-to-end play loop', () => {
   });
 
   it('currency conservation: engagement spent == engagement removed from balance', () => {
-    const t = 1_000_000;
+    let t = 1_000_000;
     const driver = createDriver({
       staticData: STATIC_DATA,
       now: () => t,
       loadFromStorage: false,
       persistToStorage: false,
     });
-    driver.step(1); // unlock selfies
-    for (let i = 0; i < 50; i++) driver.click();
+    driver.step(1); // unlock selfies + chirps
+    for (let i = 0; i < 50; i++) { t += 500; driver.click(); }
 
     const before = driver.getState().player.engagement;
-    // selfies buy cost at count=0 is ceil(10 × 1.15^0) = 10
-    driver.buy('selfies');
+    // chirps buy cost at count=0 is ceil(2 × 1.15^0) = 2
+    driver.buy('chirps');
     const after = driver.getState().player.engagement;
-    expect(before - after).toBe(10);
+    expect(before - after).toBe(2);
   });
 
   it('follower totals stay consistent with platform sums across a long run', () => {
@@ -186,7 +188,7 @@ describe('integration — end-to-end play loop', () => {
       persistToStorage: false,
     });
     driver.step(1);
-    for (let i = 0; i < 200; i++) driver.click();
+    for (let i = 0; i < 200; i++) { t += 500; driver.click(); }
     // Buy until a purchase fails (see comment in upstream integration test).
     let failed2 = false;
     const unsub2 = driver.onActionError(() => { failed2 = true; });
@@ -249,7 +251,7 @@ describe('integration — save/reload round-trip', () => {
       persistToStorage: true,
     });
     driverA.step(1);
-    for (let i = 0; i < 30; i++) driverA.click();
+    for (let i = 0; i < 30; i++) { t += 500; driverA.click(); }
     driverA.buy('selfies');
     t += 10_000;
     driverA.step(10_000);
