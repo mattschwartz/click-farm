@@ -39,6 +39,15 @@ function hexToRgb(hex: string): string {
   return `${(n >> 16) & 0xff}, ${(n >> 8) & 0xff}, ${n & 0xff}`;
 }
 
+/** Darken a hex color by a factor (0–1) for the bottom depth shadow. */
+function darkenHex(hex: string, factor: number = 0.3): string {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round(((n >> 16) & 0xff) * (1 - factor));
+  const g = Math.round(((n >> 8) & 0xff) * (1 - factor));
+  const b = Math.round((n & 0xff) * (1 - factor));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+}
+
 // Manual-clickable ladder verbs in unlock order (proposal §14d).
 const LADDER_VERBS: GeneratorId[] = [
   'chirps',
@@ -144,6 +153,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
       className={`live-verb-btn${isSpotlight ? ' live-verb-spotlight' : ''}${isReady || atFloor ? ' live-verb-ready' : ' live-verb-cooldown'}`}
       style={{
         '--verb-color': color,
+        '--verb-color-dark': darkenHex(color),
         '--verb-color-rgb': hexToRgb(color),
         '--cd-fill': `${fillHeight}%`,
       } as React.CSSProperties}
@@ -155,7 +165,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
         <span className="verb-icon">{display.icon}</span>
         <span className="verb-name">{display.name.toUpperCase()}</span>
         {genState.count > 0 && (
-          <span className="verb-badge" style={{ color, backgroundColor: `${color}40` }}>
+          <span className="verb-badge">
             x{genState.count}
           </span>
         )}
@@ -164,7 +174,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
       <span className="verb-data">
         <span className="verb-yield">{fmtCompact(perTap)} eng/tap</span>
         {(isReady || atFloor) && (
-          <span className="verb-pulse" style={{ backgroundColor: color }}>
+          <span className="verb-pulse">
             {lastTap === 0 ? 'ready' : ''}
           </span>
         )}
