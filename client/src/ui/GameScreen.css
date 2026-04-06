@@ -326,7 +326,7 @@
 .actions-scroll-region {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
   overflow-y: auto;
   padding: 10px 10px 8px;
   min-height: 0;
