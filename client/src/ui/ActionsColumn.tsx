@@ -179,9 +179,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
 
   return (
     <div className="verb-btn-wrap">
-      {genState.count > 0 && (
-        <span className="verb-badge">x{genState.count}</span>
-      )}
+      <span className="verb-badge">+{fmtCompact(perTap)}</span>
       <button
         ref={btnRef}
         className={`live-verb-btn${isSpotlight ? ' live-verb-spotlight' : ''}${isReady || atFloor ? ' live-verb-ready' : ' live-verb-cooldown'}`}
@@ -204,7 +202,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
           {!VERB_IMAGE[verbId] && <span className="verb-icon">{display.icon}</span>}
           <span className="verb-name-group">
             <span className="verb-name">{display.name.toUpperCase()}</span>
-            <span className="verb-rate">+{fmtCompact(perTap)}</span>
+            {genState.count > 0 && <span className="verb-rate">x{genState.count}</span>}
           </span>
         </span>
 
