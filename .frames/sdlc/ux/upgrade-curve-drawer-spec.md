@@ -1,14 +1,14 @@
 # Upgrade Curve Drawer — UX Spec
 
-> **Scope:** Specifies the drawer that opens when a player taps the upgrade affordance (⬆) on a generator row. Covers layout, content, interaction states, and motion. The drawer shows the generator's upgrade path — current level, next 3 levels, costs, and rate deltas — and is the surface where the player commits to level upgrades.
+> **Scope:** Specifies the drawer that opens when a player taps a generator row (not a purchase pill). Covers layout, content, interaction states, and motion. The drawer shows the generator's LVL UP path — current level, next 3 levels, costs, and cooldown deltas — and is the deliberate "plan my upgrades" surface. For the fast-path purchase pills (LVL/BUY/AUTO), see `ux/generator-purchase-pills.md`.
 >
-> **Not in scope:** The Buy button and purchase-moment feedback (see `ux/purchase-feedback-and-rate-visibility.md`), the Clout Shop upgrade modal (see `ux/prestige-rebrand-screen.md` §3).
+> **Not in scope:** Purchase pills (see `ux/generator-purchase-pills.md`). BUY/Autoclicker purchase feedback (see `ux/purchase-feedback-and-rate-visibility.md`). Clout Shop upgrade modal (see `ux/prestige-rebrand-screen.md` §3).
 >
-> **Implements:** `ux/core-game-screen.md` §6.3 (upgrade interaction — which gestures at this drawer without specifying it).
+> **Implements:** `ux/core-game-screen.md` §6.3 (upgrade interaction — deliberate path).
 >
-> **Against contract:** `architecture/core-systems.md` — `Generator.level`, level_multiplier formula, effective engagement rate.
+> **Against contract:** `architecture/core-systems.md` — `Generator.level`, `generatorUpgradeCost` formula, effective engagement rate. `proposals/accepted/level-driven-manual-cooldown.md` — level drives cooldown (`max(50, 1000 / (level × base_event_rate))`), not yield.
 >
-> **Relies on:** level multiplier curve — `level_multiplier(level) = 2^(level² / 5)` per `proposals/draft/level-multiplier-curve.md`.
+> **Relies on:** level multiplier curve — `level_multiplier(level) = 2^(level² / 5)` per `proposals/draft/level-multiplier-curve.md`. Note: under the three-axis model, `level_multiplier` is used for upgrade *cost* scaling only — it no longer appears in the per-tap yield formula (yield is now `base_event_yield × (1 + count)`).
 
 ---
 
@@ -25,7 +25,7 @@
 
 ## 1. Trigger & Position
 
-- **Trigger:** tap on the upgrade button (⬆) on any owned generator row, OR tap anywhere on an owned generator row (see §6 — row-level affordance)
+- **Trigger:** tap anywhere on an owned generator row (see §6 — row-level affordance), EXCEPT on a purchase pill (pills fire purchases directly per `ux/generator-purchase-pills.md`). The LVL pill on the row provides the fast path; this drawer provides the deliberate path for planning multi-level upgrades.
 - **Position:** drawer slides out from the **right edge of the tapped row**
 - **Width:** 340px
 - **Height:** ~260px (enough for header + current-level readout + 3 level rows + footer close)

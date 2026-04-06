@@ -55,12 +55,12 @@ Desktop canvas, 1280×800 reference.
 │   (320px)           │   (flex)             │   (280px)      │
 │                     │                      │                │
 │   ┌───────────┐     │   [category: STARTER]│   ┌──────────┐ │
-│   │           │     │   ▸ Selfies   ×N  ⬆  │   │ Chirper  │ │
-│   │   POST    │     │   ▸ Memes     ×N  ⬆  │   │  12.4K   │ │
+│   │           │     │   ▸ Selfies ×N [L][B][A]│  │ Chirper  │ │
+│   │   POST    │     │   ▸ Memes  ×N     [B]│   │  12.4K   │ │
 │   │           │     │                      │   │ [affin.] │ │
 │   │   +12     │     │   [category: MID]    │   │ [mood]   │ │
-│   │           │     │   ▸ Hot Takes ×N  ⬆  │   └──────────┘ │
-│   └───────────┘     │   ▸ Tutorials ×N  ⬆  │   ┌──────────┐ │
+│   │           │     │   ▸ Hot Takes ×N  [B]│   └──────────┘ │
+│   └───────────┘     │   ▸ Tutorials ×N  [B]│   ┌──────────┐ │
 │                     │                      │   │InstaSham │ │
 │   [rate display]    │   [category: LATE]   │   │   8.1K   │ │
 │                     │   ▸ Livestreams      │   │ [affin.] │ │
@@ -95,7 +95,7 @@ Per the UX review on the core proposal, three currencies at three speeds map cle
 | **P1 — Secondary** | Total Followers, per-platform follower counts | Medium numerals, secondary contrast | Top bar (total) + right panel (per-platform) |
 | **P1 — Ambient** | Algorithm state name + mood | Name medium, mood environmental | Top bar left + background layer |
 | **P2 — Strategic** | Generator rows (count, rate, upgrade cost) | Standard text weight | Center column |
-| **P2 — Situational** | Upgrade affordances, unlock teasers | Compact, in-row | Right edge of generator rows |
+| **P2 — Situational** | Purchase pills (LVL/BUY/AUTO), unlock teasers | Compact, in-row | Right edge of generator rows |
 | **P3 — On-demand** | Individual generator detail, upgrade curves, history | Drawer / modal | Behind tap on generator row |
 | **P3 — Elsewhere** | Clout | Not on this screen | Prestige screen |
 
@@ -214,25 +214,29 @@ Per AC: visual language must scale beyond 8 types. The scaling strategy is four 
 ### 6.2 Row anatomy
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  [badge]  Icon  Name            Count  Rate  [chip]  ⬆  │
-│           32px  weight 500      (×N)   /sec  (×1.8)     │
-└─────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│  [badge]  Icon  Name       ×N  +18/s  [×1.8▲]   [LVL] [BUY] [AUTO] │
+│           32px  wt 500     ct  rate   chip        pill   pill  pill  │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Badge:** Category shape, holds icon. 32px.
 - **Name:** 16px weight 500.
-- **Count (×N):** How many owned. 14px.
+- **Count (×N):** BUY count (yield multiplier). 14px.
 - **Rate:** Effective engagement/sec from this generator line. 14px.
 - **Modifier chip:** Current algorithm effect (§4.5).
-- **Upgrade button (⬆):** Primary affordance. Cost shown on hover/tap; executes on confirm tap (see §6.3).
+- **Purchase pills** (LVL / BUY / AUTO): three compact inline pill buttons, right-aligned. Full spec in `ux/generator-purchase-pills.md`. Manual-clickable verbs show all three; passive-only generators show BUY only. Tapping a row (not a pill) opens the upgrade curve drawer (§6.3).
 
 ### 6.3 Upgrade interaction
 
-- **Default (hover on desktop):** cost appears next to the upgrade button as a ghost label
-- **On tap:** drawer slides out from right of row, showing upgrade path (next 3 levels), cost, and effect delta
+Two purchase paths coexist on each generator row:
+
+**Fast path — purchase pills (LVL / BUY / AUTO):** tapping a pill fires the purchase immediately. No drawer opens. Cost is shown via hover/long-press ghost label on the pill. Full spec in `ux/generator-purchase-pills.md`.
+
+**Deliberate path — upgrade curve drawer:** tapping the row itself (not a pill) opens the drawer, showing the level-up upgrade path (next 3 levels, costs, rate deltas). Full spec in `ux/upgrade-curve-drawer-spec.md`.
+
 - **Confirm in drawer:** spends engagement, row pulses briefly (scale 1.0 → 1.02 → 1.0, 250ms), rate updates, counter ticks down to new value
-- **Insufficient engagement:** button shows disabled state (3:1 contrast, not faded out), cost ghost-label in amber
+- **Insufficient engagement:** pill shows unaffordable state (receded grey, transparent background); drawer shows disabled Upgrade button (3:1 contrast)
 
 ### 6.4 Unowned / locked generators
 
@@ -372,11 +376,11 @@ Viral events must remain rare enough to retain their weight. Target: a fully-eng
 
 The UX review flagged this as "the single biggest UX challenge in the proposal." Here's how this spec resolves it.
 
-**The problem:** at mid-game, the screen carries engagement + total followers + 3 platform follower counts + 5–8 generator rows with modifier chips + algorithm state + upgrade affordances. That's 15–20 live elements.
+**The problem:** at mid-game, the screen carries engagement + total followers + 3 platform follower counts + 5–8 generator rows with modifier chips + purchase pills + algorithm state. That's 15–20 live elements.
 
 **The resolution:** three-tier zoning + strict hierarchy.
 
-1. **Top bar is sacred.** Only P0 + P1 live there. No generator info, no upgrade affordances, no secondary CTAs.
+1. **Top bar is sacred.** Only P0 + P1 live there. No generator info, no purchase controls, no secondary CTAs.
 2. **Generators own the center.** The list is long but has category grouping, stable order, and consistent row anatomy — the player reads it as a ledger, not as 8 competing elements.
 3. **Platforms are peripheral persistence.** Right-side cards do not compete for attention — they provide glanceable context.
 4. **Detail is on-demand.** Upgrade curves, generator stats, platform affinity breakdowns live behind tap interactions. The main screen never shows them all at once.
@@ -428,7 +432,7 @@ Quick reference for all named motion.
 | Instability intensification | Approaching shift | Scales over final 20% of interval | linear | Something is coming |
 | Shift transition | Shift moment | 1.2s | ease-in-out | Weather changed |
 | Modifier chip pulse | Shift affecting row | 400ms | ease-out | This generator was affected |
-| Upgrade confirm pulse | Upgrade purchase | 250ms | ease-out | Upgrade applied |
+| Purchase confirm pulse | Purchase via pill or drawer | 250ms | ease-out | Purchase applied |
 | Unlock fill | Crossing unlock threshold | 400ms | ease-out | New thing available |
 | Viral build | Viral event start | 1500ms | ease-in | Something big is starting |
 | Viral peak tick-rate | Viral sustained | event duration | arc | This is the peak |

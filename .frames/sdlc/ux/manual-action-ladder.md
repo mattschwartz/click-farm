@@ -29,7 +29,7 @@ Calls this spec makes beyond what the accepted proposal locked in. Each is flagg
 
 ## 1. Emotional Arc — The Ladder Moment
 
-The ladder's progression arc is **per-verb** (unlock → upgrade → automate) and **session-wide** (1 verb → 5 verbs + ghost → full instrument panel). Every element in the column should know which beat of which arc it serves.
+The ladder's progression arc is **per-verb** (unlock → LVL UP → BUY → autoclicker) and **session-wide** (1 verb → 5 verbs + ghost → full instrument panel). Every element in the column should know which beat of which arc it serves.
 
 ### Session-level arc
 

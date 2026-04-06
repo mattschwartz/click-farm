@@ -51,8 +51,8 @@ Vertical stack, top to bottom:
 ├────────────────────────────┤
 │                            │
 │  GENERATOR LIST    (flex)  │  ← vertical scroll
-│  ▸ Selfies ×3         [⬆] │
-│  ▸ Memes ×1           [⬆] │
+│  ▸ Selfies ×3   [L][B][A] │
+│  ▸ Memes ×1          [B] │
 │  ▸ Hot Takes (locked)     │
 │  ...                       │
 │                            │
@@ -153,23 +153,25 @@ Same treatment as desktop §7.3, sized to mobile card dimensions. Unlock transit
 Row height: **88px** (up from ~56px desktop).
 
 ```
-┌────────────────────────────────────────────┐
-│  [badge]  Name                  ×N  [chip] │  ← line 1 (28px)
-│   40px    Rate /sec  cost: N         [⬆]  │  ← line 2 (20px + button)
-└────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│  [badge]  Name                  ×N  [chip]           │  ← line 1 (28px)
+│   40px    Rate /sec             [LVL] [BUY] [AUTO]  │  ← line 2 (20px + pills)
+└──────────────────────────────────────────────────────┘
 ```
 
 - **Badge:** 40px (up from 32px desktop) — easier to parse at arm's length
 - **Line 1:** name + count + modifier chip
-- **Line 2:** rate, cost (if relevant), and upgrade button right-aligned
+- **Line 2:** rate + purchase pills right-aligned. Passive-only generators show `[BUY]` only.
 
 **Name weight:** 16px weight 500. Rate: 13px weight 500 (up from 14px@400 per purchase-feedback spec §2.2).
 
-### 5.2 Upgrade button (⬆)
+### 5.2 Purchase pills (mobile)
 
-- **Size:** 44×44px (minimum touch target)
-- **Position:** right-edge of row, vertically centered
-- **Tap:** opens Upgrade Drawer (see §9 for drawer adaptation on mobile)
+- **Size:** 44px min-width × 28px height per `ux/generator-purchase-pills.md` §7.
+- **Position:** right-edge of row line 2, inline.
+- **Labels:** on viewports < 360px, abbreviate to single-letter (L / B / A).
+- **Tap:** fires purchase immediately (no drawer). Cost shown on long-press (300ms) ghost label.
+- **Row tap (not on a pill):** opens Upgrade Drawer (see §9 for drawer adaptation on mobile).
 
 ### 5.3 Category dividers
 
@@ -257,7 +259,7 @@ Desktop hover interactions must be replaced or removed on touch.
 |---------|--------------------|
 | Hover Rebrand button → Clout-on-rebrand tooltip | **Long-press** (500ms) Rebrand button → same tooltip as a temporary popover |
 | Hover Upgrades button → Clout balance tooltip | **Long-press** Upgrades button → popover |
-| Hover upgrade button on generator row → cost ghost label | **Cost shown inline by default** on row line 2. No hover needed. |
+| Hover purchase pill on generator row → cost ghost label | **Long-press** (300ms) on pill → ghost label above pill per `ux/generator-purchase-pills.md` §7.3. |
 | Hover action row in upgrade drawer → tint bump | Removed. Action row is always visually distinguished. |
 
 **Long-press feedback:** haptic (if supported) + scale 0.96 on the element. Popover appears after 500ms.
@@ -297,7 +299,7 @@ Phase-by-phase adaptation:
 
 Desktop drawer slides out from right of row. On mobile, there is no room to slide right — the row occupies full width.
 
-**Mobile adaptation:** the upgrade drawer becomes a **bottom sheet** triggered from the row tap or ⬆ button. Height: ~360px. Content identical to desktop drawer spec — header, current level readout, 3 level rows, close button.
+**Mobile adaptation:** the upgrade drawer becomes a **bottom sheet** triggered from a row tap (not on a purchase pill — pill taps fire purchases directly per `ux/generator-purchase-pills.md`). Height: ~360px. Content identical to desktop drawer spec — header, current level readout, 3 level rows, close button.
 
 **On-close-after-upgrade:** bottom sheet slides down (150ms). Row behind pulses + rate flares per purchase-feedback spec.
 
@@ -320,7 +322,7 @@ Per desktop §9, adapted:
 
 ## 11. Accessibility (Touch-Specific)
 
-- **Touch targets:** all interactive elements ≥ 44×44px per WCAG 2.5.5. Upgrade button (⬆) sized specifically to this minimum. Platform cards large enough to tap without precision.
+- **Touch targets:** all interactive elements ≥ 44×44px per WCAG 2.5.5. Purchase pills are 44px min-width × 28px height (row padding clears the 44px logical target). Platform cards large enough to tap without precision.
 - **Reduced motion:** honors OS `prefers-reduced-motion` and in-game Reduce Motion toggle. Mobile-specific motion (bottom sheet slides) replaced with fades when enabled. Snap-scroll behavior preserved (it's ergonomic, not decorative).
 - **Dynamic type:** respect OS font scaling. All font sizes specified here are at 100% scale; they scale proportionally. Layout must not break at 150% text scale — test at 1.5× during implementation.
 - **Screen reader:** all screens navigable via VoiceOver/TalkBack. Platform strip announces as "Platform list, 3 items, horizontal scroll." Generator list announces each row's name, count, rate, upgrade availability.
