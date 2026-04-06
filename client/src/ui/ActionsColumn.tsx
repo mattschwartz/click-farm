@@ -122,7 +122,7 @@ interface FloatItem {
   batchCount?: number;
 }
 
-const FLOAT_TTL_MS = 650; // slightly longer than the 600ms CSS animation
+const FLOAT_TTL_MS = 2700; // slightly longer than the 2600ms CSS animation
 
 // ---------------------------------------------------------------------------
 // LiveVerbButton
