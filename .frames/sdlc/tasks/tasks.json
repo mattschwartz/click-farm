@@ -5324,7 +5324,19 @@
         },
         {
           "ref": ".frames/sdlc/ux/manual-action-ladder.md",
-          "purpose": "Current UX spec — §4.2 badge, §4.4 interaction states, §10 engineer handover. Will be updated by U1"
+          "purpose": "§4.2 badge semantics, §4.4 interaction states, §4.6 autoclicker floating numbers, §10 engineer handover"
+        },
+        {
+          "ref": ".frames/sdlc/ux/generator-purchase-pills.md",
+          "purpose": "Purchase pill spec — pill anatomy, affordance states, cost ghost label, tap interaction, feedback chains, engineer handover §10"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-purchase-button-location.md",
+          "purpose": "Location decision — all three tracks in Generators column"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "§5 counter-bump is manual-tap-only (per task #138 amendment)"
         },
         {
           "ref": "client/src/ui/ActionsColumn.tsx",
@@ -5333,6 +5345,10 @@
         {
           "ref": "client/src/ui/GameScreen.tsx",
           "purpose": "perClick yield preview computation needs formula update"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Generator rows — purchase pills render here"
         }
       ],
       "acceptance_criteria": [
