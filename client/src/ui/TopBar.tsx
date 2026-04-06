@@ -104,13 +104,11 @@ export function TopBar({
   return (
     <header className="top-bar">
       <img src={faviconSrc} alt="Click Farm" className="top-bar-icon" />
-      {/* Zone A — empty after algorithm weather removal */}
-      <div className="algo-label">
-        <div className="name-slot">
-          {badgeShown && (
-            <span className="run-badge">{formatRunBadge(rebrandCount)}</span>
-          )}
-        </div>
+      <div className="top-bar-title-group">
+        <span className="top-bar-title">Click Farm</span>
+        {badgeShown && (
+          <span className="run-badge">{formatRunBadge(rebrandCount)}</span>
+        )}
       </div>
 
       <div className="engagement-slot">

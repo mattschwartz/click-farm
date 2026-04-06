@@ -72,6 +72,22 @@
   flex-shrink: 0;
 }
 
+.top-bar-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.top-bar-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
 /* Zone A — empty after algorithm removal (max 40% width, §1.2). */
 .algo-label {
   display: flex;
