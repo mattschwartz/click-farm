@@ -160,6 +160,8 @@ Polly's other thoughts on using vague directives intentionally
 - [principle] if an agent is misuing a tool, then the tool is not capturing the agent's needs. understand its desire and update the tool to accommodate
 - [theory] with some tweaking, this could be a tool for creating quick POCs for someone like a PM. i don't even know how the code is structured right now and it doesn't matter. i can guide it with NL
 - [observation] sometimes i wonder if the AI work well with json sure but don't _prefer_ it? like, to work with it internally it seems they don't really like it cuz i keep seeing them formatting the tool and preferring --pretty-print over the json blob. idk why though
+- [observation] finally, the architect said it was not aligned and flagged major concerns. so it does do it but it needs a really big tipping point. but it went against me so that was i think a good sign
+- 
 
 SKills from polly
   1. "Capability packages with instructions and tools, loaded on-demand." — A skill is a bundle of a prompt (instructions) + tool access, packaged together. It's not loaded into the conversation until you actually

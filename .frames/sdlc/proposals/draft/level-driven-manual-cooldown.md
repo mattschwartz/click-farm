@@ -4,7 +4,7 @@ description: Redefine the Actions-column buttons so LVL UP controls tap speed, B
 created: 2026-04-06
 author: game-designer
 status: draft
-reviewers: [architect, engineer]
+reviewers: [game-designer, architect, engineer]
 ---
 
 # Proposal: Level-Driven Manual Cooldown
@@ -166,3 +166,86 @@ All other sections of manual-action-ladder (verb roster, balance cells, unlock t
 6. **Autoclicker and offline progression.** Do autoclickers produce engagement while the player is away? If yes, the offline catch-up formula needs to account for autoclicker count per verb. If no, autoclickers are active-session-only. **Owner: game-designer** (intent), **architect** (implementation)
 
 7. **Autoclicker firing pattern with multiple workers.** Do N autoclickers fire simultaneously every `base_cooldown` ms (burst), or are they staggered evenly across the interval (smooth)? Staggered creates a steadier stream of floating numbers; burst creates periodic "volleys." Both are valid feels. **Owner: game-designer** (feel), **ux-designer** (visual rhythm)
+
+---
+# Review: architect
+
+**Date**: 2026-04-06
+**Decision**: Not Aligned
+
+**Comments**
+
+The level→speed / count→power swap is a clean conceptual improvement over the manual-action-ladder's mapping. The three-axis investment model (LVL UP, BUY, Autoclicker) is architecturally tractable and the design reasoning is sound. Three things need resolution before I can approve.
+
+### Blocking 1: Data Model — Three Purchase Tracks, One `count` Field
+
+The proposal introduces three distinct investment axes per verb: LVL UP (speed), BUY (power), Autoclicker (passive income). Today `GeneratorState.count` is a single field that serves as both automator count and yield scaling factor. Under this proposal, BUY and Autoclicker are **separate purchases** — BUY increases a yield multiplier, Autoclicker adds independent passive tappers.
+
+`GeneratorState` currently has:
+- `level` (1–max_level) — repurposed to drive cooldown ✓
+- `count` (≥ 0) — currently serves double duty
+
+This proposal needs something like:
+- `level` → drives cooldown (repurposed)
+- `count` → drives yield via `countMultiplier` (repurposed as BUY count)
+- `autoclicker_count` → **new field**, number of purchased autoclickers driving passive income
+
+The proposal must name the new field (or rename existing ones), specify the `GeneratorState` shape, and acknowledge the save migration (new version). Every consumer of `count` — tick pipeline, offline calculator, UI, driver — needs to know which count it's reading.
+
+### Blocking 2: Passive Tick Formula Not Specified
+
+The existing passive rate formula is:
+
+```
+effective_rate = count × base_event_rate × base_event_yield × levelMultiplier(level) × algoMod × clout × kit
+```
+
+The proposal specifies the manual-tap earned formula and the cooldown formula, but never writes the new passive tick formula. With autoclickers separated from BUY, the formula becomes something like:
+
+```
+passive_rate = autoclicker_count × base_event_rate × base_event_yield × countMultiplier(buy_count) × algoMod × clout × kit
+```
+
+But that's my inference. The proposal needs to state it explicitly because:
+- The leading factor changes from `count` to `autoclicker_count`
+- `levelMultiplier(level)` drops out of passive production entirely (level drives cooldown only)
+- `countMultiplier(buy_count)` replaces it
+- This flows directly into the offline calculator (which walks passive rates per algorithm segment)
+
+If my inference is wrong, that's exactly why the contract must be written down.
+
+### Blocking 3: Cooldown Formula vs. Table Mismatch
+
+The stated formula is `cooldownMs = 1000 / (level × base_event_rate)`. The table is treated as the design intent (per user direction), but the formula does not produce the table values for chirps and selfies using the locked-in `base_event_rate` values from manual-action-ladder §14a:
+
+| Verb | Locked rate | L1 (formula) | L1 (table) |
+|---|---|---|---|
+| chirps | 2.5 | 400ms | 2,000ms |
+| selfies | 0.4 | 2,500ms | 5,000ms |
+| livestreams | 0.1 | 10,000ms | 10,000ms ✓ |
+| podcasts | 0.033 | 30,303ms | 30,303ms ✓ |
+| viral_stunts | 0.0083 | 120,482ms | 120,482ms ✓ |
+
+The table values for chirps and selfies imply different `base_event_rate` values (0.5 and 0.2 respectively) than the locked-in rates from §14a. If the design intent is to slow these verbs' starting cooldowns to make LVL UP progression more dramatic, that's a valid game-design call — but changing `base_event_rate` breaks the passive-output invariant (`base_event_yield × base_event_rate = preserved passive output`) unless `base_event_yield` is retuned to compensate. The proposal should either:
+
+- (a) Explicitly state the new `base_event_rate` values and the compensating `base_event_yield` values that preserve passive output, or
+- (b) Explicitly state that passive output is being retuned (and why)
+
+Additionally, chirps and selfies show **0ms** at L10. Under any formula of the shape `1000 / (level × rate)`, cooldown approaches zero but never reaches it. True 0ms means uncapped fire rate, which is a tick-pipeline hazard (infinite events per frame). Recommend a floor (e.g. 10ms or 50ms) for the same reason the old model had a ~0.01s floor. Alternatively, the formula may need a different shape (subtractive rather than reciprocal) to hit the table values — that's a design + architecture co-decision.
+
+### Non-Blocking: `countMultiplier` (OQ1) Is Load-Bearing for Planning
+
+Not blocking acceptance, but flagging: count is unbounded; level was capped at 10. The existing `levelMultiplier = 2^(level²/5)` produces ~1,048,576× at L=10 — that curve applied to unbounded count would overflow instantly. The curve choice (linear, logarithmic, polynomial, etc.) defines the entire economy's pacing. I want OQ1 resolved before any implementation tasks are filed so the engineer isn't blocked.
+
+### Non-Blocking: Autoclicker Timing Model (OQ7) — Architect Recommendation
+
+Burst mode (all N autoclickers fire simultaneously every `base_cooldown` ms) maps cleanly to the existing tick pipeline: `passive_rate = autoclicker_count × base_event_rate × yield × modifiers × deltaMs`. Zero new state, same formula shape as today. Staggered mode (phase offsets per autoclicker) would require per-autoclicker phase state on `GeneratorState` — more fields, more migration, more tick complexity. I'd advocate **burst** unless the game-designer has a strong feel reason for staggered. The UX layer can visually stagger the floating-number emissions without the engine actually staggering the fires.
+
+### Non-Blocking: Supersession List Is Incomplete
+
+The proposal says "all other sections of manual-action-ladder remain in force," but:
+- §2 (three-state lifecycle: Unlock → Upgrade → Automate) becomes Unlock → three parallel investment tracks — structurally different
+- §14a balance cells may change if `base_event_rate` is retuned for the new cooldown model
+- The passive tick formula changes (per Blocking 2)
+
+These should be called out in the Supersession section so downstream implementers know what's changed vs. what carries forward.
