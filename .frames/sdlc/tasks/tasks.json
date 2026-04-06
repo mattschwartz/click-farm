@@ -1,5 +1,5 @@
 {
-  "next_id": 132,
+  "next_id": 140,
   "tasks": [
     {
       "id": 1,
@@ -5156,6 +5156,334 @@
           "owner": "game-designer"
         }
       ],
+      "blocked_on": []
+    },
+    {
+      "id": 132,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Engine formula refactor + data model + migration + static data retune for level-driven cooldown",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the core engine changes from the level-driven-manual-cooldown proposal. This is the foundation task — every other task in this plan depends on it (directly or transitively). The proposal redefines: LVL UP drives cooldown (speed), BUY drives yield multiplier (power), and a new `autoclicker_count` field drives passive production. The change surface spans 9 of the engineer's 10 traced code sites (all except the new buyAutoclicker action, which is E2).\n\nKey formula changes:\n- `computeGeneratorEffectiveRate`: leading `count` → `autoclicker_count`, `levelMultiplier(level)` → `(1 + count)`, early-return guard `count <= 0` → `autoclicker_count <= 0`\n- `postClick` cooldown: `1000 / (Math.max(1, genState.count) * def.base_event_rate)` → `Math.max(50, 1000 / (genState.level * def.base_event_rate))`\n- `postClick` earned: `def.base_event_yield * levelMultiplier(genState.level) * algoMod * clout * kit` → `def.base_event_yield * (1 + genState.count) * algoMod * clout * kit`\n- Passive tick formula becomes: `autoclicker_count × base_event_rate × base_event_yield × (1 + count) × algoMod × clout × kit`\n\n`levelMultiplier` function stays — still used in `generatorUpgradeCost` for cost scaling. Do not delete it.\n\nThe offline calculator (`offline/index.ts`) calls `computeAllGeneratorEffectiveRates` which inherits the formula change — no separate code change needed there, but verify with a test.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Source proposal — formulas in §2-§4, data model in §Data Model, passive formula in §Passive Tick Formula, rate retune table in §2"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Add autoclicker_count to GeneratorState (line 163-171), add base_autoclicker_cost to GeneratorDef (line 272-325)"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "computeGeneratorEffectiveRate (line 141-163) — 3 simultaneous changes. postClick (line 567-613) — cooldown + earned formula swap"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "chirps rate 2.5→0.5 yield 0.2→1.0, selfies rate 0.4→0.2 yield 2.5→5.0, add base_autoclicker_cost to all generator defs"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "v9→v10 migration: seed autoclicker_count=0 on all generators. CURRENT_VERSION bump at line 20"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "applyRebrand (line 117+) must reset autoclicker_count to 0 alongside existing field resets"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "createInitialGameState must seed autoclicker_count=0 for all generators"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "Remove count<=0 guard on upgradeGenerator (line 273-276) — level now drives cooldown, works at count=0"
+        }
+      ],
+      "acceptance_criteria": [
+        "GeneratorState has autoclicker_count: number field, seeded to 0 in createInitialGameState and migration",
+        "GeneratorDef has base_autoclicker_cost: number field, populated for all generators per proposal OQ5 table (chirps=25, selfies=50, livestreams=650000, podcasts=7000000, viral_stunts=100000000; passive-only and post-prestige generators get a placeholder value e.g. 0 since they are not manual-clickable)",
+        "computeGeneratorEffectiveRate uses: autoclicker_count × base_event_rate × base_event_yield × (1 + count) × algoMod × clout × kit. Early-return guard checks autoclicker_count <= 0 (not count <= 0)",
+        "postClick cooldown formula is Math.max(50, 1000 / (genState.level * def.base_event_rate))",
+        "postClick earned formula is def.base_event_yield * (1 + genState.count) * algoMod * clout * kit",
+        "Static data: chirps base_event_rate=0.5, base_event_yield=1.0; selfies base_event_rate=0.2, base_event_yield=5.0. All other generators unchanged",
+        "Regression test: passive output for each generator at count=1 (now autoclicker_count=1), level=1 matches the preserved passive output values from the proposal rate retune table (chirps=0.5, selfies=1.0, livestreams=80, podcasts=150, viral_stunts=500 eng/s before modifiers)",
+        "save/index.ts: migrateV9toV10 seeds autoclicker_count=0 on all generators; CURRENT_VERSION bumped to 10",
+        "applyRebrand resets autoclicker_count to 0 for all generators",
+        "upgradeGenerator no longer throws when count=0 — the count<=0 guard is removed. LVL UP is valid at count=0 (player taps faster at base yield)",
+        "levelMultiplier function is preserved (still used in generatorUpgradeCost) — do NOT delete",
+        "Offline calculator produces correct results via inheriting the updated computeGeneratorEffectiveRate — add a regression test",
+        "All existing tests updated for the formula changes; new regression tests cover passive output equivalence",
+        "npm run build succeeds; full test suite passes; zero TypeScript errors"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 133,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "buyAutoclicker action + driver wiring",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Add the new buyAutoclicker purchase action — the third purchase track per the level-driven-manual-cooldown proposal. This is a focused addition: one new function in generator/index.ts, one new cost helper, one new driver method. Follows the same pattern as buyGenerator.\n\nCost formula: `ceil(base_autoclicker_cost × 1.15^autoclicker_count)` — same exponential escalation as BUY.\n\nThe function increments `autoclicker_count` on the generator and deducts engagement. Guards: not manual_clickable → throw, not owned → throw, can't afford → throw.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "OQ5 resolution — base_autoclicker_cost values and cost formula"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "Add buyAutoclicker function alongside existing buyGenerator (line 212+)"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Add driver.buyAutoclicker(verbId) method, route through runAction"
+        }
+      ],
+      "acceptance_criteria": [
+        "New buyAutoclicker(state, verbId, staticData) function in generator/index.ts",
+        "Cost helper: autoclickerBuyCost(generatorId, currentAutoclickerCount, staticData) returns ceil(base_autoclicker_cost × 1.15^currentAutoclickerCount)",
+        "buyAutoclicker throws if: generator not manual_clickable, generator not owned, insufficient engagement",
+        "buyAutoclicker increments autoclicker_count by 1 and deducts cost from player.engagement",
+        "driver.buyAutoclicker(verbId) added to GameDriver interface, routes through runAction with action name 'buyAutoclicker'",
+        "'buyAutoclicker' added to ActionName union in types",
+        "Tests cover: success path (cost deducted, autoclicker_count incremented), all three error paths, cost formula correctness at several autoclicker_count values",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        132
+      ]
+    },
+    {
+      "id": 134,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Audience mood gate change + AUTOCLICKERS_AFFECT_MOOD killswitch",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Update the applyTickPosts gate in audience-mood/index.ts so autoclicker fires contribute to audience mood pressure. The current gate (line 295) skips generators where `count <= 0`. Under the level-driven-cooldown model, a generator with count=0 but autoclicker_count > 0 has active autoclickers producing engagement. The gate changes to `count <= 0 && autoclicker_count <= 0`.\n\nPer the game-designer's resolution: autoclicker fires are semantically identical to manual taps — the audience doesn't distinguish who posted. Implementation must include a killswitch boolean flag (`AUTOCLICKERS_AFFECT_MOOD`) in static data or as a module-level constant, so this behavior can be toggled without a code change if playtesting reveals the pressure is wrong.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Revision 2026-04-06 post-engineer-review — Flag 2 resolution and killswitch requirement"
+        },
+        {
+          "ref": "client/src/audience-mood/index.ts",
+          "purpose": "applyTickPosts (line 284+), gate at line 295"
+        },
+        {
+          "ref": "client/src/audience-mood/index.test.ts",
+          "purpose": "Existing applyTickPosts tests (line 293+) need updating"
+        }
+      ],
+      "acceptance_criteria": [
+        "applyTickPosts skips a generator only when BOTH count <= 0 AND autoclicker_count <= 0 (when killswitch is on)",
+        "AUTOCLICKERS_AFFECT_MOOD boolean flag exists (module-level constant or in StaticData.audience_mood) — when false, the gate reverts to the old behavior (skip when count <= 0, ignoring autoclicker_count)",
+        "Default value of AUTOCLICKERS_AFFECT_MOOD is true",
+        "Test: generator with count=0, autoclicker_count=3 contributes to mood when killswitch is on",
+        "Test: generator with count=0, autoclicker_count=3 does NOT contribute to mood when killswitch is off",
+        "Test: generator with count=0, autoclicker_count=0 does not contribute regardless of killswitch",
+        "All existing audience-mood tests pass (updated for new gate semantics)",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        132
+      ]
+    },
+    {
+      "id": 135,
+      "alias": "E4",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "UI wiring for autoclicker model: purchase button, floating numbers, badge update",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Wire the autoclicker model into the UI layer. This is the final integration task — it makes the three-axis investment model (LVL UP / BUY / Autoclicker) visible and interactive to the player.\n\nThree sub-deliverables:\n1. **Autoclicker purchase button** — location and layout per U2's design decision. Wires to driver.buyAutoclicker(verbId) from E2. Shows cost, count badge.\n2. **Floating number emissions for autoclicker fires** — per U1's density/stagger spec. Engine fires in burst mode; UX layer may visually stagger. Need density cap and visual differentiation rules from U1.\n3. **Badge semantics update** — the ×N badge on verb buttons changes meaning per U1's spec (likely shows autoclicker_count, not BUY count). Yield display formula changes to show `base_event_yield × (1 + count)` instead of `base_event_yield × levelMultiplier(level)`.\n\nThis task depends on E2 (buyAutoclicker action exists), U1 (UX spec for badge/floating numbers/yield display), and U2 (purchase button location decision).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Three-axis model and visual feedback requirements"
+        },
+        {
+          "ref": ".frames/sdlc/ux/manual-action-ladder.md",
+          "purpose": "Current UX spec — §4.2 badge, §4.4 interaction states, §10 engineer handover. Will be updated by U1"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "Live-verb-button rendering — badge, yield display, floating numbers"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "perClick yield preview computation needs formula update"
+        }
+      ],
+      "acceptance_criteria": [
+        "Autoclicker purchase button renders per U2's location decision, shows cost via autoclickerBuyCost, wired to driver.buyAutoclicker(verbId)",
+        "Autoclicker count badge displays on verb buttons per U1's badge semantics spec",
+        "Floating number emissions for autoclicker fires follow U1's density cap, stagger timing, and visual differentiation rules",
+        "Yield display formula updated: shows base_event_yield × (1 + count) (not levelMultiplier)",
+        "perClick yield preview in GameScreen.tsx uses the new earned formula",
+        "Counter-bump (from action-button-physicality spec) fires on manual tap ONLY — autoclicker fires do not trigger counter-bump (per U3)",
+        "Cooldown ring animates per the updated formula: max(50, 1000 / (level × base_event_rate))",
+        "Reduced-motion support for autoclicker floating numbers per U1 spec",
+        "Component tests cover: autoclicker purchase flow, badge display, floating number emission, yield display correctness",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        133,
+        136,
+        137
+      ]
+    },
+    {
+      "id": 136,
+      "alias": "U1",
+      "role": "ux-designer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Update manual-action-ladder UX spec for autoclicker model (Gaps 1, 2, 5, 6)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Update ux/manual-action-ladder.md to reflect the level-driven-manual-cooldown proposal's three-axis model. Four UX gaps identified in the ux-designer's review need resolution:\n\n**Gap 1 — Badge semantics (§4.2, §4.4, §10):** The ×N badge previously showed automator count (old `count`). Under the new model, `count` = BUY count (yield multiplier) and `autoclicker_count` = army size. Decide what the badge shows. UX-designer's instinct from review: badge shows autoclicker_count (army size — 'that's 3 workers firing'). Yield multiplier communicated through yield display.\n\n**Gap 2 — Floating-number spec for autoclicker fires:** No spec exists for autoclicker-emitted floating numbers. Need: stagger timing (visual stagger even though engine fires in burst), density cap (at what N do you batch?), visual differentiation (size/opacity vs manual taps?), reduced-motion fallback.\n\n**Gap 5 — Cooldown ring threshold (§4.5):** The 100ms threshold where 'ring stops animating' is unreachable under the new formula (fastest is chirps L10 = 200ms). Section can be simplified or removed.\n\n**Gap 6 — Yield display formula (§4.2):** Display changes from `base_event_yield × levelMultiplier(level)` to `base_event_yield × (1 + count)`. Also confirm rate-flare fires on BUY (it previously fired on Upgrade which drove yield).",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Source proposal — ux-designer review (line 488+) identifies all 6 gaps with detail"
+        },
+        {
+          "ref": ".frames/sdlc/ux/manual-action-ladder.md",
+          "purpose": "Target spec file — §4.2 (badge), §4.4 (interaction states), §4.5 (cooldown ring threshold), §10 (engineer handover)"
+        },
+        {
+          "ref": ".frames/sdlc/ux/purchase-feedback-and-rate-visibility.md",
+          "purpose": "§5 rate-flare — needs to fire on BUY instead of Upgrade for yield changes"
+        }
+      ],
+      "acceptance_criteria": [
+        "§4.2 badge semantics updated: specifies what the ×N badge shows under the three-axis model (autoclicker_count or count or both), with rationale",
+        "New section or subsection specifying autoclicker floating-number emissions: stagger timing, density cap threshold, visual differentiation from manual taps, reduced-motion fallback",
+        "§4.5 updated to reflect that the 100ms threshold is unreachable (simplified or removed). 50ms hard floor from proposal noted as the new safety clamp",
+        "§4.2 yield display formula updated to base_event_yield × (1 + count). Rate-flare trigger updated (BUY purchase, not Upgrade)",
+        "§10 engineer handover updated: LiveVerbButton props include autoclicker_count, yield display formula reference, floating-number emission contract",
+        "All changes are consistent with the accepted level-driven-manual-cooldown proposal's formulas"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 137,
+      "alias": "U2",
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Decide purchase button location for LVL UP / BUY / Autoclicker (Gap 4)",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "The level-driven-manual-cooldown proposal introduces three purchase tracks per verb (LVL UP, BUY, Autoclicker) but does not specify where these purchase buttons live in the UI. The old model placed Upgrade and Automate in the Upgrades middle column.\n\nOptions from the ux-designer's review:\n- (a) All three in the Upgrades column (current pattern — action button is tap-only)\n- (b) On the action button itself (risks cluttering the 80px arcade slab)\n- (c) Hybrid — some on the button, some in Upgrades\n\nThis is a game-designer + ux-designer co-decision per the review. The answer determines how the engineer builds E4 (UI wiring). This should be a quick decision — a short proposal or inline resolution, not a deep deliberation.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "ux-designer review Gap 4 (line 545+) — full context on the layout question"
+        },
+        {
+          "ref": ".frames/sdlc/ux/manual-action-ladder.md",
+          "purpose": "Current layout spec — §4 live-verb-button anatomy (80px), §2 scroll region"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "Arcade-slab button spec — layout constraints"
+        }
+      ],
+      "acceptance_criteria": [
+        "Decision made and written down: where do LVL UP, BUY, and Autoclicker purchase buttons live (Actions column, Upgrades column, or hybrid)?",
+        "Rationale addresses: arcade-slab clutter concern, co-location of 'three feelings' with tap target, consistency with existing Upgrades column pattern",
+        "Decision is referenced in ux/manual-action-ladder.md or a new spec so the engineer can implement E4"
+      ],
+      "open_questions": [
+        {
+          "question": "Does the game-designer have a preference for co-locating all three buttons with the verb vs keeping purchases in the Upgrades column?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 138,
+      "alias": "U3",
+      "role": "ux-designer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Amend action-button-physicality spec: counter-bump is manual-tap-only (Gap 3)",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "The action-button-physicality spec (proposals/accepted/20260406-action-button-physicality.md) defines a counter-bump (scale(1.15) pulse) on button press. Under the autoclicker model, autoclicker fires also generate engagement. If autoclicker fires trigger counter-bumps, the counter becomes a seizure machine at high autoclicker counts.\n\nPer the ux-designer's review (Gap 3): counter-bump is player-tap-only. Autoclicker fires get their own distinct signal (floating numbers + badge pulse from §4.4).\n\nThis is a small spec amendment — one clarification sentence in §5.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "§5 — counter-bump definition, needs manual-tap-only clarification"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "ux-designer review Gap 3 (line 535+)"
+        }
+      ],
+      "acceptance_criteria": [
+        "action-button-physicality spec §5 explicitly states counter-bump fires on manual tap only, not on autoclicker fires",
+        "Autoclicker-fire visual feedback is noted as a separate signal (floating numbers + badge pulse), cross-referenced to the manual-action-ladder UX spec"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 139,
+      "alias": "A1",
+      "role": "architect",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Supersession edits to manual-action-ladder.md for level-driven-cooldown",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Apply supersession back-references to the accepted manual-action-ladder.md for sections superseded by level-driven-manual-cooldown.md. Same bookkeeping pattern as task #117.\n\nSections to mark superseded (per the proposal's Supersession section):\n- §2 (three-state lifecycle) → now three parallel tracks\n- §4 (Automate teaching moment) → replaced by Autoclicker first-purchase\n- §12 (cooldown formula, phantom-hand floor, per-tap earned formula) → new formulas\n- §14a (yield/rate split for chirps + selfies) → retuned values\n- §14e (automation curve) → level-keyed cooldown table\n- §14f (manual-supplementary ratio) → new ratio model\n- Passive tick formula → new formula with autoclicker_count\n\nEach edit adds a back-reference to level-driven-manual-cooldown.md at the point of supersession. Preserve historical context — mark inline, do not delete.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Supersession section (line 155-168) — lists exactly what's superseded"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "Target document — sections §2, §4, §12, §14a, §14e, §14f to be marked superseded"
+        }
+      ],
+      "acceptance_criteria": [
+        "manual-action-ladder.md §2 marked superseded with back-reference to level-driven-manual-cooldown.md",
+        "manual-action-ladder.md §4 marked superseded with back-reference",
+        "manual-action-ladder.md §12 cooldown formula, phantom-hand floor, and per-tap earned formula marked superseded with back-references",
+        "manual-action-ladder.md §14a chirps and selfies rows marked superseded (rate retune) with back-reference",
+        "manual-action-ladder.md §14e marked superseded with back-reference",
+        "manual-action-ladder.md §14f marked superseded with back-reference",
+        "All superseded text preserved (not deleted) — marked inline with supersession note",
+        "Each edit includes a reference to level-driven-manual-cooldown.md so future readers can trace the decision"
+      ],
+      "open_questions": [],
       "blocked_on": []
     }
   ]

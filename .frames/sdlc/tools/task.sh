@@ -81,8 +81,8 @@ validate_role_state() {
 
   case "$state" in
     build)
-      if [[ "$role" != "engineer" ]]; then
-        echo "Error: state 'build' is only allowed for role 'engineer' (got '$role')" >&2
+      if [[ "$role" != "engineer" && "$role" != "ux-designer" && "$role" != "architect" ]]; then
+        echo "Error: state 'build' is only allowed for role 'engineer', 'ux-designer', or 'architect' (got '$role')" >&2
         return 1
       fi
       ;;
