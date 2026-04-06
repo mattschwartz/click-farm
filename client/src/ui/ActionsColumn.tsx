@@ -102,8 +102,6 @@ export function floatStyle(perClick: number, currentEngagement: number): { fontS
   const ratio = perClick / Math.max(1, currentEngagement);
   const t = clamp((Math.log10(ratio) + 6) / 6, 0, 1);
   const fontSize = lerp(16, 32, t);
-  const saturation = lerp(40, 100, t);
-  const lightness = lerp(52, 71, t);
   return { fontSize, color: '#FFFFFF' };
 }
 

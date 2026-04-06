@@ -577,10 +577,8 @@ function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, gener
       }
       title={`Buy autoclicker for ${costLabel} engagement`}
     >
-      <span className="pill-label">AUTO</span>
-      {autoclickerCount > 0 && (
-        <span className="pill-count">×{autoclickerCount}</span>
-      )}
+      <span className="pill-label">HIRE{autoclickerCount > 0 ? ` ×${autoclickerCount}` : ''}</span>
+      <span className="pill-cost">{costLabel}</span>
     </button>
   );
 }

@@ -3489,7 +3489,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
 .purchase-pill {
   min-width: 44px;
   height: 28px;
-  border-radius: 14px;
+  border-radius: 6px;
   padding: 0 8px;
   font-size: 11px;
   font-family: 'Space Grotesk', sans-serif;
@@ -3518,10 +3518,25 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
 }
 
 /* ---------------------------------------------------------------------------
- * AUTO pill flame border — conic gradient chase with warm glow.
+ * HIRE pill flame border — conic gradient chase with warm glow.
  * Uses a rotating conic-gradient on a ::before pseudo-element, masked to
  * show only the border region. The pill itself sits on top.
  * --------------------------------------------------------------------------- */
+/* HIRE pill — two-line layout: label on top, cost below */
+.purchase-pill-auto {
+  flex-direction: column;
+  height: auto;
+  padding: 3px 8px;
+  line-height: 1.2;
+  gap: 0;
+}
+
+.purchase-pill-auto .pill-cost {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.75;
+}
+
 .purchase-pill-auto.purchase-pill-affordable {
   position: relative;
   border-color: transparent;
@@ -3537,7 +3552,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   content: '';
   position: absolute;
   inset: -2px;
-  border-radius: 16px;  /* pill radius + border width */
+  border-radius: 8px;  /* square corners + border width */
   background: conic-gradient(
     from var(--flame-angle, 0deg),
     #ff4500 0deg,
@@ -3557,7 +3572,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   content: '';
   position: absolute;
   inset: 1px;
-  border-radius: 13px;
+  border-radius: 5px;
   background: var(--surface-panel, #FFFFFF);
   z-index: -1;
 }
