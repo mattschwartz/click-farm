@@ -4716,7 +4716,7 @@
       "id": 123,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Decide multiplier-pill magnitude encoding + LVL↑ status-line threshold",
       "requester": "ux-designer",
@@ -4734,7 +4734,8 @@
         "Both decisions moved from the Open Questions table (§5) to their respective sections so the engineer can implement without ambiguity."
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 124,
