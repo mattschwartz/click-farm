@@ -1,6 +1,6 @@
 ---
 name: Level-Driven Manual Cooldown
-description: Redefine the two Actions-column buttons so LVL UP controls tap speed (cooldown) and BUY controls tap power (multiplier), with automation deferred to a separate future system.
+description: Redefine the Actions-column buttons so LVL UP controls tap speed, BUY controls tap power, and a one-time Autoclicker purchase per verb adds passive auto-tapping with visible feedback on the verb button.
 created: 2026-04-06
 author: game-designer
 status: draft
@@ -15,20 +15,23 @@ The manual-action-ladder proposal tied manual cooldown to automator count (`BUY`
 
 1. **It's emotionally backwards.** When a player taps LVL UP, they expect to get *better* at the verb — faster, not just bigger numbers. When they tap BUY, they expect to get *more stuff*, not faster fingers. The current mapping fights universal game literacy.
 
-2. **It conflates manual improvement with automation.** BUY currently adds an automator (increases count), which both starts passive income AND reduces manual cooldown. But the Actions column is the *manual tapping* column. Both buttons there should improve the player's manual tapping experience. Automation is a separate system that the player unlocks later through a different surface.
+2. **It conflates manual improvement with automation.** BUY currently adds an automator (increases count), which both starts passive income AND reduces manual cooldown. Manual upgrades and automation should be distinct systems with distinct affordances.
 
 ## Proposal
 
-### Two buttons, two axes, both manual-only
+### The Actions column per verb
 
-The Actions column shows two upgrade buttons per verb. Neither spawns a generator or automator. Both improve the player's manual tapping:
+Each verb in the Actions column has four interactive elements:
 
-| Button | What it does | What it increases | Player feeling |
-|---|---|---|---|
-| **LVL UP** | Reduces cooldown | `level` | "I'm getting faster at this" |
-| **BUY** | Increases yield multiplier | `count` | "Each tap is worth more now" |
+#### 1. Verb button (manual tap)
 
-### Cooldown formula (level-driven)
+The player taps the verb button to earn engagement. Each tap is gated by a cooldown and earns engagement based on the verb's yield multiplier. Floating numbers emit from the button showing how much engagement was earned.
+
+#### 2. LVL UP button (speed axis)
+
+Reduces the verb's manual cooldown. The player taps faster after each LVL UP. This is the speed axis — "I'm getting better at this."
+
+**Cooldown formula:**
 
 ```
 cooldownMs = 1000 / (level * base_event_rate)
@@ -48,46 +51,64 @@ Level starts at 1, caps at `max_level` (currently 10). At level 1, cooldown equa
 
 No phantom-hand floor needed — level is always >= 1, so cooldown is always defined.
 
-### Yield formula (count-driven)
+#### 3. BUY button (power axis)
 
-Each BUY increases count. Count multiplies the engagement earned per manual tap:
+Increases the engagement earned per tap. Each BUY increases count, which multiplies the per-tap yield. This is the power axis — "Each tap is worth more now."
+
+**Per-tap earned formula:**
 
 ```
 earned = base_event_yield * count_multiplier(count) * algoMod * clout_bonus * kit_bonus
 ```
 
-The exact shape of `count_multiplier(count)` — whether it's linear (`count`), uses the existing `levelMultiplier` curve, or something else — is an architect/engineer question (see OQ1). The design intent is: each BUY makes every tap visibly stronger. The player sees bigger numbers per tap.
+The exact shape of `count_multiplier(count)` — whether it's linear, exponential, or something else — is an architect/engineer question (see OQ1). The design intent is: each BUY makes every tap visibly stronger. The player sees bigger numbers per tap.
 
 **Note:** `levelMultiplier(level)` no longer appears in the per-tap yield formula. Level drives cooldown only. Count drives yield only. One button, one axis. Clean split.
 
-### Automation is separate and deferred
+#### 4. Autoclicker (one-time unlock per verb)
 
-Automators (passive production) are not part of the Actions column. They will be introduced as a separate unlock later in the game's lifecycle, through a different UI surface. When they arrive, they will use their own production formula. Until then, count=0 for passive purposes and all engagement comes from manual tapping.
+A single purchase that unlocks passive auto-tapping for the verb. Once purchased:
 
-This means the current passive production formula (`count * base_event_rate * base_event_yield * levelMultiplier * ...`) produces zero for all verbs in the pre-automator game — which is correct. The player's only income source is tapping.
+- The autoclicker fires on its own internal cooldown, generating engagement automatically.
+- **Every time it fires, the verb's action button emits a floating number** showing the engagement generated — identical to the feedback from manual taps. The player sees their verb button popping numbers even when they're not tapping it.
+- The autoclicker uses the same yield formula as manual taps — it benefits from both LVL UP (faster firing, since it shares the level-driven cooldown) and BUY (stronger output, since it shares the count-driven multiplier).
+
+This is the "set it and forget it" moment per verb. The player watches their verb button come alive on its own. But manual taps still stack on top — the player's hand and the autoclicker are additive.
+
+**Autoclicker internal cooldown:** Uses the same level-driven cooldown as manual taps. When the player levels up a verb, both their manual tapping AND the autoclicker get faster. This reinforces LVL UP as the speed axis for everything on that verb.
+
+**Autoclicker engagement per fire:**
+
+```
+earned = base_event_yield * count_multiplier(count) * algoMod * clout_bonus * kit_bonus
+```
+
+Same formula as manual taps. The autoclicker is functionally "a hand that taps for you."
 
 ### Why this is better
 
-1. **One button, one axis.** LVL UP = speed. BUY = power. No overlap, no confusion. The player never wonders "which button makes me tap faster?"
+1. **One button, one axis.** LVL UP = speed. BUY = power. Autoclicker = passive. Three distinct purchases, three distinct feelings, zero overlap.
 
-2. **Matches universal game literacy.** "Level up = get better at the thing" is how every RPG, every skill tree, every upgrade system works. "Buy more = get more" is equally intuitive.
+2. **Matches universal game literacy.** "Level up = get faster" and "buy more = get stronger" are intuitive. "Unlock autoclicker = it plays itself" is the classic idle-game graduation moment.
 
-3. **Actions column is purely manual.** Both buttons improve what your hands do. No automation leaking into the manual tapping surface. When automators arrive, they'll have their own home.
+3. **Visible automation feedback.** The autoclicker's output appears as floating numbers on the verb button. The player sees their investments paying off in the same visual language as manual taps. The verb button becomes a living thing.
 
-4. **Bounded cooldown progression.** Level caps at 10, so cooldown has a known floor per verb. No asymptotic shrink. The designer can predict exact cooldowns. The UX can show a clean progression bar.
+4. **Manual + auto are additive.** The player's hand still matters after unlocking the autoclicker. They're tapping alongside it, not being replaced by it. Both benefit from LVL UP and BUY equally.
 
-5. **Eliminates the phantom-hand floor.** `max(1, count)` was needed because count=0 is valid pre-Automate. Level is always >= 1, so the formula just works. One fewer special case.
+5. **Bounded cooldown progression.** Level caps at 10, so cooldown has a known floor per verb. No asymptotic shrink. The designer can predict exact cooldowns. The UX can show a clean progression bar.
+
+6. **Eliminates the phantom-hand floor.** `max(1, count)` was needed because count=0 is valid pre-Automate and cooldown would be infinite. Level is always >= 1, so the formula just works. One fewer special case.
 
 ### Supersession
 
 This proposal supersedes the following sections of `proposals/accepted/manual-action-ladder.md`:
 
-- **§4 (Automate teaching moment):** The dual payoff moves from BUY to LVL UP. The teaching moment ("one purchase improves two things") is no longer relevant — each button improves exactly one axis.
+- **§4 (Automate teaching moment):** Replaced by the Autoclicker one-time purchase described above. The Unlock → Upgrade → Automate lifecycle per verb is replaced by: Unlock → LVL UP / BUY (ongoing) → Autoclicker (one-time).
 - **§12 (What This Locks In) — cooldown formula:** `cooldown = 1 / (max(1, count) * base_event_rate)` is replaced by `cooldown = 1 / (level * base_event_rate)`.
 - **§12 — phantom-hand floor scoping:** Eliminated. No floor needed.
 - **§12 — per-tap earned formula:** `levelMultiplier(level)` is removed from the earned formula. Replaced by `count_multiplier(count)`.
-- **§14e (automation curve):** The cooldown progression table keyed by count is superseded by the level-keyed table above.
-- **§14f (manual-supplementary ratio):** Moot until automators exist. When they arrive, the ratio will be recalculated against the new formula.
+- **§14e (automation curve):** The cooldown-by-count table is superseded by the level-keyed cooldown table above. Automation is now a binary unlock (autoclicker), not a count-scaling curve.
+- **§14f (manual-supplementary ratio):** Replaced by the additive manual+autoclicker model. Both use the same formula; manual is always additive on top of autoclicker output, never "fading to supplementary."
 - **Architect re-review (OQ16):** Phantom-hand floor approval is moot — the floor is gone.
 
 The `postClick` cooldown gate changes:
@@ -110,7 +131,7 @@ earned = def.base_event_yield * levelMultiplier(genState.level) * algoMod * clou
 earned = def.base_event_yield * countMultiplier(genState.count) * algoMod * clout * kit
 ```
 
-All other sections of manual-action-ladder remain in force.
+All other sections of manual-action-ladder (verb roster, balance cells, unlock thresholds, platform affinities, algorithm modifiers) remain in force.
 
 ## References
 
@@ -127,6 +148,8 @@ All other sections of manual-action-ladder remain in force.
 
 3. **LVL UP cost formula.** Currently `ceil(base_upgrade_cost * levelMultiplier(level+1))`. If level now drives cooldown instead of yield, should the cost curve change to reflect the value of cooldown reduction at each level? **Owner: game-designer**
 
-4. **UX implications for cooldown display.** LVL UP can show a cooldown preview ("400ms -> 200ms"). BUY can show a multiplier preview ("x1 -> x2"). Both are clean affordances. Should the UX spec reflect this? **Owner: ux-designer**
+4. **UX implications for cooldown and autoclicker display.** LVL UP can show a cooldown preview ("400ms -> 200ms"). BUY can show a multiplier preview ("x1 -> x2"). The Autoclicker button needs a cost display and a visual state change once purchased (grayed out / "ACTIVE" badge). The floating-number emission from autoclicker fires needs a UX spec. **Owner: ux-designer**
 
-5. **Passive production formula when automators arrive.** The current formula uses both count and levelMultiplier. With this split, should automators use count (number of workers × rate × yield) while level drives their efficiency? Or is that a future proposal? **Owner: architect**
+5. **Autoclicker cost per verb.** What does the one-time autoclicker purchase cost? Should it scale with the verb's tier (chirps cheap, viral_stunts expensive)? Should it gate behind a follower threshold, an engagement cost, or both? **Owner: game-designer**
+
+6. **Autoclicker and offline progression.** Does the autoclicker produce engagement while the player is away? If yes, the offline catch-up formula needs to account for autoclicker state per verb. If no, autoclickers are active-session-only. **Owner: game-designer** (intent), **architect** (implementation)
