@@ -1,5 +1,5 @@
 {
-  "next_id": 148,
+  "next_id": 149,
   "tasks": [
     {
       "id": 1,
@@ -5951,6 +5951,38 @@
       ],
       "blocked_on": [],
       "date_completed": "2026-04-06"
+    },
+    {
+      "id": 148,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Plan implementation tasks for compact number tier colors",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "The compact number tier colors proposal has been accepted. The architect needs to decompose it into concrete, assignable tasks. The implementation involves: (1) adding --tier-k through --tier-dc CSS tokens to tokens.css, (2) splitting applyTier in format.ts to return structured data (number + suffix + tier) instead of a concatenated string, (3) creating a <Compact> wrapper component that renders the suffix in a colored <span>, (4) rolling out the component across ~18 call sites (TopBar, GeneratorList, PlatformPanel, ActionsColumn, UpgradeDrawer, PostZone, etc.), and (5) fixing the stale contrast numbers in the proposal prose.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-compact-number-tier-colors.md",
+          "purpose": "The accepted proposal defining the color ramp, application rules, and collision avoidance"
+        },
+        {
+          "ref": "client/src/ui/format.ts",
+          "purpose": "Current formatter functions (fmtCompact, fmtCompactInt, applyTier) that need structured-return support"
+        },
+        {
+          "ref": "client/src/theme/tokens.css",
+          "purpose": "Where the new --tier-* CSS custom properties will be added"
+        }
+      ],
+      "acceptance_criteria": [
+        "Tasks are filed covering CSS tokens, formatter refactor, wrapper component, call-site rollout, and tests",
+        "Each task is assigned to the correct role with clear done-when criteria",
+        "Dependencies between tasks are captured in blocked_on fields"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }
