@@ -506,7 +506,7 @@ function GeneratorRow({
             {lvlState === 'maxed' && (
               <span className="lvl-crown" aria-hidden>♛</span>
             )}
-            Lvl ↑
+            SPEED
           </span>
           {lvlState === 'armed' && (
             <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
@@ -577,10 +577,8 @@ function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, gener
       }
       title={`Buy autoclicker for ${costLabel} engagement`}
     >
-      <span className="pill-label">AUTO</span>
-      {autoclickerCount > 0 && (
-        <span className="pill-count">×{autoclickerCount}</span>
-      )}
+      <span className="pill-label">HIRE{autoclickerCount > 0 ? ` ×${autoclickerCount}` : ''}</span>
+      <span className="pill-cost">{costLabel}</span>
     </button>
   );
 }
@@ -656,7 +654,7 @@ function CompactBuyButton({ costLabel, canBuy, onBuy }: CompactBuyButtonProps) {
       aria-disabled={!canBuy}
       title={`Buy 1 unit for ${costLabel} engagement`}
     >
-      <span className="label">Buy</span>
+      <span className="label">POWER</span>
       {costLabel}
     </button>
   );

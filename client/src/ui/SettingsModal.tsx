@@ -17,7 +17,7 @@ import {
   exportSaveJSON,
   importSaveJSON,
 } from '../save/index.ts';
-import { clearSettings } from '../settings/index.ts';
+
 
 // ---------------------------------------------------------------------------
 // Pure helpers (unit-tested via SettingsModal.test.ts)
@@ -162,7 +162,8 @@ export function SettingsModal({
 
   const handleResetConfirm = () => {
     clearSave();
-    clearSettings();
+    // Settings are intentionally preserved across reset — players shouldn't
+    // have to re-configure audio, reduce-motion, etc. after restarting.
     setResetStep('idle');
     onResetRequested();
   };

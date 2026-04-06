@@ -9,7 +9,8 @@ import { createDriver, type ActionError, type SaveError } from '../driver/index.
 import type { OfflineResult } from '../offline/index.ts';
 import type { RebrandResult } from '../prestige/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
-import { playPurchase } from './sfx.ts';
+import { playPurchase, setSoundEnabled } from './sfx.ts';
+import { loadSettings, readOsReduceMotion } from '../settings/index.ts';
 
 export interface UseGameResult {
   state: GameState;
@@ -99,15 +100,45 @@ export function useGame(): UseGameResult {
   // Start/stop the timers with the component lifecycle. Also persist on page
   // hide (beforeunload fires unreliably on mobile; visibilitychange is the
   // recommended modern replacement).
+  //
+  // visibilitychange handles tab-switch / minimize: save, pause the loop, and
+  // mute audio on hide; resume, unmute, and apply offline gains on return.
   useEffect(() => {
     driver.start();
 
     const saveOnHide = (): void => {
       driver.saveNow();
     };
+
+    // Track whether sound was enabled before we muted on hide, so we don't
+    // unmute a player who had sound off.
+    let soundWasEnabled = false;
+
+    const handleVisibilityChange = (): void => {
+      if (document.hidden) {
+        // Tab going to background — save, pause, mute.
+        driver.saveNow();
+        driver.stop();
+        soundWasEnabled = loadSettings(readOsReduceMotion()).sound;
+        setSoundEnabled(false);
+      } else {
+        // Tab returning to foreground — run offline calc, show modal, resume.
+        driver.runOfflineCalc();
+        const result = driver.getOfflineResult();
+        if (result) {
+          setOfflineResult(result);
+        }
+        if (soundWasEnabled) {
+          setSoundEnabled(true);
+        }
+        driver.start();
+      }
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', saveOnHide);
       window.addEventListener('pagehide', saveOnHide);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
     }
 
     return () => {
@@ -116,6 +147,7 @@ export function useGame(): UseGameResult {
       if (typeof window !== 'undefined') {
         window.removeEventListener('beforeunload', saveOnHide);
         window.removeEventListener('pagehide', saveOnHide);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
       }
     };
   }, [driver]);

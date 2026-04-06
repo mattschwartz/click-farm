@@ -45,13 +45,14 @@ import type {
 // pass (task #88).
 
 const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
-  // §14c — starter verb, unlocked at 0. Level-driven cooldown: 1/(level×0.5).
-  // Retuned yield×rate for level-driven-cooldown: yield=1.0, rate=0.5 →
-  // passive 0.5 eng/s at autoclicker_count=1, count=0.
+  // Starter verb, unlocked at 0. Level-driven cooldown: 1/(level×1.0).
+  // Retuned for faster early game: yield=0.5, rate=1.0 →
+  // passive 0.5 eng/s at autoclicker_count=1, count=0 (preserved).
+  // L1 cooldown = 1,000ms (1 tap/s). First autoclicker at ~15 taps/15s.
   chirps: {
     id: 'chirps',
-    base_event_yield: 1.0,
-    base_event_rate: 0.5,
+    base_event_yield: 0.5,
+    base_event_rate: 1.0,
     manual_clickable: true,
     follower_conversion_rate: 0.07,
     trend_sensitivity: 0.7,
@@ -60,7 +61,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 50,
     max_level: 10,
-    base_autoclicker_cost: 25,
+    base_autoclicker_cost: 5,
   },
   // §14a — ladder verb. Retuned: yield=5.0, rate=0.2 → passive 1.0 eng/s
   // at autoclicker_count=1, count=0.

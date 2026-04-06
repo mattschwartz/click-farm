@@ -140,6 +140,12 @@ export interface GameDriver {
   /** Clear the stored offline result (e.g. after the UI shows it). */
   clearOfflineResult(): void;
   /**
+   * Run the offline calculator against the current state using the saved
+   * last_close_time. Applies gains to state and stores the result for
+   * getOfflineResult(). Used when resuming from a background tab.
+   */
+  runOfflineCalc(): void;
+  /**
    * Rebrand: wipe the current run, award Clout, start a fresh run.
    * Returns the RebrandResult so the UI can show the Clout earned.
    */
@@ -447,6 +453,19 @@ export function createDriver(options: DriverOptions): GameDriver {
     getOfflineResult: () => offlineResult,
     clearOfflineResult: () => {
       offlineResult = null;
+    },
+    runOfflineCalc: () => {
+      const closeTime = state.player.last_close_time;
+      const openTime = now();
+      if (closeTime === null || openTime <= closeTime) return;
+      const { result: offline, newState } = calculateOffline(
+        state,
+        closeTime,
+        openTime,
+        staticData,
+      );
+      offlineResult = offline;
+      applyState(newState);
     },
 
     rebrand() {

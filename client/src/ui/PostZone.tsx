@@ -26,7 +26,7 @@ interface Props {
   contextLabel: string;
 }
 
-const FLOAT_TTL_MS = 500;
+const FLOAT_TTL_MS = 2700;
 const STACK_OFFSET_MAX_PX = 40;
 const CONFIRM_FLASH_MS = 150;
 

@@ -670,14 +670,21 @@
   pointer-events: none;
   font-size: 22px;
   font-weight: 800;
-  color: #FFD66B;
-  animation: verb-float-pop 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  color: #FFFFFF;
+  animation: verb-float-pop 2600ms ease-out forwards;
   z-index: 3;
   text-shadow:
-    0 0 3px rgba(255, 214, 107, 0.9),
-    0 0 8px rgba(255, 214, 107, 0.5),
-    0 0 16px rgba(255, 200, 50, 0.3),
+    0 0 3px rgba(255, 255, 255, 0.9),
+    0 0 8px rgba(255, 255, 255, 0.5),
+    0 0 16px rgba(255, 255, 255, 0.3),
     0 2px 4px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.5);
+}
+.float-multiplier {
+  color: #FFD66B;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-style: italic;
 }
 @keyframes verb-float-pop {
   0% {
@@ -685,7 +692,12 @@
     transform: translate(-50%, -50%) scale(1.8);
     filter: brightness(1.5);
   }
-  15% {
+  6% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: brightness(1);
+  }
+  80% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
     filter: brightness(1);
@@ -3308,8 +3320,42 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   bottom: 16px;
   left: 16px;
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   z-index: 100;
+}
+
+.alpha-row {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.alpha-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 54px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.55);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.15),
+    0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 0 10px rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.alpha-version {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.55);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.15),
+    0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 0 10px rgba(255, 255, 255, 0.08);
+  pointer-events: none;
 }
 
 /* --- Settings / mute button ---------------------------------------------- */
@@ -3352,6 +3398,16 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 .settings-gear-btn:focus-visible {
   outline: 2px solid rgba(var(--kit-accent-rgb), 0.9);
   outline-offset: 2px;
+}
+
+.github-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 10px 14px;
 }
 
 /* ==========================================================================
@@ -3433,7 +3489,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
 .purchase-pill {
   min-width: 44px;
   height: 28px;
-  border-radius: 14px;
+  border-radius: 6px;
   padding: 0 8px;
   font-size: 11px;
   font-family: 'Space Grotesk', sans-serif;
@@ -3459,6 +3515,90 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   background: rgba(var(--pill-color-rgb), 0.15);
   color: var(--pill-color);
   border-color: rgba(var(--pill-color-rgb), 0.30);
+}
+
+/* ---------------------------------------------------------------------------
+ * HIRE pill flame border — conic gradient chase with warm glow.
+ * Uses a rotating conic-gradient on a ::before pseudo-element, masked to
+ * show only the border region. The pill itself sits on top.
+ * --------------------------------------------------------------------------- */
+/* HIRE pill — two-line layout: label on top, cost below */
+.purchase-pill-auto {
+  flex-direction: column;
+  height: auto;
+  padding: 3px 8px;
+  line-height: 1.2;
+  gap: 0;
+}
+
+.purchase-pill-auto .pill-cost {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+.purchase-pill-auto.purchase-pill-affordable {
+  position: relative;
+  border-color: transparent;
+  background: rgba(var(--pill-color-rgb), 0.15);
+  z-index: 0;
+  overflow: visible;
+  box-shadow:
+    0 0 6px 1px rgba(255, 140, 40, 0.35),
+    0 0 16px 2px rgba(255, 80, 20, 0.15);
+}
+
+.purchase-pill-auto.purchase-pill-affordable::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 8px;  /* square corners + border width */
+  background: conic-gradient(
+    from var(--flame-angle, 0deg),
+    #ff4500 0deg,
+    #ff8c00 60deg,
+    #ffd700 120deg,
+    #ff4500 180deg,
+    #ff8c00 240deg,
+    #ffd700 300deg,
+    #ff4500 360deg
+  );
+  z-index: -1;
+  animation: flame-chase 1.2s linear infinite;
+}
+
+/* Inner mask — punches out the center so only the border ring shows */
+.purchase-pill-auto.purchase-pill-affordable::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 5px;
+  background: var(--surface-panel, #FFFFFF);
+  z-index: -1;
+}
+
+@keyframes flame-chase {
+  from { --flame-angle: 0deg; }
+  to   { --flame-angle: 360deg; }
+}
+
+/* Register the custom property so the conic-gradient can animate */
+@property --flame-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Reduced motion — static glow, no chase */
+@media (prefers-reduced-motion: reduce) {
+  .purchase-pill-auto.purchase-pill-affordable::before {
+    animation: none;
+    background: rgba(255, 140, 40, 0.5);
+  }
+}
+html[data-reduce-motion="true"] .purchase-pill-auto.purchase-pill-affordable::before {
+  animation: none;
+  background: rgba(255, 140, 40, 0.5);
 }
 
 /* Unaffordable — receded grey per §3.2 */

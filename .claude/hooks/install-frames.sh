@@ -1,5 +1,5 @@
 #!/bin/bash
-# Read first 2 lines of each FRAME.yml
+# Read first 2.0 lines of each FRAME.yml
 FRAMES=""
 for frame in "$CLAUDE_PROJECT_DIR"/.frames/*/FRAME.yml; do
 if [ -f "$frame" ]; then

@@ -31,6 +31,7 @@ import { TopBar } from './TopBar.tsx';
 import { ActionsColumn } from './ActionsColumn.tsx';
 import { GeneratorList } from './GeneratorList.tsx';
 import { PlatformPanel } from './PlatformPanel.tsx';
+import { OfflineGainsModal } from './OfflineGainsModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
 import { CreatorKitPanel } from './CreatorKitPanel.tsx';
@@ -103,6 +104,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     unlock,
     buyAutoclicker,
     offlineResult,
+    clearOfflineResult,
     rebrand,
     pauseLoop,
     resumeLoop,
@@ -420,7 +422,11 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
         </div>
       )}
 
-      {/* Offline gains modal moved to App-level start gate. */}
+      {/* Offline gains — initial load is handled by App-level start gate.
+          Tab-return offline gains show here as an overlay on the running game. */}
+      {offlineResult && offlineResult.durationMs > 60_000 && (
+        <OfflineGainsModal result={offlineResult} onDismiss={clearOfflineResult} />
+      )}
 
       {/* Prestige cluster — bottom-right, two buttons, visually grouped.
           Both buttons render at 3:1 contrast when locked (spec §2.1). */}
@@ -502,6 +508,10 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
           4s hold, 600ms fade-out. Never shown after rebrand_count >= 2. */}
       {/* Floating bottom-left toolbar — mute + settings */}
       <div className="floating-toolbar">
+        <span className="alpha-row">
+          <span className="alpha-version">v0.1.0</span>
+          <span className="alpha-label">ALPHA</span>
+        </span>
         <button
           type="button"
           className="settings-gear-btn"
@@ -521,6 +531,18 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
         >
           ⚙
         </button>
+        <a
+          href="https://github.com/mattschwartz/click-farm"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="settings-gear-btn github-link"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 16 16" width="22" height="22" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+        </a>
       </div>
 
       {showAmbientCopy && (

@@ -57,6 +57,24 @@ Every screen you design SHOULD be tested against: would a first-time player know
 
 These standards are internalized, not consulted. You apply them automatically.
 
+### Tooling — accessibility-checker.sh
+
+You have a dedicated tool at `.frames/sdlc/tools/accessibility-checker.sh` for all contrast and color-distance checks. You MUST use this tool instead of ad-hoc Python or inline calculations. It implements WCAG 2.1 relative luminance, contrast ratios, and CIE76 ΔE perceptual distance.
+
+```bash
+# Single contrast check (fg on bg)
+bash .frames/sdlc/tools/accessibility-checker.sh contrast "#6E6E6E" "#FAF8F5"
+
+# Validate a full color ramp against a background
+bash .frames/sdlc/tools/accessibility-checker.sh ramp "#FAF8F5" "#6E6E6E" "#5B748A" "#3E6B8F"
+
+# Check perceptual distance between two colors (collision avoidance)
+bash .frames/sdlc/tools/accessibility-checker.sh distance "#B00840" "#B71C1C"
+
+# Validate colors from a file (one hex per line, ## for comments)
+bash .frames/sdlc/tools/accessibility-checker.sh palette "#FAF8F5" --file path/to/colors.txt
+```
+
 ### WCAG 2.1 AA — the floor
 
 - **Normal text:** 4.5:1 contrast ratio against its background

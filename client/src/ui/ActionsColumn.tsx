@@ -102,9 +102,7 @@ export function floatStyle(perClick: number, currentEngagement: number): { fontS
   const ratio = perClick / Math.max(1, currentEngagement);
   const t = clamp((Math.log10(ratio) + 6) / 6, 0, 1);
   const fontSize = lerp(16, 32, t);
-  const saturation = lerp(40, 100, t);
-  const lightness = lerp(52, 71, t);
-  return { fontSize, color: `hsl(43, ${saturation}%, ${lightness}%)` };
+  return { fontSize, color: '#FFFFFF' };
 }
 
 // ---------------------------------------------------------------------------
@@ -122,7 +120,7 @@ interface FloatItem {
   batchCount?: number;
 }
 
-const FLOAT_TTL_MS = 650; // slightly longer than the 600ms CSS animation
+const FLOAT_TTL_MS = 2700; // slightly longer than the 2600ms CSS animation
 
 // ---------------------------------------------------------------------------
 // LiveVerbButton
@@ -332,7 +330,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
               opacity: autoOpacity,
             }}
           >
-            +{fmtCompact(f.value)}{f.batchCount ? ` ×${f.batchCount}` : ''}
+            +{fmtCompact(f.value)}{f.batchCount ? <span className="float-multiplier"> ×{f.batchCount}</span> : ''}
           </span>
         );
       })}
