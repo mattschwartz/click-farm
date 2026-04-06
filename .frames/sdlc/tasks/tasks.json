@@ -4532,7 +4532,7 @@
       "alias": "E3",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Unlock-as-purchase lifecycle: new unlock action, checkGeneratorUnlocks split, selfies threshold change",
       "requester": "architect",
@@ -4591,7 +4591,8 @@
         "npm run build succeeds; no TypeScript errors"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 121,
@@ -4665,9 +4666,7 @@
         "npm run build succeeds; no TypeScript errors; all tests pass"
       ],
       "open_questions": [],
-      "blocked_on": [
-        120
-      ]
+      "blocked_on": []
     },
     {
       "id": 122,
