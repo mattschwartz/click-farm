@@ -1,5 +1,5 @@
 {
-  "next_id": 130,
+  "next_id": 131,
   "tasks": [
     {
       "id": 1,
@@ -4968,6 +4968,69 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-06"
+    },
+    {
+      "id": 130,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Plan level-driven-manual-cooldown implementation",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Decompose the accepted level-driven-manual-cooldown proposal into concrete build tasks. The proposal redefines the Actions column: LVL UP drives cooldown (speed), BUY drives yield multiplier (power), and stackable Autoclickers add passive auto-tapping at base cooldown. Three distinct GeneratorState fields (level, count, autoclicker_count). The engineer's review includes a full 10-point change surface trace across the codebase.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "The accepted proposal — contains formulas, data model, supersession notes, and all three reviews"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "The predecessor proposal partially superseded — §2, §4, §12, §14a/e/f affected"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "postClick cooldown gate + computeGeneratorEffectiveRate — both formulas change"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "chirps/selfies rate retune + new base_autoclicker_cost field on GeneratorDef"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "GeneratorState needs autoclicker_count field"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "New buyAutoclicker function, remove count<=0 guard on upgradeGenerator"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Save migration — seed autoclicker_count=0"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "applyRebrand must reset autoclicker_count"
+        },
+        {
+          "ref": "client/src/audience-mood/index.ts",
+          "purpose": "applyTickPosts gate change + AUTOCLICKERS_AFFECT_MOOD killswitch"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "UI wiring for autoclicker purchase button + floating number emissions"
+        }
+      ],
+      "acceptance_criteria": [
+        "Decompose into discrete build tasks covering: engine formula refactor (cooldown + yield + passive), data model + save migration, autoclicker purchase action, audience mood gate + killswitch, static data retune, and test updates",
+        "Each task is assigned to exactly one role (engineer or ux-designer) with one state (build)",
+        "Tasks reference the engineer's 10-point change surface from their review so nothing is missed",
+        "UX-designer spec-update tasks filed for the 6 gaps identified in their review (badge semantics, floating-number density, counter-bump scope, purchase button location, cooldown ring threshold, yield display formula)",
+        "Dependency ordering specified — which tasks block which",
+        "Supersession edits to manual-action-ladder.md called out as a separate task"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }
