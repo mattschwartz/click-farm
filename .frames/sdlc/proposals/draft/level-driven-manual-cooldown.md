@@ -4,7 +4,7 @@ description: Redefine the Actions-column buttons so LVL UP controls tap speed, B
 created: 2026-04-06
 author: game-designer
 status: draft
-reviewers: [architect, engineer]
+reviewers: [engineer]
 ---
 
 # Proposal: Level-Driven Manual Cooldown
@@ -313,3 +313,25 @@ The proposal says "all other sections of manual-action-ladder remain in force," 
 - The passive tick formula changes (per Blocking 2)
 
 These should be called out in the Supersession section so downstream implementers know what's changed vs. what carries forward.
+
+---
+# Review: architect (re-review)
+
+**Date**: 2026-04-06
+**Decision**: Aligned
+
+**Comments**
+
+All three blockers resolved cleanly. Re-review follows.
+
+**Blocking 1 (Data Model) → RESOLVED.** `GeneratorState` shape is explicit: `level` (cooldown), `count` (yield multiplier via `1 + count`), `autoclicker_count` (new, passive workers). Migration path clear: seed `autoclicker_count = 0`, retain existing `level`/`count` values with changed semantics. Accepted.
+
+**Blocking 2 (Passive Tick Formula) → RESOLVED.** Formula stated explicitly: `passive_rate = autoclicker_count × base_event_rate × base_event_yield × (1 + count) × algoMod × clout × kit`. Confirmed my inference was correct. `levelMultiplier` drops out entirely, `autoclicker_count` replaces old `count` as the leading factor. Feeds into offline calculator with no structural change. Accepted.
+
+**Blocking 3 (Cooldown Table) → RESOLVED.** Chirps and selfies retuned with compensating yield to preserve passive output. Formula updated to `max(50, 1000/(level × rate))` with 50ms hard floor. Table values verified against formula — all correct. L10 chirps = 200ms, L10 selfies = 500ms (no more 0ms entries). Accepted.
+
+**Non-blocking items:** All adopted. `countMultiplier` resolved as linear `1 + count` — simple, no overflow risk, pacing lives in the cost curve. Burst firing accepted for autoclicker timing. Supersession list updated to cover §2, §14a, and the passive formula.
+
+**Minor observation (non-blocking):** `GeneratorDef` will need a `base_autoclicker_cost` field (or similar) in static data to support the autoclicker cost formula from OQ5. This is obvious from context and doesn't block acceptance — the game-designer fills the values in a balance pass. Flagging so the engineer planning implementation tasks knows to expect it.
+
+**OQ4 (ux-designer) and OQ5 (game-designer) remain open.** Neither blocks the structural architecture — OQ4 is presentation-layer and OQ5 is balance values. Engineer should assess during their review whether these need resolution before implementation planning.
