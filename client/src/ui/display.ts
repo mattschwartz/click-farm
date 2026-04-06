@@ -1,5 +1,5 @@
 // Display metadata for the core game screen: labels, icons, categories,
-// semantic colors, and algorithm mood palettes.
+// and semantic colors.
 //
 // This is presentation-only data. Game logic MUST NOT read from here —
 // everything here is about how things look and read.
@@ -10,7 +10,6 @@
 // for ux-designer.
 
 import type {
-  AlgorithmStateId,
   GeneratorId,
   PlatformId,
 } from '../types.ts';
@@ -217,72 +216,6 @@ export const PLATFORM_ORDER: readonly PlatformId[] = [
   'skroll',
   'podpod',
 ];
-
-// ---------------------------------------------------------------------------
-// Algorithm mood library (UX spec §4.2)
-// ---------------------------------------------------------------------------
-
-export interface AlgorithmMood {
-  name: string;
-  /** Seconds for one full drift cycle (UX §4.2 motion signature). */
-  cycleSeconds: number;
-  /** Narrative tone for flavor text — one line. */
-  tagline: string;
-  /**
-   * Per-state edge color for the mood vignette (hex).
-   * MUST match the Tier-1 --palette-mood-* value in tokens.css.
-   */
-  moodEdgeColor: string;
-  /**
-   * Base opacity for the mood vignette, [0.14, 0.22].
-   * MUST match the --mood-edge-opacity value in tokens.css.
-   */
-  moodEdgeOpacity: number;
-}
-
-// Per-state moodEdgeColor and moodEdgeOpacity MUST match the Tier-1
-// palette entries and --mood-edge-opacity values in tokens.css. See
-// architecture/visual-theming.md §Coupling Analysis for why both exist.
-export const ALGORITHM_MOOD: Record<AlgorithmStateId, AlgorithmMood> = {
-  short_form_surge: {
-    name: 'Short-Form Surge',
-    cycleSeconds: 6,
-    tagline: 'Electric, impatient.',
-    moodEdgeColor: '#E87B3C',
-    moodEdgeOpacity: 0.18,
-  },
-  authenticity_era: {
-    name: 'Authenticity Era',
-    cycleSeconds: 12,
-    tagline: 'Cool, quiet.',
-    moodEdgeColor: '#4F8A7A',
-    moodEdgeOpacity: 0.18,
-  },
-  engagement_bait: {
-    name: 'Engagement Bait',
-    cycleSeconds: 4,
-    tagline: 'Garish, pulsing.',
-    moodEdgeColor: '#D63A82',
-    moodEdgeOpacity: 0.22,
-  },
-  nostalgia_wave: {
-    name: 'Nostalgia Wave',
-    cycleSeconds: 15,
-    tagline: 'Warm, slow, looping.',
-    moodEdgeColor: '#7A4FA8',
-    moodEdgeOpacity: 0.18,
-  },
-  corporate_takeover: {
-    name: 'Corporate Takeover',
-    cycleSeconds: 20,
-    tagline: 'Flat, cold, inevitable.',
-    moodEdgeColor: '#8A95A8',
-    moodEdgeOpacity: 0.14,
-  },
-  // algorithm_winter and viral_storm from the mood library are not in
-  // AlgorithmStateId yet — they'd be added when the algorithm state roster
-  // grows. (UX spec shows 5 moods; static data has 5 matching states.)
-};
 
 // ---------------------------------------------------------------------------
 // Helpers

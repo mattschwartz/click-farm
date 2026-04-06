@@ -1,39 +1,25 @@
 // Offline calculator.
-// Responsibility: compute the state delta between close and open, walking the
-// seeded Algorithm shift schedule segment-by-segment.
+// Responsibility: compute the state delta between close and open using a
+// single-pass multiplication of close-time production rates by elapsed time.
 //
-// Architecture contract (core-systems.md §Offline Calculator):
-//   "For each segment between shifts, apply the production rates for that
-//    Algorithm state. Sum the gains across all segments."
-//
-// Signature: calculateOffline(state, closeTime, openTime, staticData) — takes
-// the full GameState, not just SnapshotState. Segment-aware calculation needs
-// per-generator trend_sensitivity to recompute rates under each algorithm
-// segment; an aggregate-rate snapshot cannot be re-weighted. See core-systems.md
-// §Interface Contracts → Offline Calculator for the rationale. SnapshotState
-// is retained on the save for forward compatibility but is not read here.
+// With the algorithm weather system removed, there are no segment boundaries
+// to walk — rates are constant across the offline window.
 //
 // Assumptions (per architecture spec §Assumptions #6):
-//   - Offline is approximation, not simulation. Rates are computed once per
-//     algorithm segment and multiplied by segment duration.
-//   - No negative events fire while offline (proposal §8). Pure accumulation.
+//   - Offline is approximation, not simulation. Rates are computed once and
+//     multiplied by elapsed time.
+//   - No negative events fire while offline. Pure accumulation.
 //   - Platform / generator unlocks checked once at the end of the offline
 //     window — crossing a threshold mid-offline does not retroactively
 //     redirect follower distribution for that window.
 
 import type {
-  AlgorithmState,
-  AlgorithmStateId,
   GameState,
   GeneratorId,
   PlatformId,
   PlatformState,
   StaticData,
 } from '../types.ts';
-import {
-  advanceAlgorithm,
-  getShiftAtIndex,
-} from '../algorithm/index.ts';
 import {
   computeAllGeneratorEffectiveRates,
   computeSnapshot,
@@ -51,14 +37,12 @@ import { syncTotalFollowers, clampEngagement } from '../model/index.ts';
 // ---------------------------------------------------------------------------
 
 export interface OfflineResult {
-  /** Total engagement gained across all segments. ≥ 0. */
+  /** Total engagement gained. >= 0. */
   engagementGained: number;
-  /** Followers gained per platform. All values ≥ 0. */
+  /** Followers gained per platform. All values >= 0. */
   followersGained: Record<PlatformId, number>;
-  /** Sum of followersGained across all platforms. ≥ 0. */
+  /** Sum of followersGained across all platforms. >= 0. */
   totalFollowersGained: number;
-  /** Number of algorithm shifts that occurred during the offline window. */
-  algorithmAdvances: number;
   /** Elapsed milliseconds between closeTime and openTime. */
   durationMs: number;
 }
@@ -78,27 +62,22 @@ function emptyResult(
     engagementGained: 0,
     followersGained,
     totalFollowersGained: 0,
-    algorithmAdvances: 0,
     durationMs,
   };
 }
 
 // ---------------------------------------------------------------------------
-// Core walker
+// Core calculation — single-pass (no algorithm segments)
 // ---------------------------------------------------------------------------
 
 /**
- * Compute accumulated gains for an offline window, segmenting by algorithm
- * shifts. Returns both the structured result (for player-facing summary) and
- * the new GameState with gains applied.
+ * Compute accumulated gains for an offline window. Returns both the
+ * structured result (for player-facing summary) and the new GameState
+ * with gains applied.
  *
  * Edge cases:
- *   - openTime ≤ closeTime → empty result, state unchanged.
- *   - No generators producing → algorithm still advances, engagement &
- *     followers stay at 0.
- *   - Very long offline windows → O(N) in number of shifts. At base_interval
- *     ~5 min this is ~288 shifts per day. A month offline = ~8,640 iterations.
- *     Still cheap.
+ *   - openTime <= closeTime -> empty result, state unchanged.
+ *   - No generators producing -> engagement & followers stay at 0.
  */
 export function calculateOffline(
   state: GameState,
@@ -114,90 +93,50 @@ export function calculateOffline(
     };
   }
 
-  const seed = state.player.algorithm_seed;
   const platformIds = Object.keys(state.platforms) as PlatformId[];
 
-  // Step 1: normalize algorithm state to closeTime. The saved shift_time may
-  // already be in the past (shift due but not yet applied), so catch up.
-  let algorithmState: AlgorithmState = advanceAlgorithm(
-    state.algorithm,
-    seed,
-    closeTime,
+  // Compute rates from current state (rates are constant — no algorithm segments).
+  const ratesPerSec = computeAllGeneratorEffectiveRates(state, staticData);
+
+  // Engagement = sum(rates_per_sec) * seconds
+  const durationSec = durationMs / 1000;
+  let engagementGained = 0;
+  for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
+    engagementGained += (ratesPerSec[id] ?? 0) * durationSec;
+  }
+
+  // Follower distribution is computed from per-ms rates.
+  const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
+  for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
+    ratesPerMs[id] = (ratesPerSec[id] ?? 0) / 1000;
+  }
+  const distribution = computeFollowerDistribution(
+    ratesPerMs,
+    state.platforms,
     staticData,
   );
-  const startIndex = algorithmState.current_state_index;
-
-  // Accumulators
-  let engagementGained = 0;
+  // Wardrobe wraps the entire per-platform distribution (mirrors tick).
+  const kitFollowerMult = kitFollowerConversionBonus(
+    state.player.creator_kit,
+    staticData,
+  );
+  // Audience Mood retention is frozen offline — apply the retention
+  // value captured at closeTime as a constant scalar over the entire
+  // offline window. See architecture/audience-mood.md §Integration —
+  // Offline. No pressure advance while offline.
   const followersGained = Object.fromEntries(
     platformIds.map((id) => [id, 0]),
   ) as Record<PlatformId, number>;
-
-  // Step 2: walk segments.
-  let t = closeTime;
-  while (t < openTime) {
-    const segmentEnd = Math.min(algorithmState.shift_time, openTime);
-    const segmentDurationMs = segmentEnd - t;
-
-    if (segmentDurationMs > 0) {
-      // Build a temporary state with the current segment's algorithm state so
-      // computeAllGeneratorEffectiveRates applies the right modifiers.
-      const tmpState: GameState = { ...state, algorithm: algorithmState };
-      const ratesPerSec = computeAllGeneratorEffectiveRates(tmpState, staticData);
-
-      // Engagement = sum(rates_per_sec) × seconds
-      const segmentSec = segmentDurationMs / 1000;
-      for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
-        engagementGained += (ratesPerSec[id] ?? 0) * segmentSec;
-      }
-
-      // Follower distribution is computed from per-ms rates.
-      const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
-      for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
-        ratesPerMs[id] = (ratesPerSec[id] ?? 0) / 1000;
-      }
-      const distribution = computeFollowerDistribution(
-        ratesPerMs,
-        state.platforms,
-        staticData,
-      );
-      // Wardrobe wraps the entire per-platform distribution (mirrors tick).
-      const kitFollowerMult = kitFollowerConversionBonus(
-        state.player.creator_kit,
-        staticData,
-      );
-      // Audience Mood retention is frozen offline — apply the retention
-      // value captured at closeTime as a constant scalar over the entire
-      // offline window. See architecture/audience-mood.md §Integration —
-      // Offline. No pressure advance while offline.
-      for (const id of platformIds) {
-        const retention = state.platforms[id].retention;
-        followersGained[id] +=
-          distribution.perPlatformRate[id] *
-          kitFollowerMult *
-          retention *
-          segmentDurationMs;
-      }
-    }
-
-    t = segmentEnd;
-    if (t < openTime) {
-      // Advance to the next algorithm state.
-      const nextIndex = algorithmState.current_state_index + 1;
-      const shift = getShiftAtIndex(seed, nextIndex, staticData);
-      const def = staticData.algorithmStates[shift.stateId as AlgorithmStateId];
-      algorithmState = {
-        current_state_id: shift.stateId,
-        current_state_index: nextIndex,
-        shift_time: algorithmState.shift_time + shift.durationMs,
-        state_modifiers: { ...def.state_modifiers },
-      };
-    }
+  for (const id of platformIds) {
+    const retention = state.platforms[id].retention;
+    followersGained[id] =
+      distribution.perPlatformRate[id] *
+      kitFollowerMult *
+      retention *
+      durationMs;
   }
 
-  const algorithmAdvances = algorithmState.current_state_index - startIndex;
-
-  // Step 3: apply gains to state.
+  // Apply gains to state.
   const totalFollowersGained = platformIds.reduce(
     (sum, id) => sum + followersGained[id],
     0,
@@ -221,7 +160,7 @@ export function calculateOffline(
   // syncTotalFollowers recomputes total_followers from platforms.
   newPlayer = syncTotalFollowers(newPlayer, newPlatforms);
 
-  // Step 4: run unlock checks using the post-offline totals.
+  // Run unlock checks using the post-offline totals.
   const postUnlockPlatforms = checkPlatformUnlocks(
     newPlatforms,
     newPlayer.total_followers,
@@ -233,9 +172,8 @@ export function calculateOffline(
     staticData,
   );
 
-  // Step 5: update last_close_state snapshot on the new state so the *next*
-  // save cycle starts fresh — and refresh last_close_time to openTime so a
-  // subsequent open doesn't double-apply offline.
+  // Update last_close_time to openTime so a subsequent open doesn't
+  // double-apply offline.
   const newState: GameState = {
     player: {
       ...newPlayer,
@@ -243,13 +181,11 @@ export function calculateOffline(
     },
     generators: postUnlockGenerators,
     platforms: postUnlockPlatforms,
-    algorithm: algorithmState,
     // viralBurst is always reset after an offline session — any in-progress
     // burst is stale and cannot be meaningfully resumed.
     viralBurst: { active_ticks_since_last: 0, active: null },
   };
-  // Recompute snapshot so the stored per-second rates reflect the now-current
-  // algorithm state (otherwise it'd be stale from close).
+  // Recompute snapshot so the stored per-second rates are fresh.
   const refreshedSnapshot = computeSnapshot(newState, staticData);
   const finalState: GameState = {
     ...newState,
@@ -261,7 +197,6 @@ export function calculateOffline(
       engagementGained,
       followersGained,
       totalFollowersGained,
-      algorithmAdvances,
       durationMs,
     },
     newState: finalState,

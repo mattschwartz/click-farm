@@ -78,7 +78,6 @@ describe('isOneShot', () => {
 
   it('returns false for multi-level upgrades', () => {
     expect(isOneShot('engagement_boost', STATIC_DATA)).toBe(false);
-    expect(isOneShot('algorithm_insight', STATIC_DATA)).toBe(false);
   });
 });
 
@@ -210,10 +209,10 @@ describe('buildRowData', () => {
 // ---------------------------------------------------------------------------
 
 describe('buildCategorizedRows', () => {
-  it('produces categories in the fixed order ENGAGEMENT → UNLOCKS → INSIGHT', () => {
+  it('produces categories in the fixed order ENGAGEMENT → UNLOCKS', () => {
     const state = makeState();
     const result = buildCategorizedRows(state, STATIC_DATA);
-    expect(result.map((g) => g.category)).toEqual(['ENGAGEMENT', 'UNLOCKS', 'INSIGHT']);
+    expect(result.map((g) => g.category)).toEqual(['ENGAGEMENT', 'UNLOCKS']);
   });
 
   it('places the engagement_boost upgrade in the ENGAGEMENT category', () => {
@@ -235,12 +234,6 @@ describe('buildCategorizedRows', () => {
     expect(ids).toContain('platform_headstart_skroll');
   });
 
-  it('places algorithm_insight in INSIGHT', () => {
-    const state = makeState();
-    const result = buildCategorizedRows(state, STATIC_DATA);
-    const insight = result.find((g) => g.category === 'INSIGHT')!;
-    expect(insight.rows.some((r) => r.upgradeId === 'algorithm_insight')).toBe(true);
-  });
 
   it('sorts rows within a category by ascending cost', () => {
     const state = makeState();
@@ -304,7 +297,6 @@ describe('isShopAllMaxed', () => {
     const state = makeState({
       ownedUpgrades: {
         engagement_boost: 3,
-        algorithm_insight: 2,
         platform_headstart_picshift: 1,
         platform_headstart_skroll: 1,
         platform_headstart_podpod: 1,

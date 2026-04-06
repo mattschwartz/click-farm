@@ -29,10 +29,8 @@ import {
   calculateRebrand,
   applyRebrand,
   purchaseCloutUpgrade,
-  getUpcomingShifts,
   type RebrandResult,
 } from '../prestige/index.ts';
-import type { ScheduledShift } from '../algorithm/index.ts';
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -154,8 +152,6 @@ export interface GameDriver {
   buyCloutUpgrade(upgradeId: UpgradeId): void;
   /** Spend Engagement on a Creator Kit item. Errors caught via onActionError. */
   buyKitItem(itemId: KitItemId): void;
-  /** Upcoming algorithm shifts visible via the algorithm_insight upgrade. */
-  getUpcomingShifts(): ScheduledShift[];
   /**
    * Subscribe to viral burst events. Fires once per event, synchronously,
    * before state subscribers are notified. Returns an unsubscribe function.
@@ -488,8 +484,6 @@ export function createDriver(options: DriverOptions): GameDriver {
         applyState(purchaseKitItem(state, itemId, staticData));
       });
     },
-
-    getUpcomingShifts: () => getUpcomingShifts(state, staticData),
 
     onViralBurst(listener) {
       viralListeners.add(listener);

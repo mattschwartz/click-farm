@@ -2,7 +2,7 @@
 // normal session. Implements UX spec §§2–8, §9, and §11.
 //
 // Zones (per UX §2):
-//   - Top bar (80px): Algorithm state + Engagement + Followers
+//   - Top bar (80px): Engagement + Followers
 //   - Post zone (left, 320px): click-to-post button
 //   - Generators (center, flex): ledger with category dividers
 //   - Platforms (right, 280px): 3 cards with follower counts
@@ -26,7 +26,6 @@ import {
 import { cloutForRebrand } from '../prestige/index.ts';
 import type { ActiveViralEvent, GeneratorId } from '../types.ts';
 import type { OfflineResult } from '../offline/index.ts';
-import { AlgorithmBackground } from './AlgorithmBackground.tsx';
 import { TopBar } from './TopBar.tsx';
 import { ActionsColumn } from './ActionsColumn.tsx';
 import { GeneratorList } from './GeneratorList.tsx';
@@ -37,7 +36,6 @@ import { CloutShopModal } from './CloutShopModal.tsx';
 import { CreatorKitPanel } from './CreatorKitPanel.tsx';
 import { SettingsModal } from './SettingsModal.tsx';
 import { useSettings } from './useSettings.ts';
-import { PLATFORM_DISPLAY } from './display.ts';
 import { fmtCompactInt } from './format.ts';
 import './GameScreen.css';
 
@@ -189,30 +187,12 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     : 0;
   const effectiveEngagementRate = engagementRate + viralBonusRatePerSec;
 
-  // Vignette color for the edge glow during viral (UX §9.2 Phase 2).
-  const vignetteColor = viralActive
-    ? PLATFORM_DISPLAY[viralActive.source_platform_id].accent
-    : null;
-
   // ---------------------------------------------------------------------------
   // Offline modal moved to the App-level start gate (welcome back variant).
   // The standalone OfflineGainsModal is no longer rendered here.
 
   // Upgrade drawer open state — used to dim the platform panel per spec §1.
   const [upgradeDrawerOpen, setUpgradeDrawerOpen] = useState(false);
-
-  // Approximate algorithm interval from static schedule — used for
-  // instability scaling (we don't have the exact current-interval value
-  // available; base ± variance is close enough for visual intent).
-  const intervalMs = STATIC_DATA.algorithmSchedule.baseIntervalMs;
-
-  // Live `now` for the instability computation. Tick once a second — we
-  // only need coarse resolution to scale animation speed.
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(t);
-  }, []);
 
   // Prestige cluster — two-button affordance bottom-right (spec §2.1–2.3).
   // Replaces the old single rebrand-corner button and window.confirm.
@@ -317,29 +297,8 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
 
   return (
     <>
-      <AlgorithmBackground
-        algorithm={state.algorithm}
-        now={now}
-        intervalMs={intervalMs}
-        viralActive={viralPhase !== null}
-        viralBurst={
-          viralPhase !== null && vignetteColor
-            ? {
-                color: vignetteColor,
-                phase:
-                  viralPhase === 'build'
-                    ? 'entering'
-                    : viralPhase === 'decay'
-                      ? 'exiting'
-                      : 'peak',
-              }
-            : undefined
-        }
-      />
-
       <main className={`game-screen${viralPhase === 'peak' ? ' viral-zoom-pulse' : ''}`}>
         <TopBar
-          algorithm={state.algorithm}
           engagement={state.player.engagement}
           engagementRate={effectiveEngagementRate}
           totalFollowers={state.player.total_followers}

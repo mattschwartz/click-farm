@@ -510,7 +510,7 @@ describe('tick — generator unlocks', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     // selfies is manual_clickable=true — checkGeneratorUnlocks skips it
     const next = tick(
-      { ...state, algorithm: { ...state.algorithm, shift_time: T0 + 10_000_000 } },
+      state,
       T0 + 100,
       100,
       STATIC_DATA,
@@ -524,7 +524,6 @@ describe('tick — generator unlocks', () => {
     const base = createInitialGameState(STATIC_DATA, T0);
     const state: GameState = {
       ...base,
-      algorithm: { ...base.algorithm, shift_time: T0 + 10_000_000 },
       generators: {
         ...base.generators,
         podcasts: { ...base.generators.podcasts, owned: true, count: 500, level: 1, autoclicker_count: 500 },
@@ -541,7 +540,7 @@ describe('tick — generator unlocks', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     // No active generators → no followers → nothing auto-unlocks
     const next = tick(
-      { ...state, algorithm: { ...state.algorithm, shift_time: T0 + 10_000_000 } },
+      state,
       T0 + 100,
       100,
       STATIC_DATA,

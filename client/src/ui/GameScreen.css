@@ -6,88 +6,6 @@
  * its own — palette changes happen in one place.
  */
 
-/* --- Ambient background layer (Algorithm mood) -------------------------- */
-
-.algorithm-background {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  background: var(--surface-canvas, #FAF8F5);
-  background-size: 200% 200%;
-  transition: background-image 400ms ease-in-out;
-  animation: mood-drift var(--mood-cycle, 6s) ease-in-out infinite;
-  pointer-events: none;
-}
-
-/* --- Algorithm mood edge vignette ----------------------------------------
- * Radial gradient wash at screen edges. Color and opacity driven by
- * --mood-color-edge / --mood-edge-opacity tokens bound per algorithm state
- * in tokens.css. Instability and viral burst override opacity/color inline.
- * Architecture: visual-theming.md §Vignette Layer — DOM Contract. */
-
-.algorithm-vignette {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 120% 100% at 50% 50%,
-    transparent 40%,
-    var(--mood-color-edge, transparent) 100%
-  );
-  transition: background 400ms ease-in-out, opacity 400ms ease-in-out;
-}
-
-/* Viral burst peak: pulse the vignette opacity at 2s cycle. */
-.algorithm-vignette.vignette-pulse {
-  animation: vignette-mood-pulse 2s ease-in-out infinite;
-}
-
-@keyframes vignette-mood-pulse {
-  0%, 100% { opacity: 0.16; }
-  50%      { opacity: 0.32; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .algorithm-vignette {
-    transition: none;
-  }
-  .algorithm-vignette.vignette-pulse {
-    animation: none;
-  }
-}
-
-.algorithm-background::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  /* Shimmer overlay — white-on-warm-white (near-invisible on light-mode
-   * canvas). Retained as a structural hook for a follow-up particle pass.
-   * Tokenized per no-literals rule (task #108 AC7). */
-  background:
-    radial-gradient(ellipse at 30% 20%, rgba(var(--palette-white-rgb), 0.04), transparent 55%),
-    radial-gradient(ellipse at 70% 80%, rgba(var(--palette-white-rgb), 0.03), transparent 60%);
-  animation: mood-shimmer calc(var(--mood-cycle, 6s) * 1.5) ease-in-out infinite;
-}
-
-/* Instability intensification — the UX spec §4.3 says motion speeds up and
- * saturation nudges in the final 20% of the shift interval. We scale the
- * animation-duration down via --mood-cycle and bump saturation via filter. */
-.algorithm-background.instability {
-  filter: saturate(1.15) brightness(1.08);
-}
-
-@keyframes mood-drift {
-  0%   { background-position: 0%   0%;   }
-  50%  { background-position: 100% 100%; }
-  100% { background-position: 0%   0%;   }
-}
-
-@keyframes mood-shimmer {
-  0%, 100% { opacity: 0.6; transform: translateY(0); }
-  50%      { opacity: 1.0; transform: translateY(-8px); }
-}
-
 /* --- Screen layout ------------------------------------------------------- */
 
 .game-screen {
@@ -113,7 +31,7 @@
 /* --- Top bar (UX §2, §3, §5) -------------------------------------------- */
 
 /* Three-zone strip per game-screen-hud-refinements §1.2.
- * Zone A (algorithm): left, max 40%.
+ * Zone A: left, max 40% (empty after algorithm removal).
  * Zone B (engagement): center, min 30%.
  * Zone C (followers): right, max 30%.
  * Settings gear sits outside the zone budget.
@@ -154,7 +72,7 @@
   flex-shrink: 0;
 }
 
-/* Zone A — algorithm label (max 40% width, §1.2). */
+/* Zone A — empty after algorithm removal (max 40% width, §1.2). */
 .algo-label {
   display: flex;
   flex-direction: column;
@@ -203,7 +121,7 @@
   text-overflow: ellipsis;
 }
 
-/* RUN badge — appears inline with algorithm state name (task #66, UX §5).
+/* RUN badge — appears in Zone A (task #66, UX §5).
    Hidden at rebrand_count 0; 400ms fade-in on first appearance (rebrand_count 1). */
 .run-badge {
   display: inline-block;
@@ -2040,17 +1958,6 @@
    Three phases: Build (0–1500ms) → Peak (variable) → Decay (last 1000ms).
    ========================================================================== */
 
-/* --- Algorithm background saturation bump (Phase 1 / Phase 2) ------------ */
-
-.algorithm-background.viral-saturation {
-  filter: saturate(1.2) brightness(1.05);
-}
-
-/* Combined: instability + viral */
-.algorithm-background.instability.viral-saturation {
-  filter: saturate(1.3) brightness(1.1);
-}
-
 /* --- Engagement counter gold color (Phase 1 onset → Phase 3 end) --------- */
 
 /* Transition on base rule handles both directions:
@@ -2158,9 +2065,6 @@
   }
 }
 
-/* --- Legacy viral-vignette block removed by task #109. The viral burst
- * edge vignette is now handled by AlgorithmBackground's .algorithm-vignette
- * layer with viralBurst override. See algorithm-mood-visibility proposal. */
 
 /* --- Camera-style zoom pulse (Phase 2 only) --------------------------------
  * ±1% scale on the game-screen. Fixed-position siblings (vignette, particles,
@@ -3419,19 +3323,6 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
    (prefers-reduced-motion: reduce) counterpart above — search for the same
    selectors if you're modifying motion behavior. */
 
-html[data-reduce-motion="true"] .algorithm-background,
-html[data-reduce-motion="true"] .algorithm-background::after,
-html[data-reduce-motion="true"] .algorithm-background.instability {
-  animation: none;
-}
-
-html[data-reduce-motion="true"] .algorithm-vignette {
-  transition: none;
-}
-
-html[data-reduce-motion="true"] .algorithm-vignette.vignette-pulse {
-  animation: none;
-}
 
 html[data-reduce-motion="true"] .badge.badge-owned {
   animation: none;

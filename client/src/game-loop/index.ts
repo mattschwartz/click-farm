@@ -9,7 +9,6 @@
 //   3. Distribute followers across unlocked platforms via the follower
 //      distribution formula; sync derived totals on Player.
 //   4. Check platform unlocks against total_followers.
-//   5. Advance Algorithm to account for any shifts up to `now`.
 //
 // All functions are pure. State in → new state out. No mutation.
 
@@ -26,7 +25,6 @@ import type {
   UpgradeId,
   ViralBurstState,
 } from '../types.ts';
-import { advanceAlgorithm, getAlgorithmModifier } from '../algorithm/index.ts';
 import {
   checkPlatformUnlocks,
   computeFollowerDistribution,
@@ -70,8 +68,8 @@ export function levelMultiplier(level: number): number {
  * Reads every `engagement_multiplier` clout-upgrade's per-level `values` array
  * and takes `values[level - 1]` as the cumulative multiplier at that level.
  * Multiple engagement-multiplier upgrades stack multiplicatively. Other
- * upgrade types (algorithm_insight, platform_headstart, generator_unlock) do
- * not affect engagement rate.
+ * upgrade types (platform_headstart, generator_unlock) do not affect
+ * engagement rate.
  *
  * Returns 1.0 (no bonus) if no engagement_multiplier upgrade is purchased.
  */
@@ -98,22 +96,6 @@ export function cloutBonus(
   return multiplier;
 }
 
-/**
- * Folds trend_sensitivity into the raw algorithm state modifier.
- *
- *   effective = 1 + trend_sensitivity × (raw_modifier - 1)
- *
- * Interpolates between 1.0 (trend-immune) and the raw modifier (fully
- * trend-sensitive). trend_sensitivity=0 → always 1.0. trend_sensitivity=1 →
- * always the raw modifier. In between is a linear interpolation.
- */
-export function effectiveAlgorithmModifier(
-  rawModifier: number,
-  trendSensitivity: number,
-): number {
-  return 1 + trendSensitivity * (rawModifier - 1);
-}
-
 // ---------------------------------------------------------------------------
 // Per-generator effective rate
 // ---------------------------------------------------------------------------
@@ -123,8 +105,7 @@ export function effectiveAlgorithmModifier(
  * generator's PASSIVE production, driven by autoclicker_count.
  *
  *   effective_rate = autoclicker_count × base_event_rate × base_event_yield
- *                    × (1 + count)
- *                    × effective_algorithm_modifier × clout_bonus × kit_bonus
+ *                    × (1 + count) × clout_bonus × kit_bonus
  *
  * Level-driven-cooldown refactor (task #132):
  *   - `autoclicker_count` drives passive production (was `count`)
@@ -144,8 +125,6 @@ export function computeGeneratorEffectiveRate(
 ): number {
   if (!generator.owned || generator.autoclicker_count <= 0) return 0;
   const def = staticData.generators[generator.id];
-  const rawModifier = getAlgorithmModifier(state.algorithm, generator.id);
-  const algoMod = effectiveAlgorithmModifier(rawModifier, def.trend_sensitivity);
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
   // Kit effects fold in AFTER Clout per architecture/creator-kit.md §Stacking
   // Order (§3 clout → §4 kit). Camera is the only item in this chain today.
@@ -155,7 +134,6 @@ export function computeGeneratorEffectiveRate(
     def.base_event_rate *
     def.base_event_yield *
     (1 + generator.count) *
-    algoMod *
     clout *
     kit
   );
@@ -188,11 +166,9 @@ export function computeAllGeneratorEffectiveRates(
 /**
  * Evaluates whether a viral burst should fire this tick.
  *
- * All three gates must pass:
+ * Both gates must pass:
  *   Gate 1 — cooldown: enough active-play ticks since the last viral.
- *   Gate 2 — probability: random roll < p_viral (adjusted by Gate 3).
- *   Gate 3 — algorithm affinity: top generator's effective modifier ≥ threshold
- *             doubles p_viral.
+ *   Gate 2 — probability: random roll < p_viral.
  *
  * Returns a fully-constructed `ActiveViralEvent` on trigger, or null otherwise.
  *
@@ -209,7 +185,7 @@ export function evaluateViralTrigger(
   random: () => number = Math.random,
 ): ActiveViralEvent | null {
   const config = staticData.viralBurst;
-  const { viralBurst, generators, platforms, algorithm } = state;
+  const { viralBurst, generators, platforms } = state;
 
   // Gate 1 — cooldown (hard floor, active-play ticks only)
   if (viralBurst.active_ticks_since_last < config.minCooldownTicks) {
@@ -231,7 +207,12 @@ export function evaluateViralTrigger(
     p_viral = config.baseProbabilityLate;
   }
 
-  // Gate 3 — algorithm affinity boost (applied to p_viral before the roll)
+  // Gate 2 — probability roll
+  if (random() >= p_viral) {
+    return null;
+  }
+
+  // Find top generator for source selection
   let topGenId: GeneratorId = rateEntries[0][0];
   let topRate = rateEntries[0][1];
   for (const [id, rate] of rateEntries) {
@@ -240,19 +221,8 @@ export function evaluateViralTrigger(
       topGenId = id;
     }
   }
-  const rawMod = getAlgorithmModifier(algorithm, topGenId);
-  const topGenDef = staticData.generators[topGenId];
-  const effectiveMod = effectiveAlgorithmModifier(rawMod, topGenDef.trend_sensitivity);
-  if (effectiveMod > config.algorithmBoostThreshold) {
-    p_viral *= config.algorithmBoostMultiplier;
-  }
 
-  // Gate 2 — probability roll
-  if (random() >= p_viral) {
-    return null;
-  }
-
-  // All gates passed — select source platform
+  // Select source platform — highest affinity for the top generator
   const unlockedPlatformIds = (Object.keys(platforms) as PlatformId[]).filter(
     (id) => platforms[id].unlocked,
   );
@@ -309,12 +279,8 @@ export function evaluateViralTrigger(
 /**
  * Execute one game loop tick. Pure state → state.
  *
- * Contract: core-systems.md §Interface Contracts → Game Loop Tick.
- * `now` is separate from `deltaMs` because Algorithm shift advancement is
- * driven by absolute epoch timestamps (`shift_time`), not elapsed deltas.
- *
  * @param state      current game state
- * @param now        current epoch ms (for Algorithm shift advancement)
+ * @param now        current epoch ms
  * @param deltaMs    elapsed milliseconds since last tick
  * @param staticData balance data
  */
@@ -328,15 +294,7 @@ export function tick(
     throw new Error(`tick: deltaMs must be ≥ 0, got ${deltaMs}`);
   }
   if (deltaMs === 0) {
-    // No time elapsed — only advance algorithm against `now` in case a shift
-    // boundary was crossed by other code paths.
-    const algorithm = advanceAlgorithm(
-      state.algorithm,
-      state.player.algorithm_seed,
-      now,
-      staticData,
-    );
-    return algorithm === state.algorithm ? state : { ...state, algorithm };
+    return state;
   }
 
   // 1. Compute per-generator effective rates (per second).
@@ -434,39 +392,30 @@ export function tick(
     staticData,
   );
 
-  // 9. Advance algorithm shifts up to `now`.
-  const algorithm = advanceAlgorithm(
-    state.algorithm,
-    player.algorithm_seed,
-    now,
-    staticData,
-  );
-
-  // 10. Advance active_ticks_since_last by 1 (active-play tick counter).
+  // 9. Advance active_ticks_since_last by 1 (active-play tick counter).
   let viralBurst: ViralBurstState = {
     ...state.viralBurst,
     active_ticks_since_last: state.viralBurst.active_ticks_since_last + 1,
   };
 
-  // 11 / 12. Process active viral or evaluate trigger.
+  // 10 / 11. Process active viral or evaluate trigger.
   if (viralBurst.active !== null) {
     if (now >= viralBurst.active.start_time + viralBurst.active.duration_ms) {
-      // 11a. Viral expired — clear it.
+      // 10a. Viral expired — clear it.
       viralBurst = { ...viralBurst, active: null };
     } else {
-      // 11b. Viral still running — apply bonus engagement on top of normal production.
+      // 10b. Viral still running — apply bonus engagement on top of normal production.
       player = {
         ...player,
         engagement: clampEngagement(player.engagement + viralBurst.active.bonus_rate_per_ms * deltaMs),
       };
     }
   } else {
-    // 12. No active viral — evaluate trigger with the state assembled this tick.
+    // 11. No active viral — evaluate trigger with the state assembled this tick.
     const triggerState: GameState = {
       player,
       generators,
       platforms,
-      algorithm,
       viralBurst,
     };
     const event = evaluateViralTrigger(triggerState, staticData, now);
@@ -475,7 +424,7 @@ export function tick(
     }
   }
 
-  return { player, generators, platforms, algorithm, viralBurst };
+  return { player, generators, platforms, viralBurst };
 }
 
 // ---------------------------------------------------------------------------
@@ -540,7 +489,6 @@ export function computeSnapshot(
   return {
     total_engagement_rate,
     total_follower_rate,
-    algorithm_state_index: state.algorithm.current_state_index,
     platform_rates,
   };
 }
@@ -573,11 +521,9 @@ export function verbYieldPerTap(
   staticData: StaticData,
 ): number {
   const def = staticData.generators[generator.id];
-  const rawModifier = getAlgorithmModifier(state.algorithm, generator.id);
-  const algoMod = effectiveAlgorithmModifier(rawModifier, def.trend_sensitivity);
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
   const kit = kitEngagementBonus(state.player.creator_kit, staticData);
-  return def.base_event_yield * (1 + generator.count) * algoMod * clout * kit;
+  return def.base_event_yield * (1 + generator.count) * clout * kit;
 }
 
 // ---------------------------------------------------------------------------

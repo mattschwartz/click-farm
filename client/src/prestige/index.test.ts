@@ -8,11 +8,10 @@ import {
   cloutUpgradeCost,
   canPurchaseCloutUpgrade,
   purchaseCloutUpgrade,
-  getUpcomingShifts,
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
-import { tick, cloutBonus } from '../game-loop/index.ts';
+import { cloutBonus } from '../game-loop/index.ts';
 import type { GameState, StaticData, CloutUpgradeDef, UpgradeId } from '../types.ts';
 
 const T0 = 1_000_000;
@@ -23,7 +22,6 @@ function seedState(overrides?: Partial<GameState['player']>): GameState {
     ...s,
     player: {
       ...s.player,
-      algorithm_seed: 0xDEADBEEF,
       ...overrides,
     },
   };
@@ -78,12 +76,6 @@ describe('calculateRebrand', () => {
       lifetime_followers: 50_000, // higher, but shouldn't count
     });
     expect(calculateRebrand(state).cloutEarned).toBe(10);
-  });
-
-  it('derives a new seed from old seed + next rebrand_count', () => {
-    const a = calculateRebrand(seedState({ rebrand_count: 0 }));
-    const b = calculateRebrand(seedState({ rebrand_count: 1 }));
-    expect(a.newSeed).not.toBe(b.newSeed);
   });
 
   it('is deterministic — same state in, same result out', () => {
@@ -184,16 +176,6 @@ describe('applyRebrand — reset completeness', () => {
     expect(next.viralBurst.active_ticks_since_last).toBe(0);
   });
 
-  it('resets algorithm to a fresh schedule (index 0, new seed, new shift_time)', () => {
-    const state = setupMidRun();
-    const rebrandResult = calculateRebrand(state);
-    const next = applyRebrand(state, rebrandResult, STATIC_DATA, T0 + 1000);
-    expect(next.algorithm.current_state_index).toBe(0);
-    expect(next.player.algorithm_seed).toBe(rebrandResult.newSeed);
-    expect(next.algorithm.shift_time).toBe(
-      T0 + 1000 + STATIC_DATA.algorithmSchedule.baseIntervalMs,
-    );
-  });
 });
 
 describe('applyRebrand — preservation of meta', () => {
@@ -216,10 +198,8 @@ describe('applyRebrand — preservation of meta', () => {
   it('preserves clout_upgrades across rebrand', () => {
     const state = seedState({ total_followers: 1_000 });
     state.player.clout_upgrades.engagement_boost = 2;
-    state.player.clout_upgrades.algorithm_insight = 1;
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
     expect(next.player.clout_upgrades.engagement_boost).toBe(2);
-    expect(next.player.clout_upgrades.algorithm_insight).toBe(1);
   });
 
   it('preserves player.id across rebrand', () => {
@@ -397,135 +377,6 @@ describe('cloutUpgradeCost + purchaseCloutUpgrade', () => {
       expect(s.player.clout).toBe(before - cost);
     }
     expect(canPurchaseCloutUpgrade(s, 'engagement_boost', STATIC_DATA)).toBe(false);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Algorithm insight
-// ---------------------------------------------------------------------------
-
-describe('getUpcomingShifts', () => {
-  it('returns [] when the upgrade is unpurchased', () => {
-    const s = seedState();
-    expect(getUpcomingShifts(s, STATIC_DATA)).toEqual([]);
-  });
-
-  it('returns N shifts when algorithm_insight is at level L (N = L × lookahead)', () => {
-    const s = seedState();
-    s.player.clout_upgrades.algorithm_insight = 1; // lookahead=1, level=1 → 1 shift
-    const shifts = getUpcomingShifts(s, STATIC_DATA);
-    expect(shifts.length).toBe(1);
-    expect(shifts[0].stateId).toBeDefined();
-    expect(shifts[0].durationMs).toBeGreaterThan(0);
-  });
-
-  it('scales lookahead with per-level array (level 2 → lookaheads[1])', () => {
-    const s = seedState();
-    s.player.clout_upgrades.algorithm_insight = 2;
-    const shifts = getUpcomingShifts(s, STATIC_DATA);
-    const expected = STATIC_DATA.cloutUpgrades.algorithm_insight.effect.type
-      === 'algorithm_insight'
-      ? STATIC_DATA.cloutUpgrades.algorithm_insight.effect.lookaheads[1]
-      : 0;
-    expect(shifts.length).toBe(expected);
-  });
-
-  it('upcoming shifts match deterministic schedule from next index', () => {
-    const s = seedState();
-    s.player.clout_upgrades.algorithm_insight = 2;
-    const shifts = getUpcomingShifts(s, STATIC_DATA);
-    // The returned shifts should correspond to current_state_index + 1
-    // and +2 — same as tick would consume them.
-    expect(shifts[0].stateId).toBeDefined();
-    expect(shifts[1].stateId).toBeDefined();
-  });
-
-  it('kit Laptop level 0 contributes no lookahead', () => {
-    const s = seedState();
-    (s.player.creator_kit as Record<string, number>).laptop = 0;
-    expect(getUpcomingShifts(s, STATIC_DATA)).toEqual([]);
-  });
-
-  it('kit Laptop alone (clout=0) returns laptop.lookaheads[level-1] shifts', () => {
-    const s = seedState();
-    (s.player.creator_kit as Record<string, number>).laptop = 1;
-    const shifts = getUpcomingShifts(s, STATIC_DATA);
-    const laptopDef = STATIC_DATA.creatorKitItems.laptop;
-    const expected =
-      laptopDef.effect.type === 'algorithm_lookahead'
-        ? laptopDef.effect.lookaheads[0]
-        : 0;
-    expect(shifts.length).toBe(expected);
-  });
-
-  it('stacks Laptop + Clout algorithm_insight additively', () => {
-    const laptopDef = STATIC_DATA.creatorKitItems.laptop;
-    const cloutDef = STATIC_DATA.cloutUpgrades.algorithm_insight;
-    const laptopN =
-      laptopDef.effect.type === 'algorithm_lookahead'
-        ? laptopDef.effect.lookaheads[0]
-        : 0;
-    const cloutN =
-      cloutDef.effect.type === 'algorithm_insight'
-        ? cloutDef.effect.lookaheads[0]
-        : 0;
-
-    const sLaptop = seedState();
-    (sLaptop.player.creator_kit as Record<string, number>).laptop = 1;
-    const sClout = seedState();
-    sClout.player.clout_upgrades.algorithm_insight = 1;
-    const sBoth = seedState();
-    (sBoth.player.creator_kit as Record<string, number>).laptop = 1;
-    sBoth.player.clout_upgrades.algorithm_insight = 1;
-
-    expect(getUpcomingShifts(sLaptop, STATIC_DATA).length).toBe(laptopN);
-    expect(getUpcomingShifts(sClout, STATIC_DATA).length).toBe(cloutN);
-    expect(getUpcomingShifts(sBoth, STATIC_DATA).length).toBe(laptopN + cloutN);
-  });
-
-  it('stacks max-level Laptop + max-level Clout additively (clamp = sum)', () => {
-    const laptopDef = STATIC_DATA.creatorKitItems.laptop;
-    const cloutDef = STATIC_DATA.cloutUpgrades.algorithm_insight;
-    const laptopMaxLookahead =
-      laptopDef.effect.type === 'algorithm_lookahead'
-        ? laptopDef.effect.lookaheads[laptopDef.max_level - 1]
-        : 0;
-    const cloutMaxLookahead =
-      cloutDef.effect.type === 'algorithm_insight'
-        ? cloutDef.effect.lookaheads[cloutDef.max_level - 1]
-        : 0;
-
-    const s = seedState();
-    (s.player.creator_kit as Record<string, number>).laptop = laptopDef.max_level;
-    s.player.clout_upgrades.algorithm_insight = cloutDef.max_level;
-
-    const shifts = getUpcomingShifts(s, STATIC_DATA);
-    expect(shifts.length).toBe(laptopMaxLookahead + cloutMaxLookahead);
-    // Each shift should be a valid ScheduledShift.
-    for (const shift of shifts) {
-      expect(shift.stateId).toBeDefined();
-      expect(shift.durationMs).toBeGreaterThan(0);
-    }
-  });
-
-  it('advances correctly after a tick consumes a shift', () => {
-    const s = seedState();
-    s.player.clout_upgrades.algorithm_insight = 1;
-    const before = getUpcomingShifts(s, STATIC_DATA);
-
-    // Advance past the first shift so the algorithm advances.
-    const shifted = tick(
-      s,
-      s.algorithm.shift_time + 1,
-      0,
-      STATIC_DATA,
-    );
-    expect(shifted.algorithm.current_state_index).toBeGreaterThan(
-      s.algorithm.current_state_index,
-    );
-    const after = getUpcomingShifts(shifted, STATIC_DATA);
-    // Shown shift moves forward — what was "upcoming" is now current.
-    expect(after[0].stateId).not.toBe(before[0].stateId);
   });
 });
 

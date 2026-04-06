@@ -37,7 +37,6 @@ function stateWithGenerator(
         autoclicker_count: autoclickerCount,
       },
     },
-    algorithm: { ...base.algorithm, shift_time: T0 + 10_000_000 },
     player: { ...base.player, engagement: 10_000 },
   };
 }

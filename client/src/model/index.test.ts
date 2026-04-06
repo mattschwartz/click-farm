@@ -22,33 +22,32 @@ import { STATIC_DATA } from '../static-data/index.ts';
 
 describe('createPlayer', () => {
   it('creates a player with zeroed currencies', () => {
-    const player = createPlayer(42, 1000);
+    const player = createPlayer(1000);
     expect(player.engagement).toBe(0);
     expect(player.clout).toBe(0);
     expect(player.total_followers).toBe(0);
     expect(player.lifetime_followers).toBe(0);
   });
 
-  it('sets the seed and run_start_time', () => {
-    const player = createPlayer(99, 5000);
-    expect(player.algorithm_seed).toBe(99);
+  it('sets run_start_time', () => {
+    const player = createPlayer(5000);
     expect(player.run_start_time).toBe(5000);
   });
 
   it('starts with no close state', () => {
-    const player = createPlayer(1, 0);
+    const player = createPlayer(0);
     expect(player.last_close_time).toBeNull();
     expect(player.last_close_state).toBeNull();
   });
 
   it('generates a unique id each time', () => {
-    const a = createPlayer(1, 0);
-    const b = createPlayer(1, 0);
+    const a = createPlayer(0);
+    const b = createPlayer(0);
     expect(a.id).not.toBe(b.id);
   });
 
   it('starts with all clout_upgrades at level 0', () => {
-    const player = createPlayer(1, 0);
+    const player = createPlayer(0);
     for (const level of Object.values(player.clout_upgrades)) {
       expect(level).toBe(0);
     }
@@ -112,12 +111,6 @@ describe('createInitialGameState', () => {
       expect(platform.followers).toBe(0);
     }
   });
-
-  it('sets algorithm state from static data', () => {
-    const state = createInitialGameState(STATIC_DATA, 0);
-    const validIds = Object.keys(STATIC_DATA.algorithmStates);
-    expect(validIds).toContain(state.algorithm.current_state_id);
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -126,30 +119,30 @@ describe('createInitialGameState', () => {
 
 describe('earnEngagement', () => {
   it('adds engagement', () => {
-    const player = createPlayer(1, 0);
+    const player = createPlayer(0);
     const updated = earnEngagement(player, 50);
     expect(updated.engagement).toBe(50);
   });
 
   it('does not mutate the original player', () => {
-    const player = createPlayer(1, 0);
+    const player = createPlayer(0);
     earnEngagement(player, 50);
     expect(player.engagement).toBe(0);
   });
 
   it('throws on negative amount', () => {
-    const player = createPlayer(1, 0);
+    const player = createPlayer(0);
     expect(() => earnEngagement(player, -1)).toThrow();
   });
 
   it('allows earning 0', () => {
-    const player = createPlayer(1, 0);
+    const player = createPlayer(0);
     const updated = earnEngagement(player, 0);
     expect(updated.engagement).toBe(0);
   });
 
   it('clamps earn that would exceed MAX_SAFE_INTEGER (task #89)', () => {
-    const player = createPlayer(1, Number.MAX_SAFE_INTEGER - 10);
+    const player = createPlayer(Number.MAX_SAFE_INTEGER - 10);
     const updated = earnEngagement(player, 1e18);
     expect(updated.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
@@ -193,29 +186,29 @@ describe('clampEngagement', () => {
 
 describe('spendEngagement', () => {
   it('subtracts engagement', () => {
-    const player = earnEngagement(createPlayer(1, 0), 100);
+    const player = earnEngagement(createPlayer(0), 100);
     const updated = spendEngagement(player, 30);
     expect(updated.engagement).toBe(70);
   });
 
   it('throws when insufficient balance', () => {
-    const player = earnEngagement(createPlayer(1, 0), 10);
+    const player = earnEngagement(createPlayer(0), 10);
     expect(() => spendEngagement(player, 20)).toThrow();
   });
 
   it('throws on negative amount', () => {
-    const player = earnEngagement(createPlayer(1, 0), 100);
+    const player = earnEngagement(createPlayer(0), 100);
     expect(() => spendEngagement(player, -5)).toThrow();
   });
 
   it('allows spending exact balance to zero', () => {
-    const player = earnEngagement(createPlayer(1, 0), 50);
+    const player = earnEngagement(createPlayer(0), 50);
     const updated = spendEngagement(player, 50);
     expect(updated.engagement).toBe(0);
   });
 
   it('does not go negative', () => {
-    const player = createPlayer(1, 0); // engagement = 0
+    const player = createPlayer(0); // engagement = 0
     expect(() => spendEngagement(player, 1)).toThrow();
   });
 });
@@ -226,13 +219,13 @@ describe('spendEngagement', () => {
 
 describe('canAffordEngagement', () => {
   it('returns true when sufficient', () => {
-    const player = earnEngagement(createPlayer(1, 0), 100);
+    const player = earnEngagement(createPlayer(0), 100);
     expect(canAffordEngagement(player, 50)).toBe(true);
     expect(canAffordEngagement(player, 100)).toBe(true);
   });
 
   it('returns false when insufficient', () => {
-    const player = createPlayer(1, 0);
+    const player = createPlayer(0);
     expect(canAffordEngagement(player, 1)).toBe(false);
   });
 });
@@ -243,16 +236,16 @@ describe('canAffordEngagement', () => {
 
 describe('earnClout', () => {
   it('adds clout', () => {
-    const player = earnClout(createPlayer(1, 0), 5);
+    const player = earnClout(createPlayer(0), 5);
     expect(player.clout).toBe(5);
   });
 
   it('throws on negative amount', () => {
-    expect(() => earnClout(createPlayer(1, 0), -1)).toThrow();
+    expect(() => earnClout(createPlayer(0), -1)).toThrow();
   });
 
   it('throws on non-integer amount', () => {
-    expect(() => earnClout(createPlayer(1, 0), 1.5)).toThrow();
+    expect(() => earnClout(createPlayer(0), 1.5)).toThrow();
   });
 });
 
@@ -262,23 +255,23 @@ describe('earnClout', () => {
 
 describe('spendClout', () => {
   it('subtracts clout', () => {
-    const player = earnClout(createPlayer(1, 0), 10);
+    const player = earnClout(createPlayer(0), 10);
     const updated = spendClout(player, 3);
     expect(updated.clout).toBe(7);
   });
 
   it('throws when insufficient', () => {
-    const player = createPlayer(1, 0);
+    const player = createPlayer(0);
     expect(() => spendClout(player, 1)).toThrow();
   });
 
   it('throws on negative amount', () => {
-    const player = earnClout(createPlayer(1, 0), 10);
+    const player = earnClout(createPlayer(0), 10);
     expect(() => spendClout(player, -1)).toThrow();
   });
 
   it('throws on non-integer amount', () => {
-    const player = earnClout(createPlayer(1, 0), 10);
+    const player = earnClout(createPlayer(0), 10);
     expect(() => spendClout(player, 0.5)).toThrow();
   });
 });
@@ -289,12 +282,12 @@ describe('spendClout', () => {
 
 describe('canAffordClout', () => {
   it('returns true when sufficient', () => {
-    const player = earnClout(createPlayer(1, 0), 5);
+    const player = earnClout(createPlayer(0), 5);
     expect(canAffordClout(player, 5)).toBe(true);
   });
 
   it('returns false when insufficient', () => {
-    const player = createPlayer(1, 0);
+    const player = createPlayer(0);
     expect(canAffordClout(player, 1)).toBe(false);
   });
 });

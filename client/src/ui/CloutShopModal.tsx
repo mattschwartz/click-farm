@@ -3,7 +3,7 @@
 // UX spec: ux/prestige-rebrand-screen.md §3
 //
 // Surface: ~720×560px, centered, 30% backdrop, game loop KEEPS running.
-// Categories (fixed order): ENGAGEMENT → UNLOCKS → INSIGHT.
+// Categories (fixed order): ENGAGEMENT → UNLOCKS.
 // Within a category, rows sort by ascending cost (next-affordable near top).
 //
 // Purchase flow: tap ⬆ → button depress (CSS :active) → row pulse (250ms) →
@@ -25,12 +25,11 @@ import { STATIC_DATA } from '../static-data/index.ts';
 // Display metadata — colocated with the component per UX-presentation pattern
 // ---------------------------------------------------------------------------
 
-export type ShopCategory = 'ENGAGEMENT' | 'UNLOCKS' | 'INSIGHT';
+export type ShopCategory = 'ENGAGEMENT' | 'UNLOCKS';
 
 export const CATEGORY_ORDER: readonly ShopCategory[] = [
   'ENGAGEMENT',
   'UNLOCKS',
-  'INSIGHT',
 ] as const;
 
 export interface UpgradeDisplay {
@@ -44,14 +43,8 @@ export const UPGRADE_DISPLAY: Record<UpgradeId, UpgradeDisplay> = {
   engagement_boost: {
     name: 'Engagement Boost',
     icon: '📈',
-    description: 'Multiplies all engagement output. Stacks with Algorithm.',
+    description: 'Multiplies all engagement output.',
     category: 'ENGAGEMENT',
-  },
-  algorithm_insight: {
-    name: 'Algorithm Insight',
-    icon: '🔮',
-    description: 'Reveal upcoming Algorithm shifts before they arrive.',
-    category: 'INSIGHT',
   },
   platform_headstart_picshift: {
     name: 'PicShift Head Start',

@@ -91,7 +91,7 @@ export interface FollowerDistribution {
  * Compute how many followers are earned per ms on each unlocked platform.
  *
  * @param generatorEffectiveRates  engagement earned per ms per generator,
- *   already accounting for level, count, algorithm modifier, etc.
+ *   already accounting for count, clout bonus, kit bonus, etc.
  *   Only include generators that are active (count > 0 and owned).
  * @param platforms  current platform states
  * @param staticData  static config

@@ -4,10 +4,6 @@
 // shape, and stable ordering grouped under category dividers. Locked rows
 // are shown at 3:1 contrast with their unlock threshold (§6.4).
 //
-// Modifier chips reflect the effective algorithm multiplier (raw state
-// modifier folded with the generator's trend_sensitivity — this is the
-// number the player actually feels in their rates).
-//
 // Per purchase-feedback-and-rate-visibility.md:
 // - §2.2: Generator rate text weight promoted to 500.
 // - §4.2: Unowned buy button is full-width with name + cost sub-label (≥180×64px).
@@ -25,9 +21,7 @@ import {
 } from '../generator/index.ts';
 import {
   computeGeneratorEffectiveRate,
-  effectiveAlgorithmModifier,
 } from '../game-loop/index.ts';
-import { getAlgorithmModifier } from '../algorithm/index.ts';
 import {
   CATEGORY_LABEL,
   CATEGORY_ORDER,
@@ -140,17 +134,6 @@ const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
 export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, onBuyAutoclicker, viralGeneratorId, onDrawerOpenChange }: Props) {
-  // Track modifier pulses — when the algorithm state index changes, each
-  // affected row pulses once (UX §4.4).
-  const [pulseKey, setPulseKey] = useState(0);
-  const prevIndex = useRef(state.algorithm.current_state_index);
-  useEffect(() => {
-    if (state.algorithm.current_state_index !== prevIndex.current) {
-      prevIndex.current = state.algorithm.current_state_index;
-      setPulseKey((k) => k + 1);
-    }
-  }, [state.algorithm.current_state_index]);
-
   // Upgrade drawer state — only one open at a time.
   const [openDrawerId, setOpenDrawerId] = useState<GeneratorId | null>(null);
   const [drawerAnchorTop, setDrawerAnchorTop] = useState<number>(0);
@@ -222,7 +205,6 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, o
                 onUpgrade={onUpgrade}
                 onUnlock={onUnlock}
                 onBuyAutoclicker={onBuyAutoclicker}
-                pulseKey={pulseKey}
                 viralHalo={viralGeneratorId === id}
                 isDrawerOpen={openDrawerId === id}
                 onOpenDrawer={handleOpenDrawer}
@@ -259,7 +241,6 @@ interface RowProps {
   onUpgrade: (id: GeneratorId) => void;
   onUnlock: (id: GeneratorId) => void;
   onBuyAutoclicker: (verbId: GeneratorId) => void;
-  pulseKey: number;
   /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
   viralHalo?: boolean;
   /** True while this generator's upgrade drawer is open. */
@@ -279,7 +260,6 @@ function GeneratorRow({
   onUnlock,
   onUpgrade: _onUpgrade, // kept in RowProps for GeneratorList to wire to drawer; not called directly by row
   onBuyAutoclicker,
-  pulseKey,
   viralHalo,
   isDrawerOpen,
   onOpenDrawer,
@@ -291,9 +271,6 @@ function GeneratorRow({
 
   const thresholdMet = state.player.total_followers >= threshold;
   const isDiscovered = g.owned || thresholdMet;
-
-  const rawMod = getAlgorithmModifier(state.algorithm, id);
-  const effMod = effectiveAlgorithmModifier(rawMod, def.trend_sensitivity);
 
   const rate = computeGeneratorEffectiveRate(g, state, staticData);
 
@@ -394,7 +371,6 @@ function GeneratorRow({
         <div className={`badge hollow ${badgeShape}`}>{display.icon}</div>
         <div className="unowned-info">
           <div className="generator-name">{display.name}</div>
-          <ModifierChip value={effMod} pulseKey={pulseKey} />
         </div>
         <BuyButton
           label={label}
@@ -462,10 +438,6 @@ function GeneratorRow({
         ×{g.count}
       </div>
       <div className="generator-rate">{fmtCompact(rate)}/s</div>
-      {/* Stop propagation on chip so chip-taps don't open the drawer. */}
-      <span onClick={(e) => e.stopPropagation()}>
-        <ModifierChip value={effMod} pulseKey={pulseKey} />
-      </span>
       <div className="row-actions" onClick={(e) => e.stopPropagation()}>
         <CompactBuyButton
           costLabel={fmtCompact(buyCost)}
@@ -661,32 +633,3 @@ function CompactBuyButton({ costLabel, canBuy, onBuy }: CompactBuyButtonProps) {
 }
 
 // ---------------------------------------------------------------------------
-
-interface ChipProps {
-  value: number;
-  pulseKey: number;
-}
-
-function ModifierChip({ value, pulseKey }: ChipProps) {
-  const [pulsing, setPulsing] = useState(false);
-  useEffect(() => {
-    if (pulseKey === 0) return; // don't pulse on initial render
-    setPulsing(true);
-    const t = window.setTimeout(() => setPulsing(false), 400);
-    return () => window.clearTimeout(t);
-  }, [pulseKey]);
-
-  // Per UX §4.5: green for boosted (>1.0), amber for penalized (<1.0),
-  // neutral for ≈ 1.0. We treat within ±2% as neutral.
-  const kind =
-    value > 1.02 ? 'boost' : value < 0.98 ? 'penalty' : 'neutral';
-  const arrow = kind === 'boost' ? '▲' : kind === 'penalty' ? '▼' : '—';
-  return (
-    <span
-      className={`modifier-chip ${kind}${pulsing ? ' pulse' : ''}`}
-      aria-label={`algorithm modifier ${value.toFixed(2)}x`}
-    >
-      {arrow} ×{value.toFixed(2)}
-    </span>
-  );
-}

@@ -199,7 +199,6 @@ describe('buildPersistItems', () => {
     const state = makeState({
       ownedUpgrades: {
         engagement_boost: 2,
-        algorithm_insight: 0,
         platform_headstart_picshift: 1,
         platform_headstart_skroll: 0,
         ai_slop_unlock: 0,

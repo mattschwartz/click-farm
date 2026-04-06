@@ -86,37 +86,11 @@ describe('applyPostToPressures', () => {
     expect(s1.platforms.chirper.neglect).toBe(0);
   });
 
-  it('accumulates algorithm_misalignment on an off-trend post', () => {
-    // Pick a generator whose current algorithm modifier is < 1.0 on the
-    // initial algorithm state (short_form_surge, default): podcasts = 0.5.
-    const s0 = freshState();
-    const cfg = STATIC_DATA.audience_mood;
-    expect(s0.algorithm.state_modifiers.podcasts).toBeLessThan(cfg.alignment_threshold);
-    const s1 = applyPostToPressures(s0, STATIC_DATA, 'chirper', 'podcasts');
-    expect(s1.platforms.chirper.algorithm_misalignment).toBeCloseTo(
-      cfg.misalignment_per_off_trend_post,
-      10,
-    );
-  });
-
-  it('decays algorithm_misalignment on an aligned post', () => {
-    // Memes under short_form_surge: 1.8 ≥ 1.0 → aligned.
-    const s0 = withPlatform(freshState(), 'chirper', {
-      algorithm_misalignment: 0.5,
-    });
-    const cfg = STATIC_DATA.audience_mood;
-    const s1 = applyPostToPressures(s0, STATIC_DATA, 'chirper', 'memes');
-    expect(s1.platforms.chirper.algorithm_misalignment).toBeCloseTo(
-      Math.max(0, 0.5 - cfg.misalignment_decay_per_aligned_post),
-      10,
-    );
-  });
-
   it('recomputes retention after mutating pressures', () => {
     const s0 = freshState();
     const s1 = applyPostToPressures(s0, STATIC_DATA, 'chirper', 'selfies');
     // Pre: retention=1.0. Post-one-selfies-post: chirper.selfies fatigue = 0.08
-    // → drag_fatigue = 0.08 * 0.5 = 0.04 → retention = 0.96 (no neglect/misalign).
+    // → drag_fatigue = 0.08 * 0.5 = 0.04 → retention = 0.96 (no neglect).
     expect(s1.platforms.chirper.retention).toBeCloseTo(0.96, 10);
   });
 });
@@ -150,7 +124,7 @@ describe('advanceNeglect', () => {
     const s1 = advanceNeglect(s0, STATIC_DATA, 10);
     const expectedNeglect = cfg.neglect_per_tick * 10;
     const expectedRetention =
-      1 * 1 * (1 - expectedNeglect * cfg.neglect_weight);
+      1 * (1 - expectedNeglect * cfg.neglect_weight);
     expect(s1.platforms.chirper.retention).toBeCloseTo(expectedRetention, 10);
   });
 
@@ -172,7 +146,6 @@ describe('recomputeRetention', () => {
       retention: 1.0,
       content_fatigue: {},
       neglect: 0,
-      algorithm_misalignment: 0,
       ...patch,
     };
   }
@@ -198,13 +171,11 @@ describe('recomputeRetention', () => {
     const p = platformWith({
       content_fatigue: { selfies: 0.4 },
       neglect: 0.3,
-      algorithm_misalignment: 0.2,
     });
     const r = recomputeRetention(p, STATIC_DATA);
     const expected =
       (1 - 0.4 * cfg.fatigue_weight) *
-      (1 - 0.3 * cfg.neglect_weight) *
-      (1 - 0.2 * cfg.misalignment_weight);
+      (1 - 0.3 * cfg.neglect_weight);
     expect(r.retention).toBeCloseTo(expected, 10);
   });
 
@@ -212,7 +183,6 @@ describe('recomputeRetention', () => {
     const p = platformWith({
       content_fatigue: { selfies: 1.0 },
       neglect: 1.0,
-      algorithm_misalignment: 1.0,
     });
     const r = recomputeRetention(p, STATIC_DATA);
     expect(r.retention).toBe(cfg.retention_floor);
@@ -223,7 +193,6 @@ describe('recomputeRetention', () => {
     const p = platformWith({
       content_fatigue: { selfies: 0.1 },
       neglect: 0.6,
-      algorithm_misalignment: 0.2,
     });
     const r = recomputeRetention(p, STATIC_DATA);
     expect(r.dominantPressure).toBe('neglect');
@@ -231,14 +200,13 @@ describe('recomputeRetention', () => {
   });
 
   it('tie-breaks dominant pressure using composition_priority', () => {
-    // All three equal (0.5 each; all weights 0.5 → all drags=0.25).
+    // Both equal (0.5 each; both weights 0.5 → both drags=0.25).
     const p = platformWith({
       content_fatigue: { selfies: 0.5 },
       neglect: 0.5,
-      algorithm_misalignment: 0.5,
     });
     const r = recomputeRetention(p, STATIC_DATA);
-    // composition_priority default: content_fatigue > algorithm_misalignment > neglect
+    // composition_priority default: content_fatigue > neglect
     expect(r.dominantPressure).toBe('content_fatigue');
   });
 

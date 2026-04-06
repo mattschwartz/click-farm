@@ -1,7 +1,8 @@
 // Audience Mood module.
-// Responsibility: the retention multiplier + its three pressure accumulators
-// (content_fatigue, neglect, algorithm_misalignment). See
+// Responsibility: the retention multiplier + its two pressure accumulators
+// (content_fatigue, neglect). See
 // .frames/sdlc/architecture/audience-mood.md for the authoritative spec.
+// Algorithm misalignment removed — proposals/accepted/20260406-remove-algorithm-weather-system.md.
 //
 // STACKING ORDER POSITION (per creator-kit.md §Stacking Order):
 //   1. Base value                               (generator / platform / event)
@@ -87,8 +88,6 @@ function clamp01(v: number): number {
  *   content_fatigue[P][G]            += per_post_same_gen
  *   content_fatigue[P][G' for G'≠G]  -= decay_per_post_other_gen
  *   neglect[P]                       -= neglect_reset_on_post
- *   algorithm_misalignment[P]        ±= per_off_trend_post / decay_per_aligned_post
- *                                       (based on state_modifiers[G] vs alignment_threshold)
  *   → recompute retention for this platform.
  *
  * All pressure values clamped to [0, 1].
@@ -114,14 +113,6 @@ export function applyPostToPressures(
     );
   }
 
-  // Algorithm misalignment: aligned post decays it, off-trend post accumulates.
-  const rawMod = state.algorithm.state_modifiers[generatorId] ?? 1.0;
-  const aligned = rawMod >= cfg.alignment_threshold;
-  const delta = aligned
-    ? -cfg.misalignment_decay_per_aligned_post
-    : cfg.misalignment_per_off_trend_post;
-  const newMisalignment = clamp01(platform.algorithm_misalignment + delta);
-
   // Neglect: reset on post.
   const newNeglect = clamp01(platform.neglect - cfg.neglect_reset_on_post);
 
@@ -129,7 +120,6 @@ export function applyPostToPressures(
     ...platform,
     content_fatigue: newFatigue,
     neglect: newNeglect,
-    algorithm_misalignment: newMisalignment,
   };
 
   // Recompute retention from the new pressures.
@@ -204,9 +194,9 @@ export interface RetentionComputation {
  * Compose `retention` and determine the dominant pressure for a single
  * platform. Pure — reads only the pressure fields + the tuning knobs.
  *
- * Composition formula (architecture/audience-mood.md §Composition Rule):
+ * Composition formula (two-pressure system):
  *   retention = clamp(
- *     (1 - fatigue_mag * fw) * (1 - neglect_mag * nw) * (1 - misalign_mag * mw),
+ *     (1 - fatigue_mag * fw) * (1 - neglect_mag * nw),
  *     retention_floor, 1.0
  *   )
  *
@@ -229,26 +219,19 @@ export function recomputeRetention(
     }
   }
   const neglectMag = platformState.neglect;
-  const misalignMag = platformState.algorithm_misalignment;
 
   const dragFatigue = fatigueMag * cfg.fatigue_weight;
   const dragNeglect = neglectMag * cfg.neglect_weight;
-  const dragMisalignment = misalignMag * cfg.misalignment_weight;
 
   const raw =
     (1 - dragFatigue) *
-    (1 - dragNeglect) *
-    (1 - dragMisalignment);
+    (1 - dragNeglect);
   const retention = Math.max(cfg.retention_floor, Math.min(1.0, raw));
 
   // Dominant pressure: argmax with composition_priority tie-break.
-  // We walk composition_priority in order and track the winner — this gives
-  // priority-ordered tie-breaking for free: a later entry only displaces the
-  // current best if its drag is strictly greater.
   const dragByPressure: Record<PressureId, number> = {
     content_fatigue: dragFatigue,
     neglect: dragNeglect,
-    algorithm_misalignment: dragMisalignment,
   };
 
   let best: PressureId = cfg.composition_priority[0];
