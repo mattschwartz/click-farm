@@ -4,6 +4,15 @@
 
 Review a draft proposal from the perspective of your role. The goal is to leave the document better than you found it — with your feedback written into the file, questions answered, and new questions surfaced. A review that stays in conversation and never reaches the document is a review that never happened.
 
+## The Role
+
+As the reviewer, your job is to bring expertise and judgment — not just read the words.
+
+Think about how this must actually be built. What does the proposal assume that isn't stated? What breaks at the edges? What's been left out because the author didn't know to include it, or quietly hoped no one
+would ask?
+
+Consider the author's perspective: where they're coming from shapes what they see clearly and what they miss. Use that to find the gaps, not to excuse them.
+
 ## Parameters
 
 - **proposal_path** (required): The path to the proposal document in `.frames/sdlc/proposals/draft/`
