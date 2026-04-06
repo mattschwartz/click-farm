@@ -81,6 +81,33 @@ const LADDER_VERBS: GeneratorId[] = [
 
 
 // ---------------------------------------------------------------------------
+// Ratio-scaled float sizing (proposal: ratio-scaled-manual-tap-floats)
+// ---------------------------------------------------------------------------
+
+/** Linearly interpolate between a and b by t (0–1). */
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+/** Clamp value to [min, max]. */
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * Compute ratio-scaled inline styles for a verb float.
+ * Returns fontSize (px) and color (HSL gold) based on tap significance.
+ */
+export function floatStyle(perClick: number, currentEngagement: number): { fontSize: number; color: string } {
+  const ratio = perClick / Math.max(1, currentEngagement);
+  const t = clamp((Math.log10(ratio) + 6) / 6, 0, 1);
+  const fontSize = lerp(16, 32, t);
+  const saturation = lerp(40, 100, t);
+  const lightness = lerp(52, 71, t);
+  return { fontSize, color: `hsl(43, ${saturation}%, ${lightness}%)` };
+}
+
+// ---------------------------------------------------------------------------
 // FloatItem for tap feedback
 // ---------------------------------------------------------------------------
 
@@ -201,16 +228,19 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
         </span>
       )}
 
-      {/* Float feedback */}
-      {floats.map((f) => (
-        <span
-          key={f.id}
-          className="verb-float"
-          style={{ left: `${f.x}%`, top: `${f.y}%` }}
-        >
-          +{fmtCompact(f.value)}
-        </span>
-      ))}
+      {/* Float feedback — ratio-scaled size & brightness */}
+      {floats.map((f) => {
+        const fs = floatStyle(f.value, state.player.engagement);
+        return (
+          <span
+            key={f.id}
+            className="verb-float"
+            style={{ left: `${f.x}%`, top: `${f.y}%`, fontSize: fs.fontSize, color: fs.color }}
+          >
+            +{fmtCompact(f.value)}
+          </span>
+        );
+      })}
     </button>
     </div>
   );
