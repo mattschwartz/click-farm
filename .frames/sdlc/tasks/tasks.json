@@ -5349,7 +5349,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        136,
         141
       ]
     },
@@ -5358,7 +5357,7 @@
       "alias": "U1",
       "role": "ux-designer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Update manual-action-ladder UX spec for autoclicker model (Gaps 1, 2, 5, 6)",
       "requester": "architect",
@@ -5387,7 +5386,8 @@
         "All changes are consistent with the accepted level-driven-manual-cooldown proposal's formulas"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 137,
