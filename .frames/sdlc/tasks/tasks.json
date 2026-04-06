@@ -1,5 +1,5 @@
 {
-  "next_id": 124,
+  "next_id": 125,
   "tasks": [
     {
       "id": 1,
@@ -4456,7 +4456,7 @@
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Engine refactor: yield/rate split, postClick(verbId), chirps seed, v8→v9 migration, click() shim",
       "requester": "architect",
@@ -4524,7 +4524,8 @@
         "npm run build succeeds; no TypeScript errors"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     },
     {
       "id": 120,
@@ -4590,9 +4591,7 @@
         "npm run build succeeds; no TypeScript errors"
       ],
       "open_questions": [],
-      "blocked_on": [
-        119
-      ]
+      "blocked_on": []
     },
     {
       "id": 121,
@@ -4667,7 +4666,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        119,
         120
       ]
     },
@@ -4734,6 +4732,35 @@
       ],
       "open_questions": [],
       "blocked_on": []
+    },
+    {
+      "id": 124,
+      "role": "game-designer",
+      "state": "design",
+      "status": "complete",
+      "date_assigned": "2026-04-05",
+      "title": "Balance pass: chirps base_buy_cost and early-game payback curve",
+      "requester": "engineer",
+      "complexity": "haiku",
+      "overview": "Chirps' current balance cells (base_buy_cost=2, base_event_yield=1, base_event_rate=2.5) produce a 0.8-second payback on the first automator purchase — far faster than any other generator (selfies is ~10s). At 2.5 eng/sec passive output for a cost of 2 engagement, the player can chain-buy chirps automators almost instantly, which makes the early game feel trivially cheap. The values were seeded from proposal §14c but feel overpowered in practice. Needs a game-designer eye on whether base_buy_cost should increase, base_event_rate should decrease, or both.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/manual-action-ladder.md",
+          "purpose": "§14c defines chirps balance cells — base_buy_cost=2, yield=1, rate=2.5"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Live chirps GeneratorDef with the values to retune"
+        }
+      ],
+      "acceptance_criteria": [
+        "Chirps early-game payback time feels comparable to other starter-tier generators (~5-15s range)",
+        "Updated base_buy_cost and/or base_event_rate values committed to static-data/index.ts",
+        "Manual-action-ladder proposal §14c updated to reflect the new values"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-05"
     }
   ]
 }

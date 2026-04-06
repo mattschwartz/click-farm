@@ -48,15 +48,15 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // §14c — starter verb, unlocked at 0, 0.4s manual cooldown
   chirps: {
     id: 'chirps',
-    base_event_yield: 1,
+    base_event_yield: 0.2,
     base_event_rate: 2.5,
     manual_clickable: true,
     follower_conversion_rate: 0.07,
     trend_sensitivity: 0.7,
     unlock_threshold: 0,
-    base_buy_cost: 2,
+    base_buy_cost: 5,
     buy_cost_multiplier: 1.15,
-    base_upgrade_cost: 20,
+    base_upgrade_cost: 50,
     max_level: 10,
   },
   // §14a — ladder verb, 2.5s manual cooldown. yield×rate = 1.0 (preserved).
