@@ -3087,6 +3087,17 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   font-variant-numeric: tabular-nums;
 }
 
+.settings-audio-credit {
+  font-size: 11px;
+  color: var(--text-receded, #999);
+  margin-top: 4px;
+}
+
+.settings-audio-credit a {
+  color: var(--text-secondary, #666);
+  text-decoration: underline;
+}
+
 /* Save-section buttons. */
 .settings-btn {
   font-family: inherit;
