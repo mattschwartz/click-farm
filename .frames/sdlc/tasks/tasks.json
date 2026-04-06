@@ -1,5 +1,5 @@
 {
-  "next_id": 150,
+  "next_id": 152,
   "tasks": [
     {
       "id": 1,
@@ -6018,6 +6018,82 @@
       ],
       "open_questions": [],
       "blocked_on": []
+    },
+    {
+      "id": 150,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "SPEED button fires level-up directly — no drawer",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "The SPEED button (formerly Lvl ↑) on generator rows currently opens the upgrade curve drawer, requiring the player to click a second time to confirm the upgrade. This is unnecessary friction — the player already decided to upgrade by tapping SPEED. Change the SPEED button to fire `driver.upgrade(genId)` directly on click, same as the POWER and HIRE pills do. The button should show the same purchase feedback (pill flash, engagement debit, rate update) without opening the drawer. The drawer is being removed in a follow-up task.\n\nThe SPEED button's affordance states (dormant/armed/ready/maxed) and visual treatment stay the same — only the click handler changes from 'open drawer' to 'fire upgrade'.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "SPEED button click handler — currently calls onOpenDrawer, needs to call onUpgrade directly"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Wires the upgrade action from useGame to GeneratorList"
+        },
+        {
+          "ref": ".frames/sdlc/ux/generator-purchase-pills.md",
+          "purpose": "§5.2 purchase feedback chain — SPEED should match the same pattern"
+        }
+      ],
+      "acceptance_criteria": [
+        "Tapping the SPEED button on a generator row fires driver.upgrade(genId) immediately — no drawer opens",
+        "Purchase feedback plays: engagement debits, cooldown ring speed changes on the action button's next tap cycle",
+        "Affordance states unchanged: dormant (no units owned), armed (can't afford), ready (can afford, gold glow), maxed (platinum plaque)",
+        "Tapping SPEED when unaffordable (armed state) is a no-op with shake feedback (existing behavior preserved)",
+        "Tapping SPEED at max level is a no-op (existing behavior preserved)",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 151,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Remove upgrade curve drawer",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "The upgrade curve drawer (UpgradeDrawer component) is no longer needed — the SPEED button now fires upgrades directly (task #150). Remove the drawer component, its CSS, and all wiring: the drawer open/close state in GameScreen, the onOpenDrawer/onCloseDrawer props threaded through GeneratorList, the platform panel dimming tied to drawer visibility, and the row-tap-opens-drawer behavior. The row tap should become a no-op or be repurposed later — for now, just remove the drawer.\n\nFiles to touch:\n- client/src/ui/UpgradeDrawer.tsx — delete entirely\n- client/src/ui/GameScreen.tsx — remove upgradeDrawerOpen state, remove UpgradeDrawer render, remove drawer-dimming logic on PlatformPanel\n- client/src/ui/GeneratorList.tsx — remove onOpenDrawer prop, remove row-level click handler that opened the drawer\n- client/src/ui/GameScreen.css — remove all .upgrade-drawer and .drawer-dimmed CSS rules",
+      "related_items": [
+        {
+          "ref": "client/src/ui/UpgradeDrawer.tsx",
+          "purpose": "The drawer component — delete this file"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Drawer state management, UpgradeDrawer render, platform panel dimming"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "onOpenDrawer prop, row click handler"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": ".upgrade-drawer styles, .drawer-dimmed styles"
+        }
+      ],
+      "acceptance_criteria": [
+        "UpgradeDrawer.tsx is deleted",
+        "No references to UpgradeDrawer, upgradeDrawerOpen, onOpenDrawer, onCloseDrawer, or drawer-dimmed remain in the codebase",
+        "Platform panel no longer dims (drawerDimmed prop removed from PlatformPanel)",
+        "Row tap on a generator row is a no-op (no drawer opens)",
+        "SPEED button continues to fire upgrades directly (task #150 behavior preserved)",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        150
+      ]
     }
   ]
 }
