@@ -65,35 +65,46 @@ The exact shape of `count_multiplier(count)` — whether it's linear, exponentia
 
 **Note:** `levelMultiplier(level)` no longer appears in the per-tap yield formula. Level drives cooldown only. Count drives yield only. One button, one axis. Clean split.
 
-#### 4. Autoclicker (one-time unlock per verb)
+#### 4. Autoclickers (repeatable purchase per verb)
 
-A single purchase that unlocks passive auto-tapping for the verb. Once purchased:
+The player can buy multiple autoclickers per verb. Each autoclicker is an independent auto-tapper that fires on a loop, generating engagement passively. Each purchase gets progressively more expensive.
 
-- The autoclicker fires on its own internal cooldown, generating engagement automatically.
-- **Every time it fires, the verb's action button emits a floating number** showing the engagement generated — identical to the feedback from manual taps. The player sees their verb button popping numbers even when they're not tapping it.
-- The autoclicker uses the same yield formula as manual taps — it benefits from both LVL UP (faster firing, since it shares the level-driven cooldown) and BUY (stronger output, since it shares the count-driven multiplier).
+**Key rules:**
 
-This is the "set it and forget it" moment per verb. The player watches their verb button come alive on its own. But manual taps still stack on top — the player's hand and the autoclicker are additive.
+- **Every time an autoclicker fires, the verb's action button emits a floating number** showing the engagement generated — identical visual feedback to manual taps. More autoclickers = more pops on the button. The player sees their little army firing off.
+- **Autoclickers fire at the verb's base cooldown (L1 speed), not the player's leveled-up cooldown.** LVL UP only makes the player's hand faster — autoclickers stay at base speed. This creates a clear quality-vs-quantity split: the player's hand is always the premium path, autoclickers are the bulk path.
+- **Autoclickers benefit from BUY (count-driven yield multiplier).** Each autoclicker fire uses the same yield formula as manual taps, so BUY upgrades strengthen both the player's hand and all autoclickers equally.
+- **Manual taps are additive on top.** The player's hand and the autoclickers coexist. The player is never replaced — they're always adding to the army's output.
 
-**Autoclicker internal cooldown:** Uses the same level-driven cooldown as manual taps. When the player levels up a verb, both their manual tapping AND the autoclicker get faster. This reinforces LVL UP as the speed axis for everything on that verb.
+**Autoclicker internal cooldown (fixed at base):**
+
+```
+autoclickerCooldownMs = 1000 / base_event_rate
+```
+
+This is the L1 cooldown — the slowest the verb can be. Autoclickers never speed up from leveling. A player at L10 chirps taps at 0ms cooldown while each autoclicker still fires at 2,000ms. The player is 10× faster than any one worker, but 10 workers still add up.
 
 **Autoclicker engagement per fire:**
 
 ```
-earned = base_event_yield * count_multiplier(count) * algoMod * clout_bonus * kit_bonus
+earned = base_event_yield * count_multiplier(buy_count) * algoMod * clout_bonus * kit_bonus
 ```
 
-Same formula as manual taps. The autoclicker is functionally "a hand that taps for you."
+Same yield formula as manual taps. The only difference is the cooldown: manual uses `level * base_event_rate`, autoclickers use `base_event_rate` alone.
+
+**Strategic tension:** "Do I LVL UP to tap faster, BUY to tap harder, or get another autoclicker for passive income?" Three distinct investment axes, three distinct feelings. LVL UP is active-play-premium (only the player benefits). BUY is universal (everything gets stronger). Autoclickers are the idle-income path (quantity over quality).
 
 ### Why this is better
 
-1. **One button, one axis.** LVL UP = speed. BUY = power. Autoclicker = passive. Three distinct purchases, three distinct feelings, zero overlap.
+1. **Three axes, three feelings.** LVL UP = "I'm faster" (active-play premium). BUY = "everything hits harder" (universal). Autoclicker = "my army grows" (idle income). Each purchase feels different. No overlap.
 
-2. **Matches universal game literacy.** "Level up = get faster" and "buy more = get stronger" are intuitive. "Unlock autoclicker = it plays itself" is the classic idle-game graduation moment.
+2. **Matches universal game literacy.** "Level up = get faster" and "buy more = get stronger" are intuitive. "Buy autoclickers = they play for me" is the classic idle-game scaling moment.
 
-3. **Visible automation feedback.** The autoclicker's output appears as floating numbers on the verb button. The player sees their investments paying off in the same visual language as manual taps. The verb button becomes a living thing.
+3. **Visible automation feedback.** Each autoclicker fire emits a floating number on the verb button. More autoclickers = more pops. The player watches their verb come alive as they stack workers. The verb button becomes a living thing.
 
-4. **Manual + auto are additive.** The player's hand still matters after unlocking the autoclicker. They're tapping alongside it, not being replaced by it. Both benefit from LVL UP and BUY equally.
+4. **Player's hand is always premium.** LVL UP only speeds the player, not autoclickers. At max level, the player taps 10× faster than any single worker. The hand is never obsoleted — it's the fastest tapper in the room. But the army adds up.
+
+5. **Natural strategic fork.** "Level up myself OR buy another worker?" is a genuine decision at every price point. Active players invest in LVL UP. Idle players stack autoclickers. BUY helps both.
 
 5. **Bounded cooldown progression.** Level caps at 10, so cooldown has a known floor per verb. No asymptotic shrink. The designer can predict exact cooldowns. The UX can show a clean progression bar.
 
@@ -107,8 +118,8 @@ This proposal supersedes the following sections of `proposals/accepted/manual-ac
 - **§12 (What This Locks In) — cooldown formula:** `cooldown = 1 / (max(1, count) * base_event_rate)` is replaced by `cooldown = 1 / (level * base_event_rate)`.
 - **§12 — phantom-hand floor scoping:** Eliminated. No floor needed.
 - **§12 — per-tap earned formula:** `levelMultiplier(level)` is removed from the earned formula. Replaced by `count_multiplier(count)`.
-- **§14e (automation curve):** The cooldown-by-count table is superseded by the level-keyed cooldown table above. Automation is now a binary unlock (autoclicker), not a count-scaling curve.
-- **§14f (manual-supplementary ratio):** Replaced by the additive manual+autoclicker model. Both use the same formula; manual is always additive on top of autoclicker output, never "fading to supplementary."
+- **§14e (automation curve):** The cooldown-by-count table is superseded by the level-keyed cooldown table above. Autoclickers run at fixed base cooldown, not count-scaled cooldown.
+- **§14f (manual-supplementary ratio):** The old ratio assumed count-driven cooldown shrinking manual's relative share. With level-driven manual cooldown and fixed-speed autoclickers, the ratio depends on level (bounded) vs autoclicker count (unbounded). At max level, the player taps at L10 speed; N autoclickers each tap at L1 speed. Manual share = L10_rate / (L10_rate + N × L1_rate). The player's hand fades as autoclicker army grows, but is always the single fastest tapper.
 - **Architect re-review (OQ16):** Phantom-hand floor approval is moot — the floor is gone.
 
 The `postClick` cooldown gate changes:
@@ -150,6 +161,8 @@ All other sections of manual-action-ladder (verb roster, balance cells, unlock t
 
 4. **UX implications for cooldown and autoclicker display.** LVL UP can show a cooldown preview ("400ms -> 200ms"). BUY can show a multiplier preview ("x1 -> x2"). The Autoclicker button needs a cost display and a visual state change once purchased (grayed out / "ACTIVE" badge). The floating-number emission from autoclicker fires needs a UX spec. **Owner: ux-designer**
 
-5. **Autoclicker cost per verb.** What does the one-time autoclicker purchase cost? Should it scale with the verb's tier (chirps cheap, viral_stunts expensive)? Should it gate behind a follower threshold, an engagement cost, or both? **Owner: game-designer**
+5. **Autoclicker cost scaling.** Each autoclicker purchase gets more expensive. What's the cost formula? Reuse the existing `ceil(base_cost * 1.15^owned)` curve, or a different escalation? The base cost per verb tier also needs defining (chirps cheap, viral_stunts expensive). **Owner: game-designer**
 
-6. **Autoclicker and offline progression.** Does the autoclicker produce engagement while the player is away? If yes, the offline catch-up formula needs to account for autoclicker state per verb. If no, autoclickers are active-session-only. **Owner: game-designer** (intent), **architect** (implementation)
+6. **Autoclicker and offline progression.** Do autoclickers produce engagement while the player is away? If yes, the offline catch-up formula needs to account for autoclicker count per verb. If no, autoclickers are active-session-only. **Owner: game-designer** (intent), **architect** (implementation)
+
+7. **Autoclicker firing pattern with multiple workers.** Do N autoclickers fire simultaneously every `base_cooldown` ms (burst), or are they staggered evenly across the interval (smooth)? Staggered creates a steadier stream of floating numbers; burst creates periodic "volleys." Both are valid feels. **Owner: game-designer** (feel), **ux-designer** (visual rhythm)
