@@ -202,7 +202,10 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
 
         <span className="verb-header">
           {!VERB_IMAGE[verbId] && <span className="verb-icon">{display.icon}</span>}
-          <span className="verb-name">{display.name.toUpperCase()}</span>
+          <span className="verb-name-group">
+            <span className="verb-name">{display.name.toUpperCase()}</span>
+            <span className="verb-rate">+{fmtCompact(perTap)}</span>
+          </span>
         </span>
 
 
