@@ -4,7 +4,7 @@ description: Redefine the Actions-column buttons so LVL UP controls tap speed, B
 created: 2026-04-06
 author: game-designer
 status: draft
-reviewers: [engineer]
+reviewers: [game-designer]
 ---
 
 # Proposal: Level-Driven Manual Cooldown
@@ -335,3 +335,53 @@ All three blockers resolved cleanly. Re-review follows.
 **Minor observation (non-blocking):** `GeneratorDef` will need a `base_autoclicker_cost` field (or similar) in static data to support the autoclicker cost formula from OQ5. This is obvious from context and doesn't block acceptance — the game-designer fills the values in a balance pass. Flagging so the engineer planning implementation tasks knows to expect it.
 
 **OQ4 (ux-designer) and OQ5 (game-designer) remain open.** Neither blocks the structural architecture — OQ4 is presentation-layer and OQ5 is balance values. Engineer should assess during their review whether these need resolution before implementation planning.
+
+---
+# Review: engineer
+
+**Date**: 2026-04-06
+**Decision**: Aligned
+
+**Comments**
+
+The design is clean and the architect resolved the structural questions well. From an implementation standpoint this is tractable — no blocking concerns. The change surface is wider than it appears from the formulas alone, so I'm documenting every code site that changes and two design questions that need answers before implementation tasks are filed.
+
+### Implementation Change Surface (non-blocking, informational)
+
+Traced every consumer of `count`, `level`, `levelMultiplier`, and the passive-rate formula in the current codebase. The following files and functions require changes:
+
+1. **`types.ts` — `GeneratorState`**: Add `autoclicker_count: number` field.
+
+2. **`game-loop/index.ts` — `computeGeneratorEffectiveRate` (line 141–163)**: Three simultaneous changes in one function: leading factor `count` → `autoclicker_count`, `levelMultiplier(level)` drops out, `(1 + count)` replaces it. The early-return guard (line 146, `generator.count <= 0`) must change to `generator.autoclicker_count <= 0`. This is the highest-risk change — a half-applied refactor silently produces wrong numbers with no type error.
+
+3. **`game-loop/index.ts` — `postClick` (line 567–613)**: Cooldown formula changes from `1000 / (Math.max(1, genState.count) * def.base_event_rate)` to `Math.max(50, 1000 / (genState.level * def.base_event_rate))`. Earned formula changes from `def.base_event_yield * levelMultiplier(genState.level) * ...` to `def.base_event_yield * (1 + genState.count) * ...`. Two changes in one function, mechanical.
+
+4. **`static-data/index.ts`**: Chirps rate 2.5→0.5, yield 0.2→1.0. Selfies rate 0.4→0.2, yield 2.5→5.0. Plus a new `base_autoclicker_cost` field on `GeneratorDef` (blocked on OQ5).
+
+5. **`generator/index.ts`**: New `buyAutoclicker` function needed — new purchase action, new cost formula (`ceil(base_autoclicker_cost × 1.15^autoclicker_count)`), new state mutation. UI wiring follows.
+
+6. **`save/index.ts`**: V9→V10 migration — seed `autoclicker_count = 0` on all generators, bump version. Existing `count` values retained with changed semantics (deserves a code comment).
+
+7. **`prestige/index.ts` — `applyRebrand`**: Must reset `autoclicker_count` to 0 alongside existing field resets.
+
+8. **`offline/index.ts`**: No separate code change — it calls `computeAllGeneratorEffectiveRates` which inherits the formula change. The tight coupling the architect warned about works in our favor here.
+
+9. **`levelMultiplier` function**: Becomes semi-orphaned from hot paths. Still used in `generatorUpgradeCost` for cost scaling. Don't delete it.
+
+10. **Tests**: `game-loop/index.test.ts`, `integration.test.ts`, `generator/index.test.ts`, `save/index.test.ts` all assert on count-driven passive production and count-driven cooldown. Every such assertion needs updating.
+
+### Flag 1 (game-designer): `upgradeGenerator` prerequisite is now wrong
+
+`upgradeGenerator` (`generator/index.ts`, line 273) currently throws if `count <= 0`:
+
+> "Upgrading a generator with no units is a no-op from a gameplay perspective, so it is disallowed."
+
+That reasoning was correct when level affected passive rate (no units = no output = wasted upgrade). Under this proposal, level drives **manual cooldown**, which works at count=0 — the player taps faster regardless of BUY count. The guard should be removed, or the proposal should explicitly state whether LVL UP requires at least one BUY. This is a game-design question: **should a player be able to LVL UP before their first BUY?**
+
+### Flag 2 (game-designer): Audience Mood post gate needs clarification
+
+`applyTickPosts` (`audience-mood/index.ts`, line 295) skips generators where `count <= 0`. Under this proposal, a generator with `count=0` but `autoclicker_count > 0` has active autoclickers firing — producing engagement and emitting floating numbers. Should those autoclicker fires also generate "posts" for audience mood pressure? If autoclicker fires are semantically equivalent to manual taps (the proposal says "identical visual feedback"), they should also contribute to mood. The gate should become `count <= 0 && autoclicker_count <= 0`. But this is a design call — **do autoclickers contribute to audience mood, or only the player's hand and passive-only generators?**
+
+### OQ5 blocks implementation planning
+
+Agreeing with the architect's flag: OQ5 (`base_autoclicker_cost` per verb) must be resolved before build tasks are filed. I cannot write `buyAutoclicker` without the cost structure. OQ4 (UX spec) doesn't block engine work but blocks UI work.
