@@ -371,7 +371,6 @@
 .live-verb-btn:active {
   transform: translateY(3px);
   box-shadow:
-    inset 0 -32px 16px rgba(0, 0, 0, 0.35),
     0 1px 0 0 var(--verb-color-dark),
     0 1px 4px rgba(0, 0, 0, 0.08);
   transition: transform 40ms ease-in, box-shadow 40ms ease-in;
@@ -527,25 +526,53 @@
 }
 .live-verb-ready .verb-pulse { display: inline-block; }
 
-/* Ready swoop — light shimmer sweeps across when cooldown completes. */
+/* Ready border chase — a light sweeps the button edge once when cooldown
+ * completes. Fires on cooldown→ready transition (class swap re-triggers
+ * the animation). Uses conic-gradient rotated via @property, masked to
+ * a 2px border ring. */
+
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
 .live-verb-ready::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 40%,
-    rgba(255, 255, 255, 0.35) 50%,
-    transparent 60%
-  );
-  animation: verb-ready-swoop 600ms ease-out forwards;
-  pointer-events: none;
   border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--border-angle),
+    transparent 0%,
+    transparent 55%,
+    rgba(255, 255, 255, 0.6) 73%,
+    white 78%,
+    rgba(255, 255, 255, 0.6) 83%,
+    transparent 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  animation: border-chase 600ms ease-in-out forwards;
 }
-@keyframes verb-ready-swoop {
-  0%   { transform: translateX(-100%); opacity: 1; }
-  100% { transform: translateX(100%);  opacity: 0; }
+
+@keyframes border-chase {
+  0%   { --border-angle: 0deg;   opacity: 0; }
+  10%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { --border-angle: 360deg; opacity: 0; }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .live-verb-ready::after { animation: none; display: none; }
 }
