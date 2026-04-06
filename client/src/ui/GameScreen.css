@@ -3388,6 +3388,16 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   outline-offset: 2px;
 }
 
+.github-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 10px 14px;
+}
+
 /* ==========================================================================
    Reduce Motion — in-game mirror of @media (prefers-reduced-motion: reduce).
    ==========================================================================
