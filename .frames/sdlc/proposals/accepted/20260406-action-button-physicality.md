@@ -3,7 +3,7 @@ name: Action Button Physicality
 description: Replace flat action-button cards with raised, pressable slabs that depress on tap and snap back with spring physics — making the manual-action-ladder buttons feel heavy and satisfying.
 created: 2026-04-06
 author: ux-designer
-status: accepted
+status: implementation
 reviewers: []
 ---
 
