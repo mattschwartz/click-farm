@@ -350,7 +350,6 @@ function GeneratorRow({
   if (!isDiscovered) {
     return (
       <div className="generator-row locked" style={style}>
-        <div className={`badge hollow ${badgeShape}`} />
         <div className="unlock-label">
           Unlocks at {threshold.toLocaleString()} followers
         </div>
@@ -368,7 +367,6 @@ function GeneratorRow({
     const label = def.manual_clickable ? `Unlock ${display.name}` : `Buy ${display.name}`;
     return (
       <div className="generator-row generator-row-unowned" style={style}>
-        <div className={`badge hollow ${badgeShape}`}>{display.icon}</div>
         <div className="unowned-info">
           <div className="generator-name">{display.name}</div>
         </div>
@@ -425,19 +423,9 @@ function GeneratorRow({
       aria-expanded={canOpenDrawer ? isDrawerOpen : undefined}
       aria-label={canOpenDrawer ? `${display.name} — tap to view upgrade options` : undefined}
     >
-      <div
-        className={`badge ${badgeShape}${g.owned ? ' badge-owned' : ''}`}
-        style={g.owned ? { '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties : undefined}
-      >
-        {display.icon}
-      </div>
       <div className="generator-name">
-        {display.name} <span className="generator-level">L{g.level}</span>
+        {display.name}
       </div>
-      <div className={`generator-count${countPulsing ? ' count-pulse' : ''}`}>
-        ×{g.count}
-      </div>
-      <div className="generator-rate">{fmtCompact(rate)}/s</div>
       <div className="row-actions" onClick={(e) => e.stopPropagation()}>
         <CompactBuyButton
           costLabel={fmtCompact(buyCost)}

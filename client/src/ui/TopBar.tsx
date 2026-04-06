@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from 'react';
 import { fmtCompact, fmtCompactInt, fmtRate } from './format.ts';
 import { useInterpolatedValue } from './useInterpolatedValue.ts';
 import faviconSrc from '../assets/favicon.png';
+import goldenThumbSrc from '../assets/golden-thumb.png';
 
 interface Props {
   engagement: number;
@@ -114,6 +115,7 @@ export function TopBar({
       <div className="engagement-slot">
         <div className={`engagement-value${viralGold ? ' viral-gold' : ''}`}>
           {fmtCompact(displayedEngagement)}
+          <img src={goldenThumbSrc} alt="" className="engagement-icon" aria-hidden="true" />
         </div>
         {summaryBadge && (
           <div className={`viral-summary-badge${summaryBadge.fading ? ' fading' : ''}`}>
