@@ -21,19 +21,20 @@ const T0 = 1_700_000_000_000;
 
 function freshState(): GameState {
   const s = createInitialGameState(STATIC_DATA, T0);
-  // Force all three platforms unlocked for tests that need cross-platform
+  // Force all platforms unlocked for tests that need cross-platform
   // routing. Followers stay 0.
   return {
     ...s,
     platforms: {
       chirper: { ...s.platforms.chirper, unlocked: true },
-      instasham: { ...s.platforms.instasham, unlocked: true },
-      grindset: { ...s.platforms.grindset, unlocked: true },
+      picshift: { ...s.platforms.picshift, unlocked: true },
+      skroll: { ...s.platforms.skroll, unlocked: true },
+      podpod: { ...s.platforms.podpod, unlocked: true },
     },
   };
 }
 
-function withPlatform(state: GameState, id: 'chirper' | 'instasham' | 'grindset', patch: Partial<PlatformState>): GameState {
+function withPlatform(state: GameState, id: 'chirper' | 'picshift' | 'skroll' | 'podpod', patch: Partial<PlatformState>): GameState {
   return {
     ...state,
     platforms: {
@@ -124,7 +125,7 @@ describe('advanceNeglect', () => {
     const cfg = STATIC_DATA.audience_mood;
     const s1 = advanceNeglect(s0, STATIC_DATA, 10);
     expect(s1.platforms.chirper.neglect).toBeCloseTo(cfg.neglect_per_tick * 10, 10);
-    expect(s1.platforms.instasham.neglect).toBeCloseTo(cfg.neglect_per_tick * 10, 10);
+    expect(s1.platforms.picshift.neglect).toBeCloseTo(cfg.neglect_per_tick * 10, 10);
     // Saturate.
     const s2 = advanceNeglect(s1, STATIC_DATA, 1_000_000);
     expect(s2.platforms.chirper.neglect).toBe(1);
@@ -132,11 +133,11 @@ describe('advanceNeglect', () => {
 
   it('skips locked platforms', () => {
     const base = createInitialGameState(STATIC_DATA, T0);
-    // chirper unlocked (threshold=0), instasham/grindset locked.
+    // chirper unlocked (threshold=0), picshift/skroll locked.
     const s1 = advanceNeglect(base, STATIC_DATA, 10);
     expect(s1.platforms.chirper.neglect).toBeGreaterThan(0);
-    expect(s1.platforms.instasham.neglect).toBe(0);
-    expect(s1.platforms.grindset.neglect).toBe(0);
+    expect(s1.platforms.picshift.neglect).toBe(0);
+    expect(s1.platforms.skroll.neglect).toBe(0);
   });
 
   it('recomputes retention on touched platforms', () => {
@@ -270,18 +271,18 @@ describe('recomputeAllRetention', () => {
           retention: 1.0,
           neglect: 0.5,
         },
-        instasham: {
-          ...base.platforms.instasham,
+        picshift: {
+          ...base.platforms.picshift,
           retention: 1.0,
           content_fatigue: { memes: 0.5 },
         },
-        grindset: base.platforms.grindset,
+        skroll: base.platforms.skroll,
       },
     };
     const s1 = recomputeAllRetention(mutated, STATIC_DATA);
     expect(s1.platforms.chirper.retention).toBeLessThan(1.0);
-    expect(s1.platforms.instasham.retention).toBeLessThan(1.0);
-    expect(s1.platforms.grindset.retention).toBe(1.0);
+    expect(s1.platforms.picshift.retention).toBeLessThan(1.0);
+    expect(s1.platforms.skroll.retention).toBe(1.0);
   });
 
   it('is a no-op (reference-equal) when nothing changes', () => {
@@ -293,7 +294,7 @@ describe('recomputeAllRetention', () => {
 describe('applyTickPosts', () => {
   it('routes one post per owned generator to its highest-affinity unlocked platform', () => {
     // Hand-build a state with selfies owned+count>0. Selfies has highest
-    // affinity on instasham (2.0) vs chirper (0.8) vs grindset (0.5).
+    // affinity on picshift (2.0) vs chirper (0.8) vs skroll (0.5).
     const s0 = freshState();
     const withSelfies: GameState = {
       ...s0,
@@ -303,8 +304,8 @@ describe('applyTickPosts', () => {
       },
     };
     const s1 = applyTickPosts(withSelfies, STATIC_DATA);
-    // instasham should have received the post.
-    expect(s1.platforms.instasham.content_fatigue.selfies ?? 0).toBeGreaterThan(0);
+    // picshift should have received the post.
+    expect(s1.platforms.picshift.content_fatigue.selfies ?? 0).toBeGreaterThan(0);
     expect(s1.platforms.chirper.content_fatigue.selfies ?? 0).toBe(0);
   });
 
@@ -314,8 +315,9 @@ describe('applyTickPosts', () => {
       ...STATIC_DATA,
       platforms: {
         chirper: { ...STATIC_DATA.platforms.chirper, content_affinity: { ...STATIC_DATA.platforms.chirper.content_affinity, selfies: 1.0 } },
-        instasham: { ...STATIC_DATA.platforms.instasham, content_affinity: { ...STATIC_DATA.platforms.instasham.content_affinity, selfies: 1.0 } },
-        grindset: { ...STATIC_DATA.platforms.grindset, content_affinity: { ...STATIC_DATA.platforms.grindset.content_affinity, selfies: 1.0 } },
+        picshift: { ...STATIC_DATA.platforms.picshift, content_affinity: { ...STATIC_DATA.platforms.picshift.content_affinity, selfies: 1.0 } },
+        skroll: { ...STATIC_DATA.platforms.skroll, content_affinity: { ...STATIC_DATA.platforms.skroll.content_affinity, selfies: 1.0 } },
+        podpod: { ...STATIC_DATA.platforms.podpod, content_affinity: { ...STATIC_DATA.platforms.podpod.content_affinity, selfies: 1.0 } },
       },
     };
     const s0 = freshState();
@@ -329,7 +331,7 @@ describe('applyTickPosts', () => {
     const s1 = applyTickPosts(withSelfies, altStatic);
     // chirper is declared first in static data → wins on tie.
     expect(s1.platforms.chirper.content_fatigue.selfies ?? 0).toBeGreaterThan(0);
-    expect(s1.platforms.instasham.content_fatigue.selfies ?? 0).toBe(0);
+    expect(s1.platforms.picshift.content_fatigue.selfies ?? 0).toBe(0);
   });
 
   it('skips generators that are unowned or count=0', () => {
@@ -345,8 +347,9 @@ describe('applyTickPosts', () => {
       ...STATIC_DATA,
       platforms: {
         chirper: { ...STATIC_DATA.platforms.chirper, content_affinity: { ...STATIC_DATA.platforms.chirper.content_affinity, selfies: 0 } },
-        instasham: { ...STATIC_DATA.platforms.instasham, content_affinity: { ...STATIC_DATA.platforms.instasham.content_affinity, selfies: 0 } },
-        grindset: { ...STATIC_DATA.platforms.grindset, content_affinity: { ...STATIC_DATA.platforms.grindset.content_affinity, selfies: 0 } },
+        picshift: { ...STATIC_DATA.platforms.picshift, content_affinity: { ...STATIC_DATA.platforms.picshift.content_affinity, selfies: 0 } },
+        skroll: { ...STATIC_DATA.platforms.skroll, content_affinity: { ...STATIC_DATA.platforms.skroll.content_affinity, selfies: 0 } },
+        podpod: { ...STATIC_DATA.platforms.podpod, content_affinity: { ...STATIC_DATA.platforms.podpod.content_affinity, selfies: 0 } },
       },
     };
     const s0 = freshState();
@@ -358,7 +361,7 @@ describe('applyTickPosts', () => {
       },
     };
     const s1 = applyTickPosts(withSelfies, altStatic);
-    for (const pid of ['chirper', 'instasham', 'grindset'] as const) {
+    for (const pid of ['chirper', 'picshift', 'skroll', 'podpod'] as const) {
       expect(s1.platforms[pid].content_fatigue.selfies ?? 0).toBe(0);
     }
   });

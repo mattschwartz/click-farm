@@ -36,7 +36,7 @@ const ALL_GENERATOR_IDS: GeneratorId[] = [
   'algorithmic_prophecy',
 ];
 
-const ALL_PLATFORM_IDS: PlatformId[] = ['chirper', 'instasham', 'grindset'];
+const ALL_PLATFORM_IDS: PlatformId[] = ['chirper', 'picshift', 'skroll', 'podpod'];
 
 // ---------------------------------------------------------------------------
 // Player factory
@@ -46,8 +46,9 @@ export function createPlayer(seed: number, now: number = Date.now()): Player {
   const allUpgradeIds: UpgradeId[] = [
     'engagement_boost',
     'algorithm_insight',
-    'platform_headstart_instasham',
-    'platform_headstart_grindset',
+    'platform_headstart_picshift',
+    'platform_headstart_skroll',
+    'platform_headstart_podpod',
     'ai_slop_unlock',
     'deepfakes_unlock',
     'algorithmic_prophecy_unlock',

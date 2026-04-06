@@ -173,24 +173,32 @@ export const PLATFORM_DISPLAY: Record<PlatformId, PlatformDisplay> = {
     accent: '#4a9dd6',
     tagline: 'Hot takes and one-liners.',
   },
-  instasham: {
-    name: 'InstaSham',
+  picshift: {
+    name: 'PicShift',
     icon: '📸',
     accent: '#d6579e',
     tagline: 'Photos and curated aesthetics.',
   },
-  grindset: {
-    name: 'Grindset',
-    icon: '💼',
+  skroll: {
+    name: 'Skroll',
+    icon: '📱',
     accent: '#5eae8f',
-    tagline: 'Hustle culture and thought leadership.',
+    tagline: 'Endless short-form video.',
+  },
+  // PLACEHOLDER display metadata — game-designer owns final values (task #131 OQ #2).
+  podpod: {
+    name: 'PodPod',
+    icon: '🎧',
+    accent: '#8b6fb8',
+    tagline: 'Long-form audio, loyal audiences.',
   },
 };
 
 export const PLATFORM_ORDER: readonly PlatformId[] = [
   'chirper',
-  'instasham',
-  'grindset',
+  'picshift',
+  'skroll',
+  'podpod',
 ];
 
 // ---------------------------------------------------------------------------

@@ -13,13 +13,15 @@ import { createPlatformState } from '../model/index.ts';
 
 function makePlatforms(
   chirperUnlocked = true,
-  instashamUnlocked = false,
-  grindsetUnlocked = false
+  picshiftUnlocked = false,
+  skrollUnlocked = false,
+  podpodUnlocked = false,
 ) {
   return {
     chirper: createPlatformState('chirper', chirperUnlocked),
-    instasham: createPlatformState('instasham', instashamUnlocked),
-    grindset: createPlatformState('grindset', grindsetUnlocked),
+    picshift: createPlatformState('picshift', picshiftUnlocked),
+    skroll: createPlatformState('skroll', skrollUnlocked),
+    podpod: createPlatformState('podpod', podpodUnlocked),
   };
 }
 
@@ -42,9 +44,9 @@ describe('getPlatformAffinity', () => {
 
   it('returns different values for different platforms', () => {
     const chirperSelfies = getPlatformAffinity('chirper', 'selfies', STATIC_DATA);
-    const instashamSelfies = getPlatformAffinity('instasham', 'selfies', STATIC_DATA);
-    // instasham should boost selfies more than chirper
-    expect(instashamSelfies).toBeGreaterThan(chirperSelfies);
+    const picshiftSelfies = getPlatformAffinity('picshift', 'selfies', STATIC_DATA);
+    // picshift should boost selfies more than chirper
+    expect(picshiftSelfies).toBeGreaterThan(chirperSelfies);
   });
 });
 
@@ -56,45 +58,45 @@ describe('checkPlatformUnlocks', () => {
   it('does not unlock any platform when followers are below all thresholds', () => {
     const platforms = makePlatforms(true, false, false);
     const result = checkPlatformUnlocks(platforms, 0, STATIC_DATA);
-    expect(result.instasham.unlocked).toBe(false);
-    expect(result.grindset.unlocked).toBe(false);
+    expect(result.picshift.unlocked).toBe(false);
+    expect(result.skroll.unlocked).toBe(false);
   });
 
-  it('unlocks instasham when total followers meets its threshold', () => {
+  it('unlocks picshift when total followers meets its threshold', () => {
     const platforms = makePlatforms(true, false, false);
-    const threshold = STATIC_DATA.unlockThresholds.platforms.instasham; // 100
+    const threshold = STATIC_DATA.unlockThresholds.platforms.picshift; // 100
     const result = checkPlatformUnlocks(platforms, threshold, STATIC_DATA);
-    expect(result.instasham.unlocked).toBe(true);
+    expect(result.picshift.unlocked).toBe(true);
   });
 
-  it('does not unlock instasham when one follower short', () => {
+  it('does not unlock picshift when one follower short', () => {
     const platforms = makePlatforms(true, false, false);
-    const threshold = STATIC_DATA.unlockThresholds.platforms.instasham;
+    const threshold = STATIC_DATA.unlockThresholds.platforms.picshift;
     const result = checkPlatformUnlocks(platforms, threshold - 1, STATIC_DATA);
-    expect(result.instasham.unlocked).toBe(false);
+    expect(result.picshift.unlocked).toBe(false);
   });
 
-  it('unlocks grindset when total followers meets its threshold', () => {
+  it('unlocks skroll when total followers meets its threshold', () => {
     const platforms = makePlatforms(true, false, false);
-    const threshold = STATIC_DATA.unlockThresholds.platforms.grindset; // 500
+    const threshold = STATIC_DATA.unlockThresholds.platforms.skroll; // 500
     const result = checkPlatformUnlocks(platforms, threshold, STATIC_DATA);
-    expect(result.grindset.unlocked).toBe(true);
+    expect(result.skroll.unlocked).toBe(true);
   });
 
   it('unlocks multiple platforms simultaneously when followers are high enough', () => {
     const platforms = makePlatforms(true, false, false);
     const result = checkPlatformUnlocks(platforms, 10_000, STATIC_DATA);
-    expect(result.instasham.unlocked).toBe(true);
-    expect(result.grindset.unlocked).toBe(true);
+    expect(result.picshift.unlocked).toBe(true);
+    expect(result.skroll.unlocked).toBe(true);
   });
 
   it('does not mutate already-unlocked platforms', () => {
     const platforms = makePlatforms(true, true, false);
     const result = checkPlatformUnlocks(platforms, 0, STATIC_DATA);
-    // instasham was already unlocked; should remain so
-    expect(result.instasham.unlocked).toBe(true);
-    // instasham state object should be the same reference (no copy)
-    expect(result.instasham).toBe(platforms.instasham);
+    // picshift was already unlocked; should remain so
+    expect(result.picshift.unlocked).toBe(true);
+    // picshift state object should be the same reference (no copy)
+    expect(result.picshift).toBe(platforms.picshift);
   });
 
   it('returns the same reference when nothing changes', () => {
@@ -142,23 +144,23 @@ describe('computeFollowerDistribution', () => {
       STATIC_DATA
     );
     // chirper is the only unlocked platform → gets 100 %
-    expect(perPlatformRate.instasham).toBe(0);
-    expect(perPlatformRate.grindset).toBe(0);
+    expect(perPlatformRate.picshift).toBe(0);
+    expect(perPlatformRate.skroll).toBe(0);
     expect(perPlatformRate.chirper).toBeCloseTo(totalRate, 10);
     expect(totalRate).toBeGreaterThan(0);
   });
 
   it('distributes followers proportionally across two platforms', () => {
     const platforms = makePlatforms(true, true, false);
-    // selfies: instasham has higher affinity (2.0) than chirper (0.8)
+    // selfies: picshift has higher affinity (2.0) than chirper (0.8)
     const rates = { selfies: 10.0 };
     const { perPlatformRate } = computeFollowerDistribution(
       rates,
       platforms,
       STATIC_DATA
     );
-    expect(perPlatformRate.instasham).toBeGreaterThan(perPlatformRate.chirper);
-    expect(perPlatformRate.grindset).toBe(0);
+    expect(perPlatformRate.picshift).toBeGreaterThan(perPlatformRate.chirper);
+    expect(perPlatformRate.skroll).toBe(0);
   });
 
   it('total rate equals base follower rate (sum across platforms is conserved)', () => {
@@ -172,7 +174,7 @@ describe('computeFollowerDistribution', () => {
     );
 
     const sumOfPlatforms =
-      perPlatformRate.chirper + perPlatformRate.instasham + perPlatformRate.grindset;
+      perPlatformRate.chirper + perPlatformRate.picshift + perPlatformRate.skroll + perPlatformRate.podpod;
     expect(sumOfPlatforms).toBeCloseTo(totalRate, 10);
   });
 
@@ -191,7 +193,7 @@ describe('computeFollowerDistribution', () => {
     expect(totalRate).toBeCloseTo(selfiesRate * selfiesConv, 10);
   });
 
-  it('tutorials produce more followers on grindset than chirper', () => {
+  it('tutorials produce more followers on skroll than chirper', () => {
     const platforms = makePlatforms(true, false, true);
     const rates = { tutorials: 10.0 };
     const { perPlatformRate } = computeFollowerDistribution(
@@ -199,12 +201,12 @@ describe('computeFollowerDistribution', () => {
       platforms,
       STATIC_DATA
     );
-    // grindset has 2.0 affinity for tutorials; chirper has 0.7
-    expect(perPlatformRate.grindset).toBeGreaterThan(perPlatformRate.chirper);
+    // skroll has 2.0 affinity for tutorials; chirper has 0.7
+    expect(perPlatformRate.skroll).toBeGreaterThan(perPlatformRate.chirper);
   });
 
   it('locked platforms receive zero followers even with high affinity', () => {
-    // instasham has 2.0 selfies affinity but is locked
+    // picshift has 2.0 selfies affinity but is locked
     const platforms = makePlatforms(true, false, false);
     const rates = { selfies: 100.0 };
     const { perPlatformRate } = computeFollowerDistribution(
@@ -212,6 +214,6 @@ describe('computeFollowerDistribution', () => {
       platforms,
       STATIC_DATA
     );
-    expect(perPlatformRate.instasham).toBe(0);
+    expect(perPlatformRate.picshift).toBe(0);
   });
 });

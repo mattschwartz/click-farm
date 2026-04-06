@@ -212,10 +212,11 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
 };
 
 // ---------------------------------------------------------------------------
-// Platforms — 3 at launch
+// Platforms — 4 at launch
 // chirper: text/hot-takes platform (Twitter analog)
-// instasham: photo/visual platform (Instagram analog)
-// grindset: professional/evergreen platform (LinkedIn analog)
+// picshift: photo/visual platform (Instagram analog) — renamed from instasham
+// skroll: short-form video platform (TikTok analog) — renamed from grindset
+// podpod: long-form audio platform (podcast aggregator analog)
 // ---------------------------------------------------------------------------
 
 const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
@@ -238,8 +239,8 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
     },
     unlock_threshold: 0,
   },
-  instasham: {
-    id: 'instasham',
+  picshift: {
+    id: 'picshift',
     content_affinity: {
       chirps: 1.0,             // §14c — neutral
       selfies: 2.0,
@@ -255,8 +256,8 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
     },
     unlock_threshold: 100,
   },
-  grindset: {
-    id: 'grindset',
+  skroll: {
+    id: 'skroll',
     content_affinity: {
       chirps: 0.6,             // §14c — too ephemeral
       selfies: 0.5,
@@ -271,6 +272,25 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       algorithmic_prophecy: 1.0,
     },
     unlock_threshold: 500,
+  },
+  // BALANCE: placeholder — all podpod values below. Game-designer owns final
+  // content_affinity and unlock_threshold (task #131 open question #1).
+  podpod: {
+    id: 'podpod',
+    content_affinity: {
+      chirps: 0.5,
+      selfies: 0.3,
+      memes: 0.4,
+      hot_takes: 0.8,
+      tutorials: 1.5,
+      livestreams: 0.9,
+      podcasts: 2.0,           // home turf — podcast-native
+      viral_stunts: 0.5,
+      ai_slop: 1.0,
+      deepfakes: 1.0,
+      algorithmic_prophecy: 1.0,
+    },
+    unlock_threshold: 2_000,
   },
 };
 
@@ -387,17 +407,24 @@ const CLOUT_UPGRADE_DEFS: Record<UpgradeId, CloutUpgradeDef> = {
     max_level: 2,
     effect: { type: 'algorithm_insight', lookaheads: [1, 2] },
   },
-  platform_headstart_instasham: {
-    id: 'platform_headstart_instasham',
+  platform_headstart_picshift: {
+    id: 'platform_headstart_picshift',
     cost: [20],
     max_level: 1,
-    effect: { type: 'platform_headstart', platform_id: 'instasham' },
+    effect: { type: 'platform_headstart', platform_id: 'picshift' },
   },
-  platform_headstart_grindset: {
-    id: 'platform_headstart_grindset',
+  platform_headstart_skroll: {
+    id: 'platform_headstart_skroll',
     cost: [50],
     max_level: 1,
-    effect: { type: 'platform_headstart', platform_id: 'grindset' },
+    effect: { type: 'platform_headstart', platform_id: 'skroll' },
+  },
+  // BALANCE: placeholder cost — game-designer owns final value (task #131 OQ #1).
+  platform_headstart_podpod: {
+    id: 'platform_headstart_podpod',
+    cost: [80],
+    max_level: 1,
+    effect: { type: 'platform_headstart', platform_id: 'podpod' },
   },
   ai_slop_unlock: {
     id: 'ai_slop_unlock',
@@ -561,8 +588,9 @@ export const STATIC_DATA: StaticData = {
     },
     platforms: {
       chirper: PLATFORM_DEFS.chirper.unlock_threshold,
-      instasham: PLATFORM_DEFS.instasham.unlock_threshold,
-      grindset: PLATFORM_DEFS.grindset.unlock_threshold,
+      picshift: PLATFORM_DEFS.picshift.unlock_threshold,
+      skroll: PLATFORM_DEFS.skroll.unlock_threshold,
+      podpod: PLATFORM_DEFS.podpod.unlock_threshold,
     },
   },
   viralBurst: VIRAL_BURST_CONFIG,

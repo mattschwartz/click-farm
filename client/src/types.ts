@@ -23,7 +23,7 @@ export type GeneratorId =
   | 'deepfakes'
   | 'algorithmic_prophecy';
 
-export type PlatformId = 'chirper' | 'instasham' | 'grindset';
+export type PlatformId = 'chirper' | 'picshift' | 'skroll' | 'podpod';
 
 // Audience Mood pressure families. See architecture/audience-mood.md §Data Model.
 export type PressureId = 'content_fatigue' | 'neglect' | 'algorithm_misalignment';
@@ -40,8 +40,9 @@ export type AlgorithmStateId =
 export type UpgradeId =
   | 'engagement_boost'
   | 'algorithm_insight'
-  | 'platform_headstart_instasham'
-  | 'platform_headstart_grindset'
+  | 'platform_headstart_picshift'
+  | 'platform_headstart_skroll'
+  | 'platform_headstart_podpod'
   | 'ai_slop_unlock'
   | 'deepfakes_unlock'
   | 'algorithmic_prophecy_unlock';

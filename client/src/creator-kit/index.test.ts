@@ -381,34 +381,34 @@ describe('purchaseKitItem — Phone sequential head-start', () => {
     STATIC_DATA.platforms,
   ) as PlatformId[];
 
-  it('L1 with no Clout head-starts → unlocks the first still-locked platform (instasham)', () => {
+  it('L1 with no Clout head-starts → unlocks the first still-locked platform (picshift)', () => {
     const state = seed(phoneCost0);
     // Sanity: initial state has chirper unlocked (threshold=0), others locked.
     expect(state.platforms.chirper.unlocked).toBe(true);
-    expect(state.platforms.instasham.unlocked).toBe(false);
-    expect(state.platforms.grindset.unlocked).toBe(false);
+    expect(state.platforms.picshift.unlocked).toBe(false);
+    expect(state.platforms.skroll.unlocked).toBe(false);
 
     const next = purchaseKitItem(state, 'phone', STATIC_DATA);
     expect(next.player.creator_kit.phone).toBe(1);
-    expect(next.platforms.instasham.unlocked).toBe(true);
+    expect(next.platforms.picshift.unlocked).toBe(true);
     // Grindset still locked — Phone L1 only unlocks one platform.
-    expect(next.platforms.grindset.unlocked).toBe(false);
+    expect(next.platforms.skroll.unlocked).toBe(false);
   });
 
-  it('L1 with Clout head-start covering platform[1] → unlocks the next still-locked (grindset)', () => {
-    // Simulate rebrand-time Clout head-start by pre-unlocking instasham.
+  it('L1 with Clout head-start covering platform[1] → unlocks the next still-locked (skroll)', () => {
+    // Simulate rebrand-time Clout head-start by pre-unlocking picshift.
     const base = seed(phoneCost0);
     const state: GameState = {
       ...base,
       platforms: {
         ...base.platforms,
-        instasham: { ...base.platforms.instasham, unlocked: true },
+        picshift: { ...base.platforms.picshift, unlocked: true },
       },
     };
 
     const next = purchaseKitItem(state, 'phone', STATIC_DATA);
-    expect(next.platforms.instasham.unlocked).toBe(true);
-    expect(next.platforms.grindset.unlocked).toBe(true);
+    expect(next.platforms.picshift.unlocked).toBe(true);
+    expect(next.platforms.skroll.unlocked).toBe(true);
   });
 
   it('L2 via two sequential purchases → unlocks the first two still-locked platforms in order', () => {
@@ -416,13 +416,13 @@ describe('purchaseKitItem — Phone sequential head-start', () => {
 
     const afterFirst = purchaseKitItem(state, 'phone', STATIC_DATA);
     expect(afterFirst.player.creator_kit.phone).toBe(1);
-    expect(afterFirst.platforms.instasham.unlocked).toBe(true);
-    expect(afterFirst.platforms.grindset.unlocked).toBe(false);
+    expect(afterFirst.platforms.picshift.unlocked).toBe(true);
+    expect(afterFirst.platforms.skroll.unlocked).toBe(false);
 
     const afterSecond = purchaseKitItem(afterFirst, 'phone', STATIC_DATA);
     expect(afterSecond.player.creator_kit.phone).toBe(2);
-    expect(afterSecond.platforms.instasham.unlocked).toBe(true);
-    expect(afterSecond.platforms.grindset.unlocked).toBe(true);
+    expect(afterSecond.platforms.picshift.unlocked).toBe(true);
+    expect(afterSecond.platforms.skroll.unlocked).toBe(true);
   });
 
   it('is Inert when all platforms are already unlocked (engagement spent, level incremented, no platform change)', () => {
@@ -446,7 +446,7 @@ describe('purchaseKitItem — Phone sequential head-start', () => {
     }
   });
 
-  it('iterates in static-declaration order (chirper → instasham → grindset)', () => {
+  it('iterates in static-declaration order (chirper → picshift → skroll)', () => {
     // Regression guard: if the first platform were locked somehow, Phone
     // would unlock it before touching later ones.
     const base = seed(phoneCost0);
@@ -460,6 +460,6 @@ describe('purchaseKitItem — Phone sequential head-start', () => {
 
     const next = purchaseKitItem(state, 'phone', STATIC_DATA);
     expect(next.platforms.chirper.unlocked).toBe(true);
-    expect(next.platforms.instasham.unlocked).toBe(false);
+    expect(next.platforms.picshift.unlocked).toBe(false);
   });
 });

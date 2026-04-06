@@ -163,8 +163,9 @@ function computeHeaviestContributor(
 ): Record<PlatformId, GeneratorId | null> {
   const out: Record<PlatformId, GeneratorId | null> = {
     chirper: null,
-    instasham: null,
-    grindset: null,
+    picshift: null,
+    skroll: null,
+    podpod: null,
   };
   const entries = Object.entries(engagementRates) as [GeneratorId, number][];
   for (const pid of Object.keys(platforms) as PlatformId[]) {

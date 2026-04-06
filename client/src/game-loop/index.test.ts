@@ -150,8 +150,9 @@ describe('cloutBonus', () => {
   const zeroUpgrades = {
     engagement_boost: 0,
     algorithm_insight: 0,
-    platform_headstart_instasham: 0,
-    platform_headstart_grindset: 0,
+    platform_headstart_picshift: 0,
+    platform_headstart_skroll: 0,
+    platform_headstart_podpod: 0,
     ai_slop_unlock: 0,
     deepfakes_unlock: 0,
     algorithmic_prophecy_unlock: 0,
@@ -178,7 +179,7 @@ describe('cloutBonus', () => {
     const upgrades = {
       ...zeroUpgrades,
       algorithm_insight: 2, // not an engagement_multiplier
-      platform_headstart_instasham: 1,
+      platform_headstart_picshift: 1,
     };
     expect(cloutBonus(upgrades, STATIC_DATA)).toBe(1.0);
   });
@@ -344,14 +345,14 @@ describe('tick — engagement', () => {
 
 describe('tick — followers', () => {
   it('distributes followers to the one unlocked platform with full share', () => {
-    // Only chirper starts unlocked (threshold 0). instasham=100, grindset=500.
+    // Only chirper starts unlocked (threshold 0). picshift=100, skroll=500.
     const state = stateWithGenerator('selfies', 10, 1);
     const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
 
     // total_followers === chirper.followers; other platforms stay at 0.
     expect(next.platforms.chirper.followers).toBeGreaterThan(0);
-    expect(next.platforms.instasham.followers).toBe(0);
-    expect(next.platforms.grindset.followers).toBe(0);
+    expect(next.platforms.picshift.followers).toBe(0);
+    expect(next.platforms.skroll.followers).toBe(0);
     expect(next.player.total_followers).toBeCloseTo(
       next.platforms.chirper.followers,
       6,
@@ -368,17 +369,17 @@ describe('tick — followers', () => {
 
   it('distributes across multiple unlocked platforms by affinity weight', () => {
     const base = stateWithGenerator('selfies', 100, 1);
-    // Unlock instasham manually for this test
+    // Unlock picshift manually for this test
     const state: GameState = {
       ...base,
       platforms: {
         ...base.platforms,
-        instasham: { ...base.platforms.instasham, unlocked: true },
+        picshift: { ...base.platforms.picshift, unlocked: true },
       },
     };
     const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
-    // selfies affinity: chirper=0.8, instasham=2.0 → instasham earns more
-    expect(next.platforms.instasham.followers).toBeGreaterThan(
+    // selfies affinity: chirper=0.8, picshift=2.0 → picshift earns more
+    expect(next.platforms.picshift.followers).toBeGreaterThan(
       next.platforms.chirper.followers,
     );
     expect(next.platforms.chirper.followers).toBeGreaterThan(0);
@@ -412,24 +413,24 @@ describe('tick — followers', () => {
 // ---------------------------------------------------------------------------
 
 describe('tick — platform unlocks', () => {
-  it('unlocks instasham once total_followers crosses its threshold', () => {
-    // instasham threshold = 100. Use a ton of generators to cross it in 1s.
+  it('unlocks picshift once total_followers crosses its threshold', () => {
+    // picshift threshold = 100. Use a ton of generators to cross it in 1s.
     const state = stateWithGenerator('podcasts', 100, 5);
-    expect(state.platforms.instasham.unlocked).toBe(false);
+    expect(state.platforms.picshift.unlocked).toBe(false);
 
     const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
 
     expect(next.player.total_followers).toBeGreaterThan(100);
-    expect(next.platforms.instasham.unlocked).toBe(true);
-    // grindset (threshold 500) may or may not be unlocked — depends on rate
+    expect(next.platforms.picshift.unlocked).toBe(true);
+    // skroll (threshold 500) may or may not be unlocked — depends on rate
   });
 
   it('does not unlock platforms below their threshold', () => {
     const state = stateWithGenerator('selfies', 1, 1);
     const next = tick(state, T0 + 100, 100, STATIC_DATA);
-    // tiny production — instasham should remain locked
-    expect(next.platforms.instasham.unlocked).toBe(false);
-    expect(next.platforms.grindset.unlocked).toBe(false);
+    // tiny production — picshift should remain locked
+    expect(next.platforms.picshift.unlocked).toBe(false);
+    expect(next.platforms.skroll.unlocked).toBe(false);
   });
 });
 
@@ -688,8 +689,9 @@ describe('computeSnapshot', () => {
     expect(snap.total_engagement_rate).toBe(0);
     expect(snap.total_follower_rate).toBe(0);
     expect(snap.platform_rates.chirper).toBe(0);
-    expect(snap.platform_rates.instasham).toBe(0);
-    expect(snap.platform_rates.grindset).toBe(0);
+    expect(snap.platform_rates.picshift).toBe(0);
+    expect(snap.platform_rates.skroll).toBe(0);
+    expect(snap.platform_rates.podpod).toBe(0);
   });
 
   it('captures current algorithm_state_index', () => {
@@ -746,14 +748,15 @@ describe('computeSnapshot', () => {
       ...base,
       platforms: {
         ...base.platforms,
-        instasham: { ...base.platforms.instasham, unlocked: true },
+        picshift: { ...base.platforms.picshift, unlocked: true },
       },
     };
     const snap = computeSnapshot(state, STATIC_DATA);
     const sum =
       snap.platform_rates.chirper
-      + snap.platform_rates.instasham
-      + snap.platform_rates.grindset;
+      + snap.platform_rates.picshift
+      + snap.platform_rates.skroll
+      + snap.platform_rates.podpod;
     expect(sum).toBeCloseTo(snap.total_follower_rate, 6);
   });
 });
@@ -838,18 +841,18 @@ describe('evaluateViralTrigger', () => {
   });
 
   it('selects the platform with highest content_affinity for the source generator', () => {
-    // selfies: chirper=0.8, instasham=2.0 → instasham should be selected
+    // selfies: chirper=0.8, picshift=2.0 → picshift should be selected
     const base = stateReadyToViral();
     const state: GameState = {
       ...base,
       platforms: {
         ...base.platforms,
-        instasham: { ...base.platforms.instasham, unlocked: true },
+        picshift: { ...base.platforms.picshift, unlocked: true },
       },
     };
     const result = evaluateViralTrigger(state, STATIC_DATA, T0, alwaysZero);
     expect(result).not.toBeNull();
-    expect(result!.source_platform_id).toBe('instasham');
+    expect(result!.source_platform_id).toBe('picshift');
   });
 
   it('Gate 3: algorithm boost doubles p_viral and increases fire rate vs no boost', () => {

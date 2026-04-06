@@ -35,13 +35,13 @@ describe('unlockedPlatformsList', () => {
   });
 
   it('joins two platforms with "and"', () => {
-    const state = stateWithPlatforms(['chirper', 'instasham']);
-    expect(unlockedPlatformsList(state)).toBe('Chirper and InstaSham');
+    const state = stateWithPlatforms(['chirper', 'picshift']);
+    expect(unlockedPlatformsList(state)).toBe('Chirper and PicShift');
   });
 
   it('uses Oxford comma for 3+ platforms', () => {
-    const state = stateWithPlatforms(['chirper', 'instasham', 'grindset']);
-    expect(unlockedPlatformsList(state)).toBe('Chirper, InstaSham, and Grindset');
+    const state = stateWithPlatforms(['chirper', 'picshift', 'skroll']);
+    expect(unlockedPlatformsList(state)).toBe('Chirper, PicShift, and Skroll');
   });
 });
 

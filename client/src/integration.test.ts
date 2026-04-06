@@ -58,7 +58,7 @@ describe('integration — end-to-end play loop', () => {
     expect(driver.getState().generators.chirps.count).toBe(1);
 
     // 4. Advance time — ticks produce engagement AND followers.
-    // Need enough to unlock instasham (100 followers). Buy many selfies
+    // Need enough to unlock picshift (100 followers). Buy many selfies
     // by repeatedly clicking + buying. At level 1 this is slow, so fast-forward.
     for (let i = 0; i < 200; i++) { t += 500; driver.click('chirps'); }
     // Buy until a purchase fails (driver surfaces failure via onActionError
@@ -79,19 +79,20 @@ describe('integration — end-to-end play loop', () => {
     }
 
     // 5. Chirper accumulated followers. total_followers is the sum across
-    //    all platforms — which may include instasham if it auto-unlocked.
+    //    all platforms — which may include picshift if it auto-unlocked.
     const state = driver.getState();
     expect(state.platforms.chirper.followers).toBeGreaterThan(0);
     const platformSum =
       state.platforms.chirper.followers
-      + state.platforms.instasham.followers
-      + state.platforms.grindset.followers;
+      + state.platforms.picshift.followers
+      + state.platforms.skroll.followers
+      + state.platforms.podpod.followers;
     expect(state.player.total_followers).toBeCloseTo(platformSum, 4);
 
-    // If we crossed 100 followers, instasham should be unlocked — verifies
+    // If we crossed 100 followers, picshift should be unlocked — verifies
     // the unlock path runs through the driver.
     if (state.player.total_followers >= 100) {
-      expect(state.platforms.instasham.unlocked).toBe(true);
+      expect(state.platforms.picshift.unlocked).toBe(true);
     }
   });
 
@@ -108,15 +109,15 @@ describe('integration — end-to-end play loop', () => {
       },
       platforms: {
         ...state.platforms,
-        instasham: { ...state.platforms.instasham, unlocked: true },
+        picshift: { ...state.platforms.picshift, unlocked: true },
       },
     };
 
     // Run a tick.
     const next = tick(state, 1_001_000, 1000, STATIC_DATA);
 
-    // Selfies affinity: chirper=0.8, instasham=2.0 — instasham earns more.
-    expect(next.platforms.instasham.followers).toBeGreaterThan(
+    // Selfies affinity: chirper=0.8, picshift=2.0 — picshift earns more.
+    expect(next.platforms.picshift.followers).toBeGreaterThan(
       next.platforms.chirper.followers,
     );
     expect(next.platforms.chirper.followers).toBeGreaterThan(0);
@@ -124,8 +125,9 @@ describe('integration — end-to-end play loop', () => {
     // Totals match.
     const sum =
       next.platforms.chirper.followers +
-      next.platforms.instasham.followers +
-      next.platforms.grindset.followers;
+      next.platforms.picshift.followers +
+      next.platforms.skroll.followers +
+      next.platforms.podpod.followers;
     expect(next.player.total_followers).toBeCloseTo(sum, 6);
   });
 
@@ -207,8 +209,9 @@ describe('integration — end-to-end play loop', () => {
 
     const s = driver.getState();
     const sum = s.platforms.chirper.followers
-      + s.platforms.instasham.followers
-      + s.platforms.grindset.followers;
+      + s.platforms.picshift.followers
+      + s.platforms.skroll.followers
+      + s.platforms.podpod.followers;
     expect(s.player.total_followers).toBeCloseTo(sum, 4);
     expect(s.player.lifetime_followers).toBeGreaterThanOrEqual(
       s.player.total_followers,
@@ -229,8 +232,8 @@ describe('integration — end-to-end play loop', () => {
     expect(snap.total_engagement_rate).toBeGreaterThan(0);
     // chirper is unlocked, others not — only chirper gets the rate.
     expect(snap.platform_rates.chirper).toBeGreaterThan(0);
-    expect(snap.platform_rates.instasham).toBe(0);
-    expect(snap.platform_rates.grindset).toBe(0);
+    expect(snap.platform_rates.picshift).toBe(0);
+    expect(snap.platform_rates.skroll).toBe(0);
     expect(snap.total_follower_rate).toBeCloseTo(
       snap.platform_rates.chirper,
       6,
