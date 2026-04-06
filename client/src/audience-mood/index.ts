@@ -28,6 +28,32 @@
 //   game-designer re-tunes magnitudes at build time.
 //
 // Pure functions only. state → state. No side effects.
+//
+// AUTOCLICKERS_AFFECT_MOOD (task #134):
+//   When true, autoclicker fires contribute to mood pressure — generators with
+//   autoclicker_count > 0 but count = 0 still generate posts. When false, the
+//   gate reverts to the old behavior (count <= 0 skips). Toggle without code
+//   change if playtesting shows the pressure feels wrong.
+
+/**
+ * Killswitch: when true, autoclicker-only generators (count=0, ac>0)
+ * contribute posts to audience mood. Set false to revert to pre-#132 gate.
+ */
+export const AUTOCLICKERS_AFFECT_MOOD = true;
+
+/**
+ * Whether a generator should be considered "producing" for mood purposes.
+ * Exported so the killswitch behavior is directly testable.
+ */
+export function isGeneratorProducing(
+  count: number,
+  autoclickerCount: number,
+  killswitch: boolean = AUTOCLICKERS_AFFECT_MOOD,
+): boolean {
+  return killswitch
+    ? (count > 0 || autoclickerCount > 0)
+    : (count > 0);
+}
 
 import type {
   GameState,
@@ -292,7 +318,7 @@ export function applyTickPosts(
   let next = state;
   for (const gId of Object.keys(state.generators) as GeneratorId[]) {
     const g = state.generators[gId];
-    if (!g.owned || g.count <= 0) continue;
+    if (!g.owned || !isGeneratorProducing(g.count, g.autoclicker_count)) continue;
 
     // Find highest-affinity unlocked platform (first-declared wins on tie).
     let target: PlatformId | null = null;

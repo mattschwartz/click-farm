@@ -15,6 +15,8 @@ import {
   recomputeRetention,
   recomputeAllRetention,
   applyTickPosts,
+  AUTOCLICKERS_AFFECT_MOOD,
+  isGeneratorProducing,
 } from './index.ts';
 
 const T0 = 1_700_000_000_000;
@@ -334,9 +336,9 @@ describe('applyTickPosts', () => {
     expect(s1.platforms.picshift.content_fatigue.selfies ?? 0).toBe(0);
   });
 
-  it('skips generators that are unowned or count=0', () => {
+  it('skips generators that are unowned or have no production', () => {
     const s0 = freshState();
-    // selfies owned=false, count=0 — nothing posts.
+    // selfies owned=false, count=0, autoclicker_count=0 — nothing posts.
     const s1 = applyTickPosts(s0, STATIC_DATA);
     // Reference-equal because nothing changed.
     expect(s1).toBe(s0);
@@ -364,5 +366,69 @@ describe('applyTickPosts', () => {
     for (const pid of ['chirper', 'picshift', 'skroll', 'podpod'] as const) {
       expect(s1.platforms[pid].content_fatigue.selfies ?? 0).toBe(0);
     }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Autoclicker mood gate (task #134)
+  // ---------------------------------------------------------------------------
+
+  it('autoclicker-only generator (count=0, ac>0) contributes to mood when killswitch is on', () => {
+    // AUTOCLICKERS_AFFECT_MOOD defaults to true
+    expect(AUTOCLICKERS_AFFECT_MOOD).toBe(true);
+    const s0 = freshState();
+    const withAC: GameState = {
+      ...s0,
+      generators: {
+        ...s0.generators,
+        selfies: { ...s0.generators.selfies, owned: true, count: 0, autoclicker_count: 3 },
+      },
+    };
+    const s1 = applyTickPosts(withAC, STATIC_DATA);
+    // selfies should have posted — picshift has highest affinity for selfies
+    expect(s1.platforms.picshift.content_fatigue.selfies ?? 0).toBeGreaterThan(0);
+  });
+
+  it('generator with count=0 AND autoclicker_count=0 does not contribute regardless', () => {
+    const s0 = freshState();
+    const noProduction: GameState = {
+      ...s0,
+      generators: {
+        ...s0.generators,
+        selfies: { ...s0.generators.selfies, owned: true, count: 0, autoclicker_count: 0 },
+      },
+    };
+    const s1 = applyTickPosts(noProduction, STATIC_DATA);
+    // No posts — no fatigue anywhere for selfies
+    for (const pid of ['chirper', 'picshift', 'skroll', 'podpod'] as const) {
+      expect(s1.platforms[pid].content_fatigue.selfies ?? 0).toBe(0);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isGeneratorProducing — killswitch gate (task #134)
+// ---------------------------------------------------------------------------
+
+describe('isGeneratorProducing', () => {
+  it('AUTOCLICKERS_AFFECT_MOOD defaults to true', () => {
+    expect(AUTOCLICKERS_AFFECT_MOOD).toBe(true);
+  });
+
+  it('count>0 is producing regardless of killswitch', () => {
+    expect(isGeneratorProducing(1, 0, true)).toBe(true);
+    expect(isGeneratorProducing(1, 0, false)).toBe(true);
+  });
+
+  it('count=0, ac>0 is producing when killswitch is on', () => {
+    expect(isGeneratorProducing(0, 3, true)).toBe(true);
+  });
+
+  it('count=0, ac>0 is NOT producing when killswitch is off', () => {
+    expect(isGeneratorProducing(0, 3, false)).toBe(false);
+  });
+
+  it('count=0, ac=0 is not producing regardless of killswitch', () => {
+    expect(isGeneratorProducing(0, 0, true)).toBe(false);
+    expect(isGeneratorProducing(0, 0, false)).toBe(false);
   });
 });
