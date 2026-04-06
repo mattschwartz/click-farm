@@ -21,6 +21,19 @@ import { kitEngagementBonus } from '../creator-kit/index.ts';
 import { GENERATOR_DISPLAY } from './display.ts';
 import { fmtCompact } from './format.ts';
 
+// Verb icon images — imported via Vite so they resolve to hashed asset URLs.
+import chirpImg from '../assets/chirp.png';
+import selfieImg from '../assets/selfie.png';
+import livestreamImg from '../assets/livestream.png';
+import podcastImg from '../assets/podcast.png';
+
+const VERB_IMAGE: Partial<Record<string, string>> = {
+  chirps: chirpImg,
+  selfies: selfieImg,
+  livestreams: livestreamImg,
+  podcasts: podcastImg,
+};
+
 // ---------------------------------------------------------------------------
 // Verb color lanes — per UX spec §11
 // ---------------------------------------------------------------------------
@@ -161,8 +174,13 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
       aria-label={`${display.name}, ${fmtCompact(perTap)} engagement per tap, cooldown ${Math.round(cdMs)}ms`}
     >
 
+      {/* Background image — direct child so it positions relative to the button */}
+      {VERB_IMAGE[verbId] && (
+        <img className="verb-icon-img" src={VERB_IMAGE[verbId]} alt="" aria-hidden="true" />
+      )}
+
       <span className="verb-header">
-        <span className="verb-icon">{display.icon}</span>
+        {!VERB_IMAGE[verbId] && <span className="verb-icon">{display.icon}</span>}
         <span className="verb-name">{display.name.toUpperCase()}</span>
         {genState.count > 0 && (
           <span className="verb-badge">
@@ -224,7 +242,10 @@ function GhostSlot({ verbId, threshold, canAfford, cost, isAwakened, onUnlock }:
         className="ghost-slot ghost-promise"
         aria-label={`${display.name} locked at ${threshold} followers`}
       >
-        <span className="ghost-icon" style={{ color }}>{display.icon}</span>
+        {VERB_IMAGE[verbId]
+          ? <img className="ghost-icon-img" src={VERB_IMAGE[verbId]} alt={display.name} />
+          : <span className="ghost-icon" style={{ color }}>{display.icon}</span>
+        }
         <span className="ghost-info">
           <span className="ghost-name">{display.name.toUpperCase()}</span>
           <span className="ghost-condition">at {threshold.toLocaleString()} followers</span>
@@ -241,7 +262,10 @@ function GhostSlot({ verbId, threshold, canAfford, cost, isAwakened, onUnlock }:
       aria-label={`Unlock ${display.name} for ${cost} engagement`}
       style={{ '--verb-color': color } as React.CSSProperties}
     >
-      <span className="ghost-icon">{display.icon}</span>
+      {VERB_IMAGE[verbId]
+        ? <img className="ghost-icon-img" src={VERB_IMAGE[verbId]} alt={display.name} />
+        : <span className="ghost-icon">{display.icon}</span>
+      }
       <span className="ghost-info">
         <span className="ghost-name">{display.name.toUpperCase()}</span>
         <span className={`ghost-cost${!canAfford ? ' ghost-cost-disabled' : ''}`}>
