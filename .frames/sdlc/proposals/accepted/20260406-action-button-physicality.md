@@ -120,6 +120,8 @@ At the moment the button hits bottom (the `pointerdown` frame), the engagement c
 
 The counter scales up 15% and settles back. This happens on the SAME frame as the button depression — the two are causally linked. The player sees: "I pressed → the number moved." That's the dopamine loop.
 
+**Manual tap only.** The counter-bump fires exclusively on player tap (`pointerdown`) — never on autoclicker fires. Autoclickers can fire at high rates; if each fire triggered a `scale(1.15)` pulse, the counter would become a seizure machine. Autoclicker engagement produces its own distinct visual feedback: floating numbers and the ×N badge pulse specified in `ux/manual-action-ladder.md` §4.4. The two signals are intentionally separate — the bump is the player's hand, the floats are the army working.
+
 ### 6. Ghost slot — unlit button
 
 Ghost slots (locked verbs) use the same raised-slab shape but desaturated and muted — an unpowered arcade button:

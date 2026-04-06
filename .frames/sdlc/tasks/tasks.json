@@ -5272,7 +5272,7 @@
       "alias": "E3",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Audience mood gate change + AUTOCLICKERS_AFFECT_MOOD killswitch",
       "requester": "architect",
@@ -5303,7 +5303,8 @@
         "npm run build succeeds; full test suite passes"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 135,
@@ -5432,7 +5433,7 @@
       "alias": "U3",
       "role": "ux-designer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Amend action-button-physicality spec: counter-bump is manual-tap-only (Gap 3)",
       "requester": "architect",
@@ -5453,7 +5454,8 @@
         "Autoclicker-fire visual feedback is noted as a separate signal (floating numbers + badge pulse), cross-referenced to the manual-action-ladder UX spec"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 139,
