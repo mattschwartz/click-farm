@@ -161,6 +161,8 @@ Polly's other thoughts on using vague directives intentionally
 - [theory] with some tweaking, this could be a tool for creating quick POCs for someone like a PM. i don't even know how the code is structured right now and it doesn't matter. i can guide it with NL
 - [observation] sometimes i wonder if the AI work well with json sure but don't _prefer_ it? like, to work with it internally it seems they don't really like it cuz i keep seeing them formatting the tool and preferring --pretty-print over the json blob. idk why though
 - [observation] finally, the architect said it was not aligned and flagged major concerns. so it does do it but it needs a really big tipping point. but it went against me so that was i think a good sign
+- [observation] the LLMs may actually prefer NL over code? they keep doing --pretty-print since it was added. 
+  - but interestingly, the FRAME.yml YAML is easier to write/read for humans and the LLMs seem to understand it well, so maybe maps are good for them?
 - 
 
 SKills from polly
