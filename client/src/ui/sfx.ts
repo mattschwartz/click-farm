@@ -12,11 +12,16 @@
 
 import clickSfx from '../assets/click.wav';
 import purchaseSfx from '../assets/purchase.wav';
-import ost1Src from '../assets/ost1.mp3';
-import ost2Src from '../assets/ost2.mp3';
-import ost3Src from '../assets/ost3.mp3';
+import ost01 from '../assets/djart-ost/djartmusic-8-bit-console-from-my-childhood-301286.mp3';
+import ost02 from '../assets/djart-ost/djartmusic-best-game-console-301284.mp3';
+import ost03 from '../assets/djart-ost/djartmusic-fun-with-my-8-bit-game-301278.mp3';
+import ost04 from '../assets/djart-ost/djartmusic-i-love-my-8-bit-game-console-301272.mp3';
+import ost05 from '../assets/djart-ost/djartmusic-my-8-bit-hero-301280.mp3';
+import ost06 from '../assets/djart-ost/djartmusic-so-happy-with-my-8-bit-game-301275.mp3';
+import ost07 from '../assets/djart-ost/djartmusic-the-return-of-the-8-bit-era-301292.mp3';
+import ost08 from '../assets/djart-ost/djartmusic-the-world-of-8-bit-games-301273.mp3';
 
-const OST_TRACKS = [ost1Src, ost2Src, ost3Src];
+const OST_TRACKS = [ost01, ost02, ost03, ost04, ost05, ost06, ost07, ost08];
 
 // ---------------------------------------------------------------------------
 // Raw data pre-fetch (no AudioContext required)
