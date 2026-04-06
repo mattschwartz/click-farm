@@ -67,9 +67,10 @@ describe('save and load', () => {
     save(state);
     const loaded = expectLoaded(load());
 
-    // selfies (threshold=0) starts owned per fresh-state rules.
-    expect(loaded.generators.selfies.owned).toBe(true);
-    expect(loaded.generators.selfies.count).toBe(0);
+    // chirps (threshold=0) starts owned; selfies (threshold=100) starts unowned.
+    expect(loaded.generators.chirps.owned).toBe(true);
+    expect(loaded.generators.chirps.count).toBe(0);
+    expect(loaded.generators.selfies.owned).toBe(false);
   });
 
   it('preserves platform follower counts independently', () => {

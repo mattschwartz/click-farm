@@ -572,10 +572,13 @@ export function postClick(
 ): GameState {
   const def = staticData.generators[verbId];
 
-  // Gate: reject non-manual generators (silent no-op).
+  // Gate A: reject non-manual generators (silent no-op).
   if (!def.manual_clickable) return state;
 
   const genState = state.generators[verbId];
+
+  // Gate B: reject unowned generators (verb not yet Unlocked).
+  if (!genState.owned) return state;
 
   // Cooldown gate per architect's snippet: max(1, count) models the player's
   // hand as the first actor even pre-Automate.

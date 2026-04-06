@@ -60,6 +60,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     max_level: 10,
   },
   // §14a — ladder verb, 2.5s manual cooldown. yield×rate = 1.0 (preserved).
+  // §14d — threshold moved from 0 → 100 (chirps takes the starter position).
   selfies: {
     id: 'selfies',
     base_event_yield: 2.5,
@@ -67,7 +68,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     manual_clickable: true,
     follower_conversion_rate: 0.10,
     trend_sensitivity: 0.3,  // low — always somewhat relevant
-    unlock_threshold: 0,
+    unlock_threshold: 100,
     base_buy_cost: 10,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 100,

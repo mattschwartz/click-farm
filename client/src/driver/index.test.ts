@@ -135,20 +135,20 @@ describe('driver — lifecycle & actions', () => {
       setInterval: s.setInterval,
       clearInterval: s.clearInterval,
     });
-    // selfies threshold is 0 → starts owned. Try to buy without engagement.
+    // chirps threshold is 0 → starts owned. Try to buy without engagement.
     const errors: ActionError[] = [];
     driver.onActionError((e) => errors.push(e));
     // Suppress the default console.error for the expected failure.
     const origError = console.error;
     console.error = () => {};
     try {
-      expect(() => driver.buy('selfies')).not.toThrow();
+      expect(() => driver.buy('chirps')).not.toThrow();
     } finally {
       console.error = origError;
     }
     expect(errors).toHaveLength(1);
     expect(errors[0].action).toBe('buy');
-    expect(errors[0].context).toEqual({ generatorId: 'selfies' });
+    expect(errors[0].context).toEqual({ generatorId: 'chirps' });
     expect(errors[0].error.message).toMatch(/cannot afford/);
   });
 
@@ -165,10 +165,10 @@ describe('driver — lifecycle & actions', () => {
     const origError = console.error;
     console.error = () => {};
     try {
-      driver.buy('selfies'); // unaffordable → fires listener
+      driver.buy('chirps'); // unaffordable → fires listener
       expect(errors).toHaveLength(1);
       unsub();
-      driver.buy('selfies'); // unaffordable again → listener is gone
+      driver.buy('chirps'); // unaffordable again → listener is gone
       expect(errors).toHaveLength(1);
     } finally {
       console.error = origError;
@@ -414,11 +414,12 @@ describe('driver — persistence', () => {
     expect(driver.getState().player.rebrand_count).toBe(beforeRebrandCount + 1);
     expect(driver.getState().player.engagement).toBe(0);
     expect(driver.getState().player.total_followers).toBe(0);
-    // All generators reset: selfies stays owned post-rebrand because its
-    // threshold is 0 (matches fresh-start behavior).
-    expect(driver.getState().generators.selfies.owned).toBe(true);
-    expect(driver.getState().generators.selfies.count).toBe(0);
-    expect(driver.getState().generators.selfies.level).toBe(1);
+    // Chirps stays owned post-rebrand (threshold=0). Selfies is now
+    // threshold=100 and manual_clickable, so it resets to unowned.
+    expect(driver.getState().generators.chirps.owned).toBe(true);
+    expect(driver.getState().generators.chirps.count).toBe(0);
+    expect(driver.getState().generators.chirps.level).toBe(1);
+    expect(driver.getState().generators.selfies.owned).toBe(false);
   });
 
   it('buyCloutUpgrade emits an ActionError when player has no clout', () => {

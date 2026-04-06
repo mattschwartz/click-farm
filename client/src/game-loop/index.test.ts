@@ -563,11 +563,19 @@ describe('postClick', () => {
 
   it('dispatches by verbId — selfies produces different yield than chirps', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
-    const chirpsResult = postClick(state, STATIC_DATA, 'chirps', T0);
-    const selfiesResult = postClick(state, STATIC_DATA, 'selfies', T0);
+    // selfies starts unowned (threshold=100), so we must manually set owned=true
+    const withSelfies: GameState = {
+      ...state,
+      generators: {
+        ...state.generators,
+        selfies: { ...state.generators.selfies, owned: true },
+      },
+    };
+    const chirpsResult = postClick(withSelfies, STATIC_DATA, 'chirps', T0);
+    const selfiesResult = postClick(withSelfies, STATIC_DATA, 'selfies', T0);
     const chirpsGain = chirpsResult.player.engagement;
     const selfiesGain = selfiesResult.player.engagement;
-    // chirps yield=1, selfies yield=2.5 → selfies earns more per tap
+    // chirps yield=0.2, selfies yield=2.5 → selfies earns more per tap
     expect(selfiesGain).toBeGreaterThan(chirpsGain);
   });
 
