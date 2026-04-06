@@ -4,7 +4,7 @@ description: Scale floating number size and brightness based on tap significance
 created: 2026-04-06
 author: ux-designer
 status: draft
-reviewers: [engineer]
+reviewers: [ux-designer]
 ---
 
 # Proposal: Ratio-Scaled Manual Tap Floating Numbers
@@ -114,3 +114,22 @@ The change is contained to two files:
 ## Open Questions
 
 1. Should `PostZone.tsx` (the early-game Post button) also get ratio-scaled floats, or only the verb-button floats in ActionsColumn? The PostZone is temporary (replaced by verb buttons once the ladder activates), so the impact is limited. **Owner: ux-designer**
+
+---
+# Review: engineer
+
+**Date**: 2026-04-06
+**Decision**: Aligned
+
+**Comments**
+
+The math is sound, the implementation surface is accurate and small (~30 min). `verbYieldPerTap` already exists as an extracted helper in `game-loop/index.ts`, and `state.player.engagement` is already available in ActionsColumn's props. Computing `t` is ~3 lines of inline logic; the rest is an inline `style` override on the float span.
+
+Observations (non-blocking):
+
+1. The `max(1, currentEngagement)` floor gives the first-ever tap `t = 1.0` (biggest, brightest). That's actually the right feel for the first click — no issue.
+2. Late-game autoclicker floor at 13px (80% of 16px manual floor) is tight but legible. The density-cap batched floats staying at fixed 22px is the correct call.
+3. The `PostZone.tsx` follow-up (OQ1) is cleanly scoped out — no coupling risk since it uses a separate CSS class.
+4. The text-shadow contrast mechanism is shared infrastructure (`.verb-float` CSS) and stays fixed. No risk of dim gold becoming illegible since the dark shadow provides the contrast floor.
+
+No blocking concerns. Implementable as specified.
