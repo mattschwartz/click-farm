@@ -166,7 +166,7 @@ Polly's other thoughts on using vague directives intentionally
 - [learning] I need epics...
 - [observation] long session with multiple compactions caused the agent to start forgetting rules. the agent is not as clearly remembering rules like to load additional context files when entering a state. using the opus-1m @ 24% context
 - [theory] compactions lessen importance of earlier rules to the agent?
--  
+- [learning] need to have an easier way for me to leave feedback on docs with the designers. 
 
 SKills from polly
   1. "Capability packages with instructions and tools, loaded on-demand." — A skill is a bundle of a prompt (instructions) + tool access, packaged together. It's not loaded into the conversation until you actually
