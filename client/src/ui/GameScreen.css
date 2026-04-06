@@ -1128,9 +1128,48 @@
   transition: opacity 400ms ease-out, filter 400ms ease-out;
 }
 
+/* Gradient top-border override — paints a gradient bar inside the card
+   that covers the solid border-top. Stays inside overflow:hidden. */
+.platform-card[style*="--platform-accent-gradient"] {
+  border-top: none;
+  padding-top: 17px; /* 14px original + 3px to compensate removed border */
+}
+.platform-card[style*="--platform-accent-gradient"]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--platform-accent-gradient);
+  z-index: 2;
+}
+
 .platform-card.locked {
   opacity: 0.42;
   filter: grayscale(1);
+}
+
+/* Platform card background art — pixel-art asset fading in from the right.
+   The left ~40% of the card stays fully clear for text; the image fades in
+   across the right half at low opacity so it's atmospheric, not a hero. */
+.platform-bg-art {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: auto;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.18;
+  mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 70%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 70%);
+}
+
+.platform-card.locked .platform-bg-art {
+  filter: grayscale(1);
+  opacity: 0.08;
 }
 
 .platform-card .platform-header {
@@ -1138,6 +1177,8 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .platform-card .platform-icon {
@@ -1155,6 +1196,8 @@
   display: flex;
   align-items: baseline;
   gap: 6px;
+  position: relative;
+  z-index: 1;
 }
 
 .platform-card .platform-followers {
@@ -1180,6 +1223,8 @@
   font-size: 11px;
   color: var(--text-secondary);
   margin-top: 2px;
+  position: relative;
+  z-index: 1;
 }
 
 /* Affinity row — min 8px gutter from follower count above (§4.3). */

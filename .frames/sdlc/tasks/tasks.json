@@ -1,5 +1,5 @@
 {
-  "next_id": 144,
+  "next_id": 146,
   "tasks": [
     {
       "id": 1,
@@ -5708,6 +5708,77 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-06"
+    },
+    {
+      "id": 144,
+      "role": "architect",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Update core-systems.md after algorithm weather system removal",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The algorithm weather system removal (proposal: 20260406-remove-algorithm-weather-system.md) strips a major subsystem from the codebase. The core-systems architecture doc must be updated to reflect the new reality. This is not a design task — the decisions are already made in the accepted proposal. This is a doc update to keep the architecture spec honest.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "The architecture doc being updated"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/draft/20260406-remove-algorithm-weather-system.md",
+          "purpose": "The proposal defining what was removed and what stays"
+        }
+      ],
+      "acceptance_criteria": [
+        "AlgorithmState entity section removed from Data Model",
+        "Generator table: trend_sensitivity field removed",
+        "Player table: algorithm_seed field removed",
+        "SnapshotState table: algorithm_state_index field removed",
+        "GameState interface: algorithm field removed",
+        "StaticData interface: algorithmStates and algorithmSchedule removed",
+        "OfflineResult interface: algorithmAdvances and newAlgorithmState removed",
+        "Effective engagement rate formula updated (algoMod factor removed)",
+        "Offline calculator contract comment rewritten — per-segment algorithm recomputation rationale no longer applies",
+        "Generator↔Algorithm coupling section removed",
+        "OfflineCalculator↔Algorithm coupling section removed",
+        "Seeded PRNG technology decision removed or marked dormant",
+        "Assumption #5 (algorithm states are a fixed set per seed) removed",
+        "CloutUpgrade UpgradeEffect union: algorithm_insight variant removed",
+        "Open question #1 updated if it references algorithm"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 145,
+      "role": "engineer",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Review proposal: Remove Algorithm Weather System",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The game designer has proposed removing the algorithm weather system entirely. The architect has reviewed and aligned. The engineer is the final reviewer — once aligned, the proposal moves to accepted. Review from the engineer's perspective: implementation feasibility, save migration approach, anything missed in the removal list, and whether the offline calculator simplification is as clean as described.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/20260406-remove-algorithm-weather-system.md",
+          "purpose": "The proposal to review"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Architecture spec showing current algorithm integration points"
+        },
+        {
+          "ref": "client/src/algorithm/",
+          "purpose": "The module being removed"
+        }
+      ],
+      "acceptance_criteria": [
+        "Proposal reviewed from engineer perspective and review log entry appended",
+        "Frontmatter updated per review outcome"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }

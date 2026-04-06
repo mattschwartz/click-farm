@@ -164,7 +164,18 @@ export interface PlatformDisplay {
   icon: string;
   accent: string;
   tagline: string;
+  /** Pixel-art asset for the platform card background. */
+  image?: string;
+  /** Label shown below the follower count (default: "followers"). */
+  audienceLabel?: string;
+  /** CSS gradient for the top border (overrides solid accent). */
+  accentGradient?: string;
 }
+
+import chirperImg from '../assets/chirper.png';
+import picshiftImg from '../assets/picshift.png';
+import skrollImg from '../assets/skroll.png';
+import podpodImg from '../assets/podpod.png';
 
 export const PLATFORM_DISPLAY: Record<PlatformId, PlatformDisplay> = {
   chirper: {
@@ -172,18 +183,22 @@ export const PLATFORM_DISPLAY: Record<PlatformId, PlatformDisplay> = {
     icon: '🐦',
     accent: '#4a9dd6',
     tagline: 'Hot takes and one-liners.',
+    image: chirperImg,
   },
   picshift: {
     name: 'PicShift',
     icon: '📸',
     accent: '#d6579e',
     tagline: 'Photos and curated aesthetics.',
+    image: picshiftImg,
+    accentGradient: 'linear-gradient(to right, #d6579e, #f0b840)',
   },
   skroll: {
     name: 'Skroll',
     icon: '📱',
-    accent: '#5eae8f',
+    accent: '#b84dff',
     tagline: 'Endless short-form video.',
+    image: skrollImg,
   },
   // PLACEHOLDER display metadata — game-designer owns final values (task #131 OQ #2).
   podpod: {
@@ -191,6 +206,8 @@ export const PLATFORM_DISPLAY: Record<PlatformId, PlatformDisplay> = {
     icon: '🎧',
     accent: '#8b6fb8',
     tagline: 'Long-form audio, loyal audiences.',
+    image: podpodImg,
+    audienceLabel: 'listeners',
   },
 };
 
