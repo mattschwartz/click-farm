@@ -1,5 +1,5 @@
 {
-  "next_id": 146,
+  "next_id": 147,
   "tasks": [
     {
       "id": 1,
@@ -5776,6 +5776,134 @@
       "acceptance_criteria": [
         "Proposal reviewed from engineer perspective and review log entry appended",
         "Frontmatter updated per review outcome"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 146,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Remove algorithm weather system from codebase",
+      "requester": "game-designer",
+      "complexity": "opus",
+      "overview": "Strip the entire algorithm state system ('weather') from the codebase per the accepted proposal. This is a large removal touching 18 source files, 15+ test files, 2 CSS files, and one entire module directory. The system is being removed because it produces no player decisions — generators produce passively and the player has no content-steering lever to respond to algorithm shifts. The removal simplifies the core loop, the offline calculator (segmented multi-pass → single-pass), and the audience mood system (three pressures → two). Note: this unwinds the in-flight 'Algorithm Mood Visibility' implementation — verify no artifacts from that proposal survive beyond what's listed.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-remove-algorithm-weather-system.md",
+          "purpose": "The accepted proposal — exhaustive list of what to remove, what to keep, and all three resolved open questions"
+        },
+        {
+          "ref": "client/src/algorithm/",
+          "purpose": "Entire module to delete (PRNG, state advancement, modifier lookup, tests)"
+        },
+        {
+          "ref": "client/src/ui/AlgorithmBackground.tsx",
+          "purpose": "Entire UI component to delete"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Remove AlgorithmStateId, AlgorithmStateDef, AlgorithmState, algorithm fields on GameState/PlayerState/LastCloseState/PlatformState, algorithm_misalignment from PressureId, algorithm_insight from UpgradeEffect, algorithm_lookahead from KitEffect, algorithmStates/algorithmSchedule from StaticData, algorithmBoost* from ViralBurstConfig"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Remove ALGORITHM_STATE_DEFS, algorithm_insight clout upgrade, laptop kit item, trend_sensitivity from all generators, algorithmBoost* from viral config, algorithm_misalignment from audience mood composition_priority"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "Remove effectiveAlgorithmModifier(), algoMod from computeGeneratorEffectiveRate and postClick, algorithm boost gate from checkViralBurst, advanceAlgorithm calls from tick"
+        },
+        {
+          "ref": "client/src/offline/index.ts",
+          "purpose": "Simplify from per-algorithm-segment loop to single-pass calculation, remove algorithmAdvances from OfflineResult"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "Remove deriveNewSeed, getUpcomingShifts, algorithm state init in applyRebrand, algorithm_seed from new player"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "Remove createAlgorithmState factory, algorithm field from createInitialGameState, algorithm_seed from new player, algorithm_misalignment from new platform"
+        },
+        {
+          "ref": "client/src/audience-mood/index.ts",
+          "purpose": "Remove algorithm_misalignment pressure logic — mood becomes two-pressure (fatigue + neglect)"
+        },
+        {
+          "ref": "client/src/creator-kit/index.ts",
+          "purpose": "Remove kitAlgorithmLookaheadBonus()"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Remove getUpcomingShifts from interface and implementation"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "New migration to strip algorithm fields from saves, remove algorithm_insight/algorithm_misalignment migration references"
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "Remove algorithm state display from Zone A"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Remove AlgorithmBackground component and algorithm prop passing"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Remove modifier computation, state-change pulse animation, algoMod display"
+        },
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "Remove AlgorithmMood interface and ALGORITHM_MOOD constant"
+        },
+        {
+          "ref": "client/src/ui/OfflineGainsModal.tsx",
+          "purpose": "Remove algorithm shifts row"
+        },
+        {
+          "ref": "client/src/ui/CloutShopModal.tsx",
+          "purpose": "Remove algorithm_insight display metadata"
+        },
+        {
+          "ref": "client/src/ui/DebugApp.tsx",
+          "purpose": "Remove algorithm state display and debug entries"
+        },
+        {
+          "ref": "client/src/ui/eulogy-templates.ts",
+          "purpose": "Remove currentAlgorithmStateName and algorithm references"
+        },
+        {
+          "ref": "client/src/theme/tokens.css",
+          "purpose": "Remove --palette-mood-* properties and [data-algorithm-state] rule blocks"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Remove .algorithm-background, .algorithm-vignette, .vignette-pulse rules"
+        }
+      ],
+      "acceptance_criteria": [
+        "client/src/algorithm/ directory deleted entirely",
+        "client/src/ui/AlgorithmBackground.tsx deleted",
+        "No references to AlgorithmStateId, AlgorithmStateDef, AlgorithmState, or algorithm_misalignment remain in src/",
+        "No references to trend_sensitivity remain in src/",
+        "No references to algorithm_insight or kitAlgorithmLookaheadBonus remain in src/",
+        "No references to ALGORITHM_STATE_DEFS, ALGORITHM_MOOD, or AlgorithmMood remain in src/",
+        "laptop kit item removed from static data and types",
+        "computeGeneratorEffectiveRate formula is: autoclicker_count * rate * yield * (1+count) * clout * kit — no algoMod factor",
+        "postClick earned formula has no algoMod factor",
+        "Viral burst probability check has no algorithm boost gate",
+        "Offline calculator is a single-pass calculation with no algorithm segment boundaries",
+        "Audience mood uses two pressures only: content_fatigue and neglect",
+        "Save migration strips algorithm fields from persisted state (no Clout refund)",
+        "algorithmic_prophecy generator and its clout unlock survive unchanged",
+        "Top bar Zone A is empty (no placeholder content)",
+        "All existing tests updated — no test references algorithm system",
+        "npm run build succeeds with no TypeScript errors",
+        "All tests pass",
+        "Verify no stale comments referencing the algorithm system remain (platform/index.ts docstring, others)"
       ],
       "open_questions": [],
       "blocked_on": []
