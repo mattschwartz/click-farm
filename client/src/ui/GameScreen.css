@@ -4508,7 +4508,10 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
   }
 
   .purchase-pill-auto .pill-cost {
-    display: none;
+    display: block;
+    font-size: 10px;
+    line-height: 1;
+    opacity: 0.75;
   }
 
   /* Maxed hire pill — show MAX as second line (mirrors SPEED maxed). */
@@ -4963,6 +4966,14 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
   /* Verb action buttons — hide name, keep rate indicator on landscape mobile */
   .verb-name {
     display: none;
+  }
+
+  /* Ghost slots — lock to same height as live verb buttons */
+  .ghost-slot,
+  .ghost-promise,
+  .ghost-awakened {
+    min-height: 100px;
+    flex-shrink: 0;
   }
 
 } /* end @media landscape phone */
