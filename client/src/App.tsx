@@ -72,7 +72,7 @@ function NewGameGate({ onStart }: { onStart: () => void }) {
       }}>
         <img
           src={coverSrc}
-          alt="Click Farm"
+          alt="Game cover"
           style={{
             width: '75vw',
             borderRadius: '12px',

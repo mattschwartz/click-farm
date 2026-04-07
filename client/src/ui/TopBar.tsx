@@ -11,6 +11,16 @@ import { useInterpolatedValue } from './useInterpolatedValue.ts';
 import faviconSrc from '../assets/favicon.png';
 import engagementIconSrc from '../assets/engagement-icon.png';
 
+/**
+ * Detect touch-primary devices (phones, tablets) via pointer: coarse.
+ * Returns "Tap Farm" on touch devices, "Click Farm" on mouse/desktop.
+ */
+const GAME_NAME: string =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(pointer: coarse)').matches
+    ? 'Tap Farm'
+    : 'Click Farm';
+
 interface Props {
   engagement: number;
   engagementRate: number;
@@ -99,11 +109,16 @@ export function TopBar({
     }
   }, [rebrandCount, badgeShown]);
 
+  // Set the document/tab title to match ("Tap Farm" on touch devices).
+  useEffect(() => {
+    document.title = GAME_NAME;
+  }, []);
+
   return (
     <header className="top-bar">
-      <img src={faviconSrc} alt="Click Farm" className="top-bar-icon" />
+      <img src={faviconSrc} alt={GAME_NAME} className="top-bar-icon" />
       <div className="top-bar-title-group">
-        <span className="top-bar-title">Click Farm</span>
+        <span className="top-bar-title">{GAME_NAME}</span>
         {badgeShown && (
           <span className="run-badge"><span className="run-badge-crown" aria-hidden>♛</span> {formatRunBadge(rebrandCount)}</span>
         )}
