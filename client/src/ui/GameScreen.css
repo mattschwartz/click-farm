@@ -2227,22 +2227,8 @@
  * Proposal: proposals/accepted/lvl-up-button-affordance-states.md
  * Three mutually-exclusive states so players can tell at a glance whether
  * tapping opens a drawer with a purchasable upgrade:
- *   dormant — no units owned; disabled placeholder
- *   armed   — owned but can't afford; amber deficit glyph, stillness
- *   ready   — owned and affordable; gold border + breathing halo
- * Border-weight hierarchy (0.08 → 0.14 → full gold) keeps states
- * distinguishable without color. */
-
-/* Dormant — greyed out like unaffordable pills. */
-.row-btn-upgrade.row-btn-lvl-dormant {
-  background: transparent;
-  color: #9B9B9B;
-  border-color: rgba(240, 236, 231, 0.60);
-  cursor: not-allowed;
-}
-.row-btn-upgrade.row-btn-lvl-dormant .label {
-  color: var(--text-receded);
-}
+ *   armed   — can't afford; greyed out
+ *   ready   — affordable; gold border + breathing halo */
 
 /* Maxed — cap reached. Platinum plaque, inset, unpressable-looking.
    Spec: ux/generator-max-level-state.md §3.2. --accent-gold is reserved

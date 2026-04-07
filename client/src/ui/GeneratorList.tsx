@@ -54,29 +54,27 @@ interface Props {
 // ---------------------------------------------------------------------------
 
 /**
- * Affordance states for the per-row Lvl ↑ button.
+ * Affordance states for the per-row SPEED button.
  *
- * - dormant: count===0 — the row has no units to upgrade yet. Disabled.
- * - armed:   count>0 but engagement < upgradeCost. Clickable, but the teased
+ * - armed:   engagement < upgradeCost. Clickable, but the teased
  *            action is out of reach. Stillness communicates "not now."
- * - ready:   count>0 and engagement >= upgradeCost. Breathes gold to pull
- *            the eye toward the drawer.
+ * - ready:   engagement >= upgradeCost. Breathes gold to pull
+ *            the eye toward the button.
  * - maxed:   level >= max_level — the cap is hit, no further upgrade is
  *            possible. Shows "MAX" in place of cost. Task #89.
  *
  * See proposals/accepted/lvl-up-button-affordance-states.md and
  * proposals/accepted/generator-level-growth-curves.md.
  */
-export type LvlBtnState = 'dormant' | 'armed' | 'ready' | 'maxed';
+export type LvlBtnState = 'armed' | 'ready' | 'maxed';
 
 export function classifyLvlBtnState(
-  count: number,
+  _count: number,
   level: number,
   maxLevel: number,
   engagement: number,
   upgradeCost: number,
 ): LvlBtnState {
-  if (count <= 0) return 'dormant';
   if (level >= maxLevel) return 'maxed';
   if (engagement >= upgradeCost) return 'ready';
   return 'armed';
@@ -361,10 +359,9 @@ function GeneratorRow({
           onBuy={() => onBuy(id)}
         />
         {/* SPEED — fires upgrade directly (task #150).
-            Three affordance states per task #69:
-              dormant (count===0): disabled placeholder
-              armed   (owned, can't afford): still, amber deficit glyph
-              ready   (owned, affordable): gold breathing halo */}
+            Two affordance states:
+              armed   (can't afford): greyed out
+              ready   (affordable): gold breathing halo */}
         <SpeedButton
           lvlState={lvlState}
           maxedArrival={maxedArrival}
@@ -373,9 +370,7 @@ function GeneratorRow({
           level={g.level}
           onUpgrade={() => onUpgrade(id)}
           title={
-            lvlState === 'dormant'
-              ? `Buy at least one ${display.name} before upgrading`
-              : lvlState === 'maxed'
+            lvlState === 'maxed'
                 ? `${display.name} is at max level (L${g.level})`
                 : lvlState === 'armed'
                   ? `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ${fmtCompact(lvlDeficit)} more engagement`
@@ -453,7 +448,7 @@ function SpeedButton({
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (lvlState === 'dormant' || lvlState === 'maxed') return;
+    if (lvlState === 'maxed') return;
     if (!canAfford) {
       setShaking(true);
       window.setTimeout(() => setShaking(false), 200);
@@ -468,7 +463,7 @@ function SpeedButton({
     <button
       className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${maxedArrival ? ' lvl-maxed-arrival' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}`}
       onClick={handleClick}
-      disabled={lvlState === 'dormant' || lvlState === 'maxed'}
+      disabled={lvlState === 'maxed'}
       style={{ '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties}
       title={title}
       aria-label={ariaLabel}
