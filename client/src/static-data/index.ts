@@ -56,7 +56,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
 
     unlock_threshold: 0,
     base_buy_cost: 1.5,
-    buy_cost_multiplier: 1.15,
+    buy_cost_multiplier: 1.215,
     // Hand-tuned ~3× ramp: cheap start, trophy finish.
     upgrade_costs: [10, 30, 100, 300, 1_000, 3_000, 10_000, 30_000, 100_000],
     max_level: 10,
@@ -68,7 +68,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // §14d — threshold moved from 0 → 100 (chirps takes the starter position).
   selfies: {
     id: 'selfies',
-    base_event_yield: 250,
+    base_event_yield: 100,
     base_event_rate: 0.2,
     manual_clickable: true,
     follower_conversion_rate: 0.10,
@@ -133,7 +133,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // yield×rate = 1,600. L1 cooldown 10,000ms, L10 cooldown 1,000ms.
   livestreams: {
     id: 'livestreams',
-    base_event_yield: 550_000,
+    base_event_yield: 100_000,
     base_event_rate: 0.033,
     manual_clickable: true,
     follower_conversion_rate: 0.09,

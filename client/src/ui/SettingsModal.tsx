@@ -42,6 +42,10 @@ interface Props {
   onResetRequested: () => void;
   /** Called when an import succeeds — parent should reload similarly. */
   onImportApplied: () => void;
+  /** Whether the game loop is currently paused. */
+  isPaused: boolean;
+  /** Toggle the game loop pause state. */
+  onTogglePause: () => void;
 }
 
 type InlineStatus = { kind: 'success' | 'error'; text: string } | null;
@@ -57,6 +61,8 @@ export function SettingsModal({
   onClose,
   onResetRequested,
   onImportApplied,
+  isPaused,
+  onTogglePause,
 }: Props) {
   const [resetStep, setResetStep] = useState<'idle' | 'confirm'>('idle');
   const [inlineStatus, setInlineStatus] = useState<InlineStatus>(null);
@@ -339,6 +345,17 @@ export function SettingsModal({
                 </p>
               )}
             </div>
+          </section>
+
+          {/* PAUSE */}
+          <section className="settings-section settings-pause-section">
+            <button
+              type="button"
+              className={`settings-pause-btn${isPaused ? ' settings-pause-btn-active' : ''}`}
+              onClick={onTogglePause}
+            >
+              {isPaused ? '▶  Resume Game' : '⏸  Pause Game'}
+            </button>
           </section>
         </div>
       </div>

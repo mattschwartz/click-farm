@@ -135,12 +135,13 @@ interface LiveVerbButtonProps {
   isSpotlight: boolean;
   onClick: (verbId: GeneratorId) => void;
   showFloats?: boolean;
+  isPaused?: boolean;
 }
 
 /** Density cap for individual autoclicker floats (§4.6). Above this, batch. */
 const AUTO_FLOAT_DENSITY_CAP = 8;
 
-function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showFloats = true }: LiveVerbButtonProps) {
+function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showFloats = true, isPaused = false }: LiveVerbButtonProps) {
   const genState = state.generators[verbId];
   const display = GENERATOR_DISPLAY[verbId];
   const color = VERB_COLOR[verbId] ?? display.color;
@@ -185,7 +186,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
   const burstIntervalMs = effectiveRate > 0 ? 1000 / effectiveRate : Infinity;
 
   useEffect(() => {
-    if (autoCount <= 0 || burstIntervalMs === Infinity) return;
+    if (autoCount <= 0 || burstIntervalMs === Infinity || isPaused) return;
 
     const emitBurst = () => {
       // Badge pulse on every burst (200ms scale 1.0→1.05→1.0).
@@ -233,7 +234,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
 
     const interval = window.setInterval(emitBurst, burstIntervalMs);
     return () => window.clearInterval(interval);
-  }, [autoCount, burstIntervalMs, perAuto, prefersReducedMotion, showFloats]);
+  }, [autoCount, burstIntervalMs, perAuto, prefersReducedMotion, showFloats, isPaused]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     // Only show float feedback if the cooldown gate will accept the tap.
@@ -424,9 +425,10 @@ interface ActionsColumnProps {
   staticData: StaticData;
   onClickVerb: (verbId: GeneratorId) => void;
   showVerbFloats?: boolean;
+  isPaused?: boolean;
 }
 
-export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats = true }: ActionsColumnProps) {
+export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats = true, isPaused = false }: ActionsColumnProps) {
   // Owned ladder verbs (live buttons) in fixed ladder order:
   // chirps → selfies → livestreams → podcasts → viral_stunts.
   const liveVerbs = useMemo(() =>
@@ -463,6 +465,7 @@ export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats =
             isSpotlight={false}
             onClick={onClickVerb}
             showFloats={showVerbFloats}
+            isPaused={isPaused}
           />
         ))}
 

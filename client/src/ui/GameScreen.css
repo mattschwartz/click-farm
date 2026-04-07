@@ -3308,6 +3308,40 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   border-color: rgba(var(--modal-success-rgb), 0.40);
 }
 
+/* --- Pause button --------------------------------------------------------- */
+.settings-pause-section {
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+.settings-pause-btn {
+  display: inline-block;
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+  cursor: pointer;
+  transition: background 150ms ease-out, border-color 150ms ease-out;
+}
+.settings-pause-btn:hover {
+  background: var(--surface-pressed);
+  border-color: var(--border-strong);
+}
+.settings-pause-btn-active {
+  color: var(--accent-green);
+  border-color: rgba(var(--modal-success-rgb), 0.35);
+  background: rgba(var(--modal-success-rgb), 0.08);
+}
+.settings-pause-btn-active:hover {
+  background: rgba(var(--modal-success-rgb), 0.14);
+  border-color: rgba(var(--modal-success-rgb), 0.50);
+}
+
 /* --- Save-error banner (task #55) ---------------------------------------- */
 
 .save-error-banner {

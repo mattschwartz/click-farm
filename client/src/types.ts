@@ -284,6 +284,12 @@ export interface GeneratorDef {
    */
   buy_cost_multiplier: number;
   /**
+   * Exponent for the count yield multiplier. Per-tap and per-autoclicker yield
+   * uses `(1 + count)^count_exponent` instead of linear `(1 + count)`.
+   * 1.0 = linear (default for most generators). Higher = super-linear growth.
+   */
+  count_exponent: number;
+  /**
    * Hand-tuned cost table for each level upgrade. Index 0 = cost of L1→L2,
    * index 1 = cost of L2→L3, etc. Length must equal max_level - 1.
    * TODO(game-designer): provisional — tune during balance pass (task #88).

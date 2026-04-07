@@ -539,11 +539,11 @@ describe('yield/rate split regression', () => {
   // These are the target values from the level-driven-cooldown retune table.
   const EXPECTED_PASSIVE_RATES: Record<string, number> = {
     chirps: 0.5,                // 0.5 × 1.0
-    selfies: 50.0,              // 250 × 0.2
+    selfies: 20.0,              // 100 × 0.2
     memes: 15.0,                // 3 × 5.0
     hot_takes: 24.0,            // 2 × 12.0
     tutorials: 60.0,            // 2 × 30.0
-    livestreams: 18_150.0,      // 550_000 × 0.033
+    livestreams: 3_300.0,       // 100_000 × 0.033
     podcasts: 40_000.0,         // 2_000_000 × 0.02
     viral_stunts: 180_000.0,    // 18_000_000 × 0.01
     ai_slop: 1_280_000.0,      // 1 × 1_280_000
