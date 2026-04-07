@@ -15,6 +15,7 @@ import {
   verbCooldownMs,
   verbYieldPerTap,
   verbYieldPerAutoTap,
+  computeGeneratorEffectiveRate,
 } from '../game-loop/index.ts';
 import { playClick } from './sfx.ts';
 import { GENERATOR_DISPLAY } from './display.ts';
@@ -145,6 +146,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
   const color = VERB_COLOR[verbId] ?? display.color;
   const perTap = verbYieldPerTap(state.generators[verbId], state, staticData);
   const perAuto = verbYieldPerAutoTap(state.generators[verbId], state, staticData);
+  const ratePerSec = computeGeneratorEffectiveRate(state.generators[verbId], state, staticData);
   const def = staticData.generators[verbId];
   const cdMs = verbCooldownMs(state.generators[verbId].level, def.base_event_rate);
   const lastTap = state.player.last_manual_click_at[verbId] ?? 0;
@@ -301,6 +303,11 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
                 </span>
               )}
             </span>
+            {/* Rate indicator — shown when floats are off and autoclickers are active,
+                so the player still gets feedback that HIRE did something. */}
+            {!showFloats && ratePerSec > 0 && (
+              <span className="verb-rate-indicator">+{fmtCompact(ratePerSec)}/s</span>
+            )}
           </span>
         </span>
 

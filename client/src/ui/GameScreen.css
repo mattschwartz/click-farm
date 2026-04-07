@@ -543,8 +543,8 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   align-items: baseline;
   gap: 8px;
   position: absolute;
-  bottom: -4px;
-  left: 0;
+  bottom: 0px;
+  left: -10px;
   right: 0;
   z-index: 2;
   padding: 0;
@@ -689,6 +689,20 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   font-style: italic;
   color: rgba(255, 255, 255, 0.6);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Rate indicator — shown when floating numbers are off. Sits bottom-right
+   in the frosted glass bar so the player sees passive earnings feedback. */
+.verb-rate-indicator {
+  margin-left: auto;
+  font-size: 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: #4ADE80;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* Ready border chase — a light sweeps the button edge once when cooldown
