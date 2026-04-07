@@ -4093,6 +4093,74 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
 }
 
 /* ---------------------------------------------------------------------------
+ * SUPER pill — verb-gear-super-button.md §2–§6
+ *
+ * Extends the purchase-pill system. SUPER replaces AUTO when autoclickers
+ * are at cap. Verb-colored glow, 2px border, 25% opacity background,
+ * two-tap confirmation, and platinum maxed state.
+ * --------------------------------------------------------------------------- */
+
+/* Affordable SUPER — verb-tinted with elevated visual weight (§2.2) */
+.purchase-pill-super.purchase-pill-affordable {
+  border: 2px solid rgba(var(--pill-color-rgb), 0.50);
+  background: rgba(var(--pill-color-rgb), 0.25);
+  box-shadow: 0 0 8px rgba(var(--pill-color-rgb), 0.30);
+}
+
+.purchase-pill-super.purchase-pill-affordable .pill-label {
+  font-weight: 700;
+}
+
+/* Confirmation state — intensified (§4.2) */
+.purchase-pill-super-confirm.purchase-pill-affordable {
+  background: rgba(var(--pill-color-rgb), 0.35);
+  box-shadow: 0 0 14px rgba(var(--pill-color-rgb), 0.40);
+  animation: super-confirm-pulse 300ms ease-out;
+}
+
+@keyframes super-confirm-pulse {
+  0%   { border-width: 2px; }
+  50%  { border-width: 3px; }
+  100% { border-width: 2px; }
+}
+
+/* Unaffordable SUPER — same as standard unaffordable but keeps SUPER label (§2.2) */
+.purchase-pill-super.purchase-pill-unaffordable .pill-label {
+  font-weight: 700;
+}
+
+/* SUPER maxed — platinum treatment (§6.2) — inherits from .purchase-pill-maxed */
+.purchase-pill-super-maxed .pill-label {
+  font-weight: 700;
+}
+
+/* SUPER cost popover — richer tooltip with gear name + cost + multiplier (§2.3) */
+.pill-cost-popover-super {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.popover-gear-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.popover-gear-detail {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .purchase-pill-super-confirm.purchase-pill-affordable { animation: none; }
+}
+html[data-reduce-motion="true"] .purchase-pill-super-confirm.purchase-pill-affordable { animation: none; }
+
+/* ---------------------------------------------------------------------------
  * Autoclicker badge on verb action buttons — manual-action-ladder.md §4.2
  * Pill showing army size (×N). Verb-colored text on rgba background.
  * Pulses on each autoclicker burst (§4.4).

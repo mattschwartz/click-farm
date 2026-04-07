@@ -8016,7 +8016,7 @@
       "alias": "E5",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "SUPER button UI — HIRE→SUPER pill transformation",
       "requester": "architect",
@@ -8055,7 +8055,8 @@
         "All tests pass"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     }
   ]
 }

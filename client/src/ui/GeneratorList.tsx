@@ -14,7 +14,8 @@
 
 import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState } from 'react';
-import type { GameState, GeneratorId, StaticData } from '../types.ts';
+import type { GameState, GeneratorId, StaticData, VerbGearId } from '../types.ts';
+import { canPurchaseVerbGear, verbGearCost } from '../verb-gear/index.ts';
 import type { SweepItemType, SweepPurchaseEvent } from '../driver/index.ts';
 import {
   autoclickerBuyCost,
@@ -39,6 +40,8 @@ interface Props {
   onUpgrade: (id: GeneratorId) => void;
   /** Purchase an autoclicker for a manual-clickable verb. */
   onBuyAutoclicker: (verbId: GeneratorId) => void;
+  /** Purchase the next verb gear level for a manual-clickable verb. */
+  onBuyVerbGear: (gearId: VerbGearId) => void;
   /** When set, the matching row gets a pulsing gold halo (UX §9.2 Phase 1–2). */
   viralGeneratorId?: GeneratorId | null;
   /** Whether an auto-buy sweep is currently running. */
@@ -129,7 +132,7 @@ export function shouldApplyManyReady(readyCount: number): boolean {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutoclicker, viralGeneratorId, sweepActive, sweepCanAfford, onStartSweep, onCancelSweep, lastSweepPurchase, sweepPurchaseSeq }: Props) {
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutoclicker, onBuyVerbGear, viralGeneratorId, sweepActive, sweepCanAfford, onStartSweep, onCancelSweep, lastSweepPurchase, sweepPurchaseSeq }: Props) {
   // Build rows grouped by category in stable order.
   // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
   // excluded from the main list — they render in the Clout Shop modal instead.
@@ -444,19 +447,40 @@ function GeneratorRow({
             min-width, 28px height, 14px border-radius. Three affordance
             states: affordable (verb-tinted), unaffordable (receded grey),
             maxed (not currently capped). */}
-        {def.manual_clickable && (
-          <AutoPill
-            costLabel={<TieredNumber value={autoCost} />}
-            costText={fmtCompact(autoCost)}
-            canBuy={canBuyAuto}
-            isMaxed={g.autoclicker_count >= autoclickerCap()}
-            autoclickerCount={g.autoclicker_count}
-            verbColor={display.color}
-            onBuy={() => { onBuyAutoclicker(id); spawnCostFloat('autoclicker', autoCost); }}
-            generatorName={display.name}
-            sweepHit={sweepHitBtn === 'autoclicker'}
-          />
-        )}
+        {def.manual_clickable && (() => {
+          const isSuperPhase = g.autoclicker_count >= autoclickerCap();
+          const gearId = id as VerbGearId;
+          const gearDef = staticData.verbGear[gearId];
+          const gearLevel = state.player.verb_gear[gearId] ?? 0;
+          const gearMaxed = !gearDef || gearLevel >= gearDef.max_level;
+          const gearCost = gearMaxed ? null : verbGearCost(gearLevel, gearId, staticData);
+          const canAffordGear = gearCost !== null && canPurchaseVerbGear(state, gearId, staticData);
+          return (
+            <AutoPill
+              costLabel={isSuperPhase && !gearMaxed && gearCost !== null
+                ? <TieredNumber value={gearCost} />
+                : <TieredNumber value={autoCost} />
+              }
+              costText={isSuperPhase && !gearMaxed && gearCost !== null
+                ? fmtCompact(gearCost)
+                : fmtCompact(autoCost)
+              }
+              canBuy={isSuperPhase ? canAffordGear : canBuyAuto}
+              isMaxed={isSuperPhase ? gearMaxed : false}
+              autoclickerCount={g.autoclicker_count}
+              verbColor={display.color}
+              onBuy={isSuperPhase
+                ? () => { onBuyVerbGear(gearId); spawnCostFloat('autoclicker', gearCost ?? 0); }
+                : () => { onBuyAutoclicker(id); spawnCostFloat('autoclicker', autoCost); }
+              }
+              generatorName={display.name}
+              sweepHit={sweepHitBtn === 'autoclicker'}
+              isSuperPhase={isSuperPhase}
+              gearName={gearDef?.name}
+              gearMultiplier={!gearMaxed && gearDef ? gearDef.multipliers[gearLevel] : undefined}
+            />
+          );
+        })()}
       </div>
       {/* Cost float — portalled to body to escape backdrop-filter containing block */}
       {costFloat && createPortal(
@@ -486,6 +510,12 @@ interface AutoPillProps {
   onBuy: () => void;
   generatorName: string;
   sweepHit?: boolean;
+  /** True when autoclickers are at cap and the pill should show SUPER. */
+  isSuperPhase?: boolean;
+  /** Gear item display name (e.g. "Mechanical Keyboard"). */
+  gearName?: string;
+  /** Next gear multiplier (e.g. 10, 100, 1000). */
+  gearMultiplier?: number;
 }
 
 /** Parse hex to "R, G, B" string for rgba() compositing. */
@@ -568,10 +598,14 @@ function SpeedButton({
 
 // ---------------------------------------------------------------------------
 
-function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verbColor, onBuy, generatorName, sweepHit }: AutoPillProps) {
+function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verbColor, onBuy, generatorName, sweepHit, isSuperPhase, gearName, gearMultiplier }: AutoPillProps) {
   const [glowing, setGlowing] = useState(false);
   const [shaking, setShaking] = useState(false);
   const rgb = hexToRgbPill(verbColor);
+
+  // Two-tap confirmation for SUPER purchases (§4 of verb-gear-super-button.md).
+  const [confirming, setConfirming] = useState(false);
+  const confirmTimer = useRef<number | null>(null);
 
   // Long-press (300ms) reveals cost popover in landscape — replaces hover
   // cost ghost on touch devices. Dismisses on touch-end or after 2s.
@@ -590,13 +624,39 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
     }
   };
 
+  const cancelConfirm = () => {
+    setConfirming(false);
+    if (confirmTimer.current !== null) {
+      window.clearTimeout(confirmTimer.current);
+      confirmTimer.current = null;
+    }
+  };
+
   useEffect(() => {
     return () => {
       clearPopoverTimers();
+      if (confirmTimer.current !== null) {
+        window.clearTimeout(confirmTimer.current);
+      }
     };
   }, []);
 
+  // Cancel confirmation on outside click (§4.4).
+  useEffect(() => {
+    if (!confirming) return;
+    const handler = () => cancelConfirm();
+    // Defer so the current click doesn't immediately cancel.
+    const id = window.setTimeout(() => {
+      document.addEventListener('click', handler, { once: true, capture: true });
+    }, 0);
+    return () => {
+      window.clearTimeout(id);
+      document.removeEventListener('click', handler, { capture: true });
+    };
+  }, [confirming]);
+
   const handleTouchStart = () => {
+    if (isSuperPhase) return; // SUPER uses two-tap, not long-press popover.
     clearPopoverTimers();
     longPressTimer.current = window.setTimeout(() => {
       longPressTimer.current = null;
@@ -616,8 +676,33 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
     setCostPopover(false);
   };
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
     if (isMaxed) return;
+
+    // SUPER two-tap confirmation.
+    if (isSuperPhase) {
+      e.stopPropagation(); // Prevent outside-click handler from firing.
+      if (!canBuy) return; // Unaffordable SUPER: no-op (§4.5).
+      if (!confirming) {
+        // Tap 1: arm confirmation.
+        setConfirming(true);
+        setCostPopover(true); // Auto-show cost ghost (§4.2).
+        confirmTimer.current = window.setTimeout(() => {
+          cancelConfirm();
+          setCostPopover(false);
+        }, 3000);
+        return;
+      }
+      // Tap 2: confirm purchase.
+      cancelConfirm();
+      setCostPopover(false);
+      setGlowing(true);
+      window.setTimeout(() => setGlowing(false), 200); // 200ms flash per §5.1.
+      onBuy();
+      return;
+    }
+
+    // Standard AUTO (HIRE) flow.
     if (!canBuy) {
       setShaking(true);
       window.setTimeout(() => setShaking(false), 200);
@@ -628,43 +713,92 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
     onBuy();
   };
 
-  const stateClass = isMaxed
-    ? ' purchase-pill-maxed'
-    : canBuy
-      ? ' purchase-pill-affordable'
-      : ' purchase-pill-unaffordable';
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && confirming) {
+      cancelConfirm();
+      setCostPopover(false);
+    }
+  };
+
+  // Determine pill mode: SUPER maxed, SUPER active, or HIRE.
+  const superMaxed = isSuperPhase && isMaxed;
+  const superActive = isSuperPhase && !isMaxed;
+
+  const stateClass = superMaxed
+    ? ' purchase-pill-maxed purchase-pill-super-maxed'
+    : superActive
+      ? canBuy
+        ? ` purchase-pill-affordable purchase-pill-super${confirming ? ' purchase-pill-super-confirm' : ''}`
+        : ' purchase-pill-unaffordable purchase-pill-super'
+      : isMaxed
+        ? ' purchase-pill-maxed'
+        : canBuy
+          ? ' purchase-pill-affordable'
+          : ' purchase-pill-unaffordable';
+
+  // Label text.
+  const labelText = superMaxed
+    ? 'MAX'
+    : superActive
+      ? (confirming ? 'BUY' : 'SUPER')
+      : `HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`;
+  const labelAbbr = superActive ? 'S' : 'A';
+
+  // Aria labels per §7.1.
+  const ariaLabel = superMaxed
+    ? `${generatorName} gear maxed, ${gearName ?? ''} level 3 of 3.`
+    : superActive && confirming
+      ? `Confirm Super purchase, ${gearName ?? ''}, ${costText} engagement. Press Enter to confirm or Escape to cancel.`
+      : superActive && canBuy
+        ? `Super upgrade ${generatorName}, ${gearName ?? ''}, affordable, costs ${costText} engagement${gearMultiplier ? `, multiplier times ${gearMultiplier}` : ''}. Press Enter to begin purchase.`
+        : superActive
+          ? `Super upgrade ${generatorName}, ${gearName ?? ''}, not affordable, costs ${costText} engagement.`
+          : isMaxed
+            ? `${generatorName} autoclickers maxed at ${autoclickerCount}`
+            : canBuy
+              ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costText} engagement`
+              : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`;
+
+  const title = superMaxed
+    ? `${generatorName} — ${gearName ?? 'gear'} maxed`
+    : superActive
+      ? `${gearName ?? 'Super upgrade'} — ${costText} engagement`
+      : isMaxed
+        ? `${generatorName} — max autoclickers (${autoclickerCount})`
+        : `Buy autoclicker for ${costText} engagement`;
 
   return (
     <button
       className={`purchase-pill purchase-pill-auto${stateClass}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}${sweepHit ? ' sweep-hit' : ''}`}
-      style={!isMaxed && canBuy ? {
+      style={(!superMaxed && (superActive ? canBuy : (!isMaxed && canBuy))) ? {
         '--pill-color': verbColor,
         '--pill-color-rgb': rgb,
       } as React.CSSProperties : undefined}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       onTouchStart={handleTouchStart}
       onTouchEnd={dismissPopover}
       onTouchMove={dismissPopover}
       onTouchCancel={dismissPopover}
-      disabled={isMaxed}
-      aria-label={
-        isMaxed
-          ? `${generatorName} autoclickers maxed at ${autoclickerCount}`
-          : canBuy
-            ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costText} engagement`
-            : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`
-      }
-      title={isMaxed ? `${generatorName} — max autoclickers (${autoclickerCount})` : `Buy autoclicker for ${costText} engagement`}
+      disabled={superMaxed || (!isSuperPhase && isMaxed)}
+      aria-label={ariaLabel}
+      title={title}
     >
       <span className="pill-label">
-        {isMaxed && <span className="pill-crown" aria-hidden>♛</span>}
-        {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
-        <span className="pill-label-full">{`HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`}</span>
-        <span className="pill-label-abbr">A</span>
+        {superMaxed && <span className="pill-crown" aria-hidden>♛</span>}
+        {!isSuperPhase && isMaxed && <span className="pill-crown" aria-hidden>♛</span>}
+        <span className="pill-label-full">{labelText}</span>
+        <span className="pill-label-abbr">{labelAbbr}</span>
       </span>
-      <span className="pill-cost">{isMaxed ? 'MAX' : costLabel}</span>
-      {/* Long-press cost popover — visible in landscape where pill-cost is hidden. */}
-      {costPopover && (
+      <span className="pill-cost">{superMaxed ? 'MAX' : isMaxed ? 'MAX' : costLabel}</span>
+      {/* Cost popover — for SUPER shows gear name + cost + multiplier (§2.3). */}
+      {costPopover && isSuperPhase && !isMaxed && (
+        <span className="pill-cost-popover pill-cost-popover-super" aria-hidden="true">
+          <span className="popover-gear-name">{gearName}</span>
+          <span className="popover-gear-detail">{costText} eng {gearMultiplier ? `\u2192 \u00D7${gearMultiplier}` : ''}</span>
+        </span>
+      )}
+      {costPopover && !isSuperPhase && (
         <span className="pill-cost-popover" aria-hidden="true">
           {isMaxed ? 'MAX' : costLabel}
         </span>
