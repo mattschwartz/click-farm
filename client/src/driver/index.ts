@@ -234,6 +234,8 @@ export interface GameDriver {
    * stashes the first such error and replays it on subscribe. Task #55.
    */
   onSaveError(listener: SaveErrorListener): Unsubscribe;
+  /** @internal Test-only: replace the driver's state wholesale. */
+  _applyState(newState: GameState): void;
 }
 
 // ---------------------------------------------------------------------------
