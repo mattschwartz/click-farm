@@ -5,18 +5,18 @@
 // Keyboard helper exports (for unit tests)
 // ---------------------------------------------------------------------------
 
-/** Whether B key should be ignored (any modal open). */
-export function shouldIgnoreBKey(
+/** Whether a keyboard shortcut should be ignored (a visible modal is open). */
+export function isModalBlocking(
   showCeremonyModal: boolean,
   showShopModal: boolean,
   showSettingsModal: boolean,
-  offlineResult: unknown,
+  offlineResult: { durationMs: number } | null,
 ): boolean {
   return (
     showCeremonyModal ||
     showShopModal ||
     showSettingsModal ||
-    offlineResult !== null
+    (offlineResult !== null && offlineResult.durationMs > 60_000)
   );
 }
 
@@ -25,11 +25,11 @@ export function getBKeyAction(
   showCeremonyModal: boolean,
   showShopModal: boolean,
   showSettingsModal: boolean,
-  offlineResult: unknown,
+  offlineResult: { durationMs: number } | null,
   sweepActive: boolean,
 ): 'start' | 'cancel' | 'ignore' {
   if (
-    shouldIgnoreBKey(
+    isModalBlocking(
       showCeremonyModal,
       showShopModal,
       showSettingsModal,
@@ -259,7 +259,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
         showCeremonyModal ||
         showShopModal ||
         showSettingsModal ||
-        offlineResult !== null
+        (offlineResult !== null && offlineResult.durationMs > 60_000)
       ) {
         return;
       }
@@ -283,7 +283,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
         showCeremonyModal ||
         showShopModal ||
         showSettingsModal ||
-        offlineResult !== null
+        (offlineResult !== null && offlineResult.durationMs > 60_000)
       ) {
         return;
       }

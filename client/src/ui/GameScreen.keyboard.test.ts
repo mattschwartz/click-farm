@@ -1,54 +1,55 @@
 // Tests for GameScreen keyboard shortcuts.
-// Tests the B key handler for sweep start/cancel (no jsdom — behavioral tests only).
+// Tests the modal guard and B key handler logic (no jsdom — pure helpers only).
 
 import { describe, it, expect } from 'vitest';
-import { shouldIgnoreBKey, getBKeyAction } from './GameScreen.tsx';
+import { isModalBlocking, getBKeyAction } from './GameScreen.tsx';
 
-describe('GameScreen — B key keyboard shortcut', () => {
-  describe('shouldIgnoreBKey', () => {
+describe('GameScreen — keyboard shortcut modal guard', () => {
+  describe('isModalBlocking', () => {
     it('returns false when no modal is open', () => {
-      expect(shouldIgnoreBKey(false, false, false, null)).toBe(false);
+      expect(isModalBlocking(false, false, false, null)).toBe(false);
     });
 
     it('returns true when ceremony modal is open', () => {
-      expect(shouldIgnoreBKey(true, false, false, null)).toBe(true);
+      expect(isModalBlocking(true, false, false, null)).toBe(true);
     });
 
     it('returns true when shop modal is open', () => {
-      expect(shouldIgnoreBKey(false, true, false, null)).toBe(true);
+      expect(isModalBlocking(false, true, false, null)).toBe(true);
     });
 
     it('returns true when settings modal is open', () => {
-      expect(shouldIgnoreBKey(false, false, true, null)).toBe(true);
+      expect(isModalBlocking(false, false, true, null)).toBe(true);
     });
 
-    it('returns true when offline result is pending', () => {
-      expect(shouldIgnoreBKey(false, false, false, { durationMs: 1000 })).toBe(
-        true,
-      );
+    it('returns true when offline modal is visible (durationMs > 60s)', () => {
+      expect(isModalBlocking(false, false, false, { durationMs: 120_000 })).toBe(true);
+    });
+
+    it('returns false when offline result exists but duration is short (modal not shown)', () => {
+      expect(isModalBlocking(false, false, false, { durationMs: 1_000 })).toBe(false);
+      expect(isModalBlocking(false, false, false, { durationMs: 59_999 })).toBe(false);
+    });
+
+    it('returns true at the exact 60s boundary', () => {
+      expect(isModalBlocking(false, false, false, { durationMs: 60_001 })).toBe(true);
     });
 
     it('returns true when any combination of modals is open', () => {
-      expect(shouldIgnoreBKey(true, true, true, { durationMs: 1000 })).toBe(
-        true,
-      );
+      expect(isModalBlocking(true, true, true, { durationMs: 120_000 })).toBe(true);
     });
   });
 
   describe('getBKeyAction', () => {
-    it('returns ignore when any modal is open', () => {
-      expect(
-        getBKeyAction(true, false, false, null, false),
-      ).toBe('ignore');
-      expect(
-        getBKeyAction(false, true, false, null, false),
-      ).toBe('ignore');
-      expect(
-        getBKeyAction(false, false, true, null, false),
-      ).toBe('ignore');
-      expect(
-        getBKeyAction(false, false, false, { durationMs: 1000 }, false),
-      ).toBe('ignore');
+    it('returns ignore when a visible modal is open', () => {
+      expect(getBKeyAction(true, false, false, null, false)).toBe('ignore');
+      expect(getBKeyAction(false, true, false, null, false)).toBe('ignore');
+      expect(getBKeyAction(false, false, true, null, false)).toBe('ignore');
+      expect(getBKeyAction(false, false, false, { durationMs: 120_000 }, false)).toBe('ignore');
+    });
+
+    it('does NOT ignore when offline result has short duration', () => {
+      expect(getBKeyAction(false, false, false, { durationMs: 5_000 }, false)).toBe('start');
     });
 
     it('returns start when no modals open and sweep is inactive', () => {
@@ -60,10 +61,7 @@ describe('GameScreen — B key keyboard shortcut', () => {
     });
 
     it('prefers ignore (modal) over sweep state', () => {
-      // Even if sweep is active, modal takes precedence
-      expect(
-        getBKeyAction(true, false, false, null, true),
-      ).toBe('ignore');
+      expect(getBKeyAction(true, false, false, null, true)).toBe('ignore');
     });
   });
 });
