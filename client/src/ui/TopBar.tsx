@@ -54,7 +54,7 @@ export function TopBar({
   rebrandCount = 0,
 }: Props) {
   // Track follower decreases for a brief red flash (UX §5.2 of core spec).
-  const [decreased, setDecreased] = useState(false);
+  const [_decreased, setDecreased] = useState(false);
   const prevFollowers = useRef(totalFollowers);
   useEffect(() => {
     if (totalFollowers < prevFollowers.current) {
@@ -69,9 +69,9 @@ export function TopBar({
   // Rate flare — fires when engagementRate changes meaningfully (§5.1).
   // Positive delta = success color (green-gold), negative = penalty (amber-red).
   const prevRate = useRef(engagementRate);
-  const [rateFlaring, setRateFlaring] = useState(false);
-  const [rateDelta, setRateDelta] = useState<number | null>(null);
-  const [rateDeltaDir, setRateDeltaDir] = useState<'positive' | 'negative'>(
+  const [_rateFlaring, setRateFlaring] = useState(false);
+  const [_rateDelta, setRateDelta] = useState<number | null>(null);
+  const [_rateDeltaDir, setRateDeltaDir] = useState<'positive' | 'negative'>(
     'positive',
   );
 

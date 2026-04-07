@@ -33,7 +33,7 @@ import { PlatformPanel } from './PlatformPanel.tsx';
 import { OfflineGainsModal } from './OfflineGainsModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
-import { CreatorKitPanel } from './CreatorKitPanel.tsx';
+// CreatorKitPanel hidden — to be redesigned
 import { SettingsModal } from './SettingsModal.tsx';
 import { useSettings } from './useSettings.ts';
 import { prevTrack, nextTrack, togglePlayPause, isMusicPlaying } from './sfx.ts';
@@ -101,7 +101,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     pauseLoop,
     resumeLoop,
     buyCloutUpgrade,
-    buyKitItem,
+    buyKitItem: _buyKitItem,
     saveError,
     clearSaveError,
     resetGame,
@@ -119,7 +119,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     settings,
     setReduceMotion,
     setSound,
-    toggleSound,
+    toggleSound: _toggleSound,
     setMusicVolume,
     setSfxVolume,
   } = useSettings();

@@ -113,12 +113,6 @@ export function shouldApplyManyReady(readyCount: number): boolean {
   return readyCount >= MANY_READY_THRESHOLD;
 }
 
-const BADGE_SHAPE: Record<GeneratorCategory, string> = {
-  starter: 'shape-circle',
-  mid: 'shape-hexagon',
-  late: 'shape-diamond',
-};
-
 // Breathing animation constants (per generator-badge-breathing proposal).
 // Uniform 2.5s cadence, staggered by generator index so badges breathe
 // organically rather than in sync. Rate-coupled cadence was considered and

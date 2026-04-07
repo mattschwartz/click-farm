@@ -15,7 +15,7 @@ import {
   PLATFORM_ORDER,
   topAffinityGenerators,
 } from './display.ts';
-import { fmtCompact } from './format.ts';
+// fmtCompact removed — rate display currently disabled per user edit
 import { TieredNumber } from './TieredNumber.tsx';
 
 interface Props {
@@ -93,7 +93,7 @@ function PlatformCard({
   id,
   unlocked,
   followers,
-  ratePerSec,
+  ratePerSec: _ratePerSec,
   unlockThreshold,
   staticData,
   heaviestGenerator,
