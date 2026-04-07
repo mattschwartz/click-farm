@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createDriver, type ActionError, type SaveError } from './index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
-import { generatorBuyCost } from '../generator/index.ts';
+import { generatorBuyCost, generatorUpgradeCost } from '../generator/index.ts';
 
 // ---------------------------------------------------------------------------
 // localStorage mock (shared with save.test.ts pattern)
@@ -768,18 +768,18 @@ describe('driver — sweep engine', () => {
     expect(driver.getSweepState().active).toBe(false);
   });
 
-  it('startSweep fires cheapest purchase first (BUY chirps is cheapest)', () => {
+  it('startSweep fires SPEED (upgrade) purchases first', () => {
     const { driver, timeouts } = makeSweeperDriver(1_000_000);
-    const buyCost = generatorBuyCost('chirps', 0, STATIC_DATA); // cheapest item
+    const upgradeCost = generatorUpgradeCost('chirps', 1, STATIC_DATA); // cheapest upgrade
     const engBefore = driver.getState().player.engagement;
 
     driver.startSweep();
 
-    // First purchase fires synchronously
+    // First purchase fires synchronously — should be an upgrade
     const engAfterFirst = driver.getState().player.engagement;
     expect(engAfterFirst).toBeLessThan(engBefore);
-    // The engagement spent should match the cheapest item cost
-    expect(engBefore - engAfterFirst).toBeCloseTo(buyCost, 5);
+    // The engagement spent should match the cheapest upgrade cost
+    expect(engBefore - engAfterFirst).toBeCloseTo(upgradeCost, 5);
 
     timeouts.flush(); // clean up remaining
   });

@@ -456,8 +456,13 @@ export function createDriver(options: DriverOptions): GameDriver {
         }
       }
     }
-    // Cheapest-first — maximises coverage per the spec.
-    return items.sort((a, b) => a.cost - b.cost);
+    // SPEED (upgrade) first, then cheapest within each priority tier.
+    return items.sort((a, b) => {
+      const aUpgrade = a.type === 'upgrade' ? 0 : 1;
+      const bUpgrade = b.type === 'upgrade' ? 0 : 1;
+      if (aUpgrade !== bUpgrade) return aUpgrade - bUpgrade;
+      return a.cost - b.cost;
+    });
   }
 
   function fireSweepEndListeners(): void {

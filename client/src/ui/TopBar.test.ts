@@ -22,9 +22,9 @@ describe('TopBar RUN badge logic', () => {
   });
 
   it('formats rebrand badge text correctly', () => {
-    expect(formatRunBadge(0)).toBe('0 Rebrands');
-    expect(formatRunBadge(1)).toBe('1 Rebrand');
-    expect(formatRunBadge(2)).toBe('2 Rebrands');
-    expect(formatRunBadge(10)).toBe('10 Rebrands');
+    expect(formatRunBadge(0)).toBe('Rebrands +0');
+    expect(formatRunBadge(1)).toBe('Rebrand +1');
+    expect(formatRunBadge(2)).toBe('Rebrands +2');
+    expect(formatRunBadge(10)).toBe('Rebrands +10');
   });
 });
