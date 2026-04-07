@@ -4567,7 +4567,7 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     margin: 0;
     border-radius: 0;
     gap: 8px;
-    padding: 0 48px 0 8px; /* 48px right — leaves room for floating gear */
+    padding: 0 0 0 8px; /* no right padding — engagement badge sits flush */
     align-items: center;
   }
 
@@ -4597,13 +4597,15 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
   }
 
   /* Engagement counter: 28px (down from 64px), compressed padding.
-   * align-self: center so the frosted-glass block is vertically centred in
-   * the 40px bar rather than stretching edge-to-edge. */
+   * align-self: stretch so the frosted-glass block fills the 40px bar height
+   * and sits flush-right — matching the desktop treatment. border-radius: 0
+   * because the top-bar itself has border-radius: 0 on mobile. */
   .engagement-value {
     font-size: 28px;
     padding: 0 8px;
     gap: 4px;
-    align-self: center;
+    align-self: stretch;
+    border-radius: 0;
   }
 
   /* Show inline rate in landscape — replaces the hover tooltip which has
