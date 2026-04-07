@@ -6337,11 +6337,27 @@
       ],
       "open_questions": [
         {
-          "question": "Where should the button live in the UI? Top bar? Bottom of generators column? Floating action button?",
+          "question": "Where does the button live? The task says 'a visible button on the game screen' but doesn't specify placement. Options: (a) floating toolbar bottom-left alongside settings, (b) top of the generator column, (c) a dedicated strip between top bar and game body. The UX designer needs to decide this before the engineer builds it.",
           "owner": "ux-designer"
         },
         {
-          "question": "Should there be a keyboard shortcut for it?",
+          "question": "50ms between purchases means 20 purchases fire in 1 second. At that speed, sound effects will stack into cacophony (20 purchase sfx in 1s). Should the sweep play a single rolling sound instead of per-purchase sfx? Or throttle to one sound per 200ms?",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "Most-expensive-first means a 900K purchase on 1M engagement leaves only 100K for everything else — the sweep may buy 1 big thing and stop. Cheapest-first maximizes total purchases. Which order serves the player's intent better? Or should the player choose?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "No cancel mechanism is specified. If the player triggers accidentally, they watch their engagement drain with no way to stop. Should there be a tap-again-to-cancel or is the speed (sub-2s) fast enough that cancellation is unnecessary?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Should passive-only generators (memes, hot_takes, tutorials) be included in the sweep? They only have BUY — no LVL or Autoclicker. The task says 'all verbs' which implies manual-clickable only, but the player might expect it to buy everything.",
+          "owner": "game-designer"
+        },
+        {
+          "question": "The task has no related_items pointing to any UX spec or proposal. This feature needs at minimum a button placement decision and a sound design note before the engineer can build it without guessing.",
           "owner": "ux-designer"
         }
       ],
