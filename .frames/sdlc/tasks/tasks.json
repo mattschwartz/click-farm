@@ -1,5 +1,5 @@
 {
-  "next_id": 155,
+  "next_id": 156,
   "tasks": [
     {
       "id": 1,
@@ -6212,6 +6212,59 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-06"
+    },
+    {
+      "id": 155,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Implement per-tier color ramp for compact number suffixes",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Apply the accepted tier color ramp to compact number suffixes (K through Dc). The suffix portion of formatted numbers gets colored by magnitude tier — grey at K, deepening blue through M/B/T, violet-purple through Qa/Qi/Sx, hot magenta through Sp/Oc/No/Dc. The number itself stays in default text color; only the suffix letter(s) carry the tier color.\n\nThis requires splitting the formatter output so the rendering layer can wrap the suffix in a colored span. The formatter itself (`fmtCompact`/`fmtCompactInt`) stays a pure string function — add a companion function that returns `{ number: string, suffix: string, tierIndex: number }` or similar, so call sites can render the suffix with the appropriate color.\n\nTier colors apply everywhere compact numbers display EXCEPT floating numbers on verb buttons (those stay gold per game-designer decision).\n\nThe color tokens should be added to tokens.css as `--tier-k` through `--tier-dc`.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-compact-number-tier-colors.md",
+          "purpose": "Accepted proposal — full color ramp table, contrast ratios, collision avoidance, application rules"
+        },
+        {
+          "ref": "client/src/ui/format.ts",
+          "purpose": "fmtCompact / fmtCompactInt — need a companion that returns structured output (number + suffix + tier)"
+        },
+        {
+          "ref": "client/src/theme/tokens.css",
+          "purpose": "Add --tier-k through --tier-dc tokens"
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "Engagement counter, follower count — render suffix with tier color"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Rate display, cost labels — render suffix with tier color"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "Follower count, rate — render suffix with tier color"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "Yield display gets tier color. Floating numbers do NOT — stay gold"
+        }
+      ],
+      "acceptance_criteria": [
+        "11 tier color tokens added to tokens.css: --tier-k (#6E6E6E) through --tier-dc (#B00840) per the accepted proposal table",
+        "A structured formatter companion exists that returns { number, suffix, tierIndex } or equivalent — fmtCompact/fmtCompactInt stay unchanged as pure string functions",
+        "All compact number displays render the suffix in the tier color and the number in default text color",
+        "Floating numbers on verb buttons (ActionsColumn verb-float) do NOT get tier colors — they stay gold/white",
+        "All tier colors pass 4.5:1 contrast against #FAF8F5 (verified via accessibility-checker.sh ramp)",
+        "Tier colors do not apply to non-suffix text (e.g., the number portion, labels, etc.)",
+        "Reduced motion: no change needed (colors are static, not animated)",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }
