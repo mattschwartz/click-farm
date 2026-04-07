@@ -104,7 +104,7 @@ export function cloutBonus(
  * Computes effective engagement rate (engagement per second) for a single
  * generator's PASSIVE production, driven by autoclicker_count.
  *
- *   effective_rate = autoclicker_count × base_event_rate × base_event_yield
+ *   effective_rate = autoclicker_count × level × base_event_rate × base_event_yield
  *                    × (1 + count) × clout_bonus × kit_bonus
  *
  * Level-driven-cooldown refactor (task #132):
@@ -131,6 +131,7 @@ export function computeGeneratorEffectiveRate(
   const kit = kitEngagementBonus(state.player.creator_kit, staticData);
   return (
     generator.autoclicker_count *
+    generator.level *
     def.base_event_rate *
     def.base_event_yield *
     (1 + generator.count) *
