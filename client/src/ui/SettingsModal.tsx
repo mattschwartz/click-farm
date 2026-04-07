@@ -45,6 +45,7 @@ interface Props {
   onSetMusicVolume: (v: number) => void;
   onSetSfxVolume: (v: number) => void;
   onSetShowVerbFloats: (v: boolean) => void;
+  onSetMusicInBackground: (v: boolean) => void;
   /** Current rebrand count — drives the export filename. */
   rebrandCount: number;
   onClose: () => void;
@@ -70,6 +71,7 @@ export function SettingsModal({
   onSetMusicVolume,
   onSetSfxVolume,
   onSetShowVerbFloats,
+  onSetMusicInBackground,
   rebrandCount,
   onClose,
   onResetRequested,
@@ -193,6 +195,12 @@ export function SettingsModal({
         />
         {settings.sound && (
           <>
+            <SettingsToggle
+              label="Music in Background"
+              description="Keep music playing when the tab is hidden or the app is minimized."
+              checked={settings.musicInBackground}
+              onChange={onSetMusicInBackground}
+            />
             <SettingsSlider
               label="Music"
               value={settings.musicVolume}

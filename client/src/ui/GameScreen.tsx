@@ -171,6 +171,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     setMusicVolume,
     setSfxVolume,
     setShowVerbFloats,
+    setMusicInBackground,
   } = useSettings();
 
   // Music player — sync UI with actual audio state. Poll at 250ms so mute
@@ -523,6 +524,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
           onSetMusicVolume={setMusicVolume}
           onSetSfxVolume={setSfxVolume}
           onSetShowVerbFloats={setShowVerbFloats}
+          onSetMusicInBackground={setMusicInBackground}
           rebrandCount={state.player.rebrand_count}
           onClose={() => setShowSettingsModal(false)}
           onResetRequested={() => {

@@ -194,9 +194,10 @@ if (typeof window !== 'undefined') {
 
   // Pause all audio when the tab is hidden (minimized, backgrounded, or
   // switched away in Safari). Resume when the tab becomes visible again.
+  // If musicInBackground is enabled, music continues playing when hidden.
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      bgMusic?.pause();
+      if (!musicInBackground) bgMusic?.pause();
       silentLoop?.pause();
       ctx?.suspend();
     } else {
@@ -266,6 +267,7 @@ function play(
 let masterMuted = false;
 let sfxVol = 0.5;   // 0–1
 let musicVol = 0.3;  // 0–1
+let musicInBackground = false;
 
 /** Called by settings UI when master sound toggle changes. */
 export function setSoundEnabled(enabled: boolean): void {
@@ -292,6 +294,11 @@ export function setMusicVolume(v: number): void {
 /** Called by settings UI when SFX volume slider changes (0–100). */
 export function setSfxVolume(v: number): void {
   sfxVol = Math.max(0, Math.min(1, v / 100));
+}
+
+/** Called by settings UI when music-in-background toggle changes. */
+export function setMusicInBackground(v: boolean): void {
+  musicInBackground = v;
 }
 
 // ---------------------------------------------------------------------------
