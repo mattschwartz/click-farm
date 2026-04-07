@@ -73,7 +73,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     manual_clickable: true,
     follower_conversion_rate: 0.10,
 
-    unlock_threshold: 100,
+    unlock_threshold: 200,
     base_buy_cost: 500,
     buy_cost_multiplier: 1.15,
     count_exponent: 1,
@@ -142,7 +142,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     manual_clickable: true,
     follower_conversion_rate: 0.09,
 
-    unlock_threshold: 5_000,
+    unlock_threshold: 25_000,
     base_buy_cost: 1_300_000,
     buy_cost_multiplier: 1.15,
     count_exponent: 1,
@@ -163,7 +163,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     manual_clickable: true,
     follower_conversion_rate: 0.11,
 
-    unlock_threshold: 20_000,
+    unlock_threshold: 250_000,
     base_buy_cost: 14_000_000,
     buy_cost_multiplier: 1.15,
     count_exponent: 1,
@@ -184,7 +184,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     manual_clickable: true,
     follower_conversion_rate: 0.06,
 
-    unlock_threshold: 1_000_000,
+    unlock_threshold: 5_000_000,
     base_buy_cost: 200_000_000,
     buy_cost_multiplier: 1.15,
     count_exponent: 1,
@@ -333,7 +333,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       deepfakes: 1.0,
       algorithmic_prophecy: 1.0,
     },
-    unlock_threshold: 100_000,
+    unlock_threshold: 250_000,
   },
 };
 

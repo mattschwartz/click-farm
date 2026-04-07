@@ -153,9 +153,9 @@ describe('checkGeneratorUnlocks', () => {
     expect(result.hot_takes.owned).toBe(false);
   });
 
-  it('auto-unlocks selfies at threshold 100', () => {
+  it('auto-unlocks selfies at threshold 200', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
-    const result = checkGeneratorUnlocks(state.generators, 100, STATIC_DATA);
+    const result = checkGeneratorUnlocks(state.generators, 200, STATIC_DATA);
     expect(result.selfies.owned).toBe(true);
   });
 
@@ -205,7 +205,7 @@ describe('checkGeneratorUnlocks', () => {
 
   it('auto-unlocks all generators when followers are high enough', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
-    const result = checkGeneratorUnlocks(state.generators, 1_000_000, STATIC_DATA);
+    const result = checkGeneratorUnlocks(state.generators, 5_000_000, STATIC_DATA);
     // All threshold-based generators auto-unlock
     expect(result.selfies.owned).toBe(true);
     expect(result.livestreams.owned).toBe(true);
@@ -532,7 +532,7 @@ describe('unlockGenerator', () => {
       ...base,
       player: {
         ...base.player,
-        total_followers: 100, // meets selfies threshold
+        total_followers: 200, // meets selfies threshold
         engagement: cost + 100,
       },
     };
@@ -552,7 +552,7 @@ describe('unlockGenerator', () => {
     const base = createInitialGameState(STATIC_DATA, T0);
     const state: GameState = {
       ...base,
-      player: { ...base.player, total_followers: 100, engagement: 1000 },
+      player: { ...base.player, total_followers: 200, engagement: 1000 },
       generators: {
         ...base.generators,
         selfies: { ...base.generators.selfies, owned: true },
@@ -578,7 +578,7 @@ describe('unlockGenerator', () => {
     const base = createInitialGameState(STATIC_DATA, T0);
     const state: GameState = {
       ...base,
-      player: { ...base.player, total_followers: 100, engagement: 0 },
+      player: { ...base.player, total_followers: 200, engagement: 0 },
     };
     expect(() => unlockGenerator(state, 'selfies', STATIC_DATA)).toThrow(
       /cannot afford/,
@@ -590,7 +590,7 @@ describe('unlockGenerator', () => {
     const cost = STATIC_DATA.generators.selfies.base_buy_cost;
     const state: GameState = {
       ...base,
-      player: { ...base.player, total_followers: 100, engagement: cost },
+      player: { ...base.player, total_followers: 200, engagement: cost },
     };
     const snapshot = JSON.parse(JSON.stringify(state));
     unlockGenerator(state, 'selfies', STATIC_DATA);
