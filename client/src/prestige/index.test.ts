@@ -150,7 +150,7 @@ describe('applyRebrand — reset completeness', () => {
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
     expect(next.platforms.chirper.unlocked).toBe(true);   // threshold = 0
     expect(next.platforms.picshift.unlocked).toBe(false); // threshold = 100
-    expect(next.platforms.skroll.unlocked).toBe(false);  // threshold = 500
+    expect(next.platforms.skroll.unlocked).toBe(false);  // threshold = 15_000
   });
 
   it('resets viralBurst to a clean default (prevents doTick crash on next tick)', () => {

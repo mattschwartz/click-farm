@@ -295,7 +295,7 @@ describe('tick — engagement', () => {
 
 describe('tick — followers', () => {
   it('distributes followers to the one unlocked platform with full share', () => {
-    // Only chirper starts unlocked (threshold 0). picshift=100, skroll=500.
+    // Only chirper starts unlocked (threshold 0). picshift=100, skroll=15_000.
     const state = stateWithGenerator('selfies', 10, 1);
     const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
 
@@ -367,7 +367,7 @@ describe('tick — platform unlocks', () => {
 
     expect(next.player.total_followers).toBeGreaterThan(100);
     expect(next.platforms.picshift.unlocked).toBe(true);
-    // skroll (threshold 500) may or may not be unlocked — depends on rate
+    // skroll (threshold 15_000) may or may not be unlocked — depends on rate
   });
 
   it('does not unlock platforms below their threshold', () => {

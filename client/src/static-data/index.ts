@@ -314,7 +314,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       deepfakes: 1.0,
       algorithmic_prophecy: 1.0,
     },
-    unlock_threshold: 2_000,
+    unlock_threshold: 15_000,
   },
   // BALANCE: placeholder — all podpod values below. Game-designer owns final
   // content_affinity and unlock_threshold (task #131 open question #1).
