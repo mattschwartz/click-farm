@@ -561,7 +561,7 @@ function SpeedButton({
       {lvlState === 'armed' && (
         <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
       )}
-      {costLabel}
+      <span className="row-btn-cost">{costLabel}</span>
     </button>
   );
 }
@@ -734,7 +734,7 @@ function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit 
         <span className="pill-label-full">POWER{count > 0 ? ` +${count}` : ''}</span>
         <span className="pill-label-abbr">B</span>
       </span>
-      {costLabel}
+      <span className="row-btn-cost">{costLabel}</span>
     </button>
   );
 }

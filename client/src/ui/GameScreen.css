@@ -4400,13 +4400,20 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     gap: 3px;
   }
 
-  /* Row buttons (POWER/SPEED): 36px min-width × 24px height.
-   * Padding compressed from 5px to 3px to achieve 24px height. */
+  /* All three buttons (POWER, SPEED, HIRE) — uniform size.
+   * 56px wide × 32px tall so they read as a matched set.
+   * Explicit height + box-sizing on both ensures pixel-perfect match. */
   .row-btn {
-    min-width: 36px;
-    width: auto;
-    padding: 3px 4px;
+    width: 112px;
+    min-width: 112px;
+    height: 32px;
+    box-sizing: border-box;
+    padding: 0 4px;
     font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   .row-btn .label {
@@ -4414,28 +4421,37 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     margin-bottom: 0;
   }
 
-  /* HIRE pill (purchase-pill): 36px min-width × 24px height.
-   * Switch purchase-pill-auto from column to row layout — 24px is too tight
-   * for two lines. pill-cost hidden in landscape. */
+  /* HIRE pill — same 112×32 footprint as POWER/SPEED.
+   * Column layout preserved so maxed state shows crown + label / MAX
+   * in the same two-line pattern as SPEED. Cost hidden in landscape. */
   .purchase-pill {
-    min-width: 36px;
-    width: auto;
-    height: 24px;
-    line-height: 24px;
+    width: 112px;
+    min-width: 112px;
+    height: 32px;
+    box-sizing: border-box;
+    line-height: 1.2;
     padding: 0 4px;
     font-size: 10px;
-    gap: 2px;
+    gap: 0;
   }
 
   .purchase-pill-auto {
-    flex-direction: row;
-    height: 24px;
+    flex-direction: column;
+    height: 32px;
     padding: 0 4px;
     align-items: center;
+    justify-content: center;
   }
 
   .purchase-pill-auto .pill-cost {
     display: none;
+  }
+
+  /* Maxed hire pill — show MAX as second line (mirrors SPEED maxed). */
+  .purchase-pill-maxed .pill-cost {
+    display: block;
+    font-size: 8px;
+    line-height: 1;
   }
 
   /* --- Platform strip: horizontal mode (task #174) ------------------------- */
