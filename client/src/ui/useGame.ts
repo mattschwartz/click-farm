@@ -4,7 +4,7 @@
 // the game loop.
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import type { GameState, GeneratorId, UpgradeId } from '../types.ts';
+import type { GameState, GeneratorId, UpgradeId, VerbGearId } from '../types.ts';
 import { createDriver, type ActionError, type SaveError, type SweepPurchaseEvent } from '../driver/index.ts';
 import type { OfflineResult } from '../offline/index.ts';
 import type { RebrandResult } from '../prestige/index.ts';
@@ -26,9 +26,11 @@ export interface UseGameResult {
   rebrand: () => RebrandResult;
   /** Spend Clout on a meta-upgrade. Throws when unaffordable. */
   buyCloutUpgrade: (id: UpgradeId) => void;
+  /** Spend Engagement on a verb gear item. */
+  buyVerbGear: (id: VerbGearId) => void;
   /**
    * Last action error, if any. Updates when a player action (click/buy/
-   * upgrade/buyCloutUpgrade) fails a model precondition. Consumers can
+   * upgrade/buyCloutUpgrade/buyVerbGear) fails a model precondition. Consumers can
    * render a transient toast/shake when this changes.
    */
   lastActionError: ActionError | null;
@@ -213,6 +215,11 @@ export function useGame(): UseGameResult {
       buyCloutUpgrade: (id: UpgradeId) => {
         const before = driver.getState();
         driver.buyCloutUpgrade(id);
+        if (driver.getState() !== before) playPurchase();
+      },
+      buyVerbGear: (id: VerbGearId) => {
+        const before = driver.getState();
+        driver.buyVerbGear(id);
         if (driver.getState() !== before) playPurchase();
       },
       clearActionError: () => setLastActionError(null),
