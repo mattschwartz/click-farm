@@ -146,14 +146,15 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_autoclicker_cost: 650_000,
     autoclicker_cost_multiplier: 1.5,
   },
-  // Ladder verb. Retuned: yield 10,000→200,000 (20× bump for late-unlock feel).
-  // yield×rate = 16,000. L1 cooldown 12,500ms, L10 cooldown 1,250ms.
+  // Ladder verb. Retuned for wider cooldown gap vs livestreams.
+  // yield=484,848, rate=0.033 → passive 16,000 (preserved).
+  // L1 cooldown 30,303ms, L10 cooldown 3,030ms. ~3× slower than livestreams.
   // TODO(game-designer): buy/upgrade/autoclicker costs are provisional —
   // retune during balance pass (task #88) to match new output.
   podcasts: {
     id: 'podcasts',
-    base_event_yield: 200_000,
-    base_event_rate: 0.08,
+    base_event_yield: 484_848,
+    base_event_rate: 0.033,
     manual_clickable: true,
     follower_conversion_rate: 0.11,
 
@@ -165,14 +166,15 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_autoclicker_cost: 7_000_000,
     autoclicker_cost_multiplier: 1.5,
   },
-  // Ladder verb. Retuned: yield 200,000→4,000,000 (20× bump for late-unlock feel).
-  // yield×rate = 160,000. L1 cooldown 25,000ms, L10 cooldown 2,500ms.
+  // Ladder verb. Retuned for wider cooldown gap vs podcasts.
+  // yield=16,000,000, rate=0.01 → passive 160,000 (preserved).
+  // L1 cooldown 100,000ms, L10 cooldown 10,000ms. ~3× slower than podcasts.
   // TODO(game-designer): buy/upgrade/autoclicker costs are provisional —
   // retune during balance pass (task #88) to match new output.
   viral_stunts: {
     id: 'viral_stunts',
-    base_event_yield: 4_000_000,
-    base_event_rate: 0.04,
+    base_event_yield: 16_000_000,
+    base_event_rate: 0.01,
     manual_clickable: true,
     follower_conversion_rate: 0.06,
 
