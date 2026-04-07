@@ -6156,7 +6156,7 @@
       "id": 153,
       "role": "engineer",
       "state": "build",
-      "status": "complete",
+      "status": "open",
       "date_assigned": "2026-04-06",
       "title": "Autoclicker floats: max 6 individual pops, batch with ×N suffix above 6",
       "requester": "ux-designer",
@@ -6182,8 +6182,7 @@
         "npm run build succeeds; full test suite passes"
       ],
       "open_questions": [],
-      "blocked_on": [],
-      "date_completed": "2026-04-07"
+      "blocked_on": []
     },
     {
       "id": 154,

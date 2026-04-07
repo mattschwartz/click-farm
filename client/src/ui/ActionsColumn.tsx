@@ -138,6 +138,9 @@ interface LiveVerbButtonProps {
   isPaused?: boolean;
 }
 
+/** Density cap for individual autoclicker floats (§4.6). Above this, batch. */
+const AUTO_FLOAT_DENSITY_CAP = 8;
+
 function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showFloats = true, isPaused = false }: LiveVerbButtonProps) {
   const genState = state.generators[verbId];
   const display = GENERATOR_DISPLAY[verbId];
@@ -199,36 +202,34 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
       const rect = btnRef.current?.getBoundingClientRect();
       const perAutoTap = perAuto;
 
-      // Emit min(autoCount, 6) floats with optional ×N suffix when autoCount > 6.
-      // Task #153: always cap at 6 visible floats; use ×N to indicate batching.
-      const floatCount = Math.min(autoCount, 6);
-      const batchFactor = Math.ceil(autoCount / 6);
-      const floatValue = Math.round(perAutoTap * batchFactor);
-
-      // Stagger across the burst window: min(N × 60ms, 400ms)
-      const staggerMs = Math.min(floatCount * 60, 400);
-      const perItemDelay = floatCount > 1 ? staggerMs / (floatCount - 1) : 0;
-
-      for (let i = 0; i < floatCount; i++) {
+      if (autoCount > AUTO_FLOAT_DENSITY_CAP) {
+        // Batched float: +perTap ×N (show per-tap value, not total)
+        const id = nextId.current++;
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.random() * 25;
+        const x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
+        const y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
+        setFloats((prev) => [...prev, { id, value: perAutoTap, x, y, isAutoclick: true, batchCount: autoCount }]);
         window.setTimeout(() => {
-          const id = nextId.current++;
-          const angle = Math.random() * Math.PI * 2;
-          const radius = Math.random() * 25;
-          const x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
-          const y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
-          setFloats((prev) => [...prev, {
-            id,
-            value: floatValue,
-            x,
-            y,
-            isAutoclick: true,
-            // Include batchCount only when > 1 (×N suffix appears only when batching)
-            ...(batchFactor > 1 && { batchCount: batchFactor }),
-          }]);
+          setFloats((prev) => prev.filter((f) => f.id !== id));
+        }, FLOAT_TTL_MS);
+      } else {
+        // Individual staggered floats: min(N × 60ms, 400ms) stagger window.
+        const staggerMs = Math.min(autoCount * 60, 400);
+        const perItemDelay = autoCount > 1 ? staggerMs / (autoCount - 1) : 0;
+        for (let i = 0; i < autoCount; i++) {
           window.setTimeout(() => {
-            setFloats((prev) => prev.filter((f) => f.id !== id));
-          }, FLOAT_TTL_MS);
-        }, i * perItemDelay);
+            const id = nextId.current++;
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * 25;
+            const x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
+            const y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
+            setFloats((prev) => [...prev, { id, value: perAutoTap, x, y, isAutoclick: true }]);
+            window.setTimeout(() => {
+              setFloats((prev) => prev.filter((f) => f.id !== id));
+            }, FLOAT_TTL_MS);
+          }, i * perItemDelay);
+        }
       }
     };
 
