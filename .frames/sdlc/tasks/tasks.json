@@ -1,5 +1,5 @@
 {
-  "next_id": 165,
+  "next_id": 166,
   "tasks": [
     {
       "id": 1,
@@ -6622,6 +6622,38 @@
         "No references to unlockGenerator or canUnlockGenerator remain in src/",
         "Related tests removed",
         "All tests pass, build succeeds"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 165,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Decompose brand deal milestones proposal into implementation tasks",
+      "requester": "game-designer",
+      "complexity": "haiku",
+      "overview": "The Brand Deal Milestones (Creator Kit Integration) proposal has been accepted. It needs decomposition into concrete engineer tasks. The proposal covers: cumulative_engagement counter on Player (tick + postClick), BrandDeal[] on StaticData, brandDealMultiplier and isBrandDealFeatureUnlocked runtime functions, base yield scaling at stacking order §5, two initial milestones (1B ×2, 500B ×10 + Buy All unlock), toast notification on unlock, persistent multiplier pill display, save migration, and offline reconciliation. The Buy All button (task #157/accepted proposal) should be gated behind milestone 2's feature unlock.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-brand-deal-milestones.md",
+          "purpose": "The accepted proposal to decompose"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-auto-buy-sweep.md",
+          "purpose": "Buy All button — gated behind milestone 2 feature unlock"
+        },
+        {
+          "ref": "client/src/creator-kit/index.ts",
+          "purpose": "Existing kit system the brand deals integrate with"
+        }
+      ],
+      "acceptance_criteria": [
+        "Engineer tasks cover: data model (types + static data + migration), engine (cumulative counter + multiplier + feature gate), UI (toast + pill display + Buy All gate), offline reconciliation",
+        "Dependencies between tasks are explicit via blocked_on",
+        "Each task scoped to one role (engineer) and one state (build)"
       ],
       "open_questions": [],
       "blocked_on": []
