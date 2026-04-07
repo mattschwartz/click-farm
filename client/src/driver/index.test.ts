@@ -417,6 +417,20 @@ describe('driver — persistence', () => {
     // (floor(sqrt(X)/10) may be 0 here — that's fine for checking reset).
     void injected;
 
+    // Viral stunts must be owned to rebrand — inject via step with high followers.
+    // Use _injectState if available, otherwise force-unlock by ticking with
+    // enough followers. Simplest: directly patch the state through the driver's
+    // internal applyState by calling step with a state that has viral_stunts owned.
+    (driver as any)._applyState?.({
+      ...driver.getState(),
+      generators: {
+        ...driver.getState().generators,
+        viral_stunts: { ...driver.getState().generators.viral_stunts, owned: true },
+      },
+    });
+    // Fail deterministically if setup could not make the player rebrand-eligible.
+    expect(driver.canRebrand()).toBe(true);
+
     const beforeClout = driver.getState().player.clout;
     const beforeRebrandCount = driver.getState().player.rebrand_count;
     const result = driver.rebrand();
@@ -722,7 +736,7 @@ function makeSweeperDriver(engagementAmount: number = 1_000_000) {
 }
 
 describe('driver — sweep engine', () => {
-  it('getSweepState returns active=false and previewCount=0 on fresh low-engagement state', () => {
+  it('getSweepState returns active=false and canAfford=false on fresh low-engagement state', () => {
     const driver = createDriver({
       staticData: STATIC_DATA,
       now: () => 1_000_000,
@@ -733,15 +747,14 @@ describe('driver — sweep engine', () => {
     });
     const s = driver.getSweepState();
     expect(s.active).toBe(false);
-    expect(s.previewCount).toBe(0);
+    expect(s.canAfford).toBe(false);
   });
 
-  it('getSweepState.previewCount reflects affordable items when engagement is high', () => {
+  it('getSweepState.canAfford is true when engagement is high', () => {
     const { driver } = makeSweeperDriver(1_000_000);
     const s = driver.getSweepState();
     expect(s.active).toBe(false);
-    // chirps is owned — BUY, HIRE, and LVL UP should all be affordable at 1M engagement
-    expect(s.previewCount).toBeGreaterThan(0);
+    expect(s.canAfford).toBe(true);
   });
 
   it('startSweep is a no-op when already active', () => {
@@ -827,22 +840,23 @@ describe('driver — sweep engine', () => {
   });
 
   it('re-evaluation picks up newly affordable items as engagement is spent', () => {
-    // Give enough for exactly 3 chirp buys, verify sweep fires 3 purchases.
-    const cost0 = generatorBuyCost('chirps', 0, STATIC_DATA);
-    const cost1 = generatorBuyCost('chirps', 1, STATIC_DATA);
-    const cost2 = generatorBuyCost('chirps', 2, STATIC_DATA);
-    const budget = cost0 + cost1 + cost2 + 0.001; // just enough for 3
-    const { driver, timeouts } = makeSweeperDriver(budget);
+    // Give a generous budget and verify sweep makes multiple purchases
+    // across any track (SPEED > HIRE > POWER priority).
+    const { driver, timeouts } = makeSweeperDriver(1_000_000);
 
+    const purchases: number[] = [];
+    driver.onSweepPurchase(() => purchases.push(1));
     const ends: number[] = [];
     driver.onSweepEnd(() => ends.push(1));
 
-    driver.startSweep(); // fires purchase 1 synchronously, schedules next
-    timeouts.flush();    // fires purchase 2, schedules next
-    timeouts.flush();    // fires purchase 3, list exhausted → ends
+    driver.startSweep();
+    // Flush until sweep ends (max 100 iterations as safety).
+    for (let i = 0; i < 100 && driver.getSweepState().active; i++) {
+      timeouts.flush();
+    }
 
     expect(ends).toHaveLength(1);
-    expect(driver.getState().generators.chirps.count).toBe(3);
+    expect(purchases.length).toBeGreaterThan(1);
   });
 
   it('onSweepEnd listener can be unsubscribed', () => {

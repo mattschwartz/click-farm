@@ -11,7 +11,7 @@
 .game-screen {
   position: relative;
   z-index: 1;
-  height: 100vh;
+  height: 100dvh;
   color: var(--text-primary);
   font-family: var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif;
   display: grid;
@@ -92,6 +92,7 @@
 .top-bar-title {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 900;
+  font-style: italic;
   font-size: 28px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -542,8 +543,8 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   align-items: baseline;
   gap: 8px;
   position: absolute;
-  bottom: -4px;
-  left: 0;
+  bottom: 0px;
+  left: -10px;
   right: 0;
   z-index: 2;
   padding: 0;
@@ -690,6 +691,20 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
+/* Rate indicator — shown when floating numbers are off. Sits bottom-right
+   in the frosted glass bar so the player sees passive earnings feedback. */
+.verb-rate-indicator {
+  margin-left: auto;
+  font-size: 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: #4ADE80;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
 /* Ready border chase — a light sweeps the button edge once when cooldown
  * completes. Fires on cooldown→ready transition (class swap re-triggers
  * the animation). Uses conic-gradient rotated via @property, masked to
@@ -748,6 +763,7 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   font-size: 22px;
   font-weight: 800;
   color: #FFFFFF;
+  white-space: nowrap;
   animation: verb-float-pop 2600ms ease-out forwards;
   z-index: 3;
   text-shadow:
@@ -852,6 +868,8 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   flex-direction: column;
   min-height: 0;
   gap: 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .generator-column .generator-list {
@@ -2015,6 +2033,17 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
   font-size: 12px;
+}
+
+.ceremony-column-row-highlight {
+  opacity: 1;
+}
+
+.ceremony-col-value-highlight {
+  color: #FFD66B;
+  font-weight: 700;
+  font-size: 13px;
+  text-shadow: 0 0 8px rgba(255, 214, 107, 0.3);
 }
 
 /* Actions */
@@ -3285,6 +3314,40 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   border-color: rgba(var(--modal-success-rgb), 0.40);
 }
 
+/* --- Pause button --------------------------------------------------------- */
+.settings-pause-section {
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+.settings-pause-btn {
+  display: inline-block;
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+  cursor: pointer;
+  transition: background 150ms ease-out, border-color 150ms ease-out;
+}
+.settings-pause-btn:hover {
+  background: var(--surface-pressed);
+  border-color: var(--border-strong);
+}
+.settings-pause-btn-active {
+  color: var(--accent-green);
+  border-color: rgba(var(--modal-success-rgb), 0.35);
+  background: rgba(var(--modal-success-rgb), 0.08);
+}
+.settings-pause-btn-active:hover {
+  background: rgba(var(--modal-success-rgb), 0.14);
+  border-color: rgba(var(--modal-success-rgb), 0.50);
+}
+
 /* --- Save-error banner (task #55) ---------------------------------------- */
 
 .save-error-banner {
@@ -3528,7 +3591,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
 .purchase-pill {
   width: 80px;
   height: 28px;
-  border-radius: 6px;
+  border-radius: 4px;
   padding: 0 4px;
   font-size: 11px;
   font-family: 'Space Grotesk', sans-serif;
@@ -3591,7 +3654,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   content: '';
   position: absolute;
   inset: -2px;
-  border-radius: 8px;  /* square corners + border width */
+  border-radius: 6px;  /* pill radius (4px) + border inset (2px) */
   background: conic-gradient(
     from var(--flame-angle, 0deg),
     #ff4500 0deg,
@@ -3611,7 +3674,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   content: '';
   position: absolute;
   inset: 1px;
-  border-radius: 5px;
+  border-radius: 3px;
   background: var(--surface-panel, #FFFFFF);
   z-index: -1;
 }
@@ -3639,6 +3702,78 @@ html[data-reduce-motion="true"] .purchase-pill-auto.purchase-pill-affordable::be
   animation: none;
   background: rgba(255, 140, 40, 0.5);
 }
+
+/* Maxed — platinum plaque treatment, matches maxed SPEED/LVL button */
+.purchase-pill-maxed {
+  cursor: default;
+  border: 1px solid var(--accent-platinum-deep);
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--palette-platinum-rgb), 0.22) 0%,
+    rgba(var(--palette-platinum-rgb), 0.10) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 0 rgba(var(--palette-white-rgb), 0.55),
+    inset 0 0 0 1px rgba(var(--palette-near-black-rgb), 0.10);
+  color: var(--accent-platinum);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  position: relative;
+  overflow: hidden;
+  justify-content: center;
+  align-items: center;
+}
+
+.purchase-pill-maxed .pill-label {
+  color: var(--accent-platinum);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.purchase-pill-maxed .pill-cost {
+  color: var(--accent-platinum);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  opacity: 1;
+}
+
+.pill-crown {
+  font-size: 9px;
+  margin-right: 2px;
+}
+
+/* Shine sweep on maxed pill — synced with other maxed elements */
+.purchase-pill-maxed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgba(var(--palette-white-rgb), 0.0) 46%,
+    rgba(var(--palette-white-rgb), 0.65) 50%,
+    rgba(var(--palette-white-rgb), 0.0) 54%,
+    transparent 62%
+  );
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  animation: lvl-maxed-shine 7000ms linear infinite;
+}
+
+.purchase-pill-maxed:active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .purchase-pill-maxed::before { animation: none; }
+}
+html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; }
 
 /* Unaffordable — receded grey per §3.2 */
 .purchase-pill-unaffordable {

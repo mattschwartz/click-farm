@@ -18,6 +18,7 @@ import type { GameState, GeneratorId, StaticData } from '../types.ts';
 import type { SweepItemType, SweepPurchaseEvent } from '../driver/index.ts';
 import {
   autoclickerBuyCost,
+  autoclickerCap,
   generatorBuyCost,
   generatorUpgradeCost,
 } from '../generator/index.ts';
@@ -42,8 +43,8 @@ interface Props {
   viralGeneratorId?: GeneratorId | null;
   /** Whether an auto-buy sweep is currently running. */
   sweepActive: boolean;
-  /** Count of affordable purchases right now (live). */
-  sweepPreviewCount: number;
+  /** Whether at least one purchase is affordable right now (live). */
+  sweepCanAfford: boolean;
   /** Start the auto-buy sweep. */
   onStartSweep: () => void;
   /** Cancel a running sweep. */
@@ -128,7 +129,7 @@ export function shouldApplyManyReady(readyCount: number): boolean {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutoclicker, viralGeneratorId, sweepActive, sweepPreviewCount, onStartSweep, onCancelSweep, lastSweepPurchase, sweepPurchaseSeq }: Props) {
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutoclicker, viralGeneratorId, sweepActive, sweepCanAfford, onStartSweep, onCancelSweep, lastSweepPurchase, sweepPurchaseSeq }: Props) {
   // Build rows grouped by category in stable order.
   // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
   // excluded from the main list — they render in the Clout Shop modal instead.
@@ -163,7 +164,7 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutocl
     <section className={`generator-list${manyReady ? ' many-ready' : ''}`}>
       <BuyAllButton
         sweepActive={sweepActive}
-        previewCount={sweepPreviewCount}
+        canAfford={sweepCanAfford}
         onStartSweep={onStartSweep}
         onCancelSweep={onCancelSweep}
       />
@@ -447,6 +448,7 @@ function GeneratorRow({
             costLabel={<TieredNumber value={autoCost} />}
             costText={fmtCompact(autoCost)}
             canBuy={canBuyAuto}
+            isMaxed={g.autoclicker_count >= autoclickerCap(state.player.rebrand_count)}
             autoclickerCount={g.autoclicker_count}
             verbColor={display.color}
             onBuy={() => { onBuyAutoclicker(id); spawnCostFloat('autoclicker', autoCost); }}
@@ -477,6 +479,7 @@ interface AutoPillProps {
   costLabel: React.ReactNode;
   costText: string;
   canBuy: boolean;
+  isMaxed: boolean;
   autoclickerCount: number;
   verbColor: string;
   onBuy: () => void;
@@ -562,12 +565,13 @@ function SpeedButton({
 
 // ---------------------------------------------------------------------------
 
-function AutoPill({ costLabel, costText, canBuy, autoclickerCount, verbColor, onBuy, generatorName, sweepHit }: AutoPillProps) {
+function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verbColor, onBuy, generatorName, sweepHit }: AutoPillProps) {
   const [glowing, setGlowing] = useState(false);
   const [shaking, setShaking] = useState(false);
   const rgb = hexToRgbPill(verbColor);
 
   const handleClick = () => {
+    if (isMaxed) return;
     if (!canBuy) {
       setShaking(true);
       window.setTimeout(() => setShaking(false), 200);
@@ -578,23 +582,35 @@ function AutoPill({ costLabel, costText, canBuy, autoclickerCount, verbColor, on
     onBuy();
   };
 
+  const stateClass = isMaxed
+    ? ' purchase-pill-maxed'
+    : canBuy
+      ? ' purchase-pill-affordable'
+      : ' purchase-pill-unaffordable';
+
   return (
     <button
-      className={`purchase-pill purchase-pill-auto${canBuy ? ' purchase-pill-affordable' : ' purchase-pill-unaffordable'}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}${sweepHit ? ' sweep-hit' : ''}`}
-      style={canBuy ? {
+      className={`purchase-pill purchase-pill-auto${stateClass}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}${sweepHit ? ' sweep-hit' : ''}`}
+      style={!isMaxed && canBuy ? {
         '--pill-color': verbColor,
         '--pill-color-rgb': rgb,
       } as React.CSSProperties : undefined}
       onClick={handleClick}
+      disabled={isMaxed}
       aria-label={
-        canBuy
-          ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costText} engagement`
-          : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`
+        isMaxed
+          ? `${generatorName} autoclickers maxed at ${autoclickerCount}`
+          : canBuy
+            ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costText} engagement`
+            : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`
       }
-      title={`Buy autoclicker for ${costText} engagement`}
+      title={isMaxed ? `${generatorName} — max autoclickers (${autoclickerCount})` : `Buy autoclicker for ${costText} engagement`}
     >
-      <span className="pill-label">HIRE{autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}</span>
-      <span className="pill-cost">{costLabel}</span>
+      <span className="pill-label">
+        {isMaxed && <span className="pill-crown" aria-hidden>♛</span>}
+        {`HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`}
+      </span>
+      <span className="pill-cost">{isMaxed ? 'MAX' : costLabel}</span>
     </button>
   );
 }
@@ -684,13 +700,13 @@ function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit 
 // ---------------------------------------------------------------------------
 
 /** Label text for the BUY ALL button given current sweep state. */
-export function buyAllLabel(sweepActive: boolean, previewCount: number): string {
-  return sweepActive ? 'STOP' : `RUSH BUY (${previewCount})`;
+export function buyAllLabel(sweepActive: boolean): string {
+  return sweepActive ? 'BUYING...' : 'RUSH BUY (HOLD)';
 }
 
 /** Whether the BUY ALL button should be disabled. */
-export function buyAllDisabled(sweepActive: boolean, previewCount: number): boolean {
-  return !sweepActive && previewCount === 0;
+export function buyAllDisabled(sweepActive: boolean, canAfford: boolean): boolean {
+  return !sweepActive && !canAfford;
 }
 
 // ---------------------------------------------------------------------------
@@ -699,21 +715,35 @@ export function buyAllDisabled(sweepActive: boolean, previewCount: number): bool
 
 interface BuyAllButtonProps {
   sweepActive: boolean;
-  previewCount: number;
+  canAfford: boolean;
   onStartSweep: () => void;
   onCancelSweep: () => void;
 }
 
-function BuyAllButton({ sweepActive, previewCount, onStartSweep, onCancelSweep }: BuyAllButtonProps) {
-  const disabled = buyAllDisabled(sweepActive, previewCount);
-  const label = buyAllLabel(sweepActive, previewCount);
+function BuyAllButton({ sweepActive, canAfford, onStartSweep, onCancelSweep }: BuyAllButtonProps) {
+  const disabled = buyAllDisabled(sweepActive, canAfford);
+  const label = buyAllLabel(sweepActive);
 
-  const handleClick = () => {
-    if (disabled) return;
-    if (sweepActive) {
-      onCancelSweep();
-    } else {
-      onStartSweep();
+  const handleDown = () => {
+    if (disabled || sweepActive) return;
+    onStartSweep();
+  };
+
+  const handleUp = () => {
+    if (sweepActive) onCancelSweep();
+  };
+
+  // Keyboard: Space/Enter keydown starts, keyup stops (mirrors pointer hold).
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      handleDown();
+    }
+  };
+
+  const handleKeyUp = (e: React.KeyboardEvent) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      handleUp();
     }
   };
 
@@ -721,10 +751,15 @@ function BuyAllButton({ sweepActive, previewCount, onStartSweep, onCancelSweep }
     <button
       type="button"
       className={`buy-all-btn${sweepActive ? ' buy-all-btn-sweeping' : ''}${disabled ? ' buy-all-btn-empty' : ''}`}
-      onClick={handleClick}
+      onPointerDown={handleDown}
+      onPointerUp={handleUp}
+      onPointerLeave={handleUp}
+      onPointerCancel={handleUp}
+      onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
       disabled={disabled}
-      aria-label={sweepActive ? 'Stop auto-buy sweep' : `Rush buy all affordable upgrades (${previewCount})`}
-      title={sweepActive ? 'Stop' : `Rush buy — ${previewCount} affordable`}
+      aria-label={sweepActive ? 'Buying — release to stop' : 'Hold to rush buy all affordable upgrades'}
+      title={sweepActive ? 'Release to stop' : 'Hold to rush buy'}
     >
       {label}
     </button>

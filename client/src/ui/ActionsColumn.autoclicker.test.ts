@@ -46,17 +46,15 @@ function stateWithGenerator(
 // ---------------------------------------------------------------------------
 
 describe('yield display formula (verbYieldPerTap)', () => {
-  it('yield scales linearly with (1 + count)', () => {
-    // The formula is: base_event_yield × (1+count) × algoMod × clout × kit.
-    // We verify the (1+count) scaling by comparing two states that differ only
-    // in count. The shared multiplier chain cancels out in the ratio.
+  it('yield scales with (1 + count)^count_exponent', () => {
+    const def = STATIC_DATA.generators.chirps;
     const state0 = stateWithGenerator('chirps', 0, 1);
     const state5 = stateWithGenerator('chirps', 5, 1);
     const y0 = verbYieldPerTap(state0.generators.chirps, state0, STATIC_DATA);
     const y5 = verbYieldPerTap(state5.generators.chirps, state5, STATIC_DATA);
 
-    // y5 / y0 should be (1+5) / (1+0) = 6
-    expect(y5 / y0).toBeCloseTo(6, 5);
+    const expectedRatio = Math.pow(6, def.count_exponent) / Math.pow(1, def.count_exponent);
+    expect(y5 / y0).toBeCloseTo(expectedRatio, 3);
   });
 
   it('yield does NOT change with level — only count matters', () => {
@@ -66,17 +64,18 @@ describe('yield display formula (verbYieldPerTap)', () => {
     const yieldL1 = verbYieldPerTap(stateL1.generators.chirps, stateL1, STATIC_DATA);
     const yieldL5 = verbYieldPerTap(stateL5.generators.chirps, stateL5, STATIC_DATA);
 
-    // Level should NOT affect yield — only count matters.
     expect(yieldL1).toBe(yieldL5);
   });
 
-  it('yield ratio between count=0 and count=N is exactly (1+N)', () => {
+  it('yield ratio matches count_exponent formula', () => {
+    const def = STATIC_DATA.generators.chirps;
     const state0 = stateWithGenerator('chirps', 0, 1);
     const state10 = stateWithGenerator('chirps', 10, 1);
     const y0 = verbYieldPerTap(state0.generators.chirps, state0, STATIC_DATA);
     const y10 = verbYieldPerTap(state10.generators.chirps, state10, STATIC_DATA);
 
-    expect(y10 / y0).toBeCloseTo(11, 5);
+    const expectedRatio = Math.pow(11, def.count_exponent);
+    expect(y10 / y0).toBeCloseTo(expectedRatio, 3);
   });
 });
 

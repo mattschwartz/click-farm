@@ -96,30 +96,26 @@ describe('shouldApplyManyReady', () => {
 // ---------------------------------------------------------------------------
 
 describe('buyAllLabel', () => {
-  it('returns STOP when sweep is active', () => {
-    expect(buyAllLabel(true, 0)).toBe('STOP');
-    expect(buyAllLabel(true, 5)).toBe('STOP');
+  it('returns BUYING... when sweep is active', () => {
+    expect(buyAllLabel(true)).toBe('BUYING...');
   });
 
-  it('returns RUSH BUY (N) when idle', () => {
-    expect(buyAllLabel(false, 0)).toBe('RUSH BUY (0)');
-    expect(buyAllLabel(false, 3)).toBe('RUSH BUY (3)');
-    expect(buyAllLabel(false, 12)).toBe('RUSH BUY (12)');
+  it('returns RUSH BUY (HOLD) when idle', () => {
+    expect(buyAllLabel(false)).toBe('RUSH BUY (HOLD)');
   });
 });
 
 describe('buyAllDisabled', () => {
-  it('is disabled when idle and previewCount === 0', () => {
-    expect(buyAllDisabled(false, 0)).toBe(true);
+  it('is disabled when idle and nothing affordable', () => {
+    expect(buyAllDisabled(false, false)).toBe(true);
   });
 
-  it('is enabled when idle and previewCount > 0', () => {
-    expect(buyAllDisabled(false, 1)).toBe(false);
-    expect(buyAllDisabled(false, 10)).toBe(false);
+  it('is enabled when idle and something affordable', () => {
+    expect(buyAllDisabled(false, true)).toBe(false);
   });
 
-  it('is enabled when sweeping (STOP is tappable), even at count 0', () => {
-    expect(buyAllDisabled(true, 0)).toBe(false);
-    expect(buyAllDisabled(true, 5)).toBe(false);
+  it('is not disabled when sweeping, even if nothing affordable', () => {
+    expect(buyAllDisabled(true, false)).toBe(false);
+    expect(buyAllDisabled(true, true)).toBe(false);
   });
 });

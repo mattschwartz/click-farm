@@ -55,11 +55,15 @@ export function createPlayer(now: number = Date.now()): Player {
   ) as Record<UpgradeId, number>;
 
   return {
-    id: crypto.randomUUID(),
+    id: typeof globalThis.crypto?.randomUUID === 'function'
+      ? globalThis.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     engagement: 0,
     clout: 0,
     total_followers: 0,
     lifetime_followers: 0,
+    lifetime_engagement: 0,
+    has_started_run: false,
     rebrand_count: 0,
     clout_upgrades,
     creator_kit: {} as Record<KitItemId, number>,

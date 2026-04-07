@@ -28,12 +28,14 @@ import {
   generatorBuyCost,
   generatorUpgradeCost,
   autoclickerBuyCost,
+  autoclickerCap,
 } from '../generator/index.ts';
 import { createInitialGameState, canAffordEngagement } from '../model/index.ts';
 import { clearSave, load, save } from '../save/index.ts';
 import { calculateOffline, type OfflineResult } from '../offline/index.ts';
 import {
   calculateRebrand,
+  canRebrand,
   applyRebrand,
   purchaseCloutUpgrade,
   type RebrandResult,
@@ -93,8 +95,8 @@ export type SaveErrorListener = (e: SaveError) => void;
 /** Public read model returned by getSweepState(). Derived on every call. */
 export interface SweepState {
   active: boolean;
-  /** Number of affordable purchases across all tracks right now. */
-  previewCount: number;
+  /** Whether at least one purchase is affordable right now. */
+  canAfford: boolean;
 }
 
 /** Which track a sweep purchase targeted. */
@@ -181,6 +183,8 @@ export interface GameDriver {
    * Returns the RebrandResult so the UI can show the Clout earned.
    */
   rebrand(): RebrandResult;
+  /** Whether rebrand is currently available (viral_stunts must be unlocked). */
+  canRebrand(): boolean;
   /** Spend Clout to level up a meta-upgrade. Throws when unaffordable. */
   buyCloutUpgrade(upgradeId: UpgradeId): void;
   /** Spend Engagement on a Creator Kit item. Errors caught via onActionError. */
@@ -197,7 +201,7 @@ export interface GameDriver {
   cancelSweep(): void;
   /**
    * Synchronous read of current sweep status and affordable-purchase count.
-   * previewCount is always recomputed from live state — accurate at any time.
+   * canAfford is always recomputed from live state — accurate at any time.
    */
   getSweepState(): SweepState;
   /**
@@ -441,10 +445,13 @@ export function createDriver(options: DriverOptions): GameDriver {
         if (canAffordEngagement(s.player, buyCost)) {
           items.push({ type: 'buy', generatorId: id, cost: buyCost });
         }
-        // HIRE track
-        const hireCost = autoclickerBuyCost(id, gen.autoclicker_count, staticData);
-        if (hireCost > 0 && canAffordEngagement(s.player, hireCost)) {
-          items.push({ type: 'autoclicker', generatorId: id, cost: hireCost });
+        // HIRE track (capped at 12 × (1 + rebrand_count))
+        const cap = autoclickerCap(s.player.rebrand_count);
+        if (gen.autoclicker_count < cap) {
+          const hireCost = autoclickerBuyCost(id, gen.autoclicker_count, staticData);
+          if (hireCost > 0 && canAffordEngagement(s.player, hireCost)) {
+            items.push({ type: 'autoclicker', generatorId: id, cost: hireCost });
+          }
         }
       }
 
@@ -456,12 +463,13 @@ export function createDriver(options: DriverOptions): GameDriver {
         }
       }
     }
-    // SPEED (upgrade) first, then cheapest within each priority tier.
+    // Priority: SPEED (upgrade) > HIRE (autoclicker) > POWER (buy), most expensive first within tier.
+    const priority: Record<SweepItemType, number> = { upgrade: 0, autoclicker: 1, buy: 2 };
     return items.sort((a, b) => {
-      const aUpgrade = a.type === 'upgrade' ? 0 : 1;
-      const bUpgrade = b.type === 'upgrade' ? 0 : 1;
-      if (aUpgrade !== bUpgrade) return aUpgrade - bUpgrade;
-      return a.cost - b.cost;
+      const pa = priority[a.type];
+      const pb = priority[b.type];
+      if (pa !== pb) return pa - pb;
+      return b.cost - a.cost;
     });
   }
 
@@ -509,6 +517,9 @@ export function createDriver(options: DriverOptions): GameDriver {
 
   return {
     getState: () => state,
+
+    /** @internal Test-only: replace the driver's state wholesale. */
+    _applyState(newState: GameState) { state = newState; notify(); },
 
     subscribe(listener) {
       listeners.add(listener);
@@ -610,7 +621,12 @@ export function createDriver(options: DriverOptions): GameDriver {
       applyState(newState);
     },
 
+    canRebrand: () => canRebrand(state),
+
     rebrand() {
+      if (!canRebrand(state)) {
+        throw new Error('rebrand: viral_stunts must be unlocked before rebranding');
+      }
       const result = calculateRebrand(state);
       applyState(applyRebrand(state, result, staticData, now()));
       // Rebrand starts a fresh run — reset the tick clock so the first tick
@@ -654,7 +670,7 @@ export function createDriver(options: DriverOptions): GameDriver {
     getSweepState(): SweepState {
       return {
         active: sweep.active,
-        previewCount: buildAffordableList(state).length,
+        canAfford: buildAffordableList(state).length > 0,
       };
     },
 

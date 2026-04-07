@@ -19,23 +19,7 @@ import {
 } from '../save/index.ts';
 
 
-// ---------------------------------------------------------------------------
-// Pure helpers (unit-tested via SettingsModal.test.ts)
-// ---------------------------------------------------------------------------
-
-/**
- * Filename used for the Export Save download (§5.1). Intentionally
- * encodes rebrand count + timestamp so multiple exports sort naturally
- * and are self-describing.
- */
-export function formatExportFilename(
-  rebrandCount: number,
-  nowMs: number,
-): string {
-  // ISO without milliseconds or colons so the filename is filesystem-safe.
-  const iso = new Date(nowMs).toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  return `click-farm-save-${rebrandCount}-${iso}.json`;
-}
+import { formatExportFilename } from './formatExportFilename.ts';
 
 // ---------------------------------------------------------------------------
 // Component
@@ -58,6 +42,10 @@ interface Props {
   onResetRequested: () => void;
   /** Called when an import succeeds — parent should reload similarly. */
   onImportApplied: () => void;
+  /** Whether the game loop is currently paused. */
+  isPaused: boolean;
+  /** Toggle the game loop pause state. */
+  onTogglePause: () => void;
 }
 
 type InlineStatus = { kind: 'success' | 'error'; text: string } | null;
@@ -73,6 +61,8 @@ export function SettingsModal({
   onClose,
   onResetRequested,
   onImportApplied,
+  isPaused,
+  onTogglePause,
 }: Props) {
   const [resetStep, setResetStep] = useState<'idle' | 'confirm'>('idle');
   const [inlineStatus, setInlineStatus] = useState<InlineStatus>(null);
@@ -266,11 +256,23 @@ export function SettingsModal({
               />
               <SettingsToggle
                 label="Floating Numbers"
-                description="Show pop-up numbers from autoclicker taps."
+                description="Show pop-up numbers from autoclicker taps. If this option is toggled off, the rate is shown instead. Significantly improves performance."
                 checked={settings.showVerbFloats}
                 onChange={onSetShowVerbFloats}
               />
             </div>
+          </section>
+
+          {/* DONATE */}
+          <section className="settings-section settings-donate-section">
+            <a
+              href="https://support.savethechildren.org/site/Donation2?df_id=1620&mfc_pref=T&1620.donation=form1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="settings-donate-btn"
+            >
+              Donate to Save the Children
+            </a>
           </section>
 
           {/* MANAGE SAVE FILE */}
@@ -345,16 +347,15 @@ export function SettingsModal({
             </div>
           </section>
 
-          {/* DONATE */}
-          <section className="settings-section settings-donate-section">
-            <a
-              href="https://support.savethechildren.org/site/Donation2?df_id=1620&mfc_pref=T&1620.donation=form1"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="settings-donate-btn"
+          {/* PAUSE */}
+          <section className="settings-section settings-pause-section">
+            <button
+              type="button"
+              className={`settings-pause-btn${isPaused ? ' settings-pause-btn-active' : ''}`}
+              onClick={onTogglePause}
             >
-              Donate to Save the Children
-            </a>
+              {isPaused ? '▶  Resume Game' : '⏸  Pause Game'}
+            </button>
           </section>
         </div>
       </div>

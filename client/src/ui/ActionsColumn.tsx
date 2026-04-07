@@ -15,6 +15,7 @@ import {
   verbCooldownMs,
   verbYieldPerTap,
   verbYieldPerAutoTap,
+  computeGeneratorEffectiveRate,
 } from '../game-loop/index.ts';
 import { playClick } from './sfx.ts';
 import { GENERATOR_DISPLAY } from './display.ts';
@@ -134,17 +135,19 @@ interface LiveVerbButtonProps {
   isSpotlight: boolean;
   onClick: (verbId: GeneratorId) => void;
   showFloats?: boolean;
+  isPaused?: boolean;
 }
 
 /** Density cap for individual autoclicker floats (§4.6). Above this, batch. */
 const AUTO_FLOAT_DENSITY_CAP = 8;
 
-function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showFloats = true }: LiveVerbButtonProps) {
+function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showFloats = true, isPaused = false }: LiveVerbButtonProps) {
   const genState = state.generators[verbId];
   const display = GENERATOR_DISPLAY[verbId];
   const color = VERB_COLOR[verbId] ?? display.color;
   const perTap = verbYieldPerTap(state.generators[verbId], state, staticData);
   const perAuto = verbYieldPerAutoTap(state.generators[verbId], state, staticData);
+  const ratePerSec = computeGeneratorEffectiveRate(state.generators[verbId], state, staticData);
   const def = staticData.generators[verbId];
   const cdMs = verbCooldownMs(state.generators[verbId].level, def.base_event_rate);
   const lastTap = state.player.last_manual_click_at[verbId] ?? 0;
@@ -179,11 +182,12 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
   // Level speeds up both manual taps and autoclicker bursts.
   // ---------------------------------------------------------------------------
   const autoCount = genState.autoclicker_count;
+  const prevAutoCount = useRef(autoCount);
   const effectiveRate = genState.level * def.base_event_rate;
   const burstIntervalMs = effectiveRate > 0 ? 1000 / effectiveRate : Infinity;
 
   useEffect(() => {
-    if (autoCount <= 0 || burstIntervalMs === Infinity) return;
+    if (autoCount <= 0 || burstIntervalMs === Infinity || isPaused) return;
 
     const emitBurst = () => {
       // Badge pulse on every burst (200ms scale 1.0→1.05→1.0).
@@ -199,14 +203,13 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
       const perAutoTap = perAuto;
 
       if (autoCount > AUTO_FLOAT_DENSITY_CAP) {
-        // Batched float: +total ×N
-        const total = perAutoTap * autoCount;
+        // Batched float: +perTap ×N (show per-tap value, not total)
         const id = nextId.current++;
         const angle = Math.random() * Math.PI * 2;
         const radius = Math.random() * 25;
         const x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
         const y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
-        setFloats((prev) => [...prev, { id, value: total, x, y, isAutoclick: true, batchCount: autoCount }]);
+        setFloats((prev) => [...prev, { id, value: perAutoTap, x, y, isAutoclick: true, batchCount: autoCount }]);
         window.setTimeout(() => {
           setFloats((prev) => prev.filter((f) => f.id !== id));
         }, FLOAT_TTL_MS);
@@ -230,9 +233,16 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
       }
     };
 
+    // Fire immediately on HIRE purchase (autoCount increased) so the player
+    // sees instant visual feedback. Skip on other dep changes (e.g. POWER
+    // changing perAuto) to avoid spurious bursts.
+    if (autoCount > prevAutoCount.current) {
+      emitBurst();
+    }
+    prevAutoCount.current = autoCount;
     const interval = window.setInterval(emitBurst, burstIntervalMs);
     return () => window.clearInterval(interval);
-  }, [autoCount, burstIntervalMs, perAuto, prefersReducedMotion, showFloats]);
+  }, [autoCount, burstIntervalMs, perAuto, prefersReducedMotion, showFloats, isPaused]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     // Only show float feedback if the cooldown gate will accept the tap.
@@ -302,11 +312,16 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
                 </span>
               )}
             </span>
+            {/* Rate indicator — shown when floats are off and autoclickers are active,
+                so the player still gets feedback that HIRE did something. */}
+            {!showFloats && ratePerSec > 0 && (
+              <span className="verb-rate-indicator">+{fmtCompact(ratePerSec)}/s</span>
+            )}
           </span>
         </span>
 
 
-      {(isReady || atFloor) && state.player.engagement === 0 && (
+      {(isReady || atFloor) && !state.player.has_started_run && (
         <span className="verb-pulse">READY</span>
       )}
 
@@ -418,9 +433,10 @@ interface ActionsColumnProps {
   staticData: StaticData;
   onClickVerb: (verbId: GeneratorId) => void;
   showVerbFloats?: boolean;
+  isPaused?: boolean;
 }
 
-export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats = true }: ActionsColumnProps) {
+export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats = true, isPaused = false }: ActionsColumnProps) {
   // Owned ladder verbs (live buttons) in fixed ladder order:
   // chirps → selfies → livestreams → podcasts → viral_stunts.
   const liveVerbs = useMemo(() =>
@@ -457,6 +473,7 @@ export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats =
             isSpotlight={false}
             onClick={onClickVerb}
             showFloats={showVerbFloats}
+            isPaused={isPaused}
           />
         ))}
 

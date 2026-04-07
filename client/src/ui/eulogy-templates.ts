@@ -15,9 +15,8 @@
 //   2. top generator by lifetime engagement
 //   3. total engagement earned
 //
-// Current game state tracks (1) directly. It does NOT track:
+// Current game state tracks (1) and (3) directly. It does NOT track:
 //   - per-generator lifetime engagement
-//   - cumulative engagement earned (only current balance)
 //
 // The initial stanzas below work within these constraints. Expanding run-
 // state tracking is a separate architecture question for follow-up.
@@ -56,7 +55,7 @@ export function unlockedPlatformsList(state: GameState): string {
 export function buildEulogyStanzas(state: GameState): string[] {
   const followers = fmtCompactInt(state.player.total_followers);
   const platforms = unlockedPlatformsList(state);
-  const engagement = fmtCompactInt(state.player.engagement);
+  const engagement = fmtCompactInt(state.player.lifetime_engagement);
 
   return [
     `You had ${followers} followers on ${platforms}.`,

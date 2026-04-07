@@ -60,6 +60,14 @@ export interface RebrandResult {
   cloutEarned: number;
 }
 
+/**
+ * Whether the player can rebrand right now.
+ * Gate: viral_stunts must be unlocked (owned) before rebrand is available.
+ */
+export function canRebrand(state: GameState): boolean {
+  return state.generators.viral_stunts.owned;
+}
+
 export function calculateRebrand(state: GameState): RebrandResult {
   const cloutEarned = cloutForRebrand(state.player.total_followers);
   return { cloutEarned };
@@ -162,6 +170,7 @@ export function applyRebrand(
     ...state.player,
     engagement: 0,
     total_followers: 0,
+    has_started_run: false,
     // lifetime_followers preserved (compounds across runs)
     clout: state.player.clout + result.cloutEarned,
     rebrand_count: state.player.rebrand_count + 1,

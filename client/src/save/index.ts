@@ -17,7 +17,7 @@ import { recomputeAllRetention } from '../audience-mood/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 12;
+const CURRENT_VERSION = 14;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -705,6 +705,44 @@ export function migrateV11toV12(data: SaveData): SaveData {
   };
 }
 
+/**
+ * V12→V13: Add lifetime_engagement to player (defaults to 0).
+ * Existing saves won't have tracked this, so it starts fresh.
+ */
+export function migrateV12toV13(data: SaveData): SaveData {
+  const state = data.state as GameState;
+  return {
+    ...data,
+    version: 13,
+    state: {
+      ...state,
+      player: {
+        ...state.player,
+        lifetime_engagement: (state.player as Record<string, unknown>).lifetime_engagement as number ?? 0,
+      },
+    },
+  };
+}
+
+/**
+ * V13→V14: Add has_started_run to player (defaults to true for existing saves,
+ * since any existing save has already started playing).
+ */
+export function migrateV13toV14(data: SaveData): SaveData {
+  const state = data.state as GameState;
+  return {
+    ...data,
+    version: 14,
+    state: {
+      ...state,
+      player: {
+        ...state.player,
+        has_started_run: (state.player as Record<string, unknown>).has_started_run as boolean ?? true,
+      },
+    },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -750,6 +788,14 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 11) {
     current = migrateV11toV12(current);
+  }
+
+  if (current.version === 12) {
+    current = migrateV12toV13(current);
+  }
+
+  if (current.version === 13) {
+    current = migrateV13toV14(current);
   }
 
   if (current.version !== CURRENT_VERSION) {

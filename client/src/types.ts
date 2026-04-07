@@ -118,6 +118,10 @@ export interface Player {
   total_followers: number;
   /** Total followers ever earned across all runs. Never resets. ≥ 0. */
   lifetime_followers: number;
+  /** Total engagement ever earned across all runs. Never resets. ≥ 0. */
+  lifetime_engagement: number;
+  /** True after the player's first manual click in this run. Resets on rebrand. */
+  has_started_run: boolean;
   /** Number of completed rebrands. ≥ 0. */
   rebrand_count: number;
   /** Purchased permanent meta-upgrades. Values ≥ 0. Survives rebrand. */
@@ -279,6 +283,12 @@ export interface GeneratorDef {
    * TODO(game-designer): provisional — tune during balance pass.
    */
   buy_cost_multiplier: number;
+  /**
+   * Exponent for the count yield multiplier. Per-tap and per-autoclicker yield
+   * uses `(1 + count)^count_exponent` instead of linear `(1 + count)`.
+   * 1.0 = linear (default for most generators). Higher = super-linear growth.
+   */
+  count_exponent: number;
   /**
    * Hand-tuned cost table for each level upgrade. Index 0 = cost of L1→L2,
    * index 1 = cost of L2→L3, etc. Length must equal max_level - 1.

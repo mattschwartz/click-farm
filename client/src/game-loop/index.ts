@@ -105,11 +105,11 @@ export function cloutBonus(
  * generator's PASSIVE production, driven by autoclicker_count.
  *
  *   effective_rate = autoclicker_count × level × base_event_rate × base_event_yield
- *                    × (1 + count) × clout_bonus × kit_bonus
+ *                    × (1 + count)^count_exponent × clout_bonus × kit_bonus
  *
  * Level-driven-cooldown refactor (task #132):
  *   - `autoclicker_count` drives passive production (was `count`)
- *   - `(1 + count)` is the yield multiplier from the BUY track (was `levelMultiplier(level)`)
+ *   - `(1 + count)^count_exponent` is the yield multiplier from the BUY track
  *   - `level` now drives manual cooldown speed, not passive rate
  *
  * Returns 0 if the generator is not owned or autoclicker_count is 0.
@@ -134,7 +134,7 @@ export function computeGeneratorEffectiveRate(
     generator.level *
     def.base_event_rate *
     def.base_event_yield *
-    (1 + generator.count) *
+    Math.pow(1 + generator.count, def.count_exponent) *
     clout *
     kit
   );
@@ -314,6 +314,7 @@ export function tick(
   let player: Player = {
     ...state.player,
     engagement: clampEngagement(state.player.engagement + engagementEarned),
+    lifetime_engagement: clampEngagement(state.player.lifetime_engagement + engagementEarned),
   };
 
   // 3a. Audience Mood pressure update (architect resolution 2026-04-05).
@@ -514,7 +515,7 @@ export function verbCooldownMs(
 /**
  * Engagement earned from a single manual tap. BUY count drives yield.
  *
- *   earned = base_event_yield × (1 + count) × algoMod × clout �� kit
+ *   earned = base_event_yield × (1 + count)^count_exponent × (1 + autoclicker_count) × clout × kit
  */
 export function verbYieldPerTap(
   generator: GeneratorState,
@@ -524,25 +525,20 @@ export function verbYieldPerTap(
   const def = staticData.generators[generator.id];
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
   const kit = kitEngagementBonus(state.player.creator_kit, staticData);
-  return def.base_event_yield * (1 + generator.count) * (1 + generator.autoclicker_count) * clout * kit;
+  return def.base_event_yield * Math.pow(1 + generator.count, def.count_exponent) * (1 + generator.autoclicker_count) * clout * kit;
 }
 
 /**
- * Engagement per single autoclicker fire. Same as manual tap but WITHOUT
- * the (1 + autoclicker_count) amplifier — each autoclicker click earns
- * the base per-event yield.
+ * Engagement per single autoclicker fire. Same formula as manual tap:
  *
- *   earned = base_event_yield × (1 + count) × clout × kit
+ *   earned = base_event_yield × (1 + count)^count_exponent × (1 + autoclicker_count) × clout × kit
  */
 export function verbYieldPerAutoTap(
   generator: GeneratorState,
   state: GameState,
   staticData: StaticData,
 ): number {
-  const def = staticData.generators[generator.id];
-  const clout = cloutBonus(state.player.clout_upgrades, staticData);
-  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
-  return def.base_event_yield * (1 + generator.count) * clout * kit;
+  return verbYieldPerTap(generator, state, staticData);
 }
 
 // ---------------------------------------------------------------------------
@@ -596,6 +592,8 @@ export function postClick(
     player: {
       ...state.player,
       engagement: clampEngagement(state.player.engagement + earned),
+      lifetime_engagement: clampEngagement(state.player.lifetime_engagement + earned),
+      has_started_run: true,
       last_manual_click_at: {
         ...state.player.last_manual_click_at,
         [verbId]: now,

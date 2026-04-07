@@ -247,16 +247,16 @@ describe('importSaveJSON', () => {
 // ---------------------------------------------------------------------------
 
 describe('migrate', () => {
-  it('passes through current-version (v12) data unchanged', () => {
+  it('passes through current-version (v14) data unchanged', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const data: SaveData = {
-      version: 12,
+      version: 14,
       state,
       lastCloseTime: 0,
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(12);
+    expect(result.version).toBe(14);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -404,7 +404,7 @@ describe('migrateV3toV4', () => {
 
   it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(12);
+    expect(result.version).toBe(14);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
     expect(result.state.player.creator_kit).toEqual({});
@@ -452,7 +452,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version via the chain', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(12);
+    expect(result.version).toBe(14);
     expect(result.state.player.creator_kit).toEqual({});
   });
 
@@ -481,7 +481,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(12);
+    expect(result.version).toBe(14);
     expect(result.state.player.creator_kit).toEqual({});
   });
 });
@@ -583,7 +583,7 @@ describe('migrateV5toV6', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(12);
+    expect(result.version).toBe(14);
     expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
 });

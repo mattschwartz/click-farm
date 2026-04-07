@@ -137,7 +137,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     clearOfflineResult,
     rebrand,
     sweepActive,
-    sweepPreviewCount,
+    sweepCanAfford,
     lastSweepPurchase,
     sweepPurchaseSeq,
     startSweep,
@@ -249,6 +249,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
   const [showCeremonyModal, setShowCeremonyModal] = useState(false);
   const [showShopModal, setShowShopModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Global Esc shortcut — opens Settings when no modal is open (§1). Each
   // modal owns its own Esc-to-close handler; this listener bails out when
@@ -389,6 +390,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
             staticData={STATIC_DATA}
             onClickVerb={click}
             showVerbFloats={settings.showVerbFloats}
+            isPaused={isPaused}
           />
           <div className="generator-column">
             <GeneratorList
@@ -399,7 +401,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               onBuyAutoclicker={buyAutoclicker}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
               sweepActive={sweepActive}
-              sweepPreviewCount={sweepPreviewCount}
+              sweepCanAfford={sweepCanAfford}
               lastSweepPurchase={lastSweepPurchase}
               sweepPurchaseSeq={sweepPurchaseSeq}
               onStartSweep={startSweep}
@@ -515,6 +517,16 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
             // Same rationale as reset — force a reload so the driver
             // picks up the imported save.
             if (typeof window !== 'undefined') window.location.reload();
+          }}
+          isPaused={isPaused}
+          onTogglePause={() => {
+            if (isPaused) {
+              resumeLoop();
+              setIsPaused(false);
+            } else {
+              pauseLoop();
+              setIsPaused(true);
+            }
           }}
         />
       )}

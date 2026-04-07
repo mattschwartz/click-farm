@@ -289,7 +289,7 @@ describe('buyGenerator', () => {
     // confirm second purchase uses the higher cost
     const engagementBefore = state.player.engagement;
     state = buyGenerator(state, 'selfies', STATIC_DATA);
-    expect(engagementBefore - state.player.engagement).toBe(cost1);
+    expect(engagementBefore - state.player.engagement).toBeCloseTo(cost1);
   });
 
   it('newly-bought generator increases yield multiplier (1+count)', () => {

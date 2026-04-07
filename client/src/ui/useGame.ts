@@ -59,8 +59,8 @@ export interface UseGameResult {
   resetGame: () => void;
   /** Whether an auto-buy sweep is currently running. */
   sweepActive: boolean;
-  /** Count of currently affordable purchases (live — updates as state changes). */
-  sweepPreviewCount: number;
+  /** Whether at least one purchase is affordable right now (live). */
+  sweepCanAfford: boolean;
   /** Start the auto-buy sweep (no-op if already active). Plays sweep-start sound. */
   startSweep: () => void;
   /** Cancel an in-progress sweep immediately. */
@@ -186,7 +186,7 @@ export function useGame(): UseGameResult {
 
   // Derived synchronously from the driver's current state — always fresh after
   // any state subscriber re-render.
-  const sweepPreviewCount = driver.getSweepState().previewCount;
+  const sweepCanAfford = driver.getSweepState().canAfford;
 
   const actions = useMemo(
     () => ({
@@ -238,5 +238,5 @@ export function useGame(): UseGameResult {
     [driver],
   );
 
-  return { state, offlineResult, lastActionError, saveError, sweepActive, sweepPreviewCount, lastSweepPurchase, sweepPurchaseSeq, ...actions };
+  return { state, offlineResult, lastActionError, saveError, sweepActive, sweepCanAfford, lastSweepPurchase, sweepPurchaseSeq, ...actions };
 }
