@@ -6928,7 +6928,7 @@
       "alias": "E1",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Landscape grid shell: media query, grid redefinition, safe areas",
       "requester": "architect",
@@ -6957,7 +6957,8 @@
         "height: 100dvh is preserved so the layout fills the viewport without scrolling the outer container"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 172,
@@ -6993,9 +6994,7 @@
         "Desktop top bar unchanged"
       ],
       "open_questions": [],
-      "blocked_on": [
-        171
-      ]
+      "blocked_on": []
     },
     {
       "id": 173,
@@ -7036,9 +7035,7 @@
           "owner": "engineer"
         }
       ],
-      "blocked_on": [
-        171
-      ]
+      "blocked_on": []
     },
     {
       "id": 174,
@@ -7076,9 +7073,7 @@
         "No new props or conditional rendering added to PlatformPanel.tsx unless CSS-only is proven insufficient"
       ],
       "open_questions": [],
-      "blocked_on": [
-        171
-      ]
+      "blocked_on": []
     },
     {
       "id": 175,
@@ -7116,9 +7111,7 @@
         "Desktop generator rows unchanged"
       ],
       "open_questions": [],
-      "blocked_on": [
-        171
-      ]
+      "blocked_on": []
     },
     {
       "id": 176,
@@ -7155,9 +7148,7 @@
         "Locked state maintains 3:1 muted contrast with threshold shown inline"
       ],
       "open_questions": [],
-      "blocked_on": [
-        171
-      ]
+      "blocked_on": []
     },
     {
       "id": 177,
@@ -7199,9 +7190,7 @@
         "Desktop modals unchanged"
       ],
       "open_questions": [],
-      "blocked_on": [
-        171
-      ]
+      "blocked_on": []
     },
     {
       "id": 178,
@@ -7244,9 +7233,7 @@
           "owner": "engineer"
         }
       ],
-      "blocked_on": [
-        171
-      ]
+      "blocked_on": []
     },
     {
       "id": 179,
@@ -7276,9 +7263,7 @@
         "No other sections of the portrait mobile spec are modified"
       ],
       "open_questions": [],
-      "blocked_on": [
-        171
-      ]
+      "blocked_on": []
     },
     {
       "id": 180,

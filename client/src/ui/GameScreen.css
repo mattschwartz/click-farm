@@ -3946,3 +3946,78 @@ html[data-reduce-motion="true"] .verb-float-auto { display: none; }
 html[data-reduce-motion="true"] .purchase-pill,
 html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
 
+
+/* =============================================================================
+ * LANDSCAPE PHONE LAYOUT
+ *
+ * Two-column layout replacing the desktop three-column layout on phones in
+ * landscape orientation. See accepted proposal:
+ * .frames/sdlc/proposals/accepted/20260407-landscape-phone-layout.md
+ *
+ * Breakpoint targets all landscape phones (up to iPhone Pro Max) while
+ * excluding tablets (max-height: 500px guard) and portrait phones.
+ * =============================================================================
+ */
+
+@media (max-width: 932px) and (max-height: 500px) and (orientation: landscape) {
+
+  /* --- Grid shell (task #171) ----------------------------------------------- */
+
+  /* Redefine game-screen rows:
+   *   Row 1 — top bar (40px)
+   *   Row 2 — content area (flex, absorbs remaining height)
+   *   Row 3 — prestige row (36px, wired in task #176)
+   *
+   * Safe area padding compensates for notched-device insets:
+   *   - Dynamic Island creates a ~59px side inset in landscape (not a top inset).
+   *     The padding-left absorbs this on the notch side.
+   *   - Home indicator adds ~34px bottom inset.
+   *
+   * height: 100dvh is preserved from the base .game-screen rule. */
+  .game-screen {
+    grid-template-rows: 40px 1fr 36px;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Redefine game-body columns: verb column (160px) | content area (1fr).
+   *
+   * grid-template-rows: 48px (platform strip) | 1fr (generator list).
+   * The three children are placed explicitly below so PlatformPanel and
+   * generator-column stack vertically in column 2 without JSX changes.
+   *
+   * gap/padding zeroed — height budget is ~221px; every pixel counts. */
+  .game-body {
+    grid-template-columns: 160px 1fr;
+    grid-template-rows: 48px 1fr;
+    gap: 0;
+    padding: 0;
+    min-height: 0;
+  }
+
+  /* Verb column — left column, spans both content rows (actions fill height). */
+  .actions-column {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    min-height: 0;
+  }
+
+  /* Platform strip — top of content column (48px).
+   * PlatformPanel is the third child in the DOM (.game-body order:
+   * actions-column → generator-column → platform-panel), so explicit
+   * placement is required to reorder it above the generator list. */
+  .platform-panel {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 0;
+  }
+
+  /* Generator list — fills remaining content column height. */
+  .generator-column {
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 0;
+  }
+
+} /* end @media landscape phone */
