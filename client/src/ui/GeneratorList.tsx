@@ -357,6 +357,7 @@ function GeneratorRow({
         <CompactBuyButton
           costLabel={fmtCompact(buyCost)}
           canBuy={canBuy}
+          count={g.count}
           onBuy={() => onBuy(id)}
         />
         {/* SPEED — fires upgrade directly (task #150).
@@ -369,6 +370,7 @@ function GeneratorRow({
           maxedArrival={maxedArrival}
           breatheDelayMs={breatheDelayMs}
           canAfford={state.player.engagement >= upgradeCost}
+          level={g.level}
           onUpgrade={() => onUpgrade(id)}
           title={
             lvlState === 'dormant'
@@ -428,6 +430,7 @@ interface SpeedButtonProps {
   maxedArrival: boolean;
   breatheDelayMs: number;
   canAfford: boolean;
+  level: number;
   onUpgrade: () => void;
   title: string;
   ariaLabel: string;
@@ -439,6 +442,7 @@ function SpeedButton({
   maxedArrival,
   breatheDelayMs,
   canAfford,
+  level,
   onUpgrade,
   title,
   ariaLabel,
@@ -476,7 +480,7 @@ function SpeedButton({
         {lvlState === 'maxed' && (
           <span className="lvl-crown" aria-hidden>♛</span>
         )}
-        SPEED
+        SPEED{level > 1 ? ` ×${level}` : ''}
       </span>
       {lvlState === 'armed' && (
         <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
@@ -566,10 +570,11 @@ function BuyButton({ label, costLabel, canBuy, onBuy }: BuyButtonProps) {
 interface CompactBuyButtonProps {
   costLabel: string;
   canBuy: boolean;
+  count: number;
   onBuy: () => void;
 }
 
-function CompactBuyButton({ costLabel, canBuy, onBuy }: CompactBuyButtonProps) {
+function CompactBuyButton({ costLabel, canBuy, count, onBuy }: CompactBuyButtonProps) {
   const [shaking, setShaking] = useState(false);
   const [glowing, setGlowing] = useState(false);
 
@@ -591,7 +596,7 @@ function CompactBuyButton({ costLabel, canBuy, onBuy }: CompactBuyButtonProps) {
       aria-disabled={!canBuy}
       title={`Buy 1 unit for ${costLabel} engagement`}
     >
-      <span className="label">POWER</span>
+      <span className="label">POWER{count > 0 ? ` ×${count}` : ''}</span>
       {costLabel}
     </button>
   );
