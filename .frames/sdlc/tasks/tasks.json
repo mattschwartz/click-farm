@@ -1,5 +1,5 @@
 {
-  "next_id": 168,
+  "next_id": 171,
   "tasks": [
     {
       "id": 1,
@@ -6790,6 +6790,136 @@
           "owner": "architect"
         }
       ],
+      "blocked_on": []
+    },
+    {
+      "id": 168,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Create Spanish (es) locale files with AI-generated translations",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Using the English locale files created in task #167 as the base, produce a complete Spanish (es) translation of all ~180 strings. Use AI-assisted translation. The output is a set of es/ locale JSON files that mirror the en/ structure exactly.\n\nThis is the first non-English locale. Tone matters — the game is satirical and deadpan. Generator names (Local Car Dealership, Energy Drink Sponsorship), eulogy stanzas, and flavor text need to carry the satire in Spanish, not just be literal translations. When in doubt, favor natural Spanish phrasing over word-for-word fidelity.\n\nThe game-designer will review the output for tone in a follow-up task.",
+      "related_items": [
+        {
+          "ref": "client/src/locales/en/",
+          "purpose": "English base locale files to translate from. Created by task #167."
+        },
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "Original source of entity names and taglines — reference for understanding satirical intent behind names."
+        },
+        {
+          "ref": "client/src/ui/eulogy-templates.ts",
+          "purpose": "Original narrative stanzas — the tone benchmark for translated narrative text."
+        }
+      ],
+      "acceptance_criteria": [
+        "A complete set of Spanish locale files exists at client/src/locales/es/ mirroring the en/ namespace structure (game.json, ui.json, narrative.json)",
+        "Every key present in en/ has a corresponding Spanish translation in es/",
+        "Interpolation placeholders ({{threshold}}, {{name}}, etc.) are preserved exactly in Spanish strings",
+        "ICU plural rules use Spanish plural categories (one/other) correctly",
+        "Satirical names and flavor text are adapted for Spanish tone, not literally translated",
+        "The language switcher from task #167 can switch to Spanish and the full UI renders in Spanish without missing keys"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        167
+      ]
+    },
+    {
+      "id": 169,
+      "role": "game-designer",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Review Spanish locale files for tone, satire, and player feel",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The engineer produced AI-generated Spanish translations of all ~180 game strings (task #168). Review the es/ locale files for tone and satirical quality. The game's voice is deadpan satirical — brand deal names, generator taglines, eulogy stanzas, and flavor text must land in Spanish the way they land in English. Literal translations that lose the joke need to be rewritten.\n\nFocus areas: generator names and taglines (11 generators), platform names and taglines (4 platforms), brand deal names, creator kit flavor text, eulogy stanzas, and any UI copy that carries voice (e.g., the 'Nice.' dismiss button on offline gains).\n\nUI chrome (button labels like POWER, SPEED, HIRE) is less tone-sensitive but should still feel natural in Spanish.",
+      "related_items": [
+        {
+          "ref": "client/src/locales/es/game.json",
+          "purpose": "Spanish translations of entity names, taglines, brand deal names. Primary review target."
+        },
+        {
+          "ref": "client/src/locales/es/narrative.json",
+          "purpose": "Spanish eulogy stanzas and ceremony text. Tone-critical."
+        },
+        {
+          "ref": "client/src/locales/es/ui.json",
+          "purpose": "Spanish UI labels and descriptions. Lower priority but should feel natural."
+        },
+        {
+          "ref": "client/src/locales/en/",
+          "purpose": "English originals for comparison."
+        }
+      ],
+      "acceptance_criteria": [
+        "All satirical names (generators, platforms, brand deals) reviewed and rewritten where the joke doesn't land in Spanish",
+        "Eulogy stanzas reviewed — deadpan tone preserved, not overly formal or overly casual",
+        "Creator kit flavor text reviewed for tone",
+        "Any corrections written directly into the es/ locale JSON files",
+        "A brief summary of what was changed and why, noted in the task completion"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        168
+      ]
+    },
+    {
+      "id": 170,
+      "role": "architect",
+      "state": "plan",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Decompose landscape phone layout proposal into implementation tasks",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "The landscape phone layout proposal has been accepted (20260407-landscape-phone-layout.md). It defines a two-column layout for phones in landscape orientation — verb buttons left, generators + platform strip right — gated behind @media (max-width: 932px) and (max-height: 500px) and (orientation: landscape). The architect needs to decompose this into concrete implementation tasks for the engineer and ux-designer, sequenced with dependencies. Key implementation notes from the reviews: (1) prestige cluster should move inside <main> unconditionally with CSS switching between position:fixed (desktop) and grid-area in-flow (landscape), (2) PlatformPanel horizontal mode should be CSS-only, no compact prop, (3) CSS estimate is 500-600 lines not 300-400, (4) safe areas handled via padding-left: env(safe-area-inset-left) on game screen container, (5) pill label abbreviation uses show/hide two-span pattern inside media query.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260407-landscape-phone-layout.md",
+          "purpose": "The accepted proposal to decompose — contains full spec, zone map, per-section adaptations, code change summary (§12), and three reviewer commentaries with implementation guidance"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Main game screen component — prestige cluster placement change needed"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "3,860 lines, zero responsive queries — bulk of implementation lives here"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "Needs horizontal layout mode (CSS-only per architect/engineer alignment)"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "Verb column — compressed sizing via CSS"
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "Compact 40px landscape top bar"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Compressed 44px rows, pill label abbreviation"
+        },
+        {
+          "ref": "ux/mobile-layout.md",
+          "purpose": "Portrait mobile spec — §13 needs updating to remove 'rotate to portrait' prompt now that landscape has a real layout"
+        }
+      ],
+      "acceptance_criteria": [
+        "All implementation tasks filed with correct role, state, complexity, and sequencing (blocked_on where dependencies exist)",
+        "Tasks cover: CSS media query layout, prestige cluster move, top bar compression, verb column compression, platform strip horizontal mode, generator row compression, modal max-height constraints, touch interaction replacements, portrait spec §13 update",
+        "Each task is granular enough for exactly one role and one state to solve",
+        "CSS estimate reflects 500-600 lines per architect and engineer review feedback"
+      ],
+      "open_questions": [],
       "blocked_on": []
     }
   ]
