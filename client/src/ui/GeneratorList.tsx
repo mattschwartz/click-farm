@@ -31,7 +31,6 @@ import {
   type GeneratorCategory,
 } from './display.ts';
 import { fmtCompact } from './format.ts';
-import { UpgradeDrawer } from './UpgradeDrawer.tsx';
 
 interface Props {
   state: GameState;
@@ -48,7 +47,6 @@ interface Props {
    * Called when the upgrade drawer opens or closes. Parent uses this to dim
    * the platform panel while the drawer is open (per UX spec §1).
    */
-  onDrawerOpenChange?: (open: boolean) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -133,30 +131,7 @@ const BADGE_SHAPE: Record<GeneratorCategory, string> = {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, onBuyAutoclicker, viralGeneratorId, onDrawerOpenChange }: Props) {
-  // Upgrade drawer state — only one open at a time.
-  const [openDrawerId, setOpenDrawerId] = useState<GeneratorId | null>(null);
-  const [drawerAnchorTop, setDrawerAnchorTop] = useState<number>(0);
-
-  const handleOpenDrawer = (id: GeneratorId, anchorTop: number) => {
-    setOpenDrawerId(id);
-    setDrawerAnchorTop(anchorTop);
-  };
-
-  const handleCloseDrawer = () => {
-    setOpenDrawerId(null);
-  };
-
-  // Notify parent when drawer open state changes so it can dim the platform panel.
-  const prevDrawerOpen = useRef(false);
-  useEffect(() => {
-    const isOpen = openDrawerId !== null;
-    if (isOpen !== prevDrawerOpen.current) {
-      prevDrawerOpen.current = isOpen;
-      onDrawerOpenChange?.(isOpen);
-    }
-  }, [openDrawerId, onDrawerOpenChange]);
-
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, onBuyAutoclicker, viralGeneratorId }: Props) {
   // Build rows grouped by category in stable order.
   // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
   // excluded from the main list — they render in the Clout Shop modal instead.
@@ -206,27 +181,11 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, o
                 onUnlock={onUnlock}
                 onBuyAutoclicker={onBuyAutoclicker}
                 viralHalo={viralGeneratorId === id}
-                isDrawerOpen={openDrawerId === id}
-                onOpenDrawer={handleOpenDrawer}
               />
             ))}
           </div>
         );
       })}
-
-      {/* Upgrade drawer — portal-rendered over the platform column. */}
-      {openDrawerId && (
-        <UpgradeDrawer
-          id={openDrawerId}
-          generatorState={state.generators[openDrawerId]}
-          display={GENERATOR_DISPLAY[openDrawerId]}
-          staticData={staticData}
-          engagement={state.player.engagement}
-          anchorTop={drawerAnchorTop}
-          onUpgrade={() => onUpgrade(openDrawerId)}
-          onClose={handleCloseDrawer}
-        />
-      )}
     </section>
   );
 }
@@ -243,13 +202,6 @@ interface RowProps {
   onBuyAutoclicker: (verbId: GeneratorId) => void;
   /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
   viralHalo?: boolean;
-  /** True while this generator's upgrade drawer is open. */
-  isDrawerOpen?: boolean;
-  /**
-   * Called when the player taps the row or the ⬆ affordance to open the
-   * upgrade drawer. Passes viewport-relative anchorTop of the row.
-   */
-  onOpenDrawer?: (id: GeneratorId, anchorTop: number) => void;
 }
 
 function GeneratorRow({
@@ -261,8 +213,6 @@ function GeneratorRow({
   onUpgrade,
   onBuyAutoclicker,
   viralHalo,
-  isDrawerOpen,
-  onOpenDrawer,
 }: RowProps) {
   const g = state.generators[id];
   const def = staticData.generators[id];
@@ -386,9 +336,6 @@ function GeneratorRow({
   // Autoclicker cost — only relevant for manual-clickable generators.
   const autoCost = def.manual_clickable ? autoclickerBuyCost(id, g.autoclicker_count, staticData) : 0;
   const canBuyAuto = def.manual_clickable && state.player.engagement >= autoCost;
-  // Upgrading requires at least one unit. This can be 0 post-rebrand when a
-  // generator_unlock head-start grants owned=true without any units.
-  const canOpenDrawer = g.count > 0;
 
   // Lvl ↑ button affordance state — spec tracks distinct visuals
   // (dormant / armed / ready / maxed) so players can tell at a glance
@@ -398,30 +345,11 @@ function GeneratorRow({
   const lvlState = lvlStateUnconditional;
   const lvlDeficit = Math.max(0, upgradeCost - state.player.engagement);
 
-  const openDrawer = () => {
-    if (!canOpenDrawer) return;
-    if (!onOpenDrawer) return;
-    const rect = rowRef.current?.getBoundingClientRect();
-    onOpenDrawer(id, rect?.top ?? 100);
-  };
-
-  const drawerOpenClass = isDrawerOpen ? ' drawer-open' : '';
   return (
     <div
       ref={rowRef}
-      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}${viralHalo ? ' viral-halo' : ''}${drawerOpenClass}`}
+      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}${viralHalo ? ' viral-halo' : ''}`}
       style={style}
-      onClick={openDrawer}
-      role={canOpenDrawer ? 'button' : undefined}
-      tabIndex={canOpenDrawer ? 0 : undefined}
-      onKeyDown={canOpenDrawer ? (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          openDrawer();
-        }
-      } : undefined}
-      aria-expanded={canOpenDrawer ? isDrawerOpen : undefined}
-      aria-label={canOpenDrawer ? `${display.name} — tap to view upgrade options` : undefined}
     >
       <div className="generator-name">
         {display.name}
@@ -440,7 +368,6 @@ function GeneratorRow({
         <SpeedButton
           lvlState={lvlState}
           maxedArrival={maxedArrival}
-          isDrawerOpen={isDrawerOpen}
           breatheDelayMs={breatheDelayMs}
           canAfford={state.player.engagement >= upgradeCost}
           onUpgrade={() => onUpgrade(id)}
@@ -500,7 +427,6 @@ function hexToRgbPill(hex: string): string {
 interface SpeedButtonProps {
   lvlState: LvlBtnState;
   maxedArrival: boolean;
-  isDrawerOpen?: boolean;
   breatheDelayMs: number;
   canAfford: boolean;
   onUpgrade: () => void;
@@ -512,7 +438,6 @@ interface SpeedButtonProps {
 function SpeedButton({
   lvlState,
   maxedArrival,
-  isDrawerOpen,
   breatheDelayMs,
   canAfford,
   onUpgrade,
@@ -538,7 +463,7 @@ function SpeedButton({
 
   return (
     <button
-      className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${isDrawerOpen ? ' active' : ''}${maxedArrival ? ' lvl-maxed-arrival' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}`}
+      className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${maxedArrival ? ' lvl-maxed-arrival' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}`}
       onClick={handleClick}
       disabled={lvlState === 'dormant' || lvlState === 'maxed'}
       style={{ '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties}

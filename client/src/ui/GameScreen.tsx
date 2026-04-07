@@ -197,9 +197,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
   // Offline modal moved to the App-level start gate (welcome back variant).
   // The standalone OfflineGainsModal is no longer rendered here.
 
-  // Upgrade drawer open state — used to dim the platform panel per spec §1.
-  const [upgradeDrawerOpen, setUpgradeDrawerOpen] = useState(false);
-
   // Prestige cluster — two-button affordance bottom-right (spec §2.1–2.3).
   // Replaces the old single rebrand-corner button and window.confirm.
   const rebrandPreview = cloutForRebrand(state.player.total_followers);
@@ -324,7 +321,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               onUnlock={unlock}
               onBuyAutoclicker={buyAutoclicker}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
-              onDrawerOpenChange={setUpgradeDrawerOpen}
             />
             <CreatorKitPanel
               state={state}
@@ -336,7 +332,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
             state={state}
             staticData={STATIC_DATA}
             viralPlatformId={viralActive?.source_platform_id ?? null}
-            drawerDimmed={upgradeDrawerOpen}
           />
         </div>
       </main>

@@ -26,10 +26,9 @@ interface Props {
    * When true, dims the platform panel to 40% opacity while the upgrade
    * drawer is open (per UX spec ux/upgrade-curve-drawer-spec.md §1).
    */
-  drawerDimmed?: boolean;
 }
 
-export function PlatformPanel({ state, staticData, viralPlatformId, drawerDimmed }: Props) {
+export function PlatformPanel({ state, staticData, viralPlatformId }: Props) {
   // Compute follower rates per platform for the rate indicators (UX §7.1).
   const engagementRates = computeAllGeneratorEffectiveRates(state, staticData);
   const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
@@ -51,7 +50,7 @@ export function PlatformPanel({ state, staticData, viralPlatformId, drawerDimmed
   );
 
   return (
-    <aside className={`platform-panel${drawerDimmed ? ' drawer-dimmed' : ''}`}>
+    <aside className="platform-panel">
       {PLATFORM_ORDER.map((id) => {
         const p = state.platforms[id];
         const threshold = staticData.unlockThresholds.platforms[id] ?? 0;
