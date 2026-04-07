@@ -267,7 +267,7 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   display: inline-flex;
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-left: 1px solid rgba(255, 255, 255, 0.3);
   border-right: none;
@@ -601,7 +601,7 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   gap: 8px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+
   padding: 1px 12px 1px 16px;
   width: 100%;
   box-sizing: border-box;
@@ -893,7 +893,7 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
 .generator-list {
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 16px;
   box-shadow:
@@ -1626,7 +1626,7 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   inset: 0;
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+
   z-index: 10;
   display: flex;
   align-items: center;
@@ -1711,7 +1711,6 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   justify-content: center;
   background: rgba(var(--palette-white-rgb), 0.72);
   backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
   animation: fade-in 200ms ease-out;
 }
 
@@ -2132,7 +2131,7 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
   justify-content: center;
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+
   animation: fade-in 300ms ease-out;
 }
 
@@ -3182,7 +3181,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   justify-content: center;
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+
   animation: fade-in 200ms ease-out;
 }
 
@@ -3717,7 +3716,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
     box-shadow: none;
     background: rgba(255, 255, 255, 0.55);
     backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+  
     animation: fade-in 200ms ease-out;
   }
 
@@ -4900,7 +4899,7 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     background: rgba(255, 255, 255, 0.55);
     animation: fade-in 200ms ease-out;
     backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+  
   }
 
   /* Phase 1 — Threshold Review: compress for ~380px viewport */

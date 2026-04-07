@@ -157,8 +157,13 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
   } = useGame();
 
   // Notify parent of offline result on mount (for the start gate to show).
+  // When the result is handed off to App, clear it locally so GameScreen's
+  // own inline OfflineGainsModal doesn't also fire for the same result.
   useEffect(() => {
-    onOfflineResult?.(offlineResult);
+    if (onOfflineResult) {
+      onOfflineResult(offlineResult);
+      clearOfflineResult();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // fire once on mount
 
