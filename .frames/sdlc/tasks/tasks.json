@@ -1,5 +1,5 @@
 {
-  "next_id": 180,
+  "next_id": 181,
   "tasks": [
     {
       "id": 1,
@@ -7279,6 +7279,48 @@
       "blocked_on": [
         171
       ]
+    },
+    {
+      "id": 180,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Implement Rush Buy ignition switch visual treatment",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Replace the flat Rush Buy button styling with the ignition switch treatment from the accepted proposal. On press: button depresses, background floods solid gold, text goes white, outer glow halo radiates. Each sweep purchase triggers a brightness pulse via filter transition. Glow intensifies over ~3s via CSS animation. On release: spring-back with 200ms afterglow drain. Resting state gets raised-slab depth shadow matching verb button physicality.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260407-rush-buy-ignition.md",
+          "purpose": "Full spec — sections 2-9 define every visual state, CSS snippets included. Section 10 lists exact file changes."
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Lines 906-960: current Rush Buy CSS to replace. ~60 new lines replacing ~55 existing."
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Lines 699-767: BuyAllButton component. (1) Remove '(HOLD)' from label. (2) Add sweepPurchaseSeq to BuyAllButtonProps and thread from GeneratorList. (3) useEffect on sweepPurchaseSeq to toggle buy-all-pulse class via requestAnimationFrame."
+        },
+        {
+          "ref": "proposals/accepted/20260406-action-button-physicality.md",
+          "purpose": "Reference for the raised-slab depth shadow language — Rush Buy button adopts same visual grammar."
+        }
+      ],
+      "acceptance_criteria": [
+        "Resting state has 3px depth shadow with spring-back transition (cubic-bezier overshoot)",
+        "Sweeping state: solid gold background, white text, 4-layer box-shadow (depth + ambient + inner glow + outer glow), depressed 2px",
+        "Each sweep purchase triggers brightness(1.3) spike via filter transition (instant on, 80ms ease-out decay)",
+        "Glow ramp animation intensifies outer glow over 3s (animation-fill-mode: forwards)",
+        "Release: spring-back to resting position, 200ms background/color drain from gold to tint",
+        "Label reads 'RUSH BUY' at rest, stays 'RUSH BUY' during sweep (no text change)",
+        "Disabled state unchanged: transparent, muted, no depth shadow",
+        "Reduced motion: both @media (prefers-reduced-motion) and html[data-reduce-motion] suppress glow ramp animation, filter transition, spring-back transition, and power-down drain. Background color change preserved.",
+        "All existing sweep tests pass (BuyAllButton.sweep.test.ts)"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }
