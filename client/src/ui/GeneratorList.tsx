@@ -167,6 +167,7 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutocl
         canAfford={sweepCanAfford}
         onStartSweep={onStartSweep}
         onCancelSweep={onCancelSweep}
+        sweepPurchaseSeq={sweepPurchaseSeq}
       />
       {CATEGORY_ORDER.map((cat) => {
         const ids = byCategory.get(cat) ?? [];
@@ -699,9 +700,9 @@ function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit 
 // BuyAllButton helpers — exported for unit tests
 // ---------------------------------------------------------------------------
 
-/** Label text for the BUY ALL button given current sweep state. */
-export function buyAllLabel(sweepActive: boolean): string {
-  return sweepActive ? 'BUYING...' : 'RUSH BUY (HOLD)';
+/** Label text for the BUY ALL button — always 'RUSH BUY' (§7 ignition switch). */
+export function buyAllLabel(_sweepActive: boolean): string {
+  return 'RUSH BUY';
 }
 
 /** Whether the BUY ALL button should be disabled. */
@@ -718,11 +719,34 @@ interface BuyAllButtonProps {
   canAfford: boolean;
   onStartSweep: () => void;
   onCancelSweep: () => void;
+  /** Monotonic counter — increments on each sweep purchase for pulse trigger. */
+  sweepPurchaseSeq: number;
 }
 
-function BuyAllButton({ sweepActive, canAfford, onStartSweep, onCancelSweep }: BuyAllButtonProps) {
+function BuyAllButton({ sweepActive, canAfford, onStartSweep, onCancelSweep, sweepPurchaseSeq }: BuyAllButtonProps) {
   const disabled = buyAllDisabled(sweepActive, canAfford);
   const label = buyAllLabel(sweepActive);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const prevSeq = useRef(0);
+
+  // Purchase pulse — toggle buy-all-pulse class on each sweep purchase (§4).
+  // Add class instantly (brightness spike via transition: 0ms), remove next
+  // frame so the base 80ms ease-out transition decays the brightness back.
+  useEffect(() => {
+    if (sweepPurchaseSeq !== prevSeq.current && sweepActive) {
+      prevSeq.current = sweepPurchaseSeq;
+      const el = btnRef.current;
+      if (!el) return;
+      el.classList.add('buy-all-pulse');
+      const raf = requestAnimationFrame(() => {
+        el.classList.remove('buy-all-pulse');
+      });
+      return () => {
+        cancelAnimationFrame(raf);
+        el.classList.remove('buy-all-pulse');
+      };
+    }
+  }, [sweepPurchaseSeq, sweepActive]);
 
   const handleDown = () => {
     if (disabled || sweepActive) return;
@@ -749,6 +773,7 @@ function BuyAllButton({ sweepActive, canAfford, onStartSweep, onCancelSweep }: B
 
   return (
     <button
+      ref={btnRef}
       type="button"
       className={`buy-all-btn${sweepActive ? ' buy-all-btn-sweeping' : ''}${disabled ? ' buy-all-btn-empty' : ''}`}
       onPointerDown={handleDown}

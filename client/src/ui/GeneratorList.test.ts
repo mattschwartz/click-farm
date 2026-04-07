@@ -96,12 +96,12 @@ describe('shouldApplyManyReady', () => {
 // ---------------------------------------------------------------------------
 
 describe('buyAllLabel', () => {
-  it('returns BUYING... when sweep is active', () => {
-    expect(buyAllLabel(true)).toBe('BUYING...');
+  it('returns RUSH BUY when sweep is active (§7 — label stable during sweep)', () => {
+    expect(buyAllLabel(true)).toBe('RUSH BUY');
   });
 
-  it('returns RUSH BUY (HOLD) when idle', () => {
-    expect(buyAllLabel(false)).toBe('RUSH BUY (HOLD)');
+  it('returns RUSH BUY when idle (§7 — no HOLD hint, physicality communicates pressability)', () => {
+    expect(buyAllLabel(false)).toBe('RUSH BUY');
   });
 });
 

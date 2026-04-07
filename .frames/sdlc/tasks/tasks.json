@@ -7284,7 +7284,7 @@
       "id": 180,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Implement Rush Buy ignition switch visual treatment",
       "requester": "ux-designer",
@@ -7320,7 +7320,8 @@
         "All existing sweep tests pass (BuyAllButton.sweep.test.ts)"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     }
   ]
 }

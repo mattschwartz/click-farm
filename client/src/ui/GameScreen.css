@@ -901,7 +901,7 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   }
 }
 
-/* --- RUSH BUY button (auto-buy sweep trigger, §1 of accepted proposal) --- */
+/* --- RUSH BUY ignition switch (proposal: 20260407-rush-buy-ignition.md) --- */
 
 .buy-all-btn {
   display: block;
@@ -921,14 +921,24 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   user-select: none;
   -webkit-user-select: none;
   box-sizing: border-box;
-  transition: opacity 80ms ease-out;
+  /* Raised-slab depth shadow — matches verb button physicality (§2). */
+  box-shadow:
+    0 3px 0 0 rgba(var(--glow-halo-rgb), 0.4),
+    0 3px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(0);
+  /* Spring-back transition with cubic-bezier overshoot (§2, §6). */
+  transition: transform 100ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 100ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 60ms ease-in,
+              border-color 60ms ease-in,
+              color 60ms ease-in;
 }
 
 .buy-all-btn:hover:not(:disabled) {
   background: rgba(var(--glow-halo-rgb), 0.20);
 }
 
-/* Disabled state — nothing affordable. */
+/* Disabled state — nothing affordable. No depth shadow (§8). */
 .buy-all-btn.buy-all-btn-empty,
 .buy-all-btn:disabled {
   background: transparent;
@@ -936,27 +946,101 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   color: var(--text-receded, rgba(0, 0, 0, 0.35));
   cursor: default;
   pointer-events: none;
+  box-shadow: none;
+  transform: none;
 }
 
-/* Sweeping state — pulsing opacity, "STOP" label. */
+/* Sweeping state — ignition switch ON (§3). */
 .buy-all-btn-sweeping {
-  animation: buyAllPulse 400ms ease-in-out infinite;
+  /* Depress 2px */
+  transform: translateY(2px);
+  /* Solid gold background, text color unchanged */
+  background: var(--accent-gold, #A0730E);
+  border-color: rgba(255, 200, 50, 0.6);
+  /* 4-layer shadow: depth slab (compressed) + ambient + inner glow + outer glow (§3) */
+  box-shadow:
+    0 1px 0 0 rgba(var(--glow-halo-rgb), 0.4),
+    0 1px 4px rgba(0, 0, 0, 0.06),
+    0 0 12px 2px rgba(var(--glow-halo-rgb), 0.35),
+    0 0 24px 4px rgba(var(--glow-halo-rgb), 0.15);
   cursor: pointer;
+  /* Purchase pulse decay — 80ms ease-out from brightness spike (§4). */
+  filter: brightness(1.0);
+  transition: transform 100ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 100ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 60ms ease-in,
+              border-color 60ms ease-in,
+              color 60ms ease-in,
+              filter 80ms ease-out;
+  /* Glow ramp — outer glow intensifies over ~3s (§5). */
+  animation: buy-all-glow-ramp 3s ease-in forwards;
 }
 
-@keyframes buyAllPulse {
-  0%, 100% { opacity: 1.0; }
-  50%       { opacity: 0.8; }
+/* Purchase pulse — instant brightness spike, decays via base transition (§4). */
+.buy-all-pulse {
+  filter: brightness(1.3);
+  transition: transform 100ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 100ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 60ms ease-in,
+              border-color 60ms ease-in,
+              color 60ms ease-in,
+              filter 0ms;
 }
 
+/* Glow ramp keyframes — outer glow intensifies from 12px→20px, 24px→40px (§5). */
+@keyframes buy-all-glow-ramp {
+  0%   { box-shadow: 0 1px 0 0 rgba(var(--glow-halo-rgb), 0.4),
+                     0 1px 4px rgba(0, 0, 0, 0.06),
+                     0 0 12px 2px rgba(var(--glow-halo-rgb), 0.35),
+                     0 0 24px 4px rgba(var(--glow-halo-rgb), 0.15); }
+  100% { box-shadow: 0 1px 0 0 rgba(var(--glow-halo-rgb), 0.4),
+                     0 1px 4px rgba(0, 0, 0, 0.06),
+                     0 0 20px 4px rgba(var(--glow-halo-rgb), 0.45),
+                     0 0 40px 8px rgba(var(--glow-halo-rgb), 0.25); }
+}
+
+/* Power-down drain — 200ms afterglow on release (§6).
+   The resting .buy-all-btn transitions handle the spring-back and color drain
+   via its existing transition shorthand. Override here only for the drain timing. */
+.buy-all-btn:not(.buy-all-btn-sweeping):not(.buy-all-btn-empty):not(:disabled) {
+  transition: transform 100ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 100ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 200ms ease-out,
+              border-color 200ms ease-out,
+              color 200ms ease-out;
+}
+
+/* Reduced motion — suppress glow ramp, filter pulse, spring-back, drain (§9). */
 @media (prefers-reduced-motion: reduce) {
+  .buy-all-btn {
+    transition: none;
+  }
+  .buy-all-btn:not(.buy-all-btn-sweeping):not(.buy-all-btn-empty):not(:disabled) {
+    transition: none;
+  }
   .buy-all-btn-sweeping {
     animation: none;
+    transition: none;
+  }
+  .buy-all-pulse {
+    transition: none;
+    filter: brightness(1.0);
   }
 }
 
+html[data-reduce-motion="true"] .buy-all-btn {
+  transition: none;
+}
+html[data-reduce-motion="true"] .buy-all-btn:not(.buy-all-btn-sweeping):not(.buy-all-btn-empty):not(:disabled) {
+  transition: none;
+}
 html[data-reduce-motion="true"] .buy-all-btn-sweeping {
   animation: none;
+  transition: none;
+}
+html[data-reduce-motion="true"] .buy-all-pulse {
+  transition: none;
+  filter: brightness(1.0);
 }
 
 /* --- Sweep-hit scale pop — 64ms ease-out on each sweep purchase --- */
