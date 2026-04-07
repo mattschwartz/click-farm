@@ -43,7 +43,7 @@ interface Props {
   viralGeneratorId?: GeneratorId | null;
   /** Whether an auto-buy sweep is currently running. */
   sweepActive: boolean;
-  /** Count of affordable purchases right now (live). */
+  /** Whether at least one purchase is affordable right now (live). */
   sweepCanAfford: boolean;
   /** Start the auto-buy sweep. */
   onStartSweep: () => void;
@@ -733,6 +733,20 @@ function BuyAllButton({ sweepActive, canAfford, onStartSweep, onCancelSweep }: B
     if (sweepActive) onCancelSweep();
   };
 
+  // Keyboard: Space/Enter keydown starts, keyup stops (mirrors pointer hold).
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      handleDown();
+    }
+  };
+
+  const handleKeyUp = (e: React.KeyboardEvent) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      handleUp();
+    }
+  };
+
   return (
     <button
       type="button"
@@ -741,6 +755,8 @@ function BuyAllButton({ sweepActive, canAfford, onStartSweep, onCancelSweep }: B
       onPointerUp={handleUp}
       onPointerLeave={handleUp}
       onPointerCancel={handleUp}
+      onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
       disabled={disabled}
       aria-label={sweepActive ? 'Buying — release to stop' : 'Hold to rush buy all affordable upgrades'}
       title={sweepActive ? 'Release to stop' : 'Hold to rush buy'}

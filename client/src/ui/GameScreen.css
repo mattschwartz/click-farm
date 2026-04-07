@@ -2035,6 +2035,10 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   font-size: 12px;
 }
 
+.ceremony-column-row-highlight {
+  opacity: 1;
+}
+
 .ceremony-col-value-highlight {
   color: #FFD66B;
   font-weight: 700;

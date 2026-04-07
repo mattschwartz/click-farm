@@ -518,6 +518,9 @@ export function createDriver(options: DriverOptions): GameDriver {
   return {
     getState: () => state,
 
+    /** @internal Test-only: replace the driver's state wholesale. */
+    _applyState(newState: GameState) { state = newState; notify(); },
+
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);

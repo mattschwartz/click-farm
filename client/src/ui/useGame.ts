@@ -59,7 +59,7 @@ export interface UseGameResult {
   resetGame: () => void;
   /** Whether an auto-buy sweep is currently running. */
   sweepActive: boolean;
-  /** Count of currently affordable purchases (live — updates as state changes). */
+  /** Whether at least one purchase is affordable right now (live). */
   sweepCanAfford: boolean;
   /** Start the auto-buy sweep (no-op if already active). Plays sweep-start sound. */
   startSweep: () => void;

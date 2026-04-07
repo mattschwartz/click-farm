@@ -428,11 +428,8 @@ describe('driver — persistence', () => {
         viral_stunts: { ...driver.getState().generators.viral_stunts, owned: true },
       },
     });
-    // Fallback if _applyState isn't exposed: just verify canRebrand
-    if (!driver.canRebrand()) {
-      // Skip test if we can't inject state — file a task to fix test infrastructure
-      return;
-    }
+    // Fail deterministically if setup could not make the player rebrand-eligible.
+    expect(driver.canRebrand()).toBe(true);
 
     const beforeClout = driver.getState().player.clout;
     const beforeRebrandCount = driver.getState().player.rebrand_count;
