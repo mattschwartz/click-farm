@@ -718,7 +718,7 @@ export function migrateV12toV13(data: SaveData): SaveData {
       ...state,
       player: {
         ...state.player,
-        lifetime_engagement: (state.player as Record<string, unknown>).lifetime_engagement as number ?? 0,
+        lifetime_engagement: (state.player as unknown as Record<string, unknown>).lifetime_engagement as number ?? 0,
       },
     },
   };
@@ -737,7 +737,7 @@ export function migrateV13toV14(data: SaveData): SaveData {
       ...state,
       player: {
         ...state.player,
-        has_started_run: (state.player as Record<string, unknown>).has_started_run as boolean ?? true,
+        has_started_run: (state.player as unknown as Record<string, unknown>).has_started_run as boolean ?? true,
       },
     },
   };

@@ -205,7 +205,7 @@ describe('checkGeneratorUnlocks', () => {
 
   it('auto-unlocks all generators when followers are high enough', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
-    const result = checkGeneratorUnlocks(state.generators, 1_000_000, STATIC_DATA);
+    const result = checkGeneratorUnlocks(state.generators, 5_000_000, STATIC_DATA);
     // All threshold-based generators auto-unlock
     expect(result.selfies.owned).toBe(true);
     expect(result.livestreams.owned).toBe(true);
