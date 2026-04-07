@@ -16,7 +16,6 @@ export interface UseGameResult {
   click: (verbId: GeneratorId) => void;
   buy: (id: GeneratorId) => void;
   upgrade: (id: GeneratorId) => void;
-  unlock: (verbId: GeneratorId) => void;
   buyAutoclicker: (verbId: GeneratorId) => void;
   saveNow: () => void;
   /** Offline gains captured at driver creation, if any. */
@@ -190,11 +189,6 @@ export function useGame(): UseGameResult {
       upgrade: (id: GeneratorId) => {
         const before = driver.getState();
         driver.upgrade(id);
-        if (driver.getState() !== before) playPurchase();
-      },
-      unlock: (verbId: GeneratorId) => {
-        const before = driver.getState();
-        driver.unlock(verbId);
         if (driver.getState() !== before) playPurchase();
       },
       buyAutoclicker: (verbId: GeneratorId) => {

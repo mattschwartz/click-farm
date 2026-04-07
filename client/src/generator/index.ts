@@ -100,12 +100,10 @@ export function autoclickerBuyCost(
  * Returns an updated generators map with any newly-unlocked generators based
  * on the current total follower count.
  *
- * Behavior splits by `manual_clickable` (per manual-action-ladder arch spec):
- *   - `manual_clickable: false` (passive-only): threshold-met → owned=true
- *     (today's behavior, unchanged).
- *   - `manual_clickable: true` (ladder verbs): threshold-met does NOT auto-flip
- *     owned. The player must pay the Unlock cost via `unlockGenerator`. The UI
- *     shows a ghost slot when threshold-met && !owned.
+ * All generators auto-unlock when the follower threshold is met — no purchase
+ * required. The player's first decision is what to invest in, not whether to
+ * unlock. Post-prestige generators (no entry in unlockThresholds) are unaffected
+ * — they still unlock only via Clout upgrades.
  *
  * Returns the same reference when nothing changes so callers can use reference
  * equality to skip unnecessary re-renders.
@@ -124,9 +122,6 @@ export function checkGeneratorUnlocks(
       // Missing entry = generator is never unlocked by follower threshold
       // (e.g. post-prestige generators, which unlock via Clout upgrades).
       if (threshold !== undefined && totalFollowers >= threshold) {
-        // Manual-clickable generators require an explicit Unlock purchase —
-        // threshold-met only makes them eligible (ghost-slot visible in UI).
-        if (staticData.generators[id].manual_clickable) continue;
         next[id] = { ...generators[id], owned: true };
         changed = true;
       }

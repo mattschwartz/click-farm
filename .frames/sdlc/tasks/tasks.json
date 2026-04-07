@@ -1,5 +1,5 @@
 {
-  "next_id": 164,
+  "next_id": 165,
   "tasks": [
     {
       "id": 1,
@@ -6591,6 +6591,40 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-06"
+    },
+    {
+      "id": 164,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Remove dead unlockGenerator / canUnlockGenerator code and GhostSlot unlock wiring",
+      "requester": "game-designer",
+      "complexity": "haiku",
+      "overview": "Generators now auto-unlock when follower threshold is met. The manual unlock path is dead code: unlockGenerator(), canUnlockGenerator() in generator/index.ts, the GhostSlot onUnlock prop and its awakened/canAfford/cost logic in ActionsColumn.tsx, and any related tests. Clean it all out.",
+      "related_items": [
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "unlockGenerator and canUnlockGenerator functions — delete"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "GhostSlot onUnlock prop, ghostCost/ghostCanAfford logic — simplify or remove"
+        },
+        {
+          "ref": "client/src/generator/index.test.ts",
+          "purpose": "Any tests for unlockGenerator/canUnlockGenerator — delete"
+        }
+      ],
+      "acceptance_criteria": [
+        "unlockGenerator and canUnlockGenerator functions deleted from generator/index.ts",
+        "GhostSlot component simplified — no onUnlock prop, no cost/canAfford logic",
+        "No references to unlockGenerator or canUnlockGenerator remain in src/",
+        "Related tests removed",
+        "All tests pass, build succeeds"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }

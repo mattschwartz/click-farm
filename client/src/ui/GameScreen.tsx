@@ -132,7 +132,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     click,
     buy,
     upgrade,
-    unlock,
     buyAutoclicker,
     offlineResult,
     clearOfflineResult,
@@ -383,7 +382,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
             state={state}
             staticData={STATIC_DATA}
             onClickVerb={click}
-            onUnlockVerb={unlock}
             showVerbFloats={settings.showVerbFloats}
           />
           <div className="generator-column">
@@ -392,7 +390,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               staticData={STATIC_DATA}
               onBuy={buy}
               onUpgrade={upgrade}
-              onUnlock={unlock}
               onBuyAutoclicker={buyAutoclicker}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
               sweepActive={sweepActive}

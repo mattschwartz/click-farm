@@ -420,11 +420,10 @@ interface ActionsColumnProps {
   state: GameState;
   staticData: StaticData;
   onClickVerb: (verbId: GeneratorId) => void;
-  onUnlockVerb: (verbId: GeneratorId) => void;
   showVerbFloats?: boolean;
 }
 
-export function ActionsColumn({ state, staticData, onClickVerb, onUnlockVerb, showVerbFloats = true }: ActionsColumnProps) {
+export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats = true }: ActionsColumnProps) {
   // Owned ladder verbs (live buttons), sorted by cooldown ascending
   // (shortest cooldown at top, longest at bottom).
   const liveVerbs = useMemo(() =>
@@ -455,9 +454,6 @@ export function ActionsColumn({ state, staticData, onClickVerb, onUnlockVerb, sh
     ? staticData.unlockThresholds.generators[ghostVerb] ?? Infinity
     : Infinity;
   const ghostAwakened = ghostVerb !== null && state.player.total_followers >= ghostThreshold;
-  const ghostCost = ghostVerb ? staticData.generators[ghostVerb].base_buy_cost : 0;
-  const ghostCanAfford = ghostVerb !== null && state.player.engagement >= ghostCost;
-
   return (
     <section className="actions-column">
       <div className="actions-scroll-region">
@@ -478,10 +474,10 @@ export function ActionsColumn({ state, staticData, onClickVerb, onUnlockVerb, sh
           <GhostSlot
             verbId={ghostVerb}
             threshold={ghostThreshold}
-            canAfford={ghostCanAfford}
-            cost={ghostCost}
+            canAfford={false}
+            cost={0}
             isAwakened={ghostAwakened}
-            onUnlock={onUnlockVerb}
+            onUnlock={() => {}}
           />
         )}
       </div>

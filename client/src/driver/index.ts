@@ -24,7 +24,6 @@ import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
 import {
   buyGenerator,
   upgradeGenerator,
-  unlockGenerator,
   buyAutoclicker,
   generatorBuyCost,
   generatorUpgradeCost,
@@ -137,7 +136,6 @@ export interface GameDriver {
   buy(generatorId: GeneratorId): void;
   upgrade(generatorId: GeneratorId): void;
   /** Unlock a manual-clickable generator (pays base_buy_cost, flips owned=true). */
-  unlock(verbId: GeneratorId): void;
   /** Buy one autoclicker for a manual-clickable generator. */
   buyAutoclicker(verbId: GeneratorId): void;
   /** Force a single tick using the driver's clock. Test/debug utility. */
@@ -518,12 +516,6 @@ export function createDriver(options: DriverOptions): GameDriver {
     upgrade(generatorId) {
       runAction('upgrade', { generatorId }, () => {
         applyState(upgradeGenerator(state, generatorId, staticData));
-      });
-    },
-
-    unlock(verbId) {
-      runAction('unlock', { verbId }, () => {
-        applyState(unlockGenerator(state, verbId, staticData));
       });
     },
 

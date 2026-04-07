@@ -153,11 +153,10 @@ describe('checkGeneratorUnlocks', () => {
     expect(result.hot_takes.owned).toBe(false);
   });
 
-  it('does NOT auto-unlock selfies (manual_clickable, threshold 100)', () => {
+  it('auto-unlocks selfies at threshold 100', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
-    // selfies is manual_clickable=true, so threshold-met does NOT auto-flip owned.
     const result = checkGeneratorUnlocks(state.generators, 100, STATIC_DATA);
-    expect(result.selfies.owned).toBe(false);
+    expect(result.selfies.owned).toBe(true);
   });
 
   it('auto-unlocks chirps at threshold 0 (chirps is manual_clickable but starts owned)', () => {
@@ -204,28 +203,21 @@ describe('checkGeneratorUnlocks', () => {
     }
   });
 
-  it('does NOT auto-unlock manual-clickable ladder verbs at any follower count', () => {
+  it('auto-unlocks all generators when followers are high enough', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     const result = checkGeneratorUnlocks(state.generators, 1_000_000, STATIC_DATA);
-    // selfies, livestreams, podcasts, viral_stunts — all manual_clickable
-    expect(result.selfies.owned).toBe(false);
-    expect(result.livestreams.owned).toBe(false);
-    expect(result.podcasts.owned).toBe(false);
-    expect(result.viral_stunts.owned).toBe(false);
-  });
-
-  it('unlocks all passive-only generators simultaneously when followers are high', () => {
-    const state = createInitialGameState(STATIC_DATA, T0);
-    const result = checkGeneratorUnlocks(state.generators, 100_000, STATIC_DATA);
-    // Passive-only auto-unlock
+    // All threshold-based generators auto-unlock
+    expect(result.selfies.owned).toBe(true);
+    expect(result.livestreams.owned).toBe(true);
+    expect(result.podcasts.owned).toBe(true);
+    expect(result.viral_stunts.owned).toBe(true);
     expect(result.memes.owned).toBe(true);
     expect(result.hot_takes.owned).toBe(true);
     expect(result.tutorials.owned).toBe(true);
-    // Manual-clickable do NOT auto-unlock
-    expect(result.selfies.owned).toBe(false);
-    expect(result.livestreams.owned).toBe(false);
-    expect(result.podcasts.owned).toBe(false);
-    expect(result.viral_stunts.owned).toBe(false);
+    // Post-prestige generators still NOT auto-unlocked (no threshold entry)
+    expect(result.ai_slop.owned).toBe(false);
+    expect(result.deepfakes.owned).toBe(false);
+    expect(result.algorithmic_prophecy.owned).toBe(false);
   });
 
   it('does not reset already-owned generators', () => {

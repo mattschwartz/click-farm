@@ -34,8 +34,6 @@ interface Props {
   staticData: StaticData;
   onBuy: (id: GeneratorId) => void;
   onUpgrade: (id: GeneratorId) => void;
-  /** Unlock a manual-clickable generator (pays base_buy_cost, flips owned). */
-  onUnlock: (id: GeneratorId) => void;
   /** Purchase an autoclicker for a manual-clickable verb. */
   onBuyAutoclicker: (verbId: GeneratorId) => void;
   /** When set, the matching row gets a pulsing gold halo (UX §9.2 Phase 1–2). */
@@ -124,7 +122,7 @@ export function shouldApplyManyReady(readyCount: number): boolean {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, onBuyAutoclicker, viralGeneratorId, sweepActive, sweepPreviewCount, onStartSweep, onCancelSweep }: Props) {
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutoclicker, viralGeneratorId, sweepActive, sweepPreviewCount, onStartSweep, onCancelSweep }: Props) {
   // Build rows grouped by category in stable order.
   // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
   // excluded from the main list — they render in the Clout Shop modal instead.
@@ -176,7 +174,6 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, o
                 staticData={staticData}
                 onBuy={onBuy}
                 onUpgrade={onUpgrade}
-                onUnlock={onUnlock}
                 onBuyAutoclicker={onBuyAutoclicker}
                 viralHalo={viralGeneratorId === id}
               />
@@ -196,7 +193,6 @@ interface RowProps {
   staticData: StaticData;
   onBuy: (id: GeneratorId) => void;
   onUpgrade: (id: GeneratorId) => void;
-  onUnlock: (id: GeneratorId) => void;
   onBuyAutoclicker: (verbId: GeneratorId) => void;
   /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
   viralHalo?: boolean;
@@ -207,7 +203,6 @@ function GeneratorRow({
   state,
   staticData,
   onBuy,
-  onUnlock,
   onUpgrade,
   onBuyAutoclicker,
   viralHalo,
@@ -308,8 +303,8 @@ function GeneratorRow({
     const def = staticData.generators[id];
     const buyCost = def.manual_clickable ? def.base_buy_cost : generatorBuyCost(id, 0, staticData);
     const canBuy = state.player.engagement >= buyCost;
-    const handleBuy = () => def.manual_clickable ? onUnlock(id) : onBuy(id);
-    const label = def.manual_clickable ? `Unlock ${display.name}` : `Buy ${display.name}`;
+    const handleBuy = () => onBuy(id);
+    const label = `Buy ${display.name}`;
     return (
       <div className="generator-row generator-row-unowned" style={style}>
         <div className="unowned-info">
