@@ -3692,6 +3692,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 @media (max-width: 932px) and (orientation: landscape) {
   .settings-overlay {
     background: none;
+    animation: none; /* modal handles its own fade-in */
   }
 
   .settings-modal {
@@ -3702,12 +3703,16 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
     border-radius: 0;
     border: none;
     box-shadow: none;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    animation: fade-in 200ms ease-out;
   }
 
   .settings-tab-bar {
     display: flex;
     gap: 0;
-    padding: 0 16px;
+    padding: 0 250px;
     border-bottom: 1px solid var(--border-subtle);
     flex-shrink: 0;
   }
@@ -3739,7 +3744,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 10px 20px 16px;
+    padding: 10px 250px 16px;
     overflow-y: auto;
     flex: 1;
   }
@@ -3750,7 +3755,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   }
 
   .settings-header {
-    padding: 10px 16px 8px;
+    padding: 10px 250px 8px;
   }
 
   .settings-title {
