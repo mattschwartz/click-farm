@@ -1,5 +1,5 @@
 {
-  "next_id": 158,
+  "next_id": 159,
   "tasks": [
     {
       "id": 1,
@@ -6301,7 +6301,7 @@
       "id": 157,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Auto-buy-all button: sweep purchases most-expensive-first at 50ms intervals",
       "requester": "game-designer",
@@ -6361,6 +6361,34 @@
           "owner": "ux-designer"
         }
       ],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 158,
+      "role": "game-designer",
+      "state": "review",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Review auto-buy sweep proposal — resolve open questions on order, cancel, scope, and budget cap",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "The auto-buy sweep proposal (proposals/draft/20260406-auto-buy-sweep.md) is ready for game-designer review. The ux-designer has resolved the placement, sound, and cadence questions. Three questions remain that need game-designer sign-off: (1) purchase order — cheapest-first is proposed but game-designer should confirm, (2) cancel mechanism — tap-again-to-stop is proposed, (3) scope — passive-only generators included via POWER only. Plus two new open questions: budget cap (keep 10% reserve?) and preview count on the button.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/draft/20260406-auto-buy-sweep.md",
+          "purpose": "The proposal to review — contains all decisions and open questions"
+        }
+      ],
+      "acceptance_criteria": [
+        "Review written at the bottom of the proposal per PROPOSALS template",
+        "OQ1 (budget cap) answered: yes with a threshold, or no",
+        "OQ2 (preview count) answered or deferred to ux-designer",
+        "Cheapest-first order confirmed or overridden with rationale",
+        "Cancel mechanism (tap-to-stop) confirmed or alternative proposed",
+        "Passive-only generator inclusion confirmed"
+      ],
+      "open_questions": [],
       "blocked_on": []
     }
   ]
