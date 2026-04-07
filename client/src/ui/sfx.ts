@@ -91,7 +91,7 @@ async function decodeBuffer(url: string, audioCtx: AudioContext): Promise<AudioB
 
 let bgMusic: HTMLAudioElement | null = null;
 let bgMusicStarted = false;
-let currentTrackIndex = 0;
+let currentTrackIndex = Math.floor(Math.random() * OST_TRACKS.length);
 
 /** Start playing the track at currentTrackIndex. */
 function playCurrentTrack(): void {

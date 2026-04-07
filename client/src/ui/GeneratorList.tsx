@@ -20,10 +20,6 @@ import {
   generatorUpgradeCost,
 } from '../generator/index.ts';
 import {
-  computeGeneratorEffectiveRate,
-} from '../game-loop/index.ts';
-import {
-  CATEGORY_LABEL,
   CATEGORY_ORDER,
   GENERATOR_DISPLAY,
   GENERATOR_ORDER,
@@ -220,9 +216,6 @@ function GeneratorRow({
   const thresholdMet = state.player.total_followers >= threshold;
   const isDiscovered = g.owned || thresholdMet;
 
-  const rate = computeGeneratorEffectiveRate(g, state, staticData);
-
-  const badgeShape = BADGE_SHAPE[display.category];
   const style = { '--gen-color': display.color } as React.CSSProperties;
 
   // Row ref — used to read bounding rect for drawer anchor. Declared here
@@ -246,7 +239,7 @@ function GeneratorRow({
 
   // Count numeral pulse — fires when count increases on an owned generator.
   const prevCount = useRef(g.count);
-  const [countPulsing, setCountPulsing] = useState(false);
+  const [_countPulsing, setCountPulsing] = useState(false);
   useEffect(() => {
     if (g.owned && g.count > prevCount.current) {
       setCountPulsing(true);
@@ -265,7 +258,7 @@ function GeneratorRow({
   // Lvl ↑ affordance state computed UNCONDITIONALLY so the hooks below can
   // depend on it without skipping on unowned/locked renders. classifyLvlBtnState
   // returns 'dormant' when count===0, which is correct for pre-owned rows.
-  const upgradeCostUnconditional = generatorUpgradeCost(id, g.level, staticData);
+  const upgradeCostUnconditional = g.level >= def.max_level ? Infinity : generatorUpgradeCost(id, g.level, staticData);
   const lvlStateUnconditional = classifyLvlBtnState(
     g.count,
     g.level,
