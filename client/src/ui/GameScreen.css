@@ -238,17 +238,46 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   align-self: stretch;
 }
 
-/* Rate + followers stack — hidden on desktop, shown in landscape via media query */
+/* Rate + followers stack — always visible. Sits inside the frosted-glass
+   engagement container, right of the icon, separated by a 1px border. */
 .engagement-meta-stack {
-  display: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  border-left: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.1));
+  padding-left: 10px;
+}
+
+/* Hairline between rate and followers */
+.engagement-meta-stack::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--border-subtle, rgba(0, 0, 0, 0.06));
+  order: 1;
 }
 
 .engagement-rate-inline {
-  display: none;
+  display: inline;
+  order: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent-green, #2F7A3A);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .engagement-followers-inline {
-  display: none;
+  display: inline;
+  order: 2;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary, #6E6E6E);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 /* Engagement counter — frosted glass that hugs the number.
@@ -1455,21 +1484,6 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.platform-total-followers {
-  text-align: center;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-  padding: 12px 0 8px;
-  border-top: 1px solid var(--border-default);
-}
-
-.platform-total-label {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-secondary);
 }
 
 .platform-card {
@@ -3896,6 +3910,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   border-color: rgba(var(--pill-color-rgb), 0.30);
 }
 
+
 /* ---------------------------------------------------------------------------
  * HIRE pill flame border — conic gradient chase with warm glow.
  * Uses a rotating conic-gradient on a ::before pseudo-element, masked to
@@ -3920,6 +3935,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   position: relative;
   border-color: transparent;
   background: rgba(var(--pill-color-rgb), 0.15);
+  color: var(--text-primary);
   z-index: 0;
   overflow: visible;
   box-shadow:
@@ -4100,41 +4116,84 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
  * two-tap confirmation, and platinum maxed state.
  * --------------------------------------------------------------------------- */
 
-/* Affordable SUPER — verb-tinted with elevated visual weight (§2.2) */
+/* Affordable SUPER — verb-tinted with elevated visual weight */
 .purchase-pill-super.purchase-pill-affordable {
   border: 2px solid rgba(var(--pill-color-rgb), 0.50);
   background: rgba(var(--pill-color-rgb), 0.25);
   box-shadow: 0 0 8px rgba(var(--pill-color-rgb), 0.30);
+  color: var(--text-primary);
+  position: relative;
+  overflow: hidden;
 }
 
 .purchase-pill-super.purchase-pill-affordable .pill-label {
   font-weight: 700;
+  position: relative;
+  z-index: 1;
 }
 
-/* Confirmation state — intensified (§4.2) */
-.purchase-pill-super-confirm.purchase-pill-affordable {
-  background: rgba(var(--pill-color-rgb), 0.35);
-  box-shadow: 0 0 14px rgba(var(--pill-color-rgb), 0.40);
-  animation: super-confirm-pulse 300ms ease-out;
+.purchase-pill-super.purchase-pill-affordable .pill-cost {
+  position: relative;
+  z-index: 1;
 }
 
-@keyframes super-confirm-pulse {
-  0%   { border-width: 2px; }
-  50%  { border-width: 3px; }
-  100% { border-width: 2px; }
+/* Hold-to-buy fire bar — fills from bottom, escalating color + glow */
+.super-hold-fire {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--hold-progress, 0) * 100%);
+  background: linear-gradient(
+    to top,
+    rgba(var(--pill-color-rgb), 0.9),
+    rgba(255, 100, 20, 0.85) 40%,
+    rgba(255, 200, 50, 0.7) 80%,
+    rgba(255, 255, 180, 0.5)
+  );
+  pointer-events: none;
+  transition: none;
 }
 
-/* Unaffordable SUPER — same as standard unaffordable but keeps SUPER label (§2.2) */
+/* Escalating glow + shake during hold */
+.purchase-pill-super-holding.purchase-pill-affordable {
+  animation: super-hold-shake 80ms linear infinite;
+  border-color: rgba(255, 140, 40, 0.8);
+}
+
+@keyframes super-hold-shake {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(-1px) rotate(-0.5deg); }
+  50%  { transform: translateX(1px) rotate(0.5deg); }
+  75%  { transform: translateX(-1px) rotate(0.3deg); }
+  100% { transform: translateX(0); }
+}
+
+/* Purchase burst — expand 1.25x, shrink to 0, reappear greyed out.
+   Single animation, no forwards fill — element returns to normal after. */
+.super-burst {
+  animation: super-burst-pop 500ms ease-out;
+}
+
+@keyframes super-burst-pop {
+  0%   { transform: scale(1); opacity: 1; }
+  20%  { transform: scale(1.25); opacity: 1; }
+  55%  { transform: scale(0); opacity: 0; }
+  56%  { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Unaffordable SUPER — keeps SUPER label */
 .purchase-pill-super.purchase-pill-unaffordable .pill-label {
   font-weight: 700;
 }
 
-/* SUPER maxed — platinum treatment (§6.2) — inherits from .purchase-pill-maxed */
+/* SUPER maxed — platinum treatment, inherits from .purchase-pill-maxed */
 .purchase-pill-super-maxed .pill-label {
   font-weight: 700;
 }
 
-/* SUPER cost popover — richer tooltip with gear name + cost + multiplier (§2.3) */
+/* SUPER cost popover — gear name + cost + multiplier */
 .pill-cost-popover-super {
   display: flex;
   flex-direction: column;
@@ -4156,9 +4215,11 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .purchase-pill-super-confirm.purchase-pill-affordable { animation: none; }
+  .purchase-pill-super-holding.purchase-pill-affordable { animation: none; }
+  .super-hold-fire { transition: height 100ms linear; }
 }
-html[data-reduce-motion="true"] .purchase-pill-super-confirm.purchase-pill-affordable { animation: none; }
+html[data-reduce-motion="true"] .purchase-pill-super-holding.purchase-pill-affordable { animation: none; }
+html[data-reduce-motion="true"] .super-hold-fire { transition: height 100ms linear; }
 
 /* ---------------------------------------------------------------------------
  * Autoclicker badge on verb action buttons — manual-action-ladder.md §4.2
@@ -4501,24 +4562,6 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     padding-top: 3px;
   }
 
-  /* Total followers: trailing inline element after last card.
-   * Removes the desktop border-top divider and centers vertically. */
-  .platform-total-followers {
-    text-align: left;
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--text-secondary);
-    padding: 0 4px;
-    border-top: none;
-    white-space: nowrap;
-    flex-shrink: 0;
-    align-self: center;
-  }
-
-  .platform-total-label {
-    font-size: 11px;
-  }
-
   /* --- Top bar compression (task #172) ------------------------------------- */
 
   /* Strip margin (would add 8px to a 40px row), tighten gap/padding, and
@@ -4569,46 +4612,17 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     border-radius: 0;
   }
 
-  /* Show rate + followers stack in landscape — replaces the hover tooltip
-   * which has no trigger on touch devices. */
+  /* Rate + followers stack — tighter padding on mobile. */
   .engagement-meta-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 2px;
-    border-left: 1px solid var(--border-subtle);
     padding-left: 8px;
   }
 
-  .engagement-meta-stack::after {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 1px;
-    background: var(--border-subtle);
-    order: 1;
-  }
-
-  .engagement-rate-inline { order: 0; }
-  .engagement-followers-inline { order: 2; }
-
   .engagement-rate-inline {
-    display: inline;
     font-size: 12px;
-    font-weight: 500;
-    color: var(--accent-green, #2F7A3A);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
   }
 
   .engagement-followers-inline {
-    display: inline;
     font-size: 11px;
-    font-weight: 400;
-    color: var(--text-secondary);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
   }
 
   /* Engagement icon: 24px (down from 40px). */

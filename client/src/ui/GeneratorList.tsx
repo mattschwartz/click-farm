@@ -598,17 +598,73 @@ function SpeedButton({
 
 // ---------------------------------------------------------------------------
 
+/** SUPER hold duration in ms. */
+const SUPER_HOLD_MS = 750;
+
 function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verbColor, onBuy, generatorName, sweepHit, isSuperPhase, gearName, gearMultiplier }: AutoPillProps) {
   const [glowing, setGlowing] = useState(false);
   const [shaking, setShaking] = useState(false);
+  const [bursting, setBursting] = useState(false);
   const rgb = hexToRgbPill(verbColor);
 
-  // Two-tap confirmation for SUPER purchases (§4 of verb-gear-super-button.md).
-  const [confirming, setConfirming] = useState(false);
-  const confirmTimer = useRef<number | null>(null);
+  // Hold-to-buy for SUPER: press and hold for 3s to confirm purchase.
+  // Progress 0..1 drives the escalating fire visual.
+  const [holdProgress, setHoldProgress] = useState(0);
+  const holdingRef = useRef(false);
+  const holdStart = useRef(0);
+  const holdRaf = useRef(0);
+  const holdTimer = useRef<number | null>(null);
+  const onBuyRef = useRef(onBuy);
+  onBuyRef.current = onBuy;
 
-  // Long-press (300ms) reveals cost popover in landscape — replaces hover
-  // cost ghost on touch devices. Dismisses on touch-end or after 2s.
+  const cancelHold = () => {
+    holdingRef.current = false;
+    setHoldProgress(0);
+    if (holdRaf.current) {
+      cancelAnimationFrame(holdRaf.current);
+      holdRaf.current = 0;
+    }
+    if (holdTimer.current !== null) {
+      window.clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+  };
+
+  const tickHold = () => {
+    if (!holdingRef.current) return;
+    const elapsed = Date.now() - holdStart.current;
+    const p = Math.min(1, elapsed / SUPER_HOLD_MS);
+    setHoldProgress(p);
+    if (p < 1) {
+      holdRaf.current = requestAnimationFrame(tickHold);
+    }
+  };
+
+  const startHold = () => {
+    if (!canBuy || isMaxed) return;
+    holdingRef.current = true;
+    holdStart.current = Date.now();
+    setHoldProgress(0);
+    holdRaf.current = requestAnimationFrame(tickHold);
+    // Fire purchase after hold duration.
+    holdTimer.current = window.setTimeout(() => {
+      holdingRef.current = false;
+      setHoldProgress(0);
+      setBursting(true);
+      onBuyRef.current();
+      // Expand 1.25x → shrink to 0 → reappear (single 500ms animation).
+      window.setTimeout(() => setBursting(false), 500);
+    }, SUPER_HOLD_MS);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (holdRaf.current) cancelAnimationFrame(holdRaf.current);
+      if (holdTimer.current !== null) window.clearTimeout(holdTimer.current);
+    };
+  }, []);
+
+  // Long-press (300ms) reveals cost popover in landscape — for HIRE only.
   const [costPopover, setCostPopover] = useState(false);
   const longPressTimer = useRef<number | null>(null);
   const popoverTimer = useRef<number | null>(null);
@@ -624,46 +680,17 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
     }
   };
 
-  const cancelConfirm = () => {
-    setConfirming(false);
-    if (confirmTimer.current !== null) {
-      window.clearTimeout(confirmTimer.current);
-      confirmTimer.current = null;
-    }
-  };
-
   useEffect(() => {
-    return () => {
-      clearPopoverTimers();
-      if (confirmTimer.current !== null) {
-        window.clearTimeout(confirmTimer.current);
-      }
-    };
+    return () => clearPopoverTimers();
   }, []);
 
-  // Cancel confirmation on outside click (§4.4).
-  useEffect(() => {
-    if (!confirming) return;
-    const handler = () => cancelConfirm();
-    // Defer so the current click doesn't immediately cancel.
-    const id = window.setTimeout(() => {
-      document.addEventListener('click', handler, { once: true, capture: true });
-    }, 0);
-    return () => {
-      window.clearTimeout(id);
-      document.removeEventListener('click', handler, { capture: true });
-    };
-  }, [confirming]);
-
   const handleTouchStart = () => {
-    if (isSuperPhase) return; // SUPER uses two-tap, not long-press popover.
+    if (isSuperPhase) return;
     clearPopoverTimers();
     longPressTimer.current = window.setTimeout(() => {
       longPressTimer.current = null;
       setCostPopover(true);
-      if (popoverTimer.current !== null) {
-        window.clearTimeout(popoverTimer.current);
-      }
+      if (popoverTimer.current !== null) window.clearTimeout(popoverTimer.current);
       popoverTimer.current = window.setTimeout(() => {
         setCostPopover(false);
         popoverTimer.current = null;
@@ -676,33 +703,23 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
     setCostPopover(false);
   };
 
-  const handleClick = (e: React.MouseEvent) => {
+  // SUPER hold: start on pointerdown, cancel on pointerup/leave/cancel.
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (!isSuperPhase || isMaxed) return;
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    startHold();
+  };
+
+  const handlePointerUp = () => {
+    if (holdingRef.current) cancelHold();
+  };
+
+  const handleClick = () => {
     if (isMaxed) return;
-
-    // SUPER two-tap confirmation.
-    if (isSuperPhase) {
-      e.stopPropagation(); // Prevent outside-click handler from firing.
-      if (!canBuy) return; // Unaffordable SUPER: no-op (§4.5).
-      if (!confirming) {
-        // Tap 1: arm confirmation.
-        setConfirming(true);
-        setCostPopover(true); // Auto-show cost ghost (§4.2).
-        confirmTimer.current = window.setTimeout(() => {
-          cancelConfirm();
-          setCostPopover(false);
-        }, 3000);
-        return;
-      }
-      // Tap 2: confirm purchase.
-      cancelConfirm();
-      setCostPopover(false);
-      setGlowing(true);
-      window.setTimeout(() => setGlowing(false), 200); // 200ms flash per §5.1.
-      onBuy();
-      return;
-    }
-
-    // Standard AUTO (HIRE) flow.
+    // SUPER uses hold-to-buy — click is a no-op for SUPER.
+    if (isSuperPhase) return;
+    // Standard HIRE flow.
     if (!canBuy) {
       setShaking(true);
       window.setTimeout(() => setShaking(false), 200);
@@ -713,22 +730,30 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
     onBuy();
   };
 
+  // Keyboard: hold Space/Enter for 3s.
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape' && confirming) {
-      cancelConfirm();
-      setCostPopover(false);
+    if (!isSuperPhase || isMaxed || !canBuy) return;
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (!holdingRef.current) startHold();
+    }
+  };
+  const handleKeyUp = (e: React.KeyboardEvent) => {
+    if ((e.key === ' ' || e.key === 'Enter') && holdingRef.current) {
+      cancelHold();
     }
   };
 
-  // Determine pill mode: SUPER maxed, SUPER active, or HIRE.
+  // Determine pill mode.
   const superMaxed = isSuperPhase && isMaxed;
   const superActive = isSuperPhase && !isMaxed;
+  const holding = holdProgress > 0;
 
   const stateClass = superMaxed
     ? ' purchase-pill-maxed purchase-pill-super-maxed'
     : superActive
       ? canBuy
-        ? ` purchase-pill-affordable purchase-pill-super${confirming ? ' purchase-pill-super-confirm' : ''}`
+        ? ` purchase-pill-affordable purchase-pill-super${holding ? ' purchase-pill-super-holding' : ''}`
         : ' purchase-pill-unaffordable purchase-pill-super'
       : isMaxed
         ? ' purchase-pill-maxed'
@@ -736,54 +761,68 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
           ? ' purchase-pill-affordable'
           : ' purchase-pill-unaffordable';
 
-  // Label text.
   const labelText = superMaxed
     ? 'MAX'
     : superActive
-      ? (confirming ? 'BUY' : 'SUPER')
+      ? 'SUPER'
       : `HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`;
   const labelAbbr = superActive ? 'S' : 'A';
 
-  // Aria labels per §7.1.
   const ariaLabel = superMaxed
     ? `${generatorName} gear maxed, ${gearName ?? ''} level 3 of 3.`
-    : superActive && confirming
-      ? `Confirm Super purchase, ${gearName ?? ''}, ${costText} engagement. Press Enter to confirm or Escape to cancel.`
-      : superActive && canBuy
-        ? `Super upgrade ${generatorName}, ${gearName ?? ''}, affordable, costs ${costText} engagement${gearMultiplier ? `, multiplier times ${gearMultiplier}` : ''}. Press Enter to begin purchase.`
-        : superActive
-          ? `Super upgrade ${generatorName}, ${gearName ?? ''}, not affordable, costs ${costText} engagement.`
-          : isMaxed
-            ? `${generatorName} autoclickers maxed at ${autoclickerCount}`
-            : canBuy
-              ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costText} engagement`
-              : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`;
+    : superActive && canBuy
+      ? `Super upgrade ${generatorName}, ${gearName ?? ''}, affordable, costs ${costText} engagement${gearMultiplier ? `, multiplier times ${gearMultiplier}` : ''}. Hold for 3 seconds to purchase.`
+      : superActive
+        ? `Super upgrade ${generatorName}, ${gearName ?? ''}, not affordable, costs ${costText} engagement.`
+        : isMaxed
+          ? `${generatorName} autoclickers maxed at ${autoclickerCount}`
+          : canBuy
+            ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costText} engagement`
+            : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`;
 
   const title = superMaxed
     ? `${generatorName} — ${gearName ?? 'gear'} maxed`
     : superActive
-      ? `${gearName ?? 'Super upgrade'} — ${costText} engagement`
+      ? `${gearName ?? 'Super upgrade'} — hold to buy (${costText} eng)`
       : isMaxed
         ? `${generatorName} — max autoclickers (${autoclickerCount})`
         : `Buy autoclicker for ${costText} engagement`;
 
+  // Inline style for hold progress — drives the fire fill and glow intensity.
+  const holdStyle: React.CSSProperties | undefined =
+    (!superMaxed && (superActive ? canBuy : (!isMaxed && canBuy)))
+      ? {
+          '--pill-color': verbColor,
+          '--pill-color-rgb': rgb,
+          ...(holding ? { '--hold-progress': holdProgress } as Record<string, unknown> : {}),
+        } as React.CSSProperties
+      : undefined;
+
   return (
     <button
-      className={`purchase-pill purchase-pill-auto${stateClass}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}${sweepHit ? ' sweep-hit' : ''}`}
-      style={(!superMaxed && (superActive ? canBuy : (!isMaxed && canBuy))) ? {
-        '--pill-color': verbColor,
-        '--pill-color-rgb': rgb,
-      } as React.CSSProperties : undefined}
+      className={`purchase-pill purchase-pill-auto${stateClass}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}${bursting ? ' super-burst' : ''}${sweepHit ? ' sweep-hit' : ''}`}
+      style={holdStyle}
       onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
       onTouchStart={handleTouchStart}
       onTouchEnd={dismissPopover}
-      onTouchMove={dismissPopover}
       onTouchCancel={dismissPopover}
       disabled={superMaxed || (!isSuperPhase && isMaxed)}
       aria-label={ariaLabel}
       title={title}
     >
+      {/* Hold progress fill — fire bar rising from bottom */}
+      {holding && (
+        <span
+          className="super-hold-fire"
+          style={{ '--hold-progress': holdProgress } as React.CSSProperties}
+          aria-hidden="true"
+        />
+      )}
       <span className="pill-label">
         {superMaxed && <span className="pill-crown" aria-hidden>♛</span>}
         {!isSuperPhase && isMaxed && <span className="pill-crown" aria-hidden>♛</span>}
@@ -791,8 +830,8 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
         <span className="pill-label-abbr">{labelAbbr}</span>
       </span>
       <span className="pill-cost">{superMaxed ? 'MAX' : isMaxed ? 'MAX' : costLabel}</span>
-      {/* Cost popover — for SUPER shows gear name + cost + multiplier (§2.3). */}
-      {costPopover && isSuperPhase && !isMaxed && (
+      {/* Cost popover — SUPER shows gear name + cost + multiplier. */}
+      {(holding || costPopover) && isSuperPhase && !isMaxed && (
         <span className="pill-cost-popover pill-cost-popover-super" aria-hidden="true">
           <span className="popover-gear-name">{gearName}</span>
           <span className="popover-gear-detail">{costText} eng {gearMultiplier ? `\u2192 \u00D7${gearMultiplier}` : ''}</span>
