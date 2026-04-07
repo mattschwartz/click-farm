@@ -885,6 +885,45 @@ html[data-reduce-motion="true"] .sweep-hit {
   animation: none;
 }
 
+/* --- Sweep cost float — arcing "-14.0M" on each purchase --- */
+.sweep-cost-float {
+  position: fixed;
+  pointer-events: none;
+  font-size: 15px;
+  font-weight: 800;
+  color: #c0392b;
+  white-space: nowrap;
+  animation: sweep-cost-arc 800ms ease-out forwards;
+  z-index: 9999;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.9),
+    0 0 6px rgba(255, 255, 255, 0.6),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+@keyframes sweep-cost-arc {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1.15);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1);
+  }
+  70% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sweep-cost-float { display: none; }
+}
+html[data-reduce-motion="true"] .sweep-cost-float {
+  display: none;
+}
+
 .category-divider {
   font-size: 11px;
   font-weight: 500;

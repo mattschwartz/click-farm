@@ -12,6 +12,7 @@
 // - §6.3: First-purchase transition: badge fill + sparkle + breathing begins.
 // - §6.4: Count numeral pulses on additional purchases.
 
+import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState } from 'react';
 import type { GameState, GeneratorId, StaticData } from '../types.ts';
 import type { SweepItemType, SweepPurchaseEvent } from '../driver/index.ts';
@@ -182,6 +183,7 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutocl
                 onBuyAutoclicker={onBuyAutoclicker}
                 viralHalo={viralGeneratorId === id}
                 sweepHitType={lastSweepPurchase?.generatorId === id ? lastSweepPurchase.type : null}
+                sweepHitCost={lastSweepPurchase?.generatorId === id ? lastSweepPurchase.cost : 0}
                 sweepHitSeq={sweepPurchaseSeq}
               />
             ))}
@@ -205,6 +207,8 @@ interface RowProps {
   viralHalo?: boolean;
   /** Which button (if any) was just hit by a sweep purchase on this row. */
   sweepHitType: SweepItemType | null;
+  /** Cost of the sweep purchase (for the float label). */
+  sweepHitCost: number;
   /** Monotonic counter — increments on every sweep purchase for re-trigger detection. */
   sweepHitSeq: number;
 }
@@ -218,6 +222,7 @@ function GeneratorRow({
   onBuyAutoclicker,
   viralHalo,
   sweepHitType,
+  sweepHitCost,
   sweepHitSeq,
 }: RowProps) {
   const g = state.generators[id];
@@ -230,24 +235,38 @@ function GeneratorRow({
 
   const style = { '--gen-color': display.color } as React.CSSProperties;
 
+  // Row ref — used to read bounding rect for drawer anchor and sweep floats.
+  // Declared before the sweep-hit effect so the ref is available.
+  const rowRef = useRef<HTMLDivElement>(null);
+
   // Sweep-hit animation — fires when a sweep purchase targets this row's
-  // buy / upgrade / autoclicker button. Toggles a class for 64ms.
+  // buy / upgrade / autoclicker button. Toggles a class for 64ms + spawns cost float.
   const [sweepHitBtn, setSweepHitBtn] = useState<SweepItemType | null>(null);
+  // One float at a time per row — replace on each purchase to avoid stacking.
+  const [sweepFloat, setSweepFloat] = useState<{ key: number; cost: number; top: number; right: number } | null>(null);
+  const sweepFloatId = useRef(0);
   const prevSweepSeq = useRef(0);
   useEffect(() => {
     if (sweepHitType && sweepHitSeq !== prevSweepSeq.current) {
       prevSweepSeq.current = sweepHitSeq;
       setSweepHitBtn(sweepHitType);
       const t = window.setTimeout(() => setSweepHitBtn(null), 64);
-      return () => window.clearTimeout(t);
+      // Position at the purchased button's viewport location.
+      const btnSelector = sweepHitType === 'buy' ? '.row-btn:not(.row-btn-upgrade)'
+        : sweepHitType === 'upgrade' ? '.row-btn-upgrade'
+        : '.purchase-pill-auto';
+      const btnEl = rowRef.current?.querySelector(btnSelector);
+      const rect = (btnEl ?? rowRef.current)?.getBoundingClientRect();
+      const key = sweepFloatId.current++;
+      const top = rect ? rect.top - 4 : 0;
+      const right = rect ? window.innerWidth - rect.right : 0;
+      setSweepFloat({ key, cost: sweepHitCost, top, right });
+      const t2 = window.setTimeout(() => {
+        setSweepFloat((prev) => prev?.key === key ? null : prev);
+      }, 800);
+      return () => { window.clearTimeout(t); window.clearTimeout(t2); };
     }
-  }, [sweepHitType, sweepHitSeq]);
-
-  // Row ref — used to read bounding rect for drawer anchor. Declared here
-  // (before any early returns) so hook order stays stable across the
-  // unowned → owned transition. React's Rules of Hooks require every hook
-  // to run on every render in the same order.
-  const rowRef = useRef<HTMLDivElement>(null);
+  }, [sweepHitType, sweepHitCost, sweepHitSeq]);
 
   // First-purchase animation — fires once when owned transitions false → true.
   const prevOwned = useRef(g.owned);
@@ -419,6 +438,17 @@ function GeneratorRow({
           />
         )}
       </div>
+      {/* Sweep cost float — portalled to body to escape backdrop-filter containing block */}
+      {sweepFloat && createPortal(
+        <span
+          key={sweepFloat.key}
+          className="sweep-cost-float"
+          style={{ top: sweepFloat.top, right: sweepFloat.right }}
+        >
+          &minus;{fmtCompact(sweepFloat.cost)}
+        </span>,
+        document.body,
+      )}
     </div>
   );
 }

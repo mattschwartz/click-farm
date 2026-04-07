@@ -104,6 +104,7 @@ export type SweepItemType = 'buy' | 'upgrade' | 'autoclicker';
 export interface SweepPurchaseEvent {
   type: SweepItemType;
   generatorId: GeneratorId;
+  cost: number;
 }
 
 // Internal sweep purchase candidate.
@@ -485,7 +486,7 @@ export function createDriver(options: DriverOptions): GameDriver {
     }
     // Notify per-purchase listeners only if state actually changed.
     if (state !== before) {
-      for (const l of sweepPurchaseListeners) l({ type: item.type, generatorId: item.generatorId });
+      for (const l of sweepPurchaseListeners) l({ type: item.type, generatorId: item.generatorId, cost: item.cost });
     }
 
     const next = buildAffordableList(state);
