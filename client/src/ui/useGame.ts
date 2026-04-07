@@ -9,7 +9,7 @@ import { createDriver, type ActionError, type SaveError } from '../driver/index.
 import type { OfflineResult } from '../offline/index.ts';
 import type { RebrandResult } from '../prestige/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
-import { playPurchase } from './sfx.ts';
+import { playPurchase, playSweepStart, playSweepEnd } from './sfx.ts';
 
 export interface UseGameResult {
   state: GameState;
@@ -58,6 +58,14 @@ export interface UseGameResult {
   resumeLoop: () => void;
   /** Wipe the current save and restart the driver with a fresh GameState. */
   resetGame: () => void;
+  /** Whether an auto-buy sweep is currently running. */
+  sweepActive: boolean;
+  /** Count of currently affordable purchases (live — updates as state changes). */
+  sweepPreviewCount: number;
+  /** Start the auto-buy sweep (no-op if already active). Plays sweep-start sound. */
+  startSweep: () => void;
+  /** Cancel an in-progress sweep immediately. */
+  cancelSweep: () => void;
 }
 
 /**
@@ -80,6 +88,7 @@ export function useGame(): UseGameResult {
   );
   const [lastActionError, setLastActionError] = useState<ActionError | null>(null);
   const [saveError, setSaveError] = useState<SaveError | null>(null);
+  const [sweepActive, setSweepActive] = useState(false);
 
   // Subscribe to action errors from the driver. The listener overwrites the
   // last-error slot; consumers that need queueing can layer their own buffer.
@@ -93,6 +102,15 @@ export function useGame(): UseGameResult {
   // must mount early in the component lifecycle. Task #55.
   useEffect(() => {
     const unsub = driver.onSaveError((e) => setSaveError(e));
+    return unsub;
+  }, [driver]);
+
+  // Sweep end — reset active flag and play the bookend sound.
+  useEffect(() => {
+    const unsub = driver.onSweepEnd(() => {
+      setSweepActive(false);
+      playSweepEnd();
+    });
     return unsub;
   }, [driver]);
 
@@ -149,6 +167,10 @@ export function useGame(): UseGameResult {
     () => driver.getState(),
   );
 
+  // Derived synchronously from the driver's current state — always fresh after
+  // any state subscriber re-render.
+  const sweepPreviewCount = driver.getSweepState().previewCount;
+
   const actions = useMemo(
     () => ({
       click: (verbId: GeneratorId) => driver.click(verbId),
@@ -193,9 +215,17 @@ export function useGame(): UseGameResult {
       pauseLoop: () => driver.stop(),
       resumeLoop: () => driver.start(),
       resetGame: () => driver.resetGame(),
+      startSweep: () => {
+        driver.startSweep();
+        if (driver.getSweepState().active) {
+          setSweepActive(true);
+          playSweepStart();
+        }
+      },
+      cancelSweep: () => driver.cancelSweep(),
     }),
     [driver],
   );
 
-  return { state, offlineResult, lastActionError, saveError, ...actions };
+  return { state, offlineResult, lastActionError, saveError, sweepActive, sweepPreviewCount, ...actions };
 }

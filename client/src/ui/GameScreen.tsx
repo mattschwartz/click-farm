@@ -97,6 +97,10 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     offlineResult,
     clearOfflineResult,
     rebrand,
+    sweepActive,
+    sweepPreviewCount,
+    startSweep,
+    cancelSweep,
     pauseLoop,
     resumeLoop,
     buyCloutUpgrade,
@@ -320,6 +324,10 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               onUnlock={unlock}
               onBuyAutoclicker={buyAutoclicker}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
+              sweepActive={sweepActive}
+              sweepPreviewCount={sweepPreviewCount}
+              onStartSweep={startSweep}
+              onCancelSweep={cancelSweep}
             />
             {/* CreatorKitPanel hidden — to be redesigned */}
           </div>
