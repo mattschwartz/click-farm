@@ -4072,6 +4072,126 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     min-height: 0;
   }
 
+  /* --- Platform strip: horizontal mode (task #174) ------------------------- */
+
+  /* Horizontal scroll strip — 48px tall, flex-row, snap-scroll.
+   * Scrollbar hidden; snap is for 4+ platforms (3 fit without scrolling). */
+  .platform-panel {
+    flex-direction: row;
+    height: 48px;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    gap: 8px;
+    padding: 4px 8px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .platform-panel::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Cards: fixed 140×40px, scroll-snap target. Grid layout puts
+   * name + followers inline on row 1, affinity chips on row 2. */
+  .platform-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 1px 4px;
+    width: 140px;
+    height: 40px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    padding: 3px 6px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* Header (name): top-left cell. */
+  .platform-card .platform-header {
+    grid-column: 1;
+    grid-row: 1;
+    margin-bottom: 0;
+    align-items: flex-end;
+  }
+
+  /* Followers row: top-right cell, right-aligned. */
+  .platform-card .platform-followers-row {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
+
+  /* Sub-label ("followers"): no room in 40px — hidden. */
+  .platform-card .platform-sub-label {
+    display: none;
+  }
+
+  /* Affinity chips: span both columns, bottom row. */
+  .platform-card .affinity-row {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 0;
+    gap: 3px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  /* Unlock teaser for locked cards: bottom row, truncated to single line. */
+  .platform-card .unlock-teaser {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 9px;
+  }
+
+  /* Platform name: 11px weight 500 (down from 14px). */
+  .platform-card .platform-name {
+    font-size: 11px;
+  }
+
+  /* Followers count: 16px weight 600 (down from 24px). */
+  .platform-card .platform-followers {
+    font-size: 16px;
+  }
+
+  /* Affinity chips: 8px font, tighter padding. */
+  .affinity-chip {
+    font-size: 8px;
+    padding: 1px 3px;
+    gap: 2px;
+  }
+
+  /* Gradient-border cards: override the desktop padding-top: 17px compensation.
+   * The ::after gradient bar is still position:absolute at top:0; our 3px
+   * card padding-top clears it without the large desktop offset. */
+  .platform-card[style*="--platform-accent-gradient"] {
+    padding-top: 3px;
+  }
+
+  /* Total followers: trailing inline element after last card.
+   * Removes the desktop border-top divider and centers vertically. */
+  .platform-total-followers {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    padding: 0 4px;
+    border-top: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .platform-total-label {
+    font-size: 11px;
+  }
+
   /* --- Top bar compression (task #172) ------------------------------------- */
 
   /* Strip margin (would add 8px to a 40px row), tighten gap/padding, and
