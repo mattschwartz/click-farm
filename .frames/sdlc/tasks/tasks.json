@@ -1,5 +1,5 @@
 {
-  "next_id": 182,
+  "next_id": 183,
   "tasks": [
     {
       "id": 1,
@@ -7341,6 +7341,49 @@
         "The data-reduce-motion HTML attribute and all CSS animation rules continue to work correctly",
         "Existing users who had Reduce Motion ON see Enable Motion OFF (state preserved, not reset)",
         "Settings modal test updated if one exists"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 182,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Add rotate-to-landscape prompt for phones in portrait mode",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "When a phone-sized device is in portrait orientation, display a fullscreen overlay prompting the user to rotate to landscape. The game continues ticking in the background (no pause). The overlay blocks all interaction until the device is rotated. No 'continue in portrait' option — landscape is the only supported phone layout. This is the inverse of the pattern originally specced in ux/mobile-layout.md §13 (which prompted for portrait), updated to match the landscape-only phone strategy from the accepted landscape layout proposal.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260407-landscape-phone-layout.md",
+          "purpose": "Accepted landscape phone layout — §1 defines breakpoints. Portrait phones (max-width: 767px, orientation: portrait) are not supported."
+        },
+        {
+          "ref": "ux/mobile-layout.md",
+          "purpose": "§13 has the original rotate prompt pattern (landscape→portrait). Same UX pattern, reversed direction."
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Overlay renders here or in App.tsx — conditional on orientation detection."
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Overlay styles — fullscreen fixed, centered content, z-index above game but below modals."
+        }
+      ],
+      "acceptance_criteria": [
+        "Fullscreen overlay appears when viewport matches (max-width: 767px) and (orientation: portrait)",
+        "Overlay displays a rotate icon and 'Rotate to landscape' text, centered vertically and horizontally",
+        "Overlay blocks all pointer/touch interaction with the game beneath it",
+        "Game loop continues ticking in the background (no pause triggered)",
+        "Overlay disappears immediately when device rotates to landscape",
+        "Modal and game state are preserved across the rotation",
+        "No 'continue in portrait' button or dismiss mechanism",
+        "Overlay z-index is above the game screen but below modal overlays (so if a modal was open pre-rotation, it stays on top when returning to landscape)",
+        "Text uses the project font (Space Grotesk) and respects the existing color token system",
+        "200ms fade-in/out transition on the overlay (per ux/mobile-layout.md §12 motion brief)"
       ],
       "open_questions": [],
       "blocked_on": []
