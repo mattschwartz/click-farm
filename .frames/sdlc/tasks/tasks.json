@@ -6024,7 +6024,7 @@
       "id": 150,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "SPEED button fires level-up directly — no drawer",
       "requester": "ux-designer",
@@ -6053,7 +6053,8 @@
         "npm run build succeeds; full test suite passes"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 151,
@@ -6092,9 +6093,7 @@
         "npm run build succeeds; full test suite passes"
       ],
       "open_questions": [],
-      "blocked_on": [
-        150
-      ]
+      "blocked_on": []
     },
     {
       "id": 152,

@@ -258,7 +258,7 @@ function GeneratorRow({
   staticData,
   onBuy,
   onUnlock,
-  onUpgrade: _onUpgrade, // kept in RowProps for GeneratorList to wire to drawer; not called directly by row
+  onUpgrade,
   onBuyAutoclicker,
   viralHalo,
   isDrawerOpen,
@@ -432,22 +432,18 @@ function GeneratorRow({
           canBuy={canBuy}
           onBuy={() => onBuy(id)}
         />
-        {/* ⬆ affordance — opens the upgrade drawer.
-            Three states per task #69 / lvl-up-button-affordance-states:
+        {/* SPEED — fires upgrade directly (task #150).
+            Three affordance states per task #69:
               dormant (count===0): disabled placeholder
               armed   (owned, can't afford): still, amber deficit glyph
-              ready   (owned, affordable): gold breathing halo pulling eye
-                                           toward the drawer */}
-        <button
-          className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${isDrawerOpen ? ' active' : ''}${maxedArrival ? ' lvl-maxed-arrival' : ''}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!canOpenDrawer || !onOpenDrawer) return;
-            const rect = rowRef.current?.getBoundingClientRect();
-            onOpenDrawer(id, rect?.top ?? 100);
-          }}
-          disabled={lvlState === 'dormant' || lvlState === 'maxed'}
-          style={{ '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties}
+              ready   (owned, affordable): gold breathing halo */}
+        <SpeedButton
+          lvlState={lvlState}
+          maxedArrival={maxedArrival}
+          isDrawerOpen={isDrawerOpen}
+          breatheDelayMs={breatheDelayMs}
+          canAfford={state.player.engagement >= upgradeCost}
+          onUpgrade={() => onUpgrade(id)}
           title={
             lvlState === 'dormant'
               ? `Buy at least one ${display.name} before upgrading`
@@ -457,22 +453,9 @@ function GeneratorRow({
                   ? `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ${fmtCompact(lvlDeficit)} more engagement`
                   : `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ready`
           }
-          aria-label={`Open upgrade drawer for ${display.name}`}
-        >
-          <span className="label">
-            {lvlState === 'ready' && (
-              <span className="lvl-chevron" aria-hidden>▲</span>
-            )}
-            {lvlState === 'maxed' && (
-              <span className="lvl-crown" aria-hidden>♛</span>
-            )}
-            SPEED
-          </span>
-          {lvlState === 'armed' && (
-            <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
-          )}
-          {lvlState === 'maxed' ? 'MAX' : fmtCompact(upgradeCost)}
-        </button>
+          ariaLabel={`Upgrade ${display.name}`}
+          costLabel={lvlState === 'maxed' ? 'MAX' : fmtCompact(upgradeCost)}
+        />
         {/* AUTO pill — per generator-purchase-pills.md §2–3.
             Only rendered for manual-clickable generators. Pill shape: 44px
             min-width, 28px height, 14px border-radius. Three affordance
@@ -510,6 +493,76 @@ function hexToRgbPill(hex: string): string {
   const n = parseInt(hex.slice(1), 16);
   return `${(n >> 16) & 0xff}, ${(n >> 8) & 0xff}, ${n & 0xff}`;
 }
+
+// ---------------------------------------------------------------------------
+// Speed button — fires upgrade directly (task #150).
+
+interface SpeedButtonProps {
+  lvlState: LvlBtnState;
+  maxedArrival: boolean;
+  isDrawerOpen?: boolean;
+  breatheDelayMs: number;
+  canAfford: boolean;
+  onUpgrade: () => void;
+  title: string;
+  ariaLabel: string;
+  costLabel: string;
+}
+
+function SpeedButton({
+  lvlState,
+  maxedArrival,
+  isDrawerOpen,
+  breatheDelayMs,
+  canAfford,
+  onUpgrade,
+  title,
+  ariaLabel,
+  costLabel,
+}: SpeedButtonProps) {
+  const [shaking, setShaking] = useState(false);
+  const [glowing, setGlowing] = useState(false);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (lvlState === 'dormant' || lvlState === 'maxed') return;
+    if (!canAfford) {
+      setShaking(true);
+      window.setTimeout(() => setShaking(false), 200);
+      return;
+    }
+    setGlowing(true);
+    window.setTimeout(() => setGlowing(false), 200);
+    onUpgrade();
+  };
+
+  return (
+    <button
+      className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${isDrawerOpen ? ' active' : ''}${maxedArrival ? ' lvl-maxed-arrival' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}`}
+      onClick={handleClick}
+      disabled={lvlState === 'dormant' || lvlState === 'maxed'}
+      style={{ '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties}
+      title={title}
+      aria-label={ariaLabel}
+    >
+      <span className="label">
+        {lvlState === 'ready' && (
+          <span className="lvl-chevron" aria-hidden>▲</span>
+        )}
+        {lvlState === 'maxed' && (
+          <span className="lvl-crown" aria-hidden>♛</span>
+        )}
+        SPEED
+      </span>
+      {lvlState === 'armed' && (
+        <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
+      )}
+      {costLabel}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
 
 function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, generatorName }: AutoPillProps) {
   const [glowing, setGlowing] = useState(false);
