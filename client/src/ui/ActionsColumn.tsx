@@ -290,8 +290,8 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
           '--verb-color-rgb': hexToRgb(color),
           '--cd-fill': `${fillHeight}%`,
         } as React.CSSProperties}
-        onPointerDown={handleTap}
-        onClick={(e) => e.preventDefault()}
+        onPointerDown={(e) => { e.preventDefault(); handleTap(e); }}
+        onClick={handleTap}
         aria-label={`${display.name}, ${fmtCompact(perTap)} engagement per tap, cooldown ${Math.round(cdMs)}ms${autoCountForBadge > 0 ? `, ${autoCountForBadge} autoclickers` : ''}`}
       >
 
