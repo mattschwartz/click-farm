@@ -4,7 +4,7 @@
 // continues running). Three sections (Motion, Audio, Save) rendered as a
 // vertical scroll with no tabs.
 //
-// Reduce Motion propagates via the settings hook — this component is a
+// Enable Motion propagates via the settings hook — this component is a
 // pure editor over those values plus the save-management actions. The
 // reduceTimePressure schema field is retained as dormant until a future
 // feature wires it back in (remove-scandals-interim.md AC #13).
@@ -249,10 +249,10 @@ export function SettingsModal({
             <div className="settings-group">
               <SettingsToggle
                 buttonRef={firstToggleRef}
-                label="Reduce Motion"
-                description="Replaces decorative motion with static alternatives. Number animations preserved."
-                checked={settings.reduceMotion}
-                onChange={onSetReduceMotion}
+                label="Enable Motion"
+                description="Smooth counter animation. Disables pulses, glows, floating numbers, and all decorative effects."
+                checked={!settings.reduceMotion}
+                onChange={(v) => onSetReduceMotion(!v)}
               />
               <SettingsToggle
                 label="Floating Numbers"

@@ -7313,7 +7313,7 @@
       "id": 181,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Invert Reduce Motion toggle to 'Enable Motion' (enabled by default)",
       "requester": "architect",
@@ -7343,7 +7343,8 @@
         "Settings modal test updated if one exists"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 182,
