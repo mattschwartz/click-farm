@@ -945,6 +945,9 @@
   align-items: flex-start;
   justify-content: center;
   gap: 3px;
+  width: 236px;
+  flex-shrink: 0;
+  box-sizing: border-box;
   padding: 8px 12px;
   border-radius: 6px;
   border: 1px solid var(--border-default);
