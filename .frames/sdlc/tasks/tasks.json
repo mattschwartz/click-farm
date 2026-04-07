@@ -1,5 +1,5 @@
 {
-  "next_id": 154,
+  "next_id": 155,
   "tasks": [
     {
       "id": 1,
@@ -6179,6 +6179,35 @@
         "Visual differentiation from manual taps preserved (80% size, 0.7 opacity per §4.6)",
         "Reduced motion: autoclicker floats still suppressed per existing behavior",
         "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 154,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Apply level multiplier to autoclicker passive rate",
+      "requester": "game-designer",
+      "complexity": "haiku",
+      "overview": "LVL UP currently only speeds manual taps. Change the passive rate formula so autoclickers also benefit from level. The formula in computeGeneratorEffectiveRate changes from `autoclicker_count × base_event_rate × base_event_yield × (1 + count) × clout × kit` to `autoclicker_count × level × base_event_rate × base_event_yield × (1 + count) × clout × kit`. This is an experimental change — game-designer wants to feel how it plays before committing to it permanently.",
+      "related_items": [
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "computeGeneratorEffectiveRate — add generator.level factor to the passive rate product"
+        },
+        {
+          "ref": "client/src/game-loop/index.test.ts",
+          "purpose": "Update passive rate assertions to expect level × old values"
+        }
+      ],
+      "acceptance_criteria": [
+        "computeGeneratorEffectiveRate multiplies by generator.level (passive formula includes level factor)",
+        "Offline calculator inherits the change automatically (no separate change needed — verify)",
+        "Existing tests updated to reflect new formula",
+        "All tests pass, build succeeds"
       ],
       "open_questions": [],
       "blocked_on": []
