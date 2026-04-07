@@ -1,8 +1,12 @@
 // Rotate-to-landscape prompt for phones in portrait mode.
 //
-// Displays a fullscreen overlay when viewport is ≤767px and orientation is
-// portrait. Blocks interaction with the game beneath. Game loop continues
-// ticking. Overlay disappears when device rotates to landscape.
+// Displays a fullscreen frosted-glass overlay when viewport is ≤767px and
+// orientation is portrait. The game renders behind it — verb button colors
+// bleed through the translucent surface, giving the player a taste of what's
+// there. Blocks all interaction. Game loop continues ticking.
+//
+// z-index sits above ALL modals (offline gains, shop, settings, ceremony)
+// so the prompt is never buried behind a welcome-back modal on load.
 //
 // Per ux/mobile-layout.md §13, adapted to landscape-only strategy.
 
@@ -11,12 +15,10 @@ import { createPortal } from 'react-dom';
 
 /**
  * Detects if the current viewport matches mobile portrait (≤767px width,
- * portrait orientation). Called at render time and via orientation change
- * listener.
+ * portrait orientation).
  */
 function isPhonePortrait(): boolean {
   if (typeof window === 'undefined') return false;
-  // Check if media query matches: small viewport AND portrait
   return window.matchMedia('(max-width: 767px) and (orientation: portrait)').matches;
 }
 
@@ -24,20 +26,16 @@ export function RotateToLandscapePrompt() {
   const [shouldShow, setShouldShow] = useState(isPhonePortrait);
 
   useEffect(() => {
-    // Update state immediately if already in portrait
     setShouldShow(isPhonePortrait());
 
-    // Listen for orientation/resize changes
     const mq = window.matchMedia('(max-width: 767px) and (orientation: portrait)');
     const handleChange = (e: MediaQueryListEvent) => {
       setShouldShow(e.matches);
     };
 
-    // Modern browsers use addEventListener, fallback to addListener
     if (mq.addEventListener) {
       mq.addEventListener('change', handleChange);
     } else {
-      // Deprecated but needed for older iOS Safari
       mq.addListener(handleChange);
     }
 
@@ -59,26 +57,42 @@ export function RotateToLandscapePrompt() {
       aria-label="Rotate device to landscape"
     >
       <div className="rotate-to-landscape-content">
-        {/* Rotate icon — svg based on Material Design rotate_right */}
+        {/* Phone silhouette tilting from portrait → landscape with a
+            curved rotation arrow. Stroke-only for a clean, modern feel. */}
         <svg
           className="rotate-icon"
-          viewBox="0 0 24 24"
-          width="80"
+          viewBox="0 0 96 64"
+          width="120"
           height="80"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.5"
+          strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          {/* Circular arrow forming a rotation symbol */}
-          <path d="M 3 8 Q 3 4 7 4 L 10 4" />
-          <path d="M 10 1 L 10 7 L 4 7" />
-          <path d="M 21 11 A 8 8 0 0 0 7 9" />
+          {/* Phone body — portrait rectangle, tilted 45° toward landscape */}
+          <g transform="rotate(-45 32 32)">
+            <rect x="20" y="8" width="24" height="48" rx="4" />
+            {/* Home indicator line */}
+            <line x1="28" y1="50" x2="36" y2="50" strokeWidth="2" strokeLinecap="round" />
+          </g>
+          {/* Curved rotation arrow — clear of phone body */}
+          <g transform="translate(-3 -5) rotate(-20 62 27)">
+            <path d="M 62 6 A 24 24 0 0 1 67 42" />
+            <polyline points="63,37 67,42 71,37" transform="rotate(23 67 42)" />
+          </g>
         </svg>
 
-        {/* Text prompt */}
         <h1 className="rotate-text">Rotate to landscape</h1>
+        <p className="rotate-subtext">This game is best played wide</p>
+
+        <img
+          className="rotate-favicon"
+          src="/favicon.png"
+          alt="Tap Farm"
+          draggable={false}
+        />
+        <p className="rotate-title">Tap Farm</p>
       </div>
     </div>
   );
