@@ -86,10 +86,9 @@ export function buildPersistItems(state: GameState): PersistItem[] {
   ];
 }
 
-/** True when the player has followers and may rebrand. */
+/** True when the player has unlocked viral_stunts and may rebrand. */
 export function isEligibleToRebrand(state: GameState): boolean {
-  // Eligibility threshold is a game-designer open question (spec §9).
-  return state.player.total_followers > 0;
+  return state.generators.viral_stunts.owned;
 }
 
 /**

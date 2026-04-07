@@ -74,19 +74,23 @@ function makeState(overrides: {
 // ---------------------------------------------------------------------------
 
 describe('isEligibleToRebrand', () => {
-  it('returns false when total_followers is 0 (locked state)', () => {
-    const state = makeState({ totalFollowers: 0 });
+  it('returns false when viral_stunts is not owned', () => {
+    const state = makeState({ totalFollowers: 100_000 });
+    // viral_stunts starts unowned in default state
+    expect(state.generators.viral_stunts.owned).toBe(false);
     expect(isEligibleToRebrand(state)).toBe(false);
   });
 
-  it('returns true when total_followers > 0', () => {
-    const state = makeState({ totalFollowers: 1 });
-    expect(isEligibleToRebrand(state)).toBe(true);
-  });
-
-  it('returns true for large follower counts', () => {
+  it('returns true when viral_stunts is owned', () => {
     const state = makeState({ totalFollowers: 100_000 });
-    expect(isEligibleToRebrand(state)).toBe(true);
+    const withViral = {
+      ...state,
+      generators: {
+        ...state.generators,
+        viral_stunts: { ...state.generators.viral_stunts, owned: true },
+      },
+    };
+    expect(isEligibleToRebrand(withViral)).toBe(true);
   });
 });
 

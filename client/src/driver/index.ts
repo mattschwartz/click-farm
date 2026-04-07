@@ -34,6 +34,7 @@ import { clearSave, load, save } from '../save/index.ts';
 import { calculateOffline, type OfflineResult } from '../offline/index.ts';
 import {
   calculateRebrand,
+  canRebrand,
   applyRebrand,
   purchaseCloutUpgrade,
   type RebrandResult,
@@ -181,6 +182,8 @@ export interface GameDriver {
    * Returns the RebrandResult so the UI can show the Clout earned.
    */
   rebrand(): RebrandResult;
+  /** Whether rebrand is currently available (viral_stunts must be unlocked). */
+  canRebrand(): boolean;
   /** Spend Clout to level up a meta-upgrade. Throws when unaffordable. */
   buyCloutUpgrade(upgradeId: UpgradeId): void;
   /** Spend Engagement on a Creator Kit item. Errors caught via onActionError. */
@@ -611,7 +614,12 @@ export function createDriver(options: DriverOptions): GameDriver {
       applyState(newState);
     },
 
+    canRebrand: () => canRebrand(state),
+
     rebrand() {
+      if (!canRebrand(state)) {
+        throw new Error('rebrand: viral_stunts must be unlocked before rebranding');
+      }
       const result = calculateRebrand(state);
       applyState(applyRebrand(state, result, staticData, now()));
       // Rebrand starts a fresh run — reset the tick clock so the first tick
