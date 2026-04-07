@@ -4401,12 +4401,12 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
   }
 
   /* All three buttons (POWER, SPEED, HIRE) — uniform size.
-   * 56px wide × 32px tall so they read as a matched set.
+   * 84px wide × 48px tall so they read as a matched set.
    * Explicit height + box-sizing on both ensures pixel-perfect match. */
   .row-btn {
-    width: 112px;
-    min-width: 112px;
-    height: 32px;
+    width: 84px;
+    min-width: 84px;
+    height: 48px;
     box-sizing: border-box;
     padding: 0 4px;
     font-size: 10px;
@@ -4421,13 +4421,13 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     margin-bottom: 0;
   }
 
-  /* HIRE pill — same 112×32 footprint as POWER/SPEED.
+  /* HIRE pill — same 84×38 footprint as POWER/SPEED.
    * Column layout preserved so maxed state shows crown + label / MAX
    * in the same two-line pattern as SPEED. Cost hidden in landscape. */
   .purchase-pill {
-    width: 112px;
-    min-width: 112px;
-    height: 32px;
+    width: 84px;
+    min-width: 84px;
+    height: 48px;
     box-sizing: border-box;
     line-height: 1.2;
     padding: 0 4px;
@@ -4437,7 +4437,7 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
 
   .purchase-pill-auto {
     flex-direction: column;
-    height: 32px;
+    height: 48px;
     padding: 0 4px;
     align-items: center;
     justify-content: center;
