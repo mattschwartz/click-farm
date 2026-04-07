@@ -315,7 +315,10 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
         </span>
       )}
 
+    </button>
+
       {/* Float feedback — ratio-scaled size & brightness.
+          Rendered outside the button to avoid overflow:hidden clipping.
           Autoclicker floats render at 80% size, 0.7 opacity (§4.6). */}
       {floats.map((f) => {
         const fs = floatStyle(f.value, state.player.engagement);
@@ -337,7 +340,6 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
           </span>
         );
       })}
-    </button>
     </div>
   );
 }
