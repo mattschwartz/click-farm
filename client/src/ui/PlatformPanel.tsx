@@ -57,9 +57,6 @@ export function PlatformPanel({ state, staticData, viralPlatformId }: Props) {
           />
         );
       })}
-      <div className="platform-total-followers">
-        <TieredNumber value={state.player.total_followers} int /> <span className="platform-total-label">total followers</span>
-      </div>
     </aside>
   );
 }
