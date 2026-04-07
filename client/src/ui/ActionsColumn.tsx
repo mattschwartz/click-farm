@@ -19,7 +19,6 @@ import {
 import { playClick } from './sfx.ts';
 import { GENERATOR_DISPLAY } from './display.ts';
 import { fmtCompact } from './format.ts';
-import { TieredNumber } from './TieredNumber.tsx';
 
 // Verb icon images — imported via Vite so they resolve to hashed asset URLs.
 import chirpImg from '../assets/chirp.png';
@@ -258,13 +257,11 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
       y = ((e.clientY - rect.top + Math.sin(angle) * radius) / rect.height) * 100;
     }
 
-    if (showFloats) {
-      setFloats((prev) => [...prev, { id, value: perTap, x, y }]);
-      window.setTimeout(() => {
-        setFloats((prev) => prev.filter((f) => f.id !== id));
-      }, FLOAT_TTL_MS);
-    }
-  }, [onClick, verbId, perTap, cdMs, state.player.last_manual_click_at, showFloats]);
+    setFloats((prev) => [...prev, { id, value: perTap, x, y }]);
+    window.setTimeout(() => {
+      setFloats((prev) => prev.filter((f) => f.id !== id));
+    }, FLOAT_TTL_MS);
+  }, [onClick, verbId, perTap, cdMs, state.player.last_manual_click_at]);
 
   const fillHeight = atFloor ? 100 : progress * 100;
 
@@ -273,7 +270,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
 
   return (
     <div className="verb-btn-wrap">
-      <span className="verb-badge">+<TieredNumber value={perTap} /></span>
+      <span className="verb-badge">+{fmtCompact(perTap)}</span>
       <button
         ref={btnRef}
         className={`live-verb-btn${isSpotlight ? ' live-verb-spotlight' : ''}${isReady || atFloor ? ' live-verb-ready' : ' live-verb-cooldown'}`}
@@ -420,22 +417,15 @@ interface ActionsColumnProps {
   state: GameState;
   staticData: StaticData;
   onClickVerb: (verbId: GeneratorId) => void;
-  onUnlockVerb: (verbId: GeneratorId) => void;
   showVerbFloats?: boolean;
 }
 
-export function ActionsColumn({ state, staticData, onClickVerb, onUnlockVerb, showVerbFloats = true }: ActionsColumnProps) {
-  // Owned ladder verbs (live buttons), sorted by cooldown ascending
-  // (shortest cooldown at top, longest at bottom).
+export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats = true }: ActionsColumnProps) {
+  // Owned ladder verbs (live buttons) in fixed ladder order:
+  // chirps → selfies → livestreams → podcasts → viral_stunts.
   const liveVerbs = useMemo(() =>
-    LADDER_VERBS
-      .filter((id) => state.generators[id].owned)
-      .sort((a, b) => {
-        const cdA = verbCooldownMs(state.generators[a].level, staticData.generators[a].base_event_rate);
-        const cdB = verbCooldownMs(state.generators[b].level, staticData.generators[b].base_event_rate);
-        return cdA - cdB;
-      }),
-    [state.generators, staticData],
+    LADDER_VERBS.filter((id) => state.generators[id].owned),
+    [state.generators],
   );
 
   // Ghost: next un-owned verb whose threshold is met (or whose threshold is
@@ -455,9 +445,6 @@ export function ActionsColumn({ state, staticData, onClickVerb, onUnlockVerb, sh
     ? staticData.unlockThresholds.generators[ghostVerb] ?? Infinity
     : Infinity;
   const ghostAwakened = ghostVerb !== null && state.player.total_followers >= ghostThreshold;
-  const ghostCost = ghostVerb ? staticData.generators[ghostVerb].base_buy_cost : 0;
-  const ghostCanAfford = ghostVerb !== null && state.player.engagement >= ghostCost;
-
   return (
     <section className="actions-column">
       <div className="actions-scroll-region">
@@ -478,10 +465,10 @@ export function ActionsColumn({ state, staticData, onClickVerb, onUnlockVerb, sh
           <GhostSlot
             verbId={ghostVerb}
             threshold={ghostThreshold}
-            canAfford={ghostCanAfford}
-            cost={ghostCost}
+            canAfford={false}
+            cost={0}
             isAwakened={ghostAwakened}
-            onUnlock={onUnlockVerb}
+            onUnlock={() => {}}
           />
         )}
       </div>

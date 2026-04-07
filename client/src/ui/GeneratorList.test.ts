@@ -101,10 +101,10 @@ describe('buyAllLabel', () => {
     expect(buyAllLabel(true, 5)).toBe('STOP');
   });
 
-  it('returns BUY ALL (N) when idle', () => {
-    expect(buyAllLabel(false, 0)).toBe('BUY ALL (0)');
-    expect(buyAllLabel(false, 3)).toBe('BUY ALL (3)');
-    expect(buyAllLabel(false, 12)).toBe('BUY ALL (12)');
+  it('returns RUSH BUY (N) when idle', () => {
+    expect(buyAllLabel(false, 0)).toBe('RUSH BUY (0)');
+    expect(buyAllLabel(false, 3)).toBe('RUSH BUY (3)');
+    expect(buyAllLabel(false, 12)).toBe('RUSH BUY (12)');
   });
 });
 

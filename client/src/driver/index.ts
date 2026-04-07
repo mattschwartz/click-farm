@@ -24,7 +24,6 @@ import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
 import {
   buyGenerator,
   upgradeGenerator,
-  unlockGenerator,
   buyAutoclicker,
   generatorBuyCost,
   generatorUpgradeCost,
@@ -98,8 +97,17 @@ export interface SweepState {
   previewCount: number;
 }
 
-// Internal sweep purchase candidate — not exported.
-type SweepItemType = 'buy' | 'upgrade' | 'autoclicker';
+/** Which track a sweep purchase targeted. */
+export type SweepItemType = 'buy' | 'upgrade' | 'autoclicker';
+
+/** Info about a single sweep purchase — passed to onSweepPurchase listeners. */
+export interface SweepPurchaseEvent {
+  type: SweepItemType;
+  generatorId: GeneratorId;
+  cost: number;
+}
+
+// Internal sweep purchase candidate.
 interface SweepItem {
   type: SweepItemType;
   generatorId: GeneratorId;
@@ -137,7 +145,6 @@ export interface GameDriver {
   buy(generatorId: GeneratorId): void;
   upgrade(generatorId: GeneratorId): void;
   /** Unlock a manual-clickable generator (pays base_buy_cost, flips owned=true). */
-  unlock(verbId: GeneratorId): void;
   /** Buy one autoclicker for a manual-clickable generator. */
   buyAutoclicker(verbId: GeneratorId): void;
   /** Force a single tick using the driver's clock. Test/debug utility. */
@@ -200,9 +207,9 @@ export interface GameDriver {
   onSweepEnd(listener: () => void): Unsubscribe;
   /**
    * Subscribe to per-purchase events during a sweep. Fires after each
-   * individual purchase succeeds. Used by the UI for per-purchase sound.
+   * individual purchase succeeds with the type and generatorId that was bought.
    */
-  onSweepPurchase(listener: () => void): Unsubscribe;
+  onSweepPurchase(listener: (e: SweepPurchaseEvent) => void): Unsubscribe;
   /**
    * Subscribe to viral burst events. Fires once per event, synchronously,
    * before state subscribers are notified. Returns an unsubscribe function.
@@ -301,7 +308,7 @@ export function createDriver(options: DriverOptions): GameDriver {
   const errorListeners = new Set<ActionErrorListener>();
   const saveErrorListeners = new Set<SaveErrorListener>();
   const sweepEndListeners = new Set<() => void>();
-  const sweepPurchaseListeners = new Set<() => void>();
+  const sweepPurchaseListeners = new Set<(e: SweepPurchaseEvent) => void>();
 
   // Internal sweep state — ephemeral, not persisted.
   const sweep = { active: false, timeoutHandle: null as number | null };
@@ -449,8 +456,13 @@ export function createDriver(options: DriverOptions): GameDriver {
         }
       }
     }
-    // Cheapest-first — maximises coverage per the spec.
-    return items.sort((a, b) => a.cost - b.cost);
+    // SPEED (upgrade) first, then cheapest within each priority tier.
+    return items.sort((a, b) => {
+      const aUpgrade = a.type === 'upgrade' ? 0 : 1;
+      const bUpgrade = b.type === 'upgrade' ? 0 : 1;
+      if (aUpgrade !== bUpgrade) return aUpgrade - bUpgrade;
+      return a.cost - b.cost;
+    });
   }
 
   function fireSweepEndListeners(): void {
@@ -479,7 +491,7 @@ export function createDriver(options: DriverOptions): GameDriver {
     }
     // Notify per-purchase listeners only if state actually changed.
     if (state !== before) {
-      for (const l of sweepPurchaseListeners) l();
+      for (const l of sweepPurchaseListeners) l({ type: item.type, generatorId: item.generatorId, cost: item.cost });
     }
 
     const next = buildAffordableList(state);
@@ -518,12 +530,6 @@ export function createDriver(options: DriverOptions): GameDriver {
     upgrade(generatorId) {
       runAction('upgrade', { generatorId }, () => {
         applyState(upgradeGenerator(state, generatorId, staticData));
-      });
-    },
-
-    unlock(verbId) {
-      runAction('unlock', { verbId }, () => {
-        applyState(unlockGenerator(state, verbId, staticData));
       });
     },
 

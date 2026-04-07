@@ -21,10 +21,10 @@ describe('TopBar RUN badge logic', () => {
     expect(shouldShowRunBadge(100)).toBe(true);
   });
 
-  it('formats RUN badge text correctly', () => {
-    expect(formatRunBadge(0)).toBe('RUN 1');
-    expect(formatRunBadge(1)).toBe('RUN 2');
-    expect(formatRunBadge(2)).toBe('RUN 3');
-    expect(formatRunBadge(10)).toBe('RUN 11');
+  it('formats rebrand badge text correctly', () => {
+    expect(formatRunBadge(0)).toBe('Rebrands +0');
+    expect(formatRunBadge(1)).toBe('Rebrand +1');
+    expect(formatRunBadge(2)).toBe('Rebrands +2');
+    expect(formatRunBadge(10)).toBe('Rebrands +10');
   });
 });

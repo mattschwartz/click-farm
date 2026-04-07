@@ -57,14 +57,14 @@ interface StoredSettings {
  * Per ux/settings-screen.md §8 OQ#1: on first launch, reduceMotion seeds
  * from the OS `prefers-reduced-motion` query, then allows user override.
  */
-export function getDefaultSettings(osReduceMotion = false): Settings {
+export function getDefaultSettings(osReduceMotion = false, isSafari = false): Settings {
   return {
     reduceTimePressure: false,
     reduceMotion: osReduceMotion,
     sound: true,
     musicVolume: 30,
     sfxVolume: 50,
-    showVerbFloats: true,
+    showVerbFloats: !isSafari,
   };
 }
 
@@ -77,6 +77,17 @@ export function readOsReduceMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+/**
+ * Detect Safari (including iOS Safari). Returns false in non-browser
+ * environments. Safari struggles with backdrop-filter compositing, so
+ * we disable floating numbers by default on first launch.
+ */
+export function detectSafari(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  return /Safari/i.test(ua) && !/Chrome|Chromium|CriOS/i.test(ua);
+}
+
 // ---------------------------------------------------------------------------
 // Persistence
 // ---------------------------------------------------------------------------
@@ -87,8 +98,8 @@ export function readOsReduceMotion(): boolean {
  * malformed. Missing fields are filled from defaults — a forward-compatible
  * migration for new toggles added in future versions.
  */
-export function loadSettings(osReduceMotion = readOsReduceMotion()): Settings {
-  const defaults = getDefaultSettings(osReduceMotion);
+export function loadSettings(osReduceMotion = readOsReduceMotion(), isSafari = detectSafari()): Settings {
+  const defaults = getDefaultSettings(osReduceMotion, isSafari);
   if (typeof localStorage === 'undefined') return defaults;
 
   const raw = localStorage.getItem(STORAGE_KEY);

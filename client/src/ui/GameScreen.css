@@ -11,13 +11,14 @@
 .game-screen {
   position: relative;
   z-index: 1;
-  min-height: 100vh;
+  height: 100vh;
   color: var(--text-primary);
   font-family: var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif;
   display: grid;
   grid-template-rows: 80px 1fr;
   max-width: 1280px;
   margin: 0 auto;
+  overflow: hidden;
 }
 
 .game-body {
@@ -38,12 +39,17 @@
  * No absolute-positioned children — everything is flow. */
 .top-bar {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 24px;
-  padding: 0 24px;
+  padding: 0 0 0 24px;
+  margin: 8px 16px 0;
   background: var(--surface-panel);
-  border-bottom: 2px solid var(--border-default);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   backdrop-filter: blur(6px);
+  box-shadow:
+    0 2px 8px -2px rgba(0, 0, 0, 0.08),
+    0 4px 16px -4px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: visible;
   z-index: 10;
@@ -58,6 +64,7 @@
   opacity: 0.12;
   pointer-events: none;
   z-index: 0;
+  border-radius: inherit;
 }
 
 /* Ensure all top-bar children sit above the backdrop. */
@@ -71,13 +78,15 @@
   height: 48px;
   border-radius: 6px;
   flex-shrink: 0;
+  align-self: center;
 }
 
 .top-bar-title-group {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-direction: column;
   flex-shrink: 0;
+  line-height: 1;
+  align-self: center;
 }
 
 .top-bar-title {
@@ -138,37 +147,94 @@
   text-overflow: ellipsis;
 }
 
-/* RUN badge — appears in Zone A (task #66, UX §5).
-   Hidden at rebrand_count 0; 400ms fade-in on first appearance (rebrand_count 1). */
+/* RUN badge — platinum plaque (task #66, UX §5).
+   Hidden at rebrand_count 0; 400ms fade-in on first appearance. */
 .run-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 900;
-  font-size: 14px;
-  letter-spacing: 0.04em;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-receded); /* ~4.5:1 contrast, muted per spec */
-  margin-left: 8px;
+  color: var(--accent-platinum);
+  margin-top: 3px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+
+  justify-content: center;
+
+  /* Platinum plaque material — matches maxed LVL button */
+  border: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--palette-platinum-rgb), 0.18) 0%,
+    rgba(var(--palette-platinum-rgb), 0.08) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+    inset 0 0 0 1px rgba(var(--palette-near-black-rgb), 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.08);
+
   animation: run-badge-fade-in 400ms ease-out;
 }
 
-@keyframes run-badge-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* Shine sweep — synced with maxed LVL plaques */
+.run-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgba(var(--palette-white-rgb), 0.0) 46%,
+    rgba(var(--palette-white-rgb), 0.65) 50%,
+    rgba(var(--palette-white-rgb), 0.0) 54%,
+    transparent 62%
+  );
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  animation: lvl-maxed-shine 7000ms linear infinite;
 }
+
+.run-badge-crown {
+  font-size: 10px;
+}
+
+@keyframes run-badge-fade-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .run-badge::before { animation: none; }
+  .run-badge { animation: none; }
+}
+html[data-reduce-motion="true"] .run-badge::before { animation: none; }
+html[data-reduce-motion="true"] .run-badge { animation: none; }
 
 /* Zone B — engagement (min 30% width, §1.2). Flex-grow takes remaining
  * space after A and C. */
 .engagement-slot {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-end;
   gap: 12px;
   line-height: 1;
   position: relative; /* anchor for viral-summary-badge absolute positioning */
   flex: 1 1 auto;
   min-width: 30%;
+  align-self: stretch;
 }
 
 /* Rate is rendered inside the engagement hover tooltip, not standalone */
@@ -176,7 +242,9 @@
   display: none;
 }
 
-/* Engagement counter — frosted glass that hugs the number. */
+/* Engagement counter — frosted glass that hugs the number.
+   Stretches to fill the header height and sits flush against the
+   header's right edge so its border-radius nests inside the header's. */
 .engagement-value {
   position: relative;
   font-size: 64px;
@@ -192,13 +260,16 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  border-right: none;
+  border-radius: 12px 11px 11px 12px;
   box-shadow:
     0 2px 8px -2px rgba(0, 0, 0, 0.08),
     0 8px 24px -4px rgba(0, 0, 0, 0.05);
   padding: 4px 16px;
   align-items: center;
   gap: 8px;
+  align-self: stretch;
 }
 
 .engagement-icon {
@@ -812,7 +883,7 @@
   }
 }
 
-/* --- BUY ALL button (auto-buy sweep trigger, §1 of accepted proposal) --- */
+/* --- RUSH BUY button (auto-buy sweep trigger, §1 of accepted proposal) --- */
 
 .buy-all-btn {
   display: block;
@@ -868,6 +939,60 @@
 
 html[data-reduce-motion="true"] .buy-all-btn-sweeping {
   animation: none;
+}
+
+/* --- Sweep-hit scale pop — 64ms ease-out on each sweep purchase --- */
+.sweep-hit {
+  animation: sweep-hit-pop 64ms ease-out;
+}
+@keyframes sweep-hit-pop {
+  from { transform: scale(1.12); }
+  to   { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sweep-hit { animation: none; }
+}
+html[data-reduce-motion="true"] .sweep-hit {
+  animation: none;
+}
+
+/* --- Sweep cost float — arcing "-14.0M" on each purchase --- */
+.sweep-cost-float {
+  position: fixed;
+  pointer-events: none;
+  font-size: 15px;
+  font-weight: 800;
+  color: #c0392b;
+  white-space: nowrap;
+  animation: sweep-cost-arc 800ms ease-out forwards;
+  z-index: 9999;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.9),
+    0 0 6px rgba(255, 255, 255, 0.6),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+@keyframes sweep-cost-arc {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1.15);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1);
+  }
+  70% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sweep-cost-float { display: none; }
+}
+html[data-reduce-motion="true"] .sweep-cost-float {
+  display: none;
 }
 
 .category-divider {
@@ -1510,7 +1635,7 @@ html[data-reduce-motion="true"] .buy-all-btn-sweeping {
 .shop-overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1782,7 +1907,7 @@ html[data-reduce-motion="true"] .buy-all-btn-sweeping {
 .ceremony-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2814,7 +2939,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 .settings-overlay {
   position: fixed;
   inset: 0;
-  z-index: 45;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2900,6 +3025,12 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   border-top: 1px solid var(--border-subtle);
 }
 
+.settings-save-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
 .settings-save-group {
   gap: 10px;
 }
@@ -3129,6 +3260,29 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   color: var(--accent-red);
   background: rgba(var(--modal-danger-rgb),0.06);
   border: 1px solid rgba(var(--modal-danger-rgb),0.22);
+}
+
+/* --- Donate button ------------------------------------------------------- */
+.settings-donate-section {
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+.settings-donate-btn {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-green);
+  text-decoration: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--modal-success-rgb), 0.25);
+  background: rgba(var(--modal-success-rgb), 0.06);
+  transition: background 150ms ease-out, border-color 150ms ease-out;
+}
+.settings-donate-btn:hover {
+  background: rgba(var(--modal-success-rgb), 0.12);
+  border-color: rgba(var(--modal-success-rgb), 0.40);
 }
 
 /* --- Save-error banner (task #55) ---------------------------------------- */
