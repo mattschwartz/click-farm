@@ -39,12 +39,17 @@
  * No absolute-positioned children — everything is flow. */
 .top-bar {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 24px;
-  padding: 0 24px;
+  padding: 0 0 0 24px;
+  margin: 8px 16px 0;
   background: var(--surface-panel);
-  border-bottom: 2px solid var(--border-default);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   backdrop-filter: blur(6px);
+  box-shadow:
+    0 2px 8px -2px rgba(0, 0, 0, 0.08),
+    0 4px 16px -4px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: visible;
   z-index: 10;
@@ -59,6 +64,7 @@
   opacity: 0.12;
   pointer-events: none;
   z-index: 0;
+  border-radius: inherit;
 }
 
 /* Ensure all top-bar children sit above the backdrop. */
@@ -72,6 +78,7 @@
   height: 48px;
   border-radius: 6px;
   flex-shrink: 0;
+  align-self: center;
 }
 
 .top-bar-title-group {
@@ -79,6 +86,7 @@
   flex-direction: column;
   flex-shrink: 0;
   line-height: 1;
+  align-self: center;
 }
 
 .top-bar-title {
@@ -219,13 +227,14 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
 .engagement-slot {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-end;
   gap: 12px;
   line-height: 1;
   position: relative; /* anchor for viral-summary-badge absolute positioning */
   flex: 1 1 auto;
   min-width: 30%;
+  align-self: stretch;
 }
 
 /* Rate is rendered inside the engagement hover tooltip, not standalone */
@@ -233,7 +242,9 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   display: none;
 }
 
-/* Engagement counter — frosted glass that hugs the number. */
+/* Engagement counter — frosted glass that hugs the number.
+   Stretches to fill the header height and sits flush against the
+   header's right edge so its border-radius nests inside the header's. */
 .engagement-value {
   position: relative;
   font-size: 64px;
@@ -249,13 +260,16 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  border-right: none;
+  border-radius: 12px 11px 11px 12px;
   box-shadow:
     0 2px 8px -2px rgba(0, 0, 0, 0.08),
     0 8px 24px -4px rgba(0, 0, 0, 0.05);
   padding: 4px 16px;
   align-items: center;
   gap: 8px;
+  align-self: stretch;
 }
 
 .engagement-icon {
@@ -3246,6 +3260,29 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   color: var(--accent-red);
   background: rgba(var(--modal-danger-rgb),0.06);
   border: 1px solid rgba(var(--modal-danger-rgb),0.22);
+}
+
+/* --- Donate button ------------------------------------------------------- */
+.settings-donate-section {
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+.settings-donate-btn {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-green);
+  text-decoration: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--modal-success-rgb), 0.25);
+  background: rgba(var(--modal-success-rgb), 0.06);
+  transition: background 150ms ease-out, border-color 150ms ease-out;
+}
+.settings-donate-btn:hover {
+  background: rgba(var(--modal-success-rgb), 0.12);
+  border-color: rgba(var(--modal-success-rgb), 0.40);
 }
 
 /* --- Save-error banner (task #55) ---------------------------------------- */

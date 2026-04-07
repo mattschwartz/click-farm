@@ -10,6 +10,7 @@
 // 5. The global gesture listener also resumes suspended contexts (post-idle),
 //    so the context is always running by the time play() fires.
 
+import silentSfx from '../assets/silent.wav';
 import clickSfx from '../assets/click.wav';
 import purchaseSfx from '../assets/purchase.mp3';
 import sweepStartSfx from '../assets/sweep-start.wav';
@@ -124,6 +125,22 @@ function ensureBgMusic(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Silent loop — keeps the audio context alive on iOS Safari. Plays a 1s
+// silent WAV on repeat regardless of mute state. Started on first gesture.
+// ---------------------------------------------------------------------------
+
+let silentLoop: HTMLAudioElement | null = null;
+
+function ensureSilentLoop(): void {
+  if (typeof window === 'undefined') return;
+  if (silentLoop) return;
+  silentLoop = new Audio(silentSfx);
+  silentLoop.loop = true;
+  silentLoop.volume = 0;
+  silentLoop.play().catch(() => {});
+}
+
+// ---------------------------------------------------------------------------
 // Global gesture listener — create context + resume on ANY user interaction.
 // This ensures the context is running before play() is called, avoiding the
 // async gap between resume() and source.start() that drops the first sound.
@@ -137,6 +154,7 @@ if (typeof window !== 'undefined') {
       audioCtx.resume();
     }
     ensureBgMusic();
+    ensureSilentLoop();
   };
   for (const evt of ['click', 'touchstart', 'keydown']) {
     window.addEventListener(evt, onGesture, { capture: true, passive: true });

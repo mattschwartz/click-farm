@@ -344,6 +344,18 @@ export function SettingsModal({
               )}
             </div>
           </section>
+
+          {/* DONATE */}
+          <section className="settings-section settings-donate-section">
+            <a
+              href="https://support.savethechildren.org/site/Donation2?df_id=1620&mfc_pref=T&1620.donation=form1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="settings-donate-btn"
+            >
+              Donate to Save the Children
+            </a>
+          </section>
         </div>
       </div>
     </div>
