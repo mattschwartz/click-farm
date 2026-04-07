@@ -2385,6 +2385,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   background: transparent;
   color: #9B9B9B;
   border-color: rgba(240, 236, 231, 0.60);
+  cursor: not-allowed;
 }
 .row-btn-upgrade.row-btn-lvl-armed .label {
   color: #9B9B9B;
@@ -3369,10 +3370,23 @@ html[data-reduce-motion="true"] .purchase-pill-auto.purchase-pill-affordable::be
   background: transparent;
   color: #9B9B9B;
   border-color: rgba(240, 236, 231, 0.60);
-  cursor: default;
+  cursor: not-allowed;
 }
 .purchase-pill-unaffordable:active {
   transform: none;
+}
+
+.purchase-pill-shake {
+  animation: pill-shake 200ms ease-out;
+}
+
+@keyframes pill-shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(4px); }
+  40%  { transform: translateX(-4px); }
+  60%  { transform: translateX(4px); }
+  80%  { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
 }
 
 /* Label flash on purchase (§5.2) — 120ms bright flash */

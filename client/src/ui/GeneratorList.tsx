@@ -489,10 +489,15 @@ function SpeedButton({
 
 function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, generatorName }: AutoPillProps) {
   const [glowing, setGlowing] = useState(false);
+  const [shaking, setShaking] = useState(false);
   const rgb = hexToRgbPill(verbColor);
 
   const handleClick = () => {
-    if (!canBuy) return; // no-op, no shake (per pills spec §5.3)
+    if (!canBuy) {
+      setShaking(true);
+      window.setTimeout(() => setShaking(false), 200);
+      return;
+    }
     setGlowing(true);
     window.setTimeout(() => setGlowing(false), 120);
     onBuy();
@@ -500,7 +505,7 @@ function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, gener
 
   return (
     <button
-      className={`purchase-pill purchase-pill-auto${canBuy ? ' purchase-pill-affordable' : ' purchase-pill-unaffordable'}${glowing ? ' purchase-pill-flash' : ''}`}
+      className={`purchase-pill purchase-pill-auto${canBuy ? ' purchase-pill-affordable' : ' purchase-pill-unaffordable'}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}`}
       style={canBuy ? {
         '--pill-color': verbColor,
         '--pill-color-rgb': rgb,
