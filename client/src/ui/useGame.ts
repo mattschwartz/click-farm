@@ -114,6 +114,14 @@ export function useGame(): UseGameResult {
     return unsub;
   }, [driver]);
 
+  // Per-purchase sound during sweep.
+  useEffect(() => {
+    const unsub = driver.onSweepPurchase(() => {
+      playPurchase();
+    });
+    return unsub;
+  }, [driver]);
+
   // Start/stop the timers with the component lifecycle. Also persist on page
   // hide (beforeunload fires unreliably on mobile; visibilitychange is the
   // recommended modern replacement).
