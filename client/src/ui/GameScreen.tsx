@@ -74,6 +74,7 @@ import { OfflineGainsModal } from './OfflineGainsModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
 import { SettingsModal } from './SettingsModal.tsx';
+import { RotateToLandscapePrompt } from './RotateToLandscapePrompt.tsx';
 import { useSettings } from './useSettings.ts';
 import { prevTrack, nextTrack, togglePlayPause, isMusicPlaying } from './sfx.ts';
 import { fmtCompactInt } from './format.ts';
@@ -530,6 +531,9 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
           }}
         />
       )}
+
+      {/* Rotate to landscape prompt — shows for phones in portrait mode. */}
+      <RotateToLandscapePrompt />
 
       {/* Floating bottom-left toolbar — settings + player */}
       <div className="floating-toolbar">

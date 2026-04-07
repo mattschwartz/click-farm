@@ -7351,7 +7351,7 @@
       "id": 182,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Add rotate-to-landscape prompt for phones in portrait mode",
       "requester": "ux-designer",
@@ -7388,7 +7388,8 @@
         "200ms fade-in/out transition on the overlay (per ux/mobile-layout.md §12 motion brief)"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     }
   ]
 }

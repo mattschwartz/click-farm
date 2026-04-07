@@ -1679,6 +1679,58 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   background: var(--surface-pressed);
 }
 
+/* --- Rotate to landscape prompt (task #182) -------------------------------- */
+
+.rotate-to-landscape-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-panel);
+  animation: fade-in 200ms ease-out;
+}
+
+/* Respect reduce-motion preference — replace fade with instant on/off. */
+@media (prefers-reduced-motion: reduce) {
+  .rotate-to-landscape-overlay {
+    animation: none;
+  }
+}
+
+/* Also respect the in-game Enable Motion toggle via data-reduce-motion. */
+html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
+  animation: none;
+}
+
+.rotate-to-landscape-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  color: var(--text-primary);
+}
+
+.rotate-icon {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  color: var(--text-primary);
+  display: block;
+}
+
+.rotate-text {
+  font-family: var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
 /* --- Prestige cluster — two-button bottom-right affordance (spec §2.1–2.3) */
 
 .prestige-cluster {
