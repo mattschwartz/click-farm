@@ -134,12 +134,13 @@ interface LiveVerbButtonProps {
   staticData: StaticData;
   isSpotlight: boolean;
   onClick: (verbId: GeneratorId) => void;
+  showFloats?: boolean;
 }
 
 /** Density cap for individual autoclicker floats (§4.6). Above this, batch. */
 const AUTO_FLOAT_DENSITY_CAP = 8;
 
-function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: LiveVerbButtonProps) {
+function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showFloats = true }: LiveVerbButtonProps) {
   const genState = state.generators[verbId];
   const display = GENERATOR_DISPLAY[verbId];
   const color = VERB_COLOR[verbId] ?? display.color;
@@ -192,8 +193,8 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
         window.setTimeout(() => setBadgePulsing(false), 200);
       }
 
-      // Suppress floating numbers under reduced-motion (§9.5).
-      if (prefersReducedMotion) return;
+      // Suppress floating numbers under reduced-motion (§9.5) or setting.
+      if (prefersReducedMotion || !showFloats) return;
 
       const rect = btnRef.current?.getBoundingClientRect();
       const perAutoTap = perAuto;
@@ -232,7 +233,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
 
     const interval = window.setInterval(emitBurst, burstIntervalMs);
     return () => window.clearInterval(interval);
-  }, [autoCount, burstIntervalMs, perAuto, prefersReducedMotion]);
+  }, [autoCount, burstIntervalMs, perAuto, prefersReducedMotion, showFloats]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     // Only show float feedback if the cooldown gate will accept the tap.
@@ -257,11 +258,13 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
       y = ((e.clientY - rect.top + Math.sin(angle) * radius) / rect.height) * 100;
     }
 
-    setFloats((prev) => [...prev, { id, value: perTap, x, y }]);
-    window.setTimeout(() => {
-      setFloats((prev) => prev.filter((f) => f.id !== id));
-    }, FLOAT_TTL_MS);
-  }, [onClick, verbId, perTap, cdMs, state.player.last_manual_click_at]);
+    if (showFloats) {
+      setFloats((prev) => [...prev, { id, value: perTap, x, y }]);
+      window.setTimeout(() => {
+        setFloats((prev) => prev.filter((f) => f.id !== id));
+      }, FLOAT_TTL_MS);
+    }
+  }, [onClick, verbId, perTap, cdMs, state.player.last_manual_click_at, showFloats]);
 
   const fillHeight = atFloor ? 100 : progress * 100;
 
@@ -418,9 +421,10 @@ interface ActionsColumnProps {
   staticData: StaticData;
   onClickVerb: (verbId: GeneratorId) => void;
   onUnlockVerb: (verbId: GeneratorId) => void;
+  showVerbFloats?: boolean;
 }
 
-export function ActionsColumn({ state, staticData, onClickVerb, onUnlockVerb }: ActionsColumnProps) {
+export function ActionsColumn({ state, staticData, onClickVerb, onUnlockVerb, showVerbFloats = true }: ActionsColumnProps) {
   // Owned ladder verbs (live buttons), sorted by cooldown ascending
   // (shortest cooldown at top, longest at bottom).
   const liveVerbs = useMemo(() =>
@@ -465,6 +469,7 @@ export function ActionsColumn({ state, staticData, onClickVerb, onUnlockVerb }: 
             staticData={staticData}
             isSpotlight={false}
             onClick={onClickVerb}
+            showFloats={showVerbFloats}
           />
         ))}
 

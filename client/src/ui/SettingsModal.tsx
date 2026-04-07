@@ -47,6 +47,7 @@ interface Props {
   onSetSound: (v: boolean) => void;
   onSetMusicVolume: (v: number) => void;
   onSetSfxVolume: (v: number) => void;
+  onSetShowVerbFloats: (v: boolean) => void;
   /** Current rebrand count — drives the export filename. */
   rebrandCount: number;
   onClose: () => void;
@@ -67,6 +68,7 @@ export function SettingsModal({
   onSetSound,
   onSetMusicVolume,
   onSetSfxVolume,
+  onSetShowVerbFloats,
   rebrandCount,
   onClose,
   onResetRequested,
@@ -208,6 +210,12 @@ export function SettingsModal({
                 description="Replaces decorative motion with static alternatives. Number animations preserved."
                 checked={settings.reduceMotion}
                 onChange={onSetReduceMotion}
+              />
+              <SettingsToggle
+                label="Floating Numbers"
+                description="Show pop-up numbers on verb action buttons when tapping or autoclicking."
+                checked={settings.showVerbFloats}
+                onChange={onSetShowVerbFloats}
               />
             </div>
           </section>

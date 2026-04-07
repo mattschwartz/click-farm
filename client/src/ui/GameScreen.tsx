@@ -119,6 +119,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     setSound,
     setMusicVolume,
     setSfxVolume,
+    setShowVerbFloats,
   } = useSettings();
 
   // Music player — sync UI with actual audio state. Poll at 250ms so mute
@@ -308,6 +309,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
             staticData={STATIC_DATA}
             onClickVerb={click}
             onUnlockVerb={unlock}
+            showVerbFloats={settings.showVerbFloats}
           />
           <div className="generator-column">
             <GeneratorList
@@ -415,6 +417,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
           onSetSound={setSound}
           onSetMusicVolume={setMusicVolume}
           onSetSfxVolume={setSfxVolume}
+          onSetShowVerbFloats={setShowVerbFloats}
           rebrandCount={state.player.rebrand_count}
           onClose={() => setShowSettingsModal(false)}
           onResetRequested={() => {

@@ -37,6 +37,8 @@ export interface Settings {
   musicVolume: number;
   /** SFX volume 0–100. Default 50. */
   sfxVolume: number;
+  /** Whether floating numbers appear on verb action buttons. Default true. */
+  showVerbFloats: boolean;
 }
 
 interface StoredSettings {
@@ -62,6 +64,7 @@ export function getDefaultSettings(osReduceMotion = false): Settings {
     sound: true,
     musicVolume: 30,
     sfxVolume: 50,
+    showVerbFloats: true,
   };
 }
 
@@ -123,6 +126,8 @@ export function loadSettings(osReduceMotion = readOsReduceMotion()): Settings {
       typeof stored.musicVolume === 'number' ? stored.musicVolume : defaults.musicVolume,
     sfxVolume:
       typeof stored.sfxVolume === 'number' ? stored.sfxVolume : defaults.sfxVolume,
+    showVerbFloats:
+      typeof stored.showVerbFloats === 'boolean' ? stored.showVerbFloats : defaults.showVerbFloats,
   };
 }
 

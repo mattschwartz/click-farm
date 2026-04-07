@@ -113,6 +113,10 @@ export function TopBar({
         <div className={`engagement-value${viralGold ? ' viral-gold' : ''}`}>
           <TieredNumber value={displayedEngagement} />
           <img src={engagementIconSrc} alt="" className="engagement-icon" aria-hidden="true" />
+          <span className="engagement-tooltip">
+            Engagement
+            <span className="tooltip-rate">+<TieredNumber value={engagementRate} />/s</span>
+          </span>
         </div>
         {summaryBadge && (
           <div className={`viral-summary-badge${summaryBadge.fading ? ' fading' : ''}`}>
