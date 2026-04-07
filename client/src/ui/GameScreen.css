@@ -1071,12 +1071,16 @@
 .row-btn {
   font-family: inherit;
   font-size: 12px;
-  padding: 5px 10px;
+  padding: 5px 0;
+  width: 72px;
+  text-align: center;
   border-radius: 4px;
   border: 1px solid var(--border-default);
   background: var(--surface-panel);
   color: var(--text-primary);
   cursor: pointer;
+  box-sizing: border-box;
+  flex-shrink: 0;
   font-variant-numeric: tabular-nums;
   transition: background 120ms ease-out, border-color 120ms ease-out;
 }
@@ -3226,10 +3230,10 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
  * --------------------------------------------------------------------------- */
 
 .purchase-pill {
-  min-width: 44px;
+  width: 80px;
   height: 28px;
   border-radius: 6px;
-  padding: 0 8px;
+  padding: 0 4px;
   font-size: 11px;
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
