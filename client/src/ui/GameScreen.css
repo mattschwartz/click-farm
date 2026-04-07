@@ -785,7 +785,7 @@
 
 .generator-row {
   display: grid;
-  grid-template-columns: 1fr auto auto auto auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 12px;
   padding: 10px 4px;
@@ -1067,6 +1067,7 @@
 .row-actions {
   display: flex;
   gap: 6px;
+  margin-left: auto;
 }
 
 .row-btn {
