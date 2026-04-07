@@ -78,9 +78,9 @@ export function generatorUpgradeCost(
 /**
  * Engagement cost to buy the next autoclicker for a generator.
  *
- *   cost = ceil(base_autoclicker_cost × buy_cost_multiplier^currentAutoclickerCount)
+ *   cost = base_autoclicker_cost × autoclicker_cost_multiplier^currentAutoclickerCount
  *
- * Same exponential escalation as BUY. Only meaningful for manual_clickable
+ * Steeper escalation than BUY. Only meaningful for manual_clickable
  * generators (passive-only generators have base_autoclicker_cost = 0).
  */
 export function autoclickerBuyCost(
@@ -94,8 +94,8 @@ export function autoclickerBuyCost(
     );
   }
   const def = staticData.generators[generatorId];
-  return Math.ceil(
-    def.base_autoclicker_cost * Math.pow(def.buy_cost_multiplier, currentAutoclickerCount),
+  return (
+    def.base_autoclicker_cost * Math.pow(def.autoclicker_cost_multiplier, currentAutoclickerCount)
   );
 }
 

@@ -60,6 +60,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 50,
     max_level: 10,
     base_autoclicker_cost: 5,
+    autoclicker_cost_multiplier: 1.5,
   },
   // §14a — ladder verb. Retuned: yield=5.0, rate=0.2 → passive 1.0 eng/s
   // at autoclicker_count=1, count=0.
@@ -77,6 +78,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 100,
     max_level: 10,
     base_autoclicker_cost: 50,
+    autoclicker_cost_multiplier: 1.5,
   },
   // §14b — passive-only. yield=1, rate=5.0 (preserved).
   memes: {
@@ -92,6 +94,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 1_000,
     max_level: 10,
     base_autoclicker_cost: 0,    // passive-only — no manual tap
+    autoclicker_cost_multiplier: 0,
   },
   // §14b — passive-only. yield=1, rate=12.0 (preserved).
   hot_takes: {
@@ -107,6 +110,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 11_000,
     max_level: 10,
     base_autoclicker_cost: 0,    // passive-only — no manual tap
+    autoclicker_cost_multiplier: 0,
   },
   // §14b — passive-only. yield=1, rate=30.0 (preserved).
   tutorials: {
@@ -122,6 +126,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 120_000,
     max_level: 10,
     base_autoclicker_cost: 0,    // passive-only — no manual tap
+    autoclicker_cost_multiplier: 0,
   },
   // §14a — ladder verb. yield×rate = 80.0 (preserved).
   livestreams: {
@@ -137,6 +142,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 1_300_000,
     max_level: 10,
     base_autoclicker_cost: 650_000,
+    autoclicker_cost_multiplier: 1.5,
   },
   // Ladder verb. Retuned: yield=10,000, rate=0.08 → passive 800 eng/s
   // at autoclicker_count=1, count=0. 10× livestreams output. L1 cooldown
@@ -156,6 +162,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 14_000_000,
     max_level: 10,
     base_autoclicker_cost: 7_000_000,
+    autoclicker_cost_multiplier: 1.5,
   },
   // Ladder verb. Retuned: yield=200,000, rate=0.04 → passive 8,000 eng/s
   // at autoclicker_count=1, count=0. 10× podcasts output. L1 cooldown
@@ -175,6 +182,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 200_000_000,
     max_level: 10,
     base_autoclicker_cost: 100_000_000,
+    autoclicker_cost_multiplier: 1.5,
   },
   // -------------------------------------------------------------------------
   // Post-prestige generators — unlocked only via Clout `generator_unlock`
@@ -200,6 +208,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 2_000_000_000,
     max_level: 10,
     base_autoclicker_cost: 0,    // post-prestige, passive-only
+    autoclicker_cost_multiplier: 0,
   },
   deepfakes: {
     id: 'deepfakes',
@@ -214,6 +223,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 20_000_000_000,
     max_level: 10,
     base_autoclicker_cost: 0,    // post-prestige, passive-only
+    autoclicker_cost_multiplier: 0,
   },
   algorithmic_prophecy: {
     id: 'algorithmic_prophecy',
@@ -228,6 +238,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_upgrade_cost: 200_000_000_000,
     max_level: 10,
     base_autoclicker_cost: 0,    // post-prestige, passive-only
+    autoclicker_cost_multiplier: 0,
   },
 };
 

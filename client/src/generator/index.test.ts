@@ -674,12 +674,11 @@ describe('autoclickerBuyCost', () => {
     expect(cost).toBe(STATIC_DATA.generators.chirps.base_autoclicker_cost);
   });
 
-  it('scales exponentially: ceil(base × 1.15^count)', () => {
+  it('scales exponentially: base × autoclicker_cost_multiplier^count', () => {
     const def = STATIC_DATA.generators.chirps;
     const cost3 = autoclickerBuyCost('chirps', 3, STATIC_DATA);
-    expect(cost3).toBe(
-      Math.ceil(def.base_autoclicker_cost * Math.pow(def.buy_cost_multiplier, 3)),
-    );
+    const expected = def.base_autoclicker_cost * Math.pow(def.autoclicker_cost_multiplier, 3);
+    expect(cost3).toBeCloseTo(expected);
   });
 
   it('increases monotonically', () => {

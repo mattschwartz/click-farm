@@ -295,11 +295,16 @@ export interface GeneratorDef {
   max_level: number;
   /**
    * Engagement cost to buy the first autoclicker unit.
-   * Subsequent units cost more: base_autoclicker_cost × buy_cost_multiplier^autoclicker_count.
+   * Subsequent units cost more: base_autoclicker_cost × autoclicker_cost_multiplier^autoclicker_count.
    * 0 for passive-only and post-prestige generators (not manual-clickable).
    * See proposals/accepted/manual-action-ladder.md §level-driven-cooldown OQ5.
    */
   base_autoclicker_cost: number;
+  /**
+   * Cost escalation per autoclicker purchased. Higher = steeper curve.
+   * Separate from buy_cost_multiplier so BUY and autoclicker costs scale independently.
+   */
+  autoclicker_cost_multiplier: number;
 }
 
 export interface PlatformDef {
