@@ -1,5 +1,5 @@
 {
-  "next_id": 192,
+  "next_id": 197,
   "tasks": [
     {
       "id": 1,
@@ -7824,6 +7824,242 @@
       ],
       "blocked_on": [],
       "date_completed": "2026-04-07"
+    },
+    {
+      "id": 192,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Verb gear module — types, static data, pure functions, state init, rebrand wipe",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Build the foundation of the per-verb gear system. Add new types (VerbGearId, VerbGearDef), Player.verb_gear field, StaticData.verbGear field, and the VERB_GEAR_DEFS static data table. Create a new module at client/src/verb-gear/ exporting four pure functions: verbGearMultiplier, purchaseVerbGear (with autoclicker-cap gate — see arch spec §purchaseVerbGear step 1), verbGearCost, canPurchaseVerbGear. Update createPlayer() to init verb_gear: {} and applyRebrand to wipe verb_gear on rebrand.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/verb-gear.md",
+          "purpose": "Architecture spec — data model, interface contracts, stacking order"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260407-creator-kit-verb-gear.md",
+          "purpose": "Source proposal — §5 data model, §3 cost/multiplier tables, §10 autoclicker-cap gate"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Where VerbGearId, VerbGearDef, Player.verb_gear, StaticData.verbGear are added"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Where VERB_GEAR_DEFS is added — starting balance values in proposal §3"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "createPlayer() L43–73 — add verb_gear: {} init (arch spec §8)"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "applyRebrand — add verb_gear: {} wipe (arch spec §7)"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "autoclickerCap() — purchaseVerbGear must read autoclicker_count for the cap gate"
+        }
+      ],
+      "acceptance_criteria": [
+        "VerbGearId is a narrow 5-member union ('chirps' | 'selfies' | 'livestreams' | 'podcasts' | 'viral_stunts'), NOT an alias for GeneratorId",
+        "VerbGearDef interface matches arch spec §Data Model (id, name, max_level, cost[], multipliers[])",
+        "Player.verb_gear field exists as Record<VerbGearId, number>",
+        "StaticData.verbGear field exists as Record<VerbGearId, VerbGearDef>",
+        "VERB_GEAR_DEFS populates all 5 items with starting balance values from proposal §3",
+        "client/src/verb-gear/ module exists and exports verbGearMultiplier, purchaseVerbGear, verbGearCost, canPurchaseVerbGear",
+        "verbGearMultiplier returns 1.0 for non-gear generators (memes, hot_takes, tutorials, post-prestige) and correct cumulative multiplier for gear generators",
+        "purchaseVerbGear throws when autoclicker_count < 12 for the target verb (arch spec §purchaseVerbGear step 1)",
+        "purchaseVerbGear throws when at max level or insufficient engagement",
+        "createPlayer() initializes verb_gear: {}",
+        "applyRebrand wipes verb_gear to {}",
+        "All new functions have unit tests covering happy path and error cases",
+        "All existing tests pass"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        185
+      ]
+    },
+    {
+      "id": 193,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Flatten autoclicker cap to 12",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Remove the rebrand-scaling autoclicker cap formula and replace it with a flat constant of 12. The current formula is 12 * (1 + rebrandCount) in generator/index.ts autoclickerCap(). The cap becomes 12 regardless of rebrand count. This is a prerequisite for the HIRE→SUPER button transformation — SUPER appears at the cap. Three code sites: autoclickerCap() definition, buyAutoclicker() cap check, buildAffordableList() in driver.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260407-creator-kit-verb-gear.md",
+          "purpose": "§10 — autoclicker cap change specification and code sites"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "autoclickerCap() L96–101 — change to flat 12; buyAutoclicker() L351 — remove rebrand_count from cap check"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "buildAffordableList() L447–452 — update cap check to not pass rebrand_count"
+        }
+      ],
+      "acceptance_criteria": [
+        "autoclickerCap() returns 12 with no parameters (rebrandCount param removed)",
+        "buyAutoclicker cap check uses flat 12, no rebrand_count lookup",
+        "buildAffordableList in driver uses flat 12 cap, no rebrand_count lookup",
+        "Existing autoclicker tests updated to reflect flat cap",
+        "All tests pass"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 194,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Integrate gear multiplier into tick pipeline and add save migration",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Wire verbGearMultiplier into the two tick-pipeline formulas where the old kit factor lived (stacking position §4). Two integration points: verbYieldPerTap and computeGeneratorEffectiveRate — both get a verbGearMultiplier() call multiplied into the return value. verbYieldPerAutoTap delegates to verbYieldPerTap so no separate change needed. Update the stacking order comment in audience-mood/index.ts. Add save migration V14→V15 that strips player.creator_kit and adds player.verb_gear = {}. The old migrateV4toV5 and migrateV11toV12 (strips laptop) remain in the chain for ancient saves — they produce a creator_kit field the new migration removes.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/verb-gear.md",
+          "purpose": "§Stacking Order, §Integration Points 1–2, §Save Schema Migration"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "verbYieldPerTap and computeGeneratorEffectiveRate — the two formula integration points"
+        },
+        {
+          "ref": "client/src/audience-mood/index.ts",
+          "purpose": "L7–11 stacking order comment — update kitEngagementBonus → verbGearMultiplier"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Migration chain — add migrateV14toV15, bump CURRENT_VERSION to 15"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260407-creator-kit-verb-gear.md",
+          "purpose": "Engineer review N1 — save migration test coverage requirements"
+        }
+      ],
+      "acceptance_criteria": [
+        "verbYieldPerTap multiplies by verbGearMultiplier(generator.id, state.player.verb_gear, staticData)",
+        "computeGeneratorEffectiveRate multiplies by verbGearMultiplier(generator.id, state.player.verb_gear, staticData)",
+        "Stacking order comment in audience-mood/index.ts references verbGearMultiplier instead of kitEngagementBonus",
+        "migrateV14toV15 strips player.creator_kit and adds player.verb_gear = {}",
+        "CURRENT_VERSION bumped to 15",
+        "Migration test: save with creator_kit data (e.g. {camera: 2}) → creator_kit absent, verb_gear = {}",
+        "Migration test: fresh save with no creator_kit migrates cleanly",
+        "Formula tests: gear level 0 → multiplier 1.0; gear levels 1/2/3 → correct multiplier applied",
+        "verbYieldPerAutoTap confirmed to still delegate to verbYieldPerTap (no separate change needed)",
+        "All tests pass"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        185,
+        192
+      ]
+    },
+    {
+      "id": 195,
+      "alias": "E4",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Driver + useGame buyVerbGear binding",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Add the buyVerbGear action to the driver interface and useGame hook, replacing the removed buyKitItem. Same runAction error-handling pattern as buyCloutUpgrade. The driver method calls purchaseVerbGear from the verb-gear module. Errors (cap not met, max level, insufficient engagement) are caught and surfaced via onActionError.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/verb-gear.md",
+          "purpose": "§Integration Points 9–10 — driver and useGame contracts"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Add buyVerbGear to ActionName, GameDriver interface, and implementation — pattern: buyCloutUpgrade at L640–643"
+        },
+        {
+          "ref": "client/src/ui/useGame.ts",
+          "purpose": "Add buyVerbGear binding — pattern: buyCloutUpgrade binding"
+        }
+      ],
+      "acceptance_criteria": [
+        "'buyVerbGear' added to ActionName union",
+        "buyVerbGear(gearId: VerbGearId) added to GameDriver interface",
+        "Driver implementation calls purchaseVerbGear via runAction",
+        "useGame hook exposes buyVerbGear callback",
+        "Action errors from purchaseVerbGear are caught and surfaced via onActionError",
+        "All tests pass"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        192
+      ]
+    },
+    {
+      "id": 196,
+      "alias": "E5",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "SUPER button UI — HIRE→SUPER pill transformation",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Implement the HIRE→SUPER button lifecycle in the Actions Column per the UX spec at ux/verb-gear-super-button.md. When a verb's autoclicker_count reaches cap (12), the AUTO pill transforms into a SUPER pill that purchases the next gear level. Three phases: SUPER I → SUPER II → SUPER III → maxed. Includes: two-tap confirmation pattern (first tap reveals cost/multiplier preview and arms the button, second tap confirms, 3-second timeout reverts), verb-colored glow treatment (25% opacity vs AUTO's 15%, 2px border, static box-shadow), 10x moment visual feedback on purchase, and maxed state (platinum treatment with MAX label per ux/generator-max-level-state.md §3.3). Gear purchases are intentionally excluded from the sweep engine — the 10x moment is player-driven.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260407-creator-kit-verb-gear.md",
+          "purpose": "§10 — HIRE→SUPER lifecycle, no-reset-on-purchase, purchase mechanics"
+        },
+        {
+          "ref": ".frames/sdlc/ux/verb-gear-super-button.md",
+          "purpose": "Full UX spec — SUPER pill visual treatment, two-tap pattern, 10x moment feedback, maxed state"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "Current AUTO pill implementation — the component that transforms"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.autoclicker.test.ts",
+          "purpose": "Existing AUTO pill tests — extend for SUPER states"
+        },
+        {
+          "ref": ".frames/sdlc/ux/generator-max-level-state.md",
+          "purpose": "§3.3 — platinum MAX treatment that maxed SUPER mirrors"
+        }
+      ],
+      "acceptance_criteria": [
+        "AUTO pill shows SUPER when autoclicker_count >= 12 and gear level < max_level",
+        "SUPER pill displays gear name and cost for the next level",
+        "SUPER pill uses verb color lane at 25% opacity, 2px border, static glow box-shadow",
+        "Two-tap confirmation: first tap reveals purchase details and arms button, second tap calls buyVerbGear, 3-second timeout reverts to unarmed",
+        "After SUPER purchase, autoclickers/count/level unchanged — SUPER is purely additive",
+        "After SUPER III (gear level = max_level), pill shows platinum MAX treatment matching generator max-level spec",
+        "Tests: AUTO→SUPER transition at cap, all three SUPER levels, maxed state, two-tap confirm + timeout revert, insufficient engagement state",
+        "All tests pass"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        192,
+        193,
+        194,
+        195
+      ]
     }
   ]
 }

@@ -593,3 +593,37 @@ Recommendation: enforce in the model layer. The gate is a game rule, not a prese
 **F4 — Architecture doc source path is stale.**
 
 `architecture/verb-gear.md` header references `proposals/draft/20260407-creator-kit-verb-gear.md`. The proposal has since moved to `proposals/accepted/`. Quick fix.
+
+---
+# Review: ux-designer (re-review)
+
+**Date**: 2026-04-07
+**Decision**: Aligned (no status change — proposal already in implementation)
+
+**Comments**
+
+Re-review prompted by §10 addition (HIRE→SUPER transformation, autoclicker cap flattened to 12) and architect's post-acceptance implementation audit (F1–F4). Still aligned. §10 is a genuine improvement — it solves placement, progressive disclosure, and mobile spacing in one move and is better than my original O1 suggestion (gear affordance adjacent to verb button in the Actions Column).
+
+### What §10 gets right from a UX perspective
+
+**Self-teaching progression.** The player has tapped AUTO for the entire early game. When it transforms into SUPER, the change *is* the lesson — no tutorial text, no new panel to discover, no mental mapping between "item in a list" and "verb it modifies." Passes the no-tutorial test.
+
+**Progressive disclosure is structural.** My original O3 flagged the concern that showing five 2B–20T gear slots to a player at 100K engagement is visual noise. Under HIRE→SUPER, gear is invisible until the player has *earned* visibility by capping autoclickers for that verb. The game progression handles disclosure. Cleaner than the threshold-based reveal I was proposing.
+
+**Mobile spacing: non-issue.** No new UI elements. The AUTO pill is already there, already the right size, already per-verb.
+
+### Deliverables produced
+
+**New UX spec written:** `ux/verb-gear-super-button.md` — covers the full SUPER pill lifecycle (AUTO→SUPER arrival, two-tap confirmation pattern, the 10x moment feedback, maxed state ceremony). Resolves all three ux-designer-owned open questions from §11:
+
+1. **SUPER button visual treatment:** verb's own color lane at higher opacity (25% vs AUTO's 15%), 2px border (vs 1px), static glow `box-shadow`. The visual distinction from AUTO comes from weight and glow, not from a new color — preserving per-verb identity.
+2. **Maxed state (after SUPER III):** platinum treatment, identical to the LVL maxed pill from `ux/generator-max-level-state.md` §3.3. `MAX` label, platinum background, inset shadow, participates in the shared shine sweep. Consistency — "MAX" means "MAX" everywhere.
+3. **OQ#3 (confirmation step):** two-tap pattern. First tap reveals purchase details (gear name, cost, multiplier preview) and arms the button. Second tap confirms. 3-second timeout reverts if abandoned. Prevents accidental 2B+ spends without blocking flow for intentional buyers.
+
+**Dead UX artifact:** `ux/creator-kit-panel.md` is fully superseded by `ux/verb-gear-super-button.md`. The old spec was designed for a collapsible panel housing global modifiers. That system no longer exists.
+
+### Notes on architect's implementation flags
+
+**F1 (sweep engine + gear):** confirmed — sweep will NOT include gear purchases. No UX surface needed for sweep-triggered gear. The 10x moment is player-driven (manual SUPER purchase), not automated.
+
+**F3 (autoclicker-cap gate):** agree with architect — enforce in the model layer. The cap gate is a game rule. If it were UI-only, a direct call to `purchaseVerbGear` could bypass it. The UX spec assumes the model validates `autoclicker_count >= 12` as a precondition; the UI simply doesn't show SUPER until the cap is reached.
