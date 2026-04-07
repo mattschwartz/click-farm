@@ -3010,6 +3010,12 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   border-top: 1px solid var(--border-subtle);
 }
 
+.settings-save-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
 .settings-save-group {
   gap: 10px;
 }

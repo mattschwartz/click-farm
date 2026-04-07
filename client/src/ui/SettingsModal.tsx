@@ -200,43 +200,6 @@ export function SettingsModal({
         </div>
 
         <div className="settings-body">
-          {/* MOTION */}
-          <section className="settings-section">
-            <h2 className="settings-section-title">MOTION</h2>
-            <div className="settings-group">
-              <SettingsToggle
-                buttonRef={firstToggleRef}
-                label="Reduce Motion"
-                description="Replaces decorative motion with static alternatives. Number animations preserved."
-                checked={settings.reduceMotion}
-                onChange={onSetReduceMotion}
-              />
-              <SettingsToggle
-                label="Floating Numbers"
-                description="Show pop-up numbers from autoclicker taps."
-                checked={settings.showVerbFloats}
-                onChange={onSetShowVerbFloats}
-              />
-            </div>
-          </section>
-
-          {/* CONTROLS */}
-          <section className="settings-section">
-            <h2 className="settings-section-title">CONTROLS</h2>
-            <div className="settings-group">
-              <div className="settings-controls-list">
-                <div className="settings-control-row">
-                  <span className="settings-control-key">Esc</span>
-                  <span className="settings-control-desc">Open Settings</span>
-                </div>
-                <div className="settings-control-row">
-                  <span className="settings-control-key">B</span>
-                  <span className="settings-control-desc">Hold to auto-purchase upgrades</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* AUDIO */}
           <section className="settings-section">
             <h2 className="settings-section-title">AUDIO</h2>
@@ -273,10 +236,48 @@ export function SettingsModal({
             </div>
           </section>
 
-          {/* SAVE */}
+          {/* CONTROLS */}
           <section className="settings-section">
-            <h2 className="settings-section-title">SAVE</h2>
+            <h2 className="settings-section-title">CONTROLS</h2>
+            <div className="settings-group">
+              <div className="settings-controls-list">
+                <div className="settings-control-row">
+                  <span className="settings-control-key">Esc</span>
+                  <span className="settings-control-desc">Open Settings</span>
+                </div>
+                <div className="settings-control-row">
+                  <span className="settings-control-key">B</span>
+                  <span className="settings-control-desc">Hold to auto-purchase upgrades</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* PERFORMANCE */}
+          <section className="settings-section">
+            <h2 className="settings-section-title">PERFORMANCE</h2>
+            <div className="settings-group">
+              <SettingsToggle
+                buttonRef={firstToggleRef}
+                label="Reduce Motion"
+                description="Replaces decorative motion with static alternatives. Number animations preserved."
+                checked={settings.reduceMotion}
+                onChange={onSetReduceMotion}
+              />
+              <SettingsToggle
+                label="Floating Numbers"
+                description="Show pop-up numbers from autoclicker taps."
+                checked={settings.showVerbFloats}
+                onChange={onSetShowVerbFloats}
+              />
+            </div>
+          </section>
+
+          {/* MANAGE SAVE FILE */}
+          <section className="settings-section">
+            <h2 className="settings-section-title">MANAGE SAVE FILE</h2>
             <div className="settings-group settings-save-group">
+              <p className="settings-save-desc">Your progress is saved automatically.</p>
               <button
                 type="button"
                 className="settings-btn"
