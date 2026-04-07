@@ -28,6 +28,7 @@ import {
   generatorBuyCost,
   generatorUpgradeCost,
   autoclickerBuyCost,
+  autoclickerCap,
 } from '../generator/index.ts';
 import { createInitialGameState, canAffordEngagement } from '../model/index.ts';
 import { clearSave, load, save } from '../save/index.ts';
@@ -444,10 +445,13 @@ export function createDriver(options: DriverOptions): GameDriver {
         if (canAffordEngagement(s.player, buyCost)) {
           items.push({ type: 'buy', generatorId: id, cost: buyCost });
         }
-        // HIRE track
-        const hireCost = autoclickerBuyCost(id, gen.autoclicker_count, staticData);
-        if (hireCost > 0 && canAffordEngagement(s.player, hireCost)) {
-          items.push({ type: 'autoclicker', generatorId: id, cost: hireCost });
+        // HIRE track (capped at 12 × (1 + rebrand_count))
+        const cap = autoclickerCap(s.player.rebrand_count);
+        if (gen.autoclicker_count < cap) {
+          const hireCost = autoclickerBuyCost(id, gen.autoclicker_count, staticData);
+          if (hireCost > 0 && canAffordEngagement(s.player, hireCost)) {
+            items.push({ type: 'autoclicker', generatorId: id, cost: hireCost });
+          }
         }
       }
 
