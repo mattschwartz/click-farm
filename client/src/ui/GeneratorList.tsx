@@ -244,6 +244,16 @@ function GeneratorRow({
   const costFloatId = useRef(0);
   const costFloatTimer = useRef<number | null>(null);
 
+  // Clean up any pending cost-float timeout on unmount.
+  useEffect(() => {
+    return () => {
+      if (costFloatTimer.current !== null) {
+        window.clearTimeout(costFloatTimer.current);
+        costFloatTimer.current = null;
+      }
+    };
+  }, []);
+
   const spawnCostFloat = (btnType: SweepItemType, cost: number) => {
     const btnSelector = btnType === 'buy' ? '.row-btn:not(.row-btn-upgrade)'
       : btnType === 'upgrade' ? '.row-btn-upgrade'
