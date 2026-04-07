@@ -538,17 +538,17 @@ describe('yield/rate split regression', () => {
   // Passive output at autoclicker_count=1, count=0 = base_event_rate × base_event_yield.
   // These are the target values from the level-driven-cooldown retune table.
   const EXPECTED_PASSIVE_RATES: Record<string, number> = {
-    chirps: 0.5,          // 1.0 × 0.5
-    selfies: 1.0,         // 5.0 × 0.2
-    memes: 5.0,           // 1 × 5.0
-    hot_takes: 12.0,      // 1 × 12.0
-    tutorials: 30.0,      // 1 × 30.0
-    livestreams: 80.0,    // 800 × 0.1
-    podcasts: 800.0,      // 10_000 × 0.08
-    viral_stunts: 8_000.0, // 200_000 × 0.04
-    ai_slop: 64_000.0,    // 1 × 64_000
-    deepfakes: 120_000.0,  // 1 × 120_000
-    algorithmic_prophecy: 320_000.0, // 1 × 320_000
+    chirps: 0.5,                // 0.5 × 1.0
+    selfies: 1.0,               // 5.0 × 0.2
+    memes: 5.0,                 // 1 × 5.0
+    hot_takes: 12.0,            // 1 × 12.0
+    tutorials: 30.0,            // 1 × 30.0
+    livestreams: 1_600.0,       // 16_000 × 0.1
+    podcasts: 16_000.0,         // 200_000 × 0.08
+    viral_stunts: 160_000.0,    // 4_000_000 × 0.04
+    ai_slop: 1_280_000.0,      // 1 × 1_280_000
+    deepfakes: 2_400_000.0,     // 1 × 2_400_000
+    algorithmic_prophecy: 6_400_000.0, // 1 × 6_400_000
   };
 
   for (const [id, expectedRate] of Object.entries(EXPECTED_PASSIVE_RATES)) {

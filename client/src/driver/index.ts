@@ -21,8 +21,16 @@ import type {
 } from '../types.ts';
 import { purchaseKitItem } from '../creator-kit/index.ts';
 import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
-import { buyGenerator, upgradeGenerator, unlockGenerator, buyAutoclicker } from '../generator/index.ts';
-import { createInitialGameState } from '../model/index.ts';
+import {
+  buyGenerator,
+  upgradeGenerator,
+  unlockGenerator,
+  buyAutoclicker,
+  generatorBuyCost,
+  generatorUpgradeCost,
+  autoclickerBuyCost,
+} from '../generator/index.ts';
+import { createInitialGameState, canAffordEngagement } from '../model/index.ts';
 import { clearSave, load, save } from '../save/index.ts';
 import { calculateOffline, type OfflineResult } from '../offline/index.ts';
 import {
@@ -83,12 +91,30 @@ export interface SaveError {
 
 export type SaveErrorListener = (e: SaveError) => void;
 
+/** Public read model returned by getSweepState(). Derived on every call. */
+export interface SweepState {
+  active: boolean;
+  /** Number of affordable purchases across all tracks right now. */
+  previewCount: number;
+}
+
+// Internal sweep purchase candidate — not exported.
+type SweepItemType = 'buy' | 'upgrade' | 'autoclicker';
+interface SweepItem {
+  type: SweepItemType;
+  generatorId: GeneratorId;
+  cost: number;
+}
+
 export interface DriverOptions {
   /** Injectable clock for tests. Defaults to Date.now. */
   now?: () => number;
   /** Injectable timer scheduler for tests. Defaults to window.setInterval. */
   setInterval?: (cb: () => void, ms: number) => number;
   clearInterval?: (handle: number) => void;
+  /** Injectable one-shot timer for sweep. Defaults to window.setTimeout. */
+  setTimeout?: (cb: () => void, ms: number) => number;
+  clearTimeout?: (handle: number) => void;
   /** Injected static data so tests can swap balance. */
   staticData: StaticData;
   /** Whether to load from localStorage on start. Default true. */
@@ -153,6 +179,31 @@ export interface GameDriver {
   /** Spend Engagement on a Creator Kit item. Errors caught via onActionError. */
   buyKitItem(itemId: KitItemId): void;
   /**
+   * Build the affordable purchase list and begin the 80ms sweep loop.
+   * No-op if a sweep is already active.
+   */
+  startSweep(): void;
+  /**
+   * Cancel a sweep in progress. Already-fired purchases are not refunded.
+   * No-op if no sweep is active.
+   */
+  cancelSweep(): void;
+  /**
+   * Synchronous read of current sweep status and affordable-purchase count.
+   * previewCount is always recomputed from live state — accurate at any time.
+   */
+  getSweepState(): SweepState;
+  /**
+   * Subscribe to sweep-end events. Fires once when the sweep completes
+   * naturally (list exhausted) or is cancelled. Returns an unsubscribe fn.
+   */
+  onSweepEnd(listener: () => void): Unsubscribe;
+  /**
+   * Subscribe to per-purchase events during a sweep. Fires after each
+   * individual purchase succeeds. Used by the UI for per-purchase sound.
+   */
+  onSweepPurchase(listener: () => void): Unsubscribe;
+  /**
    * Subscribe to viral burst events. Fires once per event, synchronously,
    * before state subscribers are notified. Returns an unsubscribe function.
    */
@@ -196,6 +247,10 @@ export function createDriver(options: DriverOptions): GameDriver {
       typeof window !== 'undefined'
         ? window.clearInterval.bind(window)
         : undefined,
+    setTimeout: setTimeoutImpl =
+      typeof window !== 'undefined' ? window.setTimeout.bind(window) : undefined,
+    clearTimeout: clearTimeoutImpl =
+      typeof window !== 'undefined' ? window.clearTimeout.bind(window) : undefined,
     loadFromStorage = true,
     persistToStorage = true,
   } = options;
@@ -245,6 +300,11 @@ export function createDriver(options: DriverOptions): GameDriver {
   const viralListeners = new Set<ViralBurstListener>();
   const errorListeners = new Set<ActionErrorListener>();
   const saveErrorListeners = new Set<SaveErrorListener>();
+  const sweepEndListeners = new Set<() => void>();
+  const sweepPurchaseListeners = new Set<() => void>();
+
+  // Internal sweep state — ephemeral, not persisted.
+  const sweep = { active: false, timeoutHandle: null as number | null };
 
   function emitSaveError(e: SaveError): void {
     for (const listener of saveErrorListeners) listener(e);
@@ -353,6 +413,86 @@ export function createDriver(options: DriverOptions): GameDriver {
         details,
       });
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sweep engine
+  // ---------------------------------------------------------------------------
+
+  /** Build the sorted list of affordable purchases from the current state. */
+  function buildAffordableList(s: GameState): SweepItem[] {
+    const items: SweepItem[] = [];
+    for (const id of Object.keys(s.generators) as GeneratorId[]) {
+      const gen = s.generators[id];
+      if (!gen.owned) continue;
+      const def = staticData.generators[id];
+      if (!def) continue;
+
+      if (def.manual_clickable) {
+        // BUY track
+        const buyCost = generatorBuyCost(id, gen.count, staticData);
+        if (canAffordEngagement(s.player, buyCost)) {
+          items.push({ type: 'buy', generatorId: id, cost: buyCost });
+        }
+        // HIRE track
+        const hireCost = autoclickerBuyCost(id, gen.autoclicker_count, staticData);
+        if (hireCost > 0 && canAffordEngagement(s.player, hireCost)) {
+          items.push({ type: 'autoclicker', generatorId: id, cost: hireCost });
+        }
+      }
+
+      // LVL UP track — manual and passive both eligible
+      if (gen.level < def.max_level) {
+        const upgradeCost = generatorUpgradeCost(id, gen.level, staticData);
+        if (canAffordEngagement(s.player, upgradeCost)) {
+          items.push({ type: 'upgrade', generatorId: id, cost: upgradeCost });
+        }
+      }
+    }
+    // Cheapest-first — maximises coverage per the spec.
+    return items.sort((a, b) => a.cost - b.cost);
+  }
+
+  function fireSweepEndListeners(): void {
+    for (const l of sweepEndListeners) l();
+  }
+
+  function endSweep(): void {
+    sweep.active = false;
+    sweep.timeoutHandle = null;
+    fireSweepEndListeners();
+  }
+
+  function fireSweepPurchase(item: SweepItem): void {
+    const before = state;
+    try {
+      if (item.type === 'buy') {
+        applyState(buyGenerator(state, item.generatorId, staticData));
+      } else if (item.type === 'upgrade') {
+        applyState(upgradeGenerator(state, item.generatorId, staticData));
+      } else {
+        applyState(buyAutoclicker(state, item.generatorId, staticData));
+      }
+    } catch {
+      // Purchase may have become unaffordable since the list was built
+      // (e.g. another purchase drained funds). Skip and re-evaluate.
+    }
+    // Notify per-purchase listeners only if state actually changed.
+    if (state !== before) {
+      for (const l of sweepPurchaseListeners) l();
+    }
+
+    const next = buildAffordableList(state);
+    if (next.length === 0 || !setTimeoutImpl) {
+      endSweep();
+      return;
+    }
+    sweep.timeoutHandle = setTimeoutImpl(() => {
+      if (!sweep.active) return;
+      const nextItems = buildAffordableList(state);
+      if (nextItems.length === 0) { endSweep(); return; }
+      fireSweepPurchase(nextItems[0]);
+    }, 80);
   }
 
   return {
@@ -483,6 +623,43 @@ export function createDriver(options: DriverOptions): GameDriver {
       runAction('buyKitItem', { itemId }, () => {
         applyState(purchaseKitItem(state, itemId, staticData));
       });
+    },
+
+    startSweep() {
+      if (sweep.active) return;
+      const items = buildAffordableList(state);
+      if (items.length === 0) {
+        // Nothing to buy — fire end immediately without activating.
+        fireSweepEndListeners();
+        return;
+      }
+      sweep.active = true;
+      fireSweepPurchase(items[0]);
+    },
+
+    cancelSweep() {
+      if (!sweep.active) return;
+      if (clearTimeoutImpl && sweep.timeoutHandle !== null) {
+        clearTimeoutImpl(sweep.timeoutHandle);
+      }
+      endSweep();
+    },
+
+    getSweepState(): SweepState {
+      return {
+        active: sweep.active,
+        previewCount: buildAffordableList(state).length,
+      };
+    },
+
+    onSweepEnd(listener) {
+      sweepEndListeners.add(listener);
+      return () => sweepEndListeners.delete(listener);
+    },
+
+    onSweepPurchase(listener) {
+      sweepPurchaseListeners.add(listener);
+      return () => sweepPurchaseListeners.delete(listener);
     },
 
     onViralBurst(listener) {

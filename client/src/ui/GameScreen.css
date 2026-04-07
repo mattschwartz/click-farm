@@ -812,6 +812,64 @@
   }
 }
 
+/* --- BUY ALL button (auto-buy sweep trigger, §1 of accepted proposal) --- */
+
+.buy-all-btn {
+  display: block;
+  width: 100%;
+  height: 36px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--glow-halo-rgb), 0.25);
+  background: rgba(var(--glow-halo-rgb), 0.12);
+  color: var(--accent-gold, #A0730E);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  box-sizing: border-box;
+  transition: opacity 80ms ease-out;
+}
+
+.buy-all-btn:hover:not(:disabled) {
+  background: rgba(var(--glow-halo-rgb), 0.20);
+}
+
+/* Disabled state — nothing affordable. */
+.buy-all-btn.buy-all-btn-empty,
+.buy-all-btn:disabled {
+  background: transparent;
+  border-color: var(--border-subtle, rgba(0, 0, 0, 0.12));
+  color: var(--text-receded, rgba(0, 0, 0, 0.35));
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Sweeping state — pulsing opacity, "STOP" label. */
+.buy-all-btn-sweeping {
+  animation: buyAllPulse 400ms ease-in-out infinite;
+  cursor: pointer;
+}
+
+@keyframes buyAllPulse {
+  0%, 100% { opacity: 1.0; }
+  50%       { opacity: 0.8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buy-all-btn-sweeping {
+    animation: none;
+  }
+}
+
+html[data-reduce-motion="true"] .buy-all-btn-sweeping {
+  animation: none;
+}
+
 .category-divider {
   font-size: 11px;
   font-weight: 500;
@@ -2953,6 +3011,35 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   text-decoration: underline;
 }
 
+/* Controls section — keyboard shortcut documentation. */
+.settings-controls-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-control-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.settings-control-key {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 32px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.settings-control-desc {
+  color: var(--text-secondary, #666);
+}
+
 /* Save-section buttons. */
 .settings-btn {
   font-family: inherit;
@@ -3092,7 +3179,12 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  z-index: 100;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.floating-toolbar > *:not(.alpha-row) {
+  pointer-events: auto;
 }
 
 .alpha-row {

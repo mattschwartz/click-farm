@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createDriver, type ActionError, type SaveError } from './index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
+import { generatorBuyCost } from '../generator/index.ts';
 
 // ---------------------------------------------------------------------------
 // localStorage mock (shared with save.test.ts pattern)
@@ -648,5 +649,210 @@ describe('driver — onSaveError', () => {
     const received2: SaveError[] = [];
     driver2.onSaveError((e) => received2.push(e));
     expect(received2).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Sweep engine
+// ---------------------------------------------------------------------------
+
+/** Fake one-shot timer (setTimeout / clearTimeout) for sweep tests. */
+interface FakeOneShots {
+  setTimeout: (cb: () => void, ms: number) => number;
+  clearTimeout: (handle: number) => void;
+  /** Fire all pending one-shot callbacks (in registration order). */
+  flush: () => void;
+  pendingCount: () => number;
+}
+
+function makeFakeOneShots(): FakeOneShots {
+  const pending = new Map<number, () => void>();
+  let nextHandle = 100; // offset from setInterval handles to avoid confusion
+  return {
+    setTimeout(cb) {
+      const h = nextHandle++;
+      pending.set(h, cb);
+      return h;
+    },
+    clearTimeout(h) {
+      pending.delete(h);
+    },
+    flush() {
+      // Snapshot keys — flush may schedule new entries (re-evaluation chain).
+      for (const [h, cb] of [...pending]) {
+        pending.delete(h);
+        cb();
+      }
+    },
+    pendingCount: () => pending.size,
+  };
+}
+
+/** Build a driver with high engagement for sweep tests.
+ *  chirps is owned by default (unlock_threshold=0).
+ *  Injects high engagement via localStorage so sweep has items to buy. */
+function makeSweeperDriver(engagementAmount: number = 1_000_000) {
+  const timeouts = makeFakeOneShots();
+
+  // Create a throw-away driver to get initial serialised state, then patch it.
+  const tempDriver = createDriver({
+    staticData: STATIC_DATA,
+    now: () => 1_000_000,
+    setInterval: () => 0,
+    clearInterval: () => {},
+    persistToStorage: true,
+    loadFromStorage: false,
+  });
+  tempDriver.saveNow();
+
+  const raw = JSON.parse(localStorage.getItem('click_farm_save')!);
+  raw.state.player.engagement = engagementAmount;
+  localStorage.setItem('click_farm_save', JSON.stringify(raw));
+
+  const driver = createDriver({
+    staticData: STATIC_DATA,
+    now: () => 1_000_000,
+    setInterval: () => 0,
+    clearInterval: () => {},
+    setTimeout: timeouts.setTimeout,
+    clearTimeout: timeouts.clearTimeout,
+  });
+
+  return { driver, timeouts };
+}
+
+describe('driver — sweep engine', () => {
+  it('getSweepState returns active=false and previewCount=0 on fresh low-engagement state', () => {
+    const driver = createDriver({
+      staticData: STATIC_DATA,
+      now: () => 1_000_000,
+      setInterval: () => 0,
+      clearInterval: () => {},
+      loadFromStorage: false,
+      persistToStorage: false,
+    });
+    const s = driver.getSweepState();
+    expect(s.active).toBe(false);
+    expect(s.previewCount).toBe(0);
+  });
+
+  it('getSweepState.previewCount reflects affordable items when engagement is high', () => {
+    const { driver } = makeSweeperDriver(1_000_000);
+    const s = driver.getSweepState();
+    expect(s.active).toBe(false);
+    // chirps is owned — BUY, HIRE, and LVL UP should all be affordable at 1M engagement
+    expect(s.previewCount).toBeGreaterThan(0);
+  });
+
+  it('startSweep is a no-op when already active', () => {
+    const { driver, timeouts } = makeSweeperDriver(1_000_000);
+    driver.startSweep();
+    expect(driver.getSweepState().active).toBe(true);
+    const engagementAfterFirst = driver.getState().player.engagement;
+
+    // Call again — should not fire another purchase
+    driver.startSweep();
+    expect(driver.getState().player.engagement).toBe(engagementAfterFirst);
+
+    timeouts.flush(); // clean up
+  });
+
+  it('cancelSweep is a no-op when no sweep is active', () => {
+    const { driver } = makeSweeperDriver(1_000_000);
+    expect(driver.getSweepState().active).toBe(false);
+    // Should not throw and should not fire onSweepEnd
+    const ends: number[] = [];
+    driver.onSweepEnd(() => ends.push(1));
+    driver.cancelSweep();
+    expect(ends).toHaveLength(0);
+    expect(driver.getSweepState().active).toBe(false);
+  });
+
+  it('startSweep fires cheapest purchase first (BUY chirps is cheapest)', () => {
+    const { driver, timeouts } = makeSweeperDriver(1_000_000);
+    const buyCost = generatorBuyCost('chirps', 0, STATIC_DATA); // cheapest item
+    const engBefore = driver.getState().player.engagement;
+
+    driver.startSweep();
+
+    // First purchase fires synchronously
+    const engAfterFirst = driver.getState().player.engagement;
+    expect(engAfterFirst).toBeLessThan(engBefore);
+    // The engagement spent should match the cheapest item cost
+    expect(engBefore - engAfterFirst).toBeCloseTo(buyCost, 5);
+
+    timeouts.flush(); // clean up remaining
+  });
+
+  it('sweep terminates naturally when funds are exhausted and fires onSweepEnd', () => {
+    // Give just enough to buy one chirp (cost = 1.5) and nothing else.
+    const buyCost = generatorBuyCost('chirps', 0, STATIC_DATA);
+    const { driver, timeouts } = makeSweeperDriver(buyCost);
+
+    const ends: number[] = [];
+    driver.onSweepEnd(() => ends.push(1));
+
+    driver.startSweep();
+
+    // First purchase fires synchronously — exhausts funds.
+    // Sweep should end immediately (no timeout scheduled).
+    expect(timeouts.pendingCount()).toBe(0);
+    expect(driver.getSweepState().active).toBe(false);
+    expect(ends).toHaveLength(1);
+  });
+
+  it('cancelSweep ends the sweep immediately and fires onSweepEnd', () => {
+    const { driver, timeouts } = makeSweeperDriver(1_000_000);
+    const ends: number[] = [];
+    driver.onSweepEnd(() => ends.push(1));
+
+    driver.startSweep();
+    expect(driver.getSweepState().active).toBe(true);
+
+    driver.cancelSweep();
+    expect(driver.getSweepState().active).toBe(false);
+    expect(ends).toHaveLength(1);
+    // No further timeouts should fire after cancel
+    expect(timeouts.pendingCount()).toBe(0);
+  });
+
+  it('onSweepEnd fires on natural sweep completion', () => {
+    const buyCost = generatorBuyCost('chirps', 0, STATIC_DATA);
+    const { driver } = makeSweeperDriver(buyCost);
+    const ends: number[] = [];
+    driver.onSweepEnd(() => ends.push(1));
+
+    driver.startSweep();
+    expect(ends).toHaveLength(1);
+  });
+
+  it('re-evaluation picks up newly affordable items as engagement is spent', () => {
+    // Give enough for exactly 3 chirp buys, verify sweep fires 3 purchases.
+    const cost0 = generatorBuyCost('chirps', 0, STATIC_DATA);
+    const cost1 = generatorBuyCost('chirps', 1, STATIC_DATA);
+    const cost2 = generatorBuyCost('chirps', 2, STATIC_DATA);
+    const budget = cost0 + cost1 + cost2 + 0.001; // just enough for 3
+    const { driver, timeouts } = makeSweeperDriver(budget);
+
+    const ends: number[] = [];
+    driver.onSweepEnd(() => ends.push(1));
+
+    driver.startSweep(); // fires purchase 1 synchronously, schedules next
+    timeouts.flush();    // fires purchase 2, schedules next
+    timeouts.flush();    // fires purchase 3, list exhausted → ends
+
+    expect(ends).toHaveLength(1);
+    expect(driver.getState().generators.chirps.count).toBe(3);
+  });
+
+  it('onSweepEnd listener can be unsubscribed', () => {
+    const buyCost = generatorBuyCost('chirps', 0, STATIC_DATA);
+    const { driver } = makeSweeperDriver(buyCost);
+    const ends: number[] = [];
+    const unsub = driver.onSweepEnd(() => ends.push(1));
+    unsub();
+
+    driver.startSweep();
+    expect(ends).toHaveLength(0);
   });
 });

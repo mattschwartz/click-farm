@@ -12,6 +12,8 @@
 
 import clickSfx from '../assets/click.wav';
 import purchaseSfx from '../assets/purchase.mp3';
+import sweepStartSfx from '../assets/sweep-start.wav';
+import sweepEndSfx from '../assets/sweep-end.wav';
 import ost01 from '../assets/djart-ost/djartmusic-8-bit-console-from-my-childhood-301286.mp3';
 import ost02 from '../assets/djart-ost/djartmusic-best-game-console-301284.mp3';
 import ost03 from '../assets/djart-ost/djartmusic-fun-with-my-8-bit-game-301278.mp3';
@@ -39,6 +41,8 @@ function prefetch(url: string): void {
 
 prefetch(clickSfx);
 prefetch(purchaseSfx);
+prefetch(sweepStartSfx);
+prefetch(sweepEndSfx);
 
 // ---------------------------------------------------------------------------
 // Lazy AudioContext + eager decode
@@ -276,4 +280,16 @@ export function playClick(): void {
 export function playPurchase(): void {
   if (masterMuted) return;
   play(purchaseSfx, sfxVol * 0.8, [0.95, 1.05]);
+}
+
+/** Play the sweep-start sound (ascending chime). */
+export function playSweepStart(): void {
+  if (masterMuted) return;
+  play(sweepStartSfx, sfxVol * 0.7, [0.98, 1.02]);
+}
+
+/** Play the sweep-end sound (resolving tone). */
+export function playSweepEnd(): void {
+  if (masterMuted) return;
+  play(sweepEndSfx, sfxVol * 0.6, [0.98, 1.02]);
 }

@@ -129,10 +129,11 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_autoclicker_cost: 0,    // passive-only — no manual tap
     autoclicker_cost_multiplier: 0,
   },
-  // §14a — ladder verb. yield×rate = 80.0 (preserved).
+  // Ladder verb. Retuned: yield 800→16,000 (20× bump for late-unlock feel).
+  // yield×rate = 1,600. L1 cooldown 10,000ms, L10 cooldown 1,000ms.
   livestreams: {
     id: 'livestreams',
-    base_event_yield: 800,
+    base_event_yield: 16_000,
     base_event_rate: 0.1,
     manual_clickable: true,
     follower_conversion_rate: 0.09,
@@ -145,14 +146,13 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_autoclicker_cost: 650_000,
     autoclicker_cost_multiplier: 1.5,
   },
-  // Ladder verb. Retuned: yield=10,000, rate=0.08 → passive 800 eng/s
-  // at autoclicker_count=1, count=0. 10× livestreams output. L1 cooldown
-  // 12,500ms, L10 cooldown 1,250ms.
+  // Ladder verb. Retuned: yield 10,000→200,000 (20× bump for late-unlock feel).
+  // yield×rate = 16,000. L1 cooldown 12,500ms, L10 cooldown 1,250ms.
   // TODO(game-designer): buy/upgrade/autoclicker costs are provisional —
   // retune during balance pass (task #88) to match new output.
   podcasts: {
     id: 'podcasts',
-    base_event_yield: 10_000,
+    base_event_yield: 200_000,
     base_event_rate: 0.08,
     manual_clickable: true,
     follower_conversion_rate: 0.11,
@@ -165,14 +165,13 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     base_autoclicker_cost: 7_000_000,
     autoclicker_cost_multiplier: 1.5,
   },
-  // Ladder verb. Retuned: yield=200,000, rate=0.04 → passive 8,000 eng/s
-  // at autoclicker_count=1, count=0. 10× podcasts output. L1 cooldown
-  // 25,000ms, L10 cooldown 2,500ms.
+  // Ladder verb. Retuned: yield 200,000→4,000,000 (20× bump for late-unlock feel).
+  // yield×rate = 160,000. L1 cooldown 25,000ms, L10 cooldown 2,500ms.
   // TODO(game-designer): buy/upgrade/autoclicker costs are provisional —
   // retune during balance pass (task #88) to match new output.
   viral_stunts: {
     id: 'viral_stunts',
-    base_event_yield: 200_000,
+    base_event_yield: 4_000_000,
     base_event_rate: 0.04,
     manual_clickable: true,
     follower_conversion_rate: 0.06,
@@ -199,7 +198,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   ai_slop: {
     id: 'ai_slop',
     base_event_yield: 1,
-    base_event_rate: 64_000.0,       // 8× viral_stunts (8 × 8,000)
+    base_event_rate: 1_280_000.0,    // 8× viral_stunts (8 × 160,000)
     manual_clickable: false,
     follower_conversion_rate: 0.6,
 
@@ -214,7 +213,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   deepfakes: {
     id: 'deepfakes',
     base_event_yield: 1,
-    base_event_rate: 120_000.0,      // 15× viral_stunts (15 × 8,000)
+    base_event_rate: 2_400_000.0,    // 15× viral_stunts (15 × 160,000)
     manual_clickable: false,
     follower_conversion_rate: 0.3,
 
@@ -229,7 +228,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   algorithmic_prophecy: {
     id: 'algorithmic_prophecy',
     base_event_yield: 1,
-    base_event_rate: 320_000.0,      // 40× viral_stunts (40 × 8,000)
+    base_event_rate: 6_400_000.0,    // 40× viral_stunts (40 × 160,000)
     manual_clickable: false,
     follower_conversion_rate: 0.5,
 

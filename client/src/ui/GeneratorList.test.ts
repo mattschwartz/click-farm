@@ -6,6 +6,8 @@ import {
   shouldApplyManyReady,
   shouldFireMaxedArrival,
   MANY_READY_THRESHOLD,
+  buyAllLabel,
+  buyAllDisabled,
 } from './GeneratorList.tsx';
 
 // Signature: classifyLvlBtnState(count, level, maxLevel, engagement, upgradeCost)
@@ -86,5 +88,38 @@ describe('shouldApplyManyReady', () => {
     expect(shouldApplyManyReady(4)).toBe(true);
     expect(shouldApplyManyReady(5)).toBe(true);
     expect(shouldApplyManyReady(99)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BuyAllButton helpers — label and disabled state
+// ---------------------------------------------------------------------------
+
+describe('buyAllLabel', () => {
+  it('returns STOP when sweep is active', () => {
+    expect(buyAllLabel(true, 0)).toBe('STOP');
+    expect(buyAllLabel(true, 5)).toBe('STOP');
+  });
+
+  it('returns BUY ALL (N) when idle', () => {
+    expect(buyAllLabel(false, 0)).toBe('BUY ALL (0)');
+    expect(buyAllLabel(false, 3)).toBe('BUY ALL (3)');
+    expect(buyAllLabel(false, 12)).toBe('BUY ALL (12)');
+  });
+});
+
+describe('buyAllDisabled', () => {
+  it('is disabled when idle and previewCount === 0', () => {
+    expect(buyAllDisabled(false, 0)).toBe(true);
+  });
+
+  it('is enabled when idle and previewCount > 0', () => {
+    expect(buyAllDisabled(false, 1)).toBe(false);
+    expect(buyAllDisabled(false, 10)).toBe(false);
+  });
+
+  it('is enabled when sweeping (STOP is tappable), even at count 0', () => {
+    expect(buyAllDisabled(true, 0)).toBe(false);
+    expect(buyAllDisabled(true, 5)).toBe(false);
   });
 });

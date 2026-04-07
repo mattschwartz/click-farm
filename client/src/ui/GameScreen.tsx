@@ -1,5 +1,45 @@
 // Core game screen — the main surface the player interacts with during a
 // normal session. Implements UX spec §§2–8, §9, and §11.
+
+// ---------------------------------------------------------------------------
+// Keyboard helper exports (for unit tests)
+// ---------------------------------------------------------------------------
+
+/** Whether a keyboard shortcut should be ignored (a visible modal is open). */
+export function isModalBlocking(
+  showCeremonyModal: boolean,
+  showShopModal: boolean,
+  showSettingsModal: boolean,
+  offlineResult: { durationMs: number } | null,
+): boolean {
+  return (
+    showCeremonyModal ||
+    showShopModal ||
+    showSettingsModal ||
+    (offlineResult !== null && offlineResult.durationMs > 60_000)
+  );
+}
+
+/** What action to take when B is pressed. */
+export function getBKeyAction(
+  showCeremonyModal: boolean,
+  showShopModal: boolean,
+  showSettingsModal: boolean,
+  offlineResult: { durationMs: number } | null,
+  sweepActive: boolean,
+): 'start' | 'cancel' | 'ignore' {
+  if (
+    isModalBlocking(
+      showCeremonyModal,
+      showShopModal,
+      showSettingsModal,
+      offlineResult,
+    )
+  ) {
+    return 'ignore';
+  }
+  return sweepActive ? 'cancel' : 'start';
+}
 //
 // Zones (per UX §2):
 //   - Top bar (80px): Title + Engagement
@@ -97,6 +137,10 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     offlineResult,
     clearOfflineResult,
     rebrand,
+    sweepActive,
+    sweepPreviewCount,
+    startSweep,
+    cancelSweep,
     pauseLoop,
     resumeLoop,
     buyCloutUpgrade,
@@ -215,7 +259,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
         showCeremonyModal ||
         showShopModal ||
         showSettingsModal ||
-        offlineResult !== null
+        (offlineResult !== null && offlineResult.durationMs > 60_000)
       ) {
         return;
       }
@@ -229,6 +273,37 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     showShopModal,
     showSettingsModal,
     offlineResult,
+  ]);
+
+  // B key shortcut — trigger/cancel auto-buy sweep when no modal is open.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'b' && e.key !== 'B') return;
+      if (
+        showCeremonyModal ||
+        showShopModal ||
+        showSettingsModal ||
+        (offlineResult !== null && offlineResult.durationMs > 60_000)
+      ) {
+        return;
+      }
+      e.preventDefault();
+      if (sweepActive) {
+        cancelSweep();
+      } else {
+        startSweep();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [
+    showCeremonyModal,
+    showShopModal,
+    showSettingsModal,
+    offlineResult,
+    sweepActive,
+    startSweep,
+    cancelSweep,
   ]);
 
   // Refs for returning focus to the triggering button on modal close.
@@ -320,6 +395,10 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               onUnlock={unlock}
               onBuyAutoclicker={buyAutoclicker}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
+              sweepActive={sweepActive}
+              sweepPreviewCount={sweepPreviewCount}
+              onStartSweep={startSweep}
+              onCancelSweep={cancelSweep}
             />
             {/* CreatorKitPanel hidden — to be redesigned */}
           </div>

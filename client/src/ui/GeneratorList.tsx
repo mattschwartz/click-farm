@@ -40,10 +40,14 @@ interface Props {
   onBuyAutoclicker: (verbId: GeneratorId) => void;
   /** When set, the matching row gets a pulsing gold halo (UX §9.2 Phase 1–2). */
   viralGeneratorId?: GeneratorId | null;
-  /**
-   * Called when the upgrade drawer opens or closes. Parent uses this to dim
-   * the platform panel while the drawer is open (per UX spec §1).
-   */
+  /** Whether an auto-buy sweep is currently running. */
+  sweepActive: boolean;
+  /** Count of affordable purchases right now (live). */
+  sweepPreviewCount: number;
+  /** Start the auto-buy sweep. */
+  onStartSweep: () => void;
+  /** Cancel a running sweep. */
+  onCancelSweep: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,7 +124,7 @@ export function shouldApplyManyReady(readyCount: number): boolean {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, onBuyAutoclicker, viralGeneratorId }: Props) {
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, onBuyAutoclicker, viralGeneratorId, sweepActive, sweepPreviewCount, onStartSweep, onCancelSweep }: Props) {
   // Build rows grouped by category in stable order.
   // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
   // excluded from the main list — they render in the Clout Shop modal instead.
@@ -153,6 +157,12 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, o
 
   return (
     <section className={`generator-list${manyReady ? ' many-ready' : ''}`}>
+      <BuyAllButton
+        sweepActive={sweepActive}
+        previewCount={sweepPreviewCount}
+        onStartSweep={onStartSweep}
+        onCancelSweep={onCancelSweep}
+      />
       {CATEGORY_ORDER.map((cat) => {
         const ids = byCategory.get(cat) ?? [];
         if (ids.length === 0) return null;
@@ -342,6 +352,7 @@ function GeneratorRow({
       <div className="row-actions" onClick={(e) => e.stopPropagation()}>
         <CompactBuyButton
           costLabel={<TieredNumber value={buyCost} />}
+          costText={fmtCompact(buyCost)}
           canBuy={canBuy}
           count={g.count}
           onBuy={() => onBuy(id)}
@@ -375,6 +386,7 @@ function GeneratorRow({
         {def.manual_clickable && (
           <AutoPill
             costLabel={<TieredNumber value={autoCost} />}
+            costText={fmtCompact(autoCost)}
             canBuy={canBuyAuto}
             autoclickerCount={g.autoclicker_count}
             verbColor={display.color}
@@ -392,6 +404,7 @@ function GeneratorRow({
 
 interface AutoPillProps {
   costLabel: React.ReactNode;
+  costText: string;
   canBuy: boolean;
   autoclickerCount: number;
   verbColor: string;
@@ -475,7 +488,7 @@ function SpeedButton({
 
 // ---------------------------------------------------------------------------
 
-function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, generatorName }: AutoPillProps) {
+function AutoPill({ costLabel, costText, canBuy, autoclickerCount, verbColor, onBuy, generatorName }: AutoPillProps) {
   const [glowing, setGlowing] = useState(false);
   const [shaking, setShaking] = useState(false);
   const rgb = hexToRgbPill(verbColor);
@@ -501,10 +514,10 @@ function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, gener
       onClick={handleClick}
       aria-label={
         canBuy
-          ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costLabel} engagement`
-          : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costLabel} engagement`
+          ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costText} engagement`
+          : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`
       }
-      title={`Buy autoclicker for ${costLabel} engagement`}
+      title={`Buy autoclicker for ${costText} engagement`}
     >
       <span className="pill-label">HIRE{autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}</span>
       <span className="pill-cost">{costLabel}</span>
@@ -557,12 +570,13 @@ function BuyButton({ label, costLabel, canBuy, onBuy }: BuyButtonProps) {
 
 interface CompactBuyButtonProps {
   costLabel: React.ReactNode;
+  costText: string;
   canBuy: boolean;
   count: number;
   onBuy: () => void;
 }
 
-function CompactBuyButton({ costLabel, canBuy, count, onBuy }: CompactBuyButtonProps) {
+function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy }: CompactBuyButtonProps) {
   const [shaking, setShaking] = useState(false);
   const [glowing, setGlowing] = useState(false);
 
@@ -582,10 +596,62 @@ function CompactBuyButton({ costLabel, canBuy, count, onBuy }: CompactBuyButtonP
       className={`row-btn${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${!canBuy ? ' row-btn-disabled' : ''}`}
       onClick={handleClick}
       aria-disabled={!canBuy}
-      title={`Buy 1 unit for ${costLabel} engagement`}
+      title={`Buy 1 unit for ${costText} engagement`}
     >
       <span className="label">POWER{count > 0 ? ` +${count}` : ''}</span>
       {costLabel}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// BuyAllButton helpers — exported for unit tests
+// ---------------------------------------------------------------------------
+
+/** Label text for the BUY ALL button given current sweep state. */
+export function buyAllLabel(sweepActive: boolean, previewCount: number): string {
+  return sweepActive ? 'STOP' : `BUY ALL (${previewCount})`;
+}
+
+/** Whether the BUY ALL button should be disabled. */
+export function buyAllDisabled(sweepActive: boolean, previewCount: number): boolean {
+  return !sweepActive && previewCount === 0;
+}
+
+// ---------------------------------------------------------------------------
+// BuyAllButton
+// ---------------------------------------------------------------------------
+
+interface BuyAllButtonProps {
+  sweepActive: boolean;
+  previewCount: number;
+  onStartSweep: () => void;
+  onCancelSweep: () => void;
+}
+
+function BuyAllButton({ sweepActive, previewCount, onStartSweep, onCancelSweep }: BuyAllButtonProps) {
+  const disabled = buyAllDisabled(sweepActive, previewCount);
+  const label = buyAllLabel(sweepActive, previewCount);
+
+  const handleClick = () => {
+    if (disabled) return;
+    if (sweepActive) {
+      onCancelSweep();
+    } else {
+      onStartSweep();
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      className={`buy-all-btn${sweepActive ? ' buy-all-btn-sweeping' : ''}${disabled ? ' buy-all-btn-empty' : ''}`}
+      onClick={handleClick}
+      disabled={disabled}
+      aria-label={sweepActive ? 'Stop auto-buy sweep' : `Buy all affordable upgrades (${previewCount})`}
+      title={sweepActive ? 'Stop' : `Buy all — ${previewCount} affordable`}
+    >
+      {label}
     </button>
   );
 }
