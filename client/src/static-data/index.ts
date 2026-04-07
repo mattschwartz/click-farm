@@ -145,7 +145,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     unlock_threshold: 25_000,
     base_buy_cost: 1_300_000,
     buy_cost_multiplier: 1.15,
-    count_exponent: 1,
+    count_exponent: 1.3,
     upgrade_costs: [1_000_000, 3_000_000, 10_000_000, 30_000_000, 100_000_000, 300_000_000, 1_000_000_000, 3_000_000_000, 10_000_000_000],
     max_level: 10,
     base_autoclicker_cost: 6_500_000,
