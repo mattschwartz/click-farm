@@ -11,7 +11,7 @@
 .game-screen {
   position: relative;
   z-index: 1;
-  height: 100vh;
+  height: 100dvh;
   color: var(--text-primary);
   font-family: var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif;
   display: grid;
