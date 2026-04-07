@@ -423,17 +423,11 @@ interface ActionsColumnProps {
 }
 
 export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats = true }: ActionsColumnProps) {
-  // Owned ladder verbs (live buttons), sorted by cooldown ascending
-  // (shortest cooldown at top, longest at bottom).
+  // Owned ladder verbs (live buttons) in fixed ladder order:
+  // chirps → selfies → livestreams → podcasts → viral_stunts.
   const liveVerbs = useMemo(() =>
-    LADDER_VERBS
-      .filter((id) => state.generators[id].owned)
-      .sort((a, b) => {
-        const cdA = verbCooldownMs(state.generators[a].level, staticData.generators[a].base_event_rate);
-        const cdB = verbCooldownMs(state.generators[b].level, staticData.generators[b].base_event_rate);
-        return cdA - cdB;
-      }),
-    [state.generators, staticData],
+    LADDER_VERBS.filter((id) => state.generators[id].owned),
+    [state.generators],
   );
 
   // Ghost: next un-owned verb whose threshold is met (or whose threshold is
