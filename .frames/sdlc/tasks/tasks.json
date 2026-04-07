@@ -1,5 +1,5 @@
 {
-  "next_id": 166,
+  "next_id": 167,
   "tasks": [
     {
       "id": 1,
@@ -6656,6 +6656,54 @@
         "Each task scoped to one role (engineer) and one state (build)"
       ],
       "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 166,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Re-design the Clout upgrade system",
+      "requester": "engineer",
+      "complexity": "opus",
+      "overview": "The current Clout upgrade system (purchased during the rebrand ceremony screen) needs a design pass. The existing upgrades are platform headstarts and generator unlocks with a simple cost[] array and max_level cap. The system should be re-evaluated holistically — what upgrades exist, how they scale, what they cost, how they interact with each other, and whether they create meaningful prestige-loop decisions for the player.",
+      "related_items": [
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "Current Clout upgrade purchase logic, cost calculation, and rebrand head-start application"
+        },
+        {
+          "ref": "client/src/ui/CloutShopModal.tsx",
+          "purpose": "Current Clout shop UI — where players spend Clout on upgrades"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Static data definitions for cloutUpgrades — current upgrade roster, costs, max levels, effects"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/core-systems.md",
+          "purpose": "Architecture spec covering prestige system contracts and Clout formula"
+        }
+      ],
+      "acceptance_criteria": [
+        "Document what the current Clout upgrade roster is and evaluate whether each upgrade creates a meaningful player decision",
+        "Propose a revised upgrade roster with clear rationale for additions, removals, or changes",
+        "Define cost curves and max levels for each upgrade — should feel like deliberate investment, not just spending because you have Clout",
+        "Address how upgrades interact with each other and whether any combinations are degenerate",
+        "Consider whether the current Clout-earning formula (floor(sqrt(total_followers)/10)) produces the right pacing for the proposed upgrades",
+        "Output a design proposal in proposals/draft/"
+      ],
+      "open_questions": [
+        {
+          "question": "Are there specific pain points or upgrades that feel wrong today?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Should post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) remain Clout-purchased or move to a different system?",
+          "owner": "game-designer"
+        }
+      ],
       "blocked_on": []
     }
   ]
