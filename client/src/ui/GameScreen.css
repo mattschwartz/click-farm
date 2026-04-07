@@ -4866,6 +4866,7 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
    * Buttons centered — same as portrait mobile spec. */
   .ceremony-overlay {
     background: none;
+    animation: none; /* modals handle their own fade-in */
   }
 
   .ceremony-modal,
@@ -4885,6 +4886,7 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     /* flex-start so overflow scrolls naturally — center clips the top */
     justify-content: flex-start;
     background: rgba(255, 255, 255, 0.55);
+    animation: fade-in 200ms ease-out;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
