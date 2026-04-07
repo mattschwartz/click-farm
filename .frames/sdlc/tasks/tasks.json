@@ -7002,7 +7002,7 @@
       "alias": "E3",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Landscape verb column compression and float cap",
       "requester": "architect",
@@ -7036,7 +7036,8 @@
           "owner": "engineer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 174,
