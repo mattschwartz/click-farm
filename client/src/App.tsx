@@ -74,7 +74,8 @@ function NewGameGate({ onStart }: { onStart: () => void }) {
           src={coverSrc}
           alt="Game cover"
           style={{
-            width: '75vw',
+            maxWidth: '75vw',
+            maxHeight: '75vh',
             borderRadius: '12px',
             objectFit: 'cover',
           }}
