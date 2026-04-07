@@ -1726,8 +1726,8 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 }
 
 .rotate-icon {
-  width: 96px;
-  height: 96px;
+  width: 120px;
+  height: 80px;
   flex-shrink: 0;
   color: var(--text-secondary);
   display: block;
@@ -1762,7 +1762,15 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
   object-fit: contain;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-user-drag: none;
   filter: drop-shadow(0 4px 12px rgba(var(--palette-black-rgb), 0.10));
+  transition: transform 150ms ease-out;
+  cursor: pointer;
+}
+
+.rotate-favicon:active {
+  transform: scale(0.90);
+  transition: transform 60ms ease-in;
 }
 
 .rotate-title {
@@ -4092,6 +4100,9 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     gap: 0;
     padding: 0;
     min-height: 0;
+    /* Explicit row placement — prevents save-error-banner (conditional child
+     * between top-bar and game-body) from displacing this to row 3. */
+    grid-row: 2;
   }
 
   /* Verb column — left column, spans both content rows (actions fill height). */
@@ -4444,6 +4455,51 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     justify-content: center;
   }
 
+  /* --- Prestige row: in-flow grid row 3 (task #176) ----------------------- */
+
+  /* Switch from position: fixed to an in-flow row in the game-screen grid.
+   * On desktop the base rule keeps position: fixed — no visual change there.
+   *
+   * Note: .game-screen.viral-zoom-pulse applies a scale transform, which
+   * makes this element zoom ±1% with the content during a burst. Intentional —
+   * the prestige row is now part of the game canvas, not a viewport overlay. */
+  .prestige-cluster {
+    position: static;
+    grid-row: 3;
+    bottom: auto;
+    right: auto;
+    z-index: auto;
+    border-radius: 0;
+    padding: 0 8px;
+    gap: 8px;
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+    box-shadow: none;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Buttons: flex-distributed, 32px tall. */
+  .prestige-btn {
+    flex: 1;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  /* Show inline clout balance and rebrand preview in landscape.
+   * Replaces the hover tooltip — no hover on touch. */
+  .prestige-label-touch {
+    display: inline;
+    font-size: 10px;
+    opacity: 0.65;
+  }
+
 } /* end @media landscape phone */
 
 /* Suppress engagement hover tooltip on touch devices — the inline rate
@@ -4452,6 +4508,12 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
   .engagement-value .engagement-tooltip {
     display: none;
   }
+}
+
+/* Inline prestige button labels for touch (task #176).
+ * Shown only in landscape via the media query above. Hidden everywhere else. */
+.prestige-label-touch {
+  display: none;
 }
 
 /* Pill label two-span pattern (task #175).

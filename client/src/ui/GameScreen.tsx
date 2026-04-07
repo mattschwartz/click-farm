@@ -416,6 +416,49 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
             viralPlatformId={viralActive?.source_platform_id ?? null}
           />
         </div>
+
+        {/* Prestige cluster — moved inside <main> so it participates in the
+            landscape CSS grid as row 3. On desktop, position: fixed (CSS)
+            keeps it bottom-right with no visual change. On landscape phones,
+            CSS switches it to in-flow with grid-row: 3 (task #176).
+            Both buttons render at 3:1 contrast when locked (spec §2.1).
+            .prestige-label-touch spans are hidden on desktop, shown in
+            landscape to replace the hover tooltip (no hover on touch). */}
+        <div className="prestige-cluster">
+          <button
+            ref={upgradesBtnRef}
+            className={`prestige-btn prestige-btn-upgrades${!prestigeEligible ? ' prestige-btn-locked' : ''}`}
+            onClick={handleUpgradesClick}
+            title={`${fmtCompactInt(state.player.clout)} Clout`}
+            aria-label={`Rebrand Upgrades — ${fmtCompactInt(state.player.clout)} Clout`}
+          >
+            ⚙ Upgrades
+            <span className="prestige-label-touch">{fmtCompactInt(state.player.clout)} Clout</span>
+          </button>
+          <button
+            ref={rebrandBtnRef}
+            className={`prestige-btn prestige-btn-rebrand${!prestigeEligible ? ' prestige-btn-locked' : ''}`}
+            onClick={handleRebrandClick}
+            disabled={!prestigeEligible}
+            title={
+              prestigeEligible
+                ? `Rebrand → +${fmtCompactInt(rebrandPreview)} Clout`
+                : 'Earn followers first'
+            }
+            aria-label={
+              prestigeEligible
+                ? `Rebrand — earn ${fmtCompactInt(rebrandPreview)} Clout`
+                : 'Rebrand locked — earn followers first'
+            }
+          >
+            ↻ Rebrand
+            <span className="prestige-label-touch">
+              {prestigeEligible
+                ? `+${fmtCompactInt(rebrandPreview)} Clout`
+                : 'earn followers'}
+            </span>
+          </button>
+        </div>
       </main>
 
       {/* Viral particle burst — Phase 2 (Peak) only. Particles drift from the
@@ -444,38 +487,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
       {offlineResult && offlineResult.durationMs > 60_000 && (
         <OfflineGainsModal result={offlineResult} onDismiss={clearOfflineResult} />
       )}
-
-      {/* Prestige cluster — bottom-right, two buttons, visually grouped.
-          Both buttons render at 3:1 contrast when locked (spec §2.1). */}
-      <div className="prestige-cluster">
-        <button
-          ref={upgradesBtnRef}
-          className={`prestige-btn prestige-btn-upgrades${!prestigeEligible ? ' prestige-btn-locked' : ''}`}
-          onClick={handleUpgradesClick}
-          title={`${fmtCompactInt(state.player.clout)} Clout`}
-          aria-label={`Rebrand Upgrades — ${fmtCompactInt(state.player.clout)} Clout`}
-        >
-          ⚙ Upgrades
-        </button>
-        <button
-          ref={rebrandBtnRef}
-          className={`prestige-btn prestige-btn-rebrand${!prestigeEligible ? ' prestige-btn-locked' : ''}`}
-          onClick={handleRebrandClick}
-          disabled={!prestigeEligible}
-          title={
-            prestigeEligible
-              ? `Rebrand → +${fmtCompactInt(rebrandPreview)} Clout`
-              : 'Earn followers first'
-          }
-          aria-label={
-            prestigeEligible
-              ? `Rebrand — earn ${fmtCompactInt(rebrandPreview)} Clout`
-              : 'Rebrand locked — earn followers first'
-          }
-        >
-          ↻ Rebrand
-        </button>
-      </div>
 
       {/* Clout Shop — game loop continues ticking (spec §3.1). */}
       {showShopModal && (
