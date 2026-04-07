@@ -31,6 +31,7 @@ import {
   type GeneratorCategory,
 } from './display.ts';
 import { fmtCompact } from './format.ts';
+import { TieredNumber } from './TieredNumber.tsx';
 
 interface Props {
   state: GameState;
@@ -353,7 +354,7 @@ function GeneratorRow({
       </div>
       <div className="row-actions" onClick={(e) => e.stopPropagation()}>
         <CompactBuyButton
-          costLabel={fmtCompact(buyCost)}
+          costLabel={<TieredNumber value={buyCost} />}
           canBuy={canBuy}
           count={g.count}
           onBuy={() => onBuy(id)}
@@ -377,7 +378,7 @@ function GeneratorRow({
                   : `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ready`
           }
           ariaLabel={`Upgrade ${display.name}`}
-          costLabel={lvlState === 'maxed' ? 'MAX' : fmtCompact(upgradeCost)}
+          costLabel={lvlState === 'maxed' ? 'MAX' : <TieredNumber value={upgradeCost} />}
         />
         {/* AUTO pill — per generator-purchase-pills.md §2–3.
             Only rendered for manual-clickable generators. Pill shape: 44px
@@ -386,7 +387,7 @@ function GeneratorRow({
             maxed (not currently capped). */}
         {def.manual_clickable && (
           <AutoPill
-            costLabel={fmtCompact(autoCost)}
+            costLabel={<TieredNumber value={autoCost} />}
             canBuy={canBuyAuto}
             autoclickerCount={g.autoclicker_count}
             verbColor={display.color}
@@ -403,7 +404,7 @@ function GeneratorRow({
 // Auto pill — purchase button for autoclickers (generator-purchase-pills.md).
 
 interface AutoPillProps {
-  costLabel: string;
+  costLabel: React.ReactNode;
   canBuy: boolean;
   autoclickerCount: number;
   verbColor: string;
@@ -429,7 +430,7 @@ interface SpeedButtonProps {
   onUpgrade: () => void;
   title: string;
   ariaLabel: string;
-  costLabel: string;
+  costLabel: React.ReactNode;
 }
 
 function SpeedButton({
@@ -568,7 +569,7 @@ function BuyButton({ label, costLabel, canBuy, onBuy }: BuyButtonProps) {
 // Compact buy button — for owned rows (additional purchase, §6.4).
 
 interface CompactBuyButtonProps {
-  costLabel: string;
+  costLabel: React.ReactNode;
   canBuy: boolean;
   count: number;
   onBuy: () => void;

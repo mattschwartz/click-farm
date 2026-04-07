@@ -31,6 +31,80 @@ function applyTier(value: number, abs: number): string | null {
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Structured output for tier-colored rendering
+// ---------------------------------------------------------------------------
+
+/** CSS variable name for each suffix tier. */
+const TIER_COLOR_VAR: Record<string, string> = {
+  K:  'var(--tier-k)',
+  M:  'var(--tier-m)',
+  B:  'var(--tier-b)',
+  T:  'var(--tier-t)',
+  Qa: 'var(--tier-qa)',
+  Qi: 'var(--tier-qi)',
+  Sx: 'var(--tier-sx)',
+  Sp: 'var(--tier-sp)',
+  Oc: 'var(--tier-oc)',
+  No: 'var(--tier-no)',
+  Dc: 'var(--tier-dc)',
+};
+
+export interface TieredParts {
+  /** The numeric portion (e.g. "422.39"). */
+  number: string;
+  /** The suffix (e.g. "M"), or empty string if below K threshold. */
+  suffix: string;
+  /** CSS color variable for the suffix, or null if no suffix. */
+  color: string | null;
+}
+
+function applyTierStructured(value: number, abs: number): TieredParts | null {
+  for (const [threshold, divisor, suffix, decimals] of TIERS) {
+    if (abs >= threshold) {
+      return {
+        number: (value / divisor).toFixed(decimals),
+        suffix,
+        color: TIER_COLOR_VAR[suffix] ?? null,
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * Structured compact format — returns separate number and suffix parts
+ * so the rendering layer can color the suffix by tier.
+ */
+export function fmtCompactParts(n: number): TieredParts {
+  if (!Number.isFinite(n)) return { number: '—', suffix: '', color: null };
+  const abs = Math.abs(n);
+  if (abs >= 1e36) return { number: n.toExponential(2), suffix: '', color: null };
+
+  const tiered = applyTierStructured(n, abs);
+  if (tiered !== null) return tiered;
+
+  let num: string;
+  if (abs >= 1_000) num = n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  else if (abs >= 100) num = n.toFixed(0);
+  else if (abs >= 10) num = n.toFixed(1);
+  else num = n.toFixed(2);
+  return { number: num, suffix: '', color: null };
+}
+
+/** Structured integer compact format (floors the input). */
+export function fmtCompactIntParts(n: number): TieredParts {
+  if (!Number.isFinite(n)) return { number: '—', suffix: '', color: null };
+  const floored = Math.floor(n);
+  const abs = Math.abs(floored);
+  if (abs >= 1e36) return { number: floored.toExponential(2), suffix: '', color: null };
+
+  const tiered = applyTierStructured(floored, abs);
+  if (tiered !== null) return tiered;
+
+  return { number: floored.toLocaleString(), suffix: '', color: null };
+}
+
 /**
  * Compact-notation float: preserves 1 decimal for readability under 10k,
  * switches to K/M/B/T/Qa/… suffixes above. Used for the P0 engagement counter.

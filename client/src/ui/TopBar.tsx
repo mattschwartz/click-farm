@@ -9,7 +9,8 @@
 // - §5.2: Delta readout appears inline for 800ms on rate change.
 
 import { useEffect, useRef, useState } from 'react';
-import { fmtCompact, fmtCompactInt, fmtRate } from './format.ts';
+import { fmtCompactInt } from './format.ts';
+import { TieredNumber } from './TieredNumber.tsx';
 import { useInterpolatedValue } from './useInterpolatedValue.ts';
 import faviconSrc from '../assets/favicon.png';
 import engagementIconSrc from '../assets/engagement-icon.png';
@@ -114,7 +115,7 @@ export function TopBar({
 
       <div className="engagement-slot">
         <div className={`engagement-value${viralGold ? ' viral-gold' : ''}`}>
-          {fmtCompact(displayedEngagement)}
+          <TieredNumber value={displayedEngagement} />
           <img src={engagementIconSrc} alt="" className="engagement-icon" aria-hidden="true" />
         </div>
         {summaryBadge && (

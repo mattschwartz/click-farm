@@ -15,7 +15,8 @@ import {
   PLATFORM_ORDER,
   topAffinityGenerators,
 } from './display.ts';
-import { fmtCompact, fmtCompactInt } from './format.ts';
+import { fmtCompact } from './format.ts';
+import { TieredNumber } from './TieredNumber.tsx';
 
 interface Props {
   state: GameState;
@@ -132,7 +133,7 @@ function PlatformCard({
         <span className="platform-name">{display.name}</span>
       </div>
       <div className="platform-followers-row">
-        <span className="platform-followers">{fmtCompactInt(followers)}</span>
+        <span className="platform-followers"><TieredNumber value={followers} int /></span>
       </div>
       <div className="platform-sub-label">{display.audienceLabel ?? 'followers'}</div>
 
