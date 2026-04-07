@@ -1564,7 +1564,7 @@ html[data-reduce-motion="true"] .sweep-cost-float {
 .shop-overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1836,7 +1836,7 @@ html[data-reduce-motion="true"] .sweep-cost-float {
 .ceremony-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2868,7 +2868,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 .settings-overlay {
   position: fixed;
   inset: 0;
-  z-index: 45;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
