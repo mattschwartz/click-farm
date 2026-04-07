@@ -80,6 +80,11 @@ import { prevTrack, nextTrack, togglePlayPause, isMusicPlaying } from './sfx.ts'
 import { fmtCompactInt } from './format.ts';
 import './GameScreen.css';
 
+/** True on touch-primary devices — keyboard shortcuts are suppressed. */
+const IS_TOUCH_DEVICE =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(pointer: coarse)').matches;
+
 // ---------------------------------------------------------------------------
 // Viral burst phase helpers (UX §9.2)
 // ---------------------------------------------------------------------------
@@ -257,6 +262,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
   // any modal is visible so it doesn't double-handle.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (IS_TOUCH_DEVICE) return;
       if (e.key !== 'Escape') return;
       if (
         showCeremonyModal ||
@@ -281,6 +287,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
   // B key shortcut — hold to sweep, release to cancel.
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
+      if (IS_TOUCH_DEVICE) return;
       if (e.repeat) return;
       if (e.key !== 'b' && e.key !== 'B') return;
       if (

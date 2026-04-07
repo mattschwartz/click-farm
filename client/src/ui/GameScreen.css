@@ -4591,3 +4591,30 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     display: inline;
   }
 }
+
+/* Long-press cost popover — appears above the HIRE pill on touch devices
+ * in landscape, where the inline pill-cost is hidden. The pill needs
+ * position: relative (already set on affordable state; applied broadly here
+ * for unaffordable/maxed states). */
+.purchase-pill-auto {
+  position: relative;
+}
+
+.pill-cost-popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(var(--palette-black-rgb), 0.12);
+  animation: fade-in 120ms ease-out;
+}

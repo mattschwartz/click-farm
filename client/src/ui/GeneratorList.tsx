@@ -573,6 +573,31 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
   const [shaking, setShaking] = useState(false);
   const rgb = hexToRgbPill(verbColor);
 
+  // Long-press (300ms) reveals cost popover in landscape — replaces hover
+  // cost ghost on touch devices. Dismisses on touch-end or after 2s.
+  const [costPopover, setCostPopover] = useState(false);
+  const longPressTimer = useRef<number | null>(null);
+  const popoverTimer = useRef<number | null>(null);
+
+  const handleTouchStart = () => {
+    longPressTimer.current = window.setTimeout(() => {
+      setCostPopover(true);
+      popoverTimer.current = window.setTimeout(() => setCostPopover(false), 2000);
+    }, 300);
+  };
+
+  const dismissPopover = () => {
+    if (longPressTimer.current !== null) {
+      window.clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    setCostPopover(false);
+    if (popoverTimer.current !== null) {
+      window.clearTimeout(popoverTimer.current);
+      popoverTimer.current = null;
+    }
+  };
+
   const handleClick = () => {
     if (isMaxed) return;
     if (!canBuy) {
@@ -599,6 +624,10 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
         '--pill-color-rgb': rgb,
       } as React.CSSProperties : undefined}
       onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={dismissPopover}
+      onTouchMove={dismissPopover}
+      onTouchCancel={dismissPopover}
       disabled={isMaxed}
       aria-label={
         isMaxed
@@ -616,6 +645,12 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
         <span className="pill-label-abbr">A</span>
       </span>
       <span className="pill-cost">{isMaxed ? 'MAX' : costLabel}</span>
+      {/* Long-press cost popover — visible in landscape where pill-cost is hidden. */}
+      {costPopover && (
+        <span className="pill-cost-popover" aria-hidden="true">
+          {isMaxed ? 'MAX' : costLabel}
+        </span>
+      )}
     </button>
   );
 }
