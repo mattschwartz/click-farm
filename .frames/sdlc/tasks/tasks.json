@@ -1,5 +1,5 @@
 {
-  "next_id": 157,
+  "next_id": 158,
   "tasks": [
     {
       "id": 1,
@@ -6296,6 +6296,56 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-06"
+    },
+    {
+      "id": 157,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Auto-buy-all button: sweep purchases most-expensive-first at 50ms intervals",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "Add a button that, when tapped, automatically purchases everything the player can currently afford. It processes purchases one at a time from most expensive to least expensive, with a 50ms delay between each purchase. Each purchase fires the same visual feedback as a manual tap on that purchase button — floating numbers, badge increments, rate flares, sound effects. The effect is a visible speed-run through the buy menu. The button should be disabled while a sweep is in progress and re-enable when the sweep completes (either all affordable purchases exhausted or player can no longer afford anything). Purchase types to sweep: BUY (all verbs), LVL UP (all verbs), Autoclicker (all verbs). Sort all affordable purchases into a single list by cost descending, then fire them sequentially.",
+      "related_items": [
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "generatorBuyCost, autoclickerBuyCost, generatorUpgradeCost — cost functions to check affordability and sort by"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "buyGenerator, upgradeGenerator, buyAutoclicker — purchase actions to invoke"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Current purchase button rendering — auto-buy should trigger the same feedback chains"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Driver interface — auto-buy may need a new driver method or can compose existing buy/upgrade/buyAutoclicker calls"
+        }
+      ],
+      "acceptance_criteria": [
+        "A visible button on the game screen that triggers the auto-buy sweep",
+        "Purchases fire one at a time, most expensive first, with ~50ms between each",
+        "Each purchase triggers identical visual feedback to manual purchase (floating numbers, rate flares, badge updates, sound)",
+        "Sweep includes all three purchase types: BUY, LVL UP, and Autoclicker across all owned verbs",
+        "Sweep stops when no more purchases are affordable",
+        "Button is disabled/visually distinct while a sweep is in progress",
+        "Player can see each purchase happening in real time — it should feel like fast automated clicking, not an instant batch",
+        "Works correctly when engagement changes mid-sweep (later purchases may become unaffordable as engagement is spent)"
+      ],
+      "open_questions": [
+        {
+          "question": "Where should the button live in the UI? Top bar? Bottom of generators column? Floating action button?",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "Should there be a keyboard shortcut for it?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": []
     }
   ]
 }
