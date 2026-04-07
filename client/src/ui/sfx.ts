@@ -197,9 +197,15 @@ if (typeof window !== 'undefined') {
   // If musicInBackground is enabled, music continues playing when hidden.
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      if (!musicInBackground) bgMusic?.pause();
-      silentLoop?.pause();
-      ctx?.suspend();
+      if (musicInBackground) {
+        // Keep the AudioContext (and therefore the GainNode the music
+        // streams through) alive — only pause non-music audio.
+        silentLoop?.pause();
+      } else {
+        bgMusic?.pause();
+        silentLoop?.pause();
+        ctx?.suspend();
+      }
     } else {
       ctx?.resume();
       silentLoop?.play().catch(() => {});
