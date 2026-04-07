@@ -2245,6 +2245,11 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
   text-shadow: 0 0 8px rgba(255, 214, 107, 0.3);
 }
 
+/* X close button — hidden by default, shown in landscape mobile */
+.ceremony-close-btn {
+  display: none;
+}
+
 /* Actions */
 .ceremony-actions {
   display: flex;
@@ -4898,9 +4903,39 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     justify-content: center;
   }
 
+  /* X close button — absolutely positioned, no layout impact, matches settings */
+  .ceremony-close-btn {
+    display: block;
+    position: absolute;
+    top: 15px;
+    right: 250px;
+    font-family: inherit;
+    font-size: 20px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+    transition: color 120ms, border-color 120ms;
+  }
+
+  .ceremony-close-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border-emphasis);
+  }
+
+  /* Hide the bottom Cancel button — X replaces it */
+  .ceremony-btn-cancel-bottom {
+    display: none;
+  }
+
   .ceremony-headline {
     font-size: 15px;
-    margin: 0 0 10px;
+    margin: -5px 0 10px;
   }
 
   .ceremony-stat-box {
