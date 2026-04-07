@@ -3092,7 +3092,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  z-index: 0;
+  z-index: 50;
   pointer-events: none;
 }
 

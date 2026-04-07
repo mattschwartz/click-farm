@@ -6218,7 +6218,7 @@
       "id": 155,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Implement per-tier color ramp for compact number suffixes",
       "requester": "ux-designer",
@@ -6265,7 +6265,8 @@
         "npm run build succeeds; full test suite passes"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 156,
