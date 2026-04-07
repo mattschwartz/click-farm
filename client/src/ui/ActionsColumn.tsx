@@ -312,7 +312,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
         </span>
 
 
-      {(isReady || atFloor) && state.player.engagement === 0 && (
+      {(isReady || atFloor) && !state.player.has_started_run && (
         <span className="verb-pulse">READY</span>
       )}
 

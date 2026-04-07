@@ -593,6 +593,7 @@ export function postClick(
       ...state.player,
       engagement: clampEngagement(state.player.engagement + earned),
       lifetime_engagement: state.player.lifetime_engagement + earned,
+      has_started_run: true,
       last_manual_click_at: {
         ...state.player.last_manual_click_at,
         [verbId]: now,

@@ -120,6 +120,8 @@ export interface Player {
   lifetime_followers: number;
   /** Total engagement ever earned across all runs. Never resets. ≥ 0. */
   lifetime_engagement: number;
+  /** True after the player's first manual click in this run. Resets on rebrand. */
+  has_started_run: boolean;
   /** Number of completed rebrands. ≥ 0. */
   rebrand_count: number;
   /** Purchased permanent meta-upgrades. Values ≥ 0. Survives rebrand. */

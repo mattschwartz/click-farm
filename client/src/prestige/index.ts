@@ -162,6 +162,7 @@ export function applyRebrand(
     ...state.player,
     engagement: 0,
     total_followers: 0,
+    has_started_run: false,
     // lifetime_followers preserved (compounds across runs)
     clout: state.player.clout + result.cloutEarned,
     rebrand_count: state.player.rebrand_count + 1,
