@@ -794,7 +794,7 @@
 }
 
 .generator-row:hover {
-  background: var(--surface-hover);
+  background: none;
 }
 
 .generator-row.locked {
