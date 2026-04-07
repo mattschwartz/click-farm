@@ -1,7 +1,7 @@
 // Tests for SettingsModal pure helpers.
 
 import { describe, it, expect } from 'vitest';
-import { formatExportFilename } from './SettingsModal.tsx';
+import { formatExportFilename } from './formatExportFilename.ts';
 
 describe('formatExportFilename', () => {
   it('produces a filesystem-safe ISO timestamp', () => {
