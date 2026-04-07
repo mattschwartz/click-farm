@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import {
+  detectSafari,
   loadSettings,
   readOsReduceMotion,
   saveSettings,
@@ -31,7 +32,7 @@ export interface UseSettingsResult {
 
 export function useSettings(): UseSettingsResult {
   const [settings, setSettings] = useState<Settings>(() =>
-    loadSettings(readOsReduceMotion()),
+    loadSettings(readOsReduceMotion(), detectSafari()),
   );
 
   // Push reduceMotion to <html data-reduce-motion="…"> so CSS can mirror
