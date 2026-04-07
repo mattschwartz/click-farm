@@ -868,6 +868,8 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   flex-direction: column;
   min-height: 0;
   gap: 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .generator-column .generator-list {
