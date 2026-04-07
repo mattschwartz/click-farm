@@ -200,13 +200,13 @@ describe('computeGeneratorEffectiveRate', () => {
     expect(rate).toBe(0);
   });
 
-  it('applies autoclicker_count, base rate, (1+count), clout, and kit', () => {
+  it('applies autoclicker_count, level, base rate, (1+count), clout, and kit', () => {
     const state = stateWithGenerator('selfies', 2, 1, 3);
-    // Formula: autoclicker_count × base_event_rate × base_event_yield
+    // Formula: autoclicker_count × level × base_event_rate × base_event_yield
     //          × (1 + count) × clout × kit
     const selfiesDef = STATIC_DATA.generators.selfies;
-    // autoclicker_count=3, base_rate=0.2, base_yield=5.0, (1+count)=(1+2)=3
-    const expected = 3 * selfiesDef.base_event_rate * selfiesDef.base_event_yield
+    // autoclicker_count=3, level=1, base_rate=0.2, base_yield=5.0, (1+count)=(1+2)=3
+    const expected = 3 * 1 * selfiesDef.base_event_rate * selfiesDef.base_event_yield
       * (1 + 2) * 1.0 * 1.0;
     const rate = computeGeneratorEffectiveRate(
       state.generators.selfies,
@@ -559,8 +559,8 @@ describe('yield/rate split regression', () => {
     });
   }
 
-  it('computeGeneratorEffectiveRate output for selfies at ac=1, count=0', () => {
-    // autoclicker_count=1, count=0 → formula: 1 × rate × yield × (1+0) × clout × kit
+  it('computeGeneratorEffectiveRate output for selfies at ac=1, level=1, count=0', () => {
+    // autoclicker_count=1, level=1, count=0 → formula: 1 × 1 × rate × yield × (1+0) × clout × kit
     const state = stateWithGenerator('selfies', 0, 1, 1);
     const rate = computeGeneratorEffectiveRate(
       state.generators.selfies,

@@ -69,6 +69,14 @@ export function useInterpolatedValue(
     lastTime.current = performance.now();
   }, [value]);
 
+  // Re-anchor time when rate changes so the interpolator doesn't over-predict
+  // from a stale anchor using the new (higher/lower) rate. Without this,
+  // a rate jump causes the prediction to leap ahead of the next ground-truth
+  // tick, producing a visible twitch backward when the real value arrives.
+  useEffect(() => {
+    lastTime.current = performance.now();
+  }, [ratePerSec]);
+
   // RAF loop — runs continuously while mounted, re-creates when rate changes.
   // Capturing ratePerSec and clamp in the closure is correct: the effect
   // re-runs (cancels + restarts) when either changes, so the closure is always
