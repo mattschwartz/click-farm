@@ -33,9 +33,6 @@ const UPGRADE_ORDER: UpgradeId[] = [
 
 const GENERATOR_ORDER: GeneratorId[] = [
   'selfies',
-  'memes',
-  'hot_takes',
-  'tutorials',
   'livestreams',
   'podcasts',
   'viral_stunts',

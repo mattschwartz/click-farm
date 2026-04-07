@@ -121,9 +121,6 @@ export const GENERATOR_DISPLAY: Record<GeneratorId, GeneratorDisplay> = {
 export const GENERATOR_ORDER: readonly GeneratorId[] = [
   'chirps',
   'selfies',
-  'memes',
-  'hot_takes',
-  'tutorials',
   'livestreams',
   'podcasts',
   'viral_stunts',
