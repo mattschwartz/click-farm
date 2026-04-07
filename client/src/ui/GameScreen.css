@@ -749,6 +749,7 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   font-size: 22px;
   font-weight: 800;
   color: #FFFFFF;
+  white-space: nowrap;
   animation: verb-float-pop 2600ms ease-out forwards;
   z-index: 3;
   text-shadow:
