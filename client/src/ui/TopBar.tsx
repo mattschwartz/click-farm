@@ -127,11 +127,16 @@ export function TopBar({
       <div className="engagement-slot">
         <div className={`engagement-value${viralGold ? ' viral-gold' : ''}`}>
           <TieredNumber value={displayedEngagement} />
-          {/* Inline rate — hidden on desktop (tooltip provides it), shown in landscape. */}
-          <span className="engagement-rate-inline" aria-hidden="true">
-            +<TieredNumber value={engagementRate} />/s
-          </span>
           <img src={engagementIconSrc} alt="" className="engagement-icon" aria-hidden="true" />
+          {/* Inline rate + followers stack — hidden on desktop, shown in landscape. */}
+          <span className="engagement-meta-stack" aria-hidden="true">
+            <span className="engagement-rate-inline">
+              +<TieredNumber value={engagementRate} />/s
+            </span>
+            <span className="engagement-followers-inline">
+              {fmtCompactInt(totalFollowers)} followers
+            </span>
+          </span>
           <span className="engagement-tooltip">
             Engagement
             <span className="tooltip-rate">+<TieredNumber value={engagementRate} />/s</span>

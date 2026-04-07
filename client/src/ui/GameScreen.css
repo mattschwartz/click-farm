@@ -238,8 +238,16 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   align-self: stretch;
 }
 
-/* Rate is rendered inside the engagement hover tooltip, not standalone */
+/* Rate + followers stack — hidden on desktop, shown in landscape via media query */
+.engagement-meta-stack {
+  display: none;
+}
+
 .engagement-rate-inline {
+  display: none;
+}
+
+.engagement-followers-inline {
   display: none;
 }
 
@@ -4691,13 +4699,44 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     border-radius: 0;
   }
 
-  /* Show inline rate in landscape — replaces the hover tooltip which has
-   * no trigger on touch devices. */
+  /* Show rate + followers stack in landscape — replaces the hover tooltip
+   * which has no trigger on touch devices. */
+  .engagement-meta-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+    border-left: 1px solid var(--border-subtle);
+    padding-left: 8px;
+  }
+
+  .engagement-meta-stack::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 1px;
+    background: var(--border-subtle);
+    order: 1;
+  }
+
+  .engagement-rate-inline { order: 0; }
+  .engagement-followers-inline { order: 2; }
+
   .engagement-rate-inline {
     display: inline;
     font-size: 12px;
     font-weight: 500;
     color: var(--accent-green, #2F7A3A);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .engagement-followers-inline {
+    display: inline;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
