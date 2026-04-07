@@ -1,5 +1,5 @@
 {
-  "next_id": 181,
+  "next_id": 182,
   "tasks": [
     {
       "id": 1,
@@ -6965,7 +6965,7 @@
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Landscape top bar compression",
       "requester": "architect",
@@ -6994,7 +6994,8 @@
         "Desktop top bar unchanged"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 173,
@@ -7307,6 +7308,42 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-07"
+    },
+    {
+      "id": 181,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Invert Reduce Motion toggle to 'Enable Motion' (enabled by default)",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "In the Settings modal, the 'Reduce Motion' toggle should be inverted to 'Enable Motion'. The toggle should be ON by default (motion enabled), and turning it OFF disables motion. This is a pure label/UX inversion — the underlying settings.reduceMotion boolean, its localStorage persistence, the data-reduce-motion HTML attribute, and all CSS consumers remain unchanged.\n\nChanges needed in SettingsModal.tsx only:\n1. Change the label from 'Reduce Motion' to 'Enable Motion'\n2. Update the description from 'Replaces decorative motion with static alternatives. Number animations preserved.' to something like 'Decorative animations and transitions. Number animations are always on.' (or similar — keep it concise)\n3. Invert the checked prop: pass `!settings.reduceMotion` instead of `settings.reduceMotion`\n4. Invert the onChange callback: call `onSetReduceMotion(!v)` instead of `onSetReduceMotion(v)`\n5. Update the aria-label to match the new label\n\nThe settings module (settings/index.ts), useSettings hook, CSS data-reduce-motion attribute, and all animation consumers are NOT changed. The inversion happens entirely at the SettingsModal presentation layer.\n\nTest: update the existing SettingsModal test (if any) to reflect the inverted label and behavior.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/SettingsModal.tsx",
+          "purpose": "Toggle lives at line 250-256 — label, checked, and onChange need inverting"
+        },
+        {
+          "ref": "client/src/settings/index.ts",
+          "purpose": "Settings schema — reduceMotion boolean is NOT changed, only the UI presentation inverts"
+        },
+        {
+          "ref": "client/src/ui/useSettings.ts",
+          "purpose": "Hook that propagates reduceMotion to data-reduce-motion attribute — NOT changed"
+        }
+      ],
+      "acceptance_criteria": [
+        "Settings modal shows 'Enable Motion' toggle instead of 'Reduce Motion'",
+        "Toggle is ON by default for new users (motion enabled = reduceMotion false)",
+        "Turning the toggle OFF sets reduceMotion to true and disables decorative motion",
+        "Turning the toggle ON sets reduceMotion to false and enables decorative motion",
+        "The data-reduce-motion HTML attribute and all CSS animation rules continue to work correctly",
+        "Existing users who had Reduce Motion ON see Enable Motion OFF (state preserved, not reset)",
+        "Settings modal test updated if one exists"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }

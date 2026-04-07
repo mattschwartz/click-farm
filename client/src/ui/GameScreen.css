@@ -4020,4 +4020,122 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     min-height: 0;
   }
 
+  /* --- Top bar compression (task #172) ------------------------------------- */
+
+  /* Strip margin (would add 8px to a 40px row), tighten gap/padding, and
+   * center children vertically. Border-radius removed — the bar is flush
+   * edge-to-edge at this screen size. */
+  .top-bar {
+    margin: 0;
+    border-radius: 0;
+    gap: 8px;
+    padding: 0 48px 0 8px; /* 48px right — leaves room for floating gear */
+    align-items: center;
+  }
+
+  /* Game icon: 28px (down from 48px). */
+  .top-bar-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Title group: inline row — title and run badge side-by-side. */
+  .top-bar-title-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Title: 18px Barlow Condensed 900 italic (down from 28px). */
+  .top-bar-title {
+    font-size: 18px;
+  }
+
+  /* RUN badge: 10px inline, reduced margin and padding. */
+  .run-badge {
+    font-size: 10px;
+    margin-top: 0;
+    padding: 2px 6px;
+  }
+
+  /* Engagement counter: 28px (down from 64px), compressed padding.
+   * align-self: center so the frosted-glass block is vertically centred in
+   * the 40px bar rather than stretching edge-to-edge. */
+  .engagement-value {
+    font-size: 28px;
+    padding: 0 8px;
+    gap: 4px;
+    align-self: center;
+  }
+
+  /* Show inline rate in landscape — replaces the hover tooltip which has
+   * no trigger on touch devices. */
+  .engagement-rate-inline {
+    display: inline;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent-green, #2F7A3A);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Engagement icon: 24px (down from 40px). */
+  .engagement-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Viral summary badge: in-flow inline element after the counter.
+   * Position: static pulls it out of absolute positioning so it sits
+   * within the engagement-slot flex row. */
+  .viral-summary-badge {
+    position: static;
+    align-self: center;
+    font-size: 12px;
+    top: auto;
+    right: auto;
+  }
+
+  /* --- Floating toolbar: top-right in landscape, gear-only --------------- */
+
+  /* Reposition to top-right, sized to the 40px top bar row.
+   * Only the settings gear is relevant in landscape — the ALPHA badge,
+   * GitHub link, and music player are hidden below. */
+  .floating-toolbar {
+    bottom: auto;
+    left: auto;
+    top: 0;
+    right: 0;
+    height: 40px;
+    align-items: center;
+    gap: 0;
+    flex-wrap: nowrap;
+  }
+
+  /* Hide non-essential toolbar items to keep the top bar clean. */
+  .floating-toolbar .alpha-row,
+  .floating-toolbar .github-link,
+  .floating-toolbar .music-player {
+    display: none;
+  }
+
+  /* Settings gear: 20px icon in 40×40 hit area. */
+  .settings-gear-btn {
+    font-size: 20px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
 } /* end @media landscape phone */
+
+/* Suppress engagement hover tooltip on touch devices — the inline rate
+ * (shown in landscape) makes it redundant, and hover doesn't exist on touch. */
+@media (pointer: coarse) {
+  .engagement-value .engagement-tooltip {
+    display: none;
+  }
+}
