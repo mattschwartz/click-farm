@@ -199,14 +199,13 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
       const perAutoTap = perAuto;
 
       if (autoCount > AUTO_FLOAT_DENSITY_CAP) {
-        // Batched float: +total ×N
-        const total = perAutoTap * autoCount;
+        // Batched float: +perTap ×N (show per-tap value, not total)
         const id = nextId.current++;
         const angle = Math.random() * Math.PI * 2;
         const radius = Math.random() * 25;
         const x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
         const y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
-        setFloats((prev) => [...prev, { id, value: total, x, y, isAutoclick: true, batchCount: autoCount }]);
+        setFloats((prev) => [...prev, { id, value: perAutoTap, x, y, isAutoclick: true, batchCount: autoCount }]);
         window.setTimeout(() => {
           setFloats((prev) => prev.filter((f) => f.id !== id));
         }, FLOAT_TTL_MS);
