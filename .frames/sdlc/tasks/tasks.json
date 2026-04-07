@@ -1,5 +1,5 @@
 {
-  "next_id": 171,
+  "next_id": 180,
   "tasks": [
     {
       "id": 1,
@@ -6873,7 +6873,7 @@
       "id": 170,
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Decompose landscape phone layout proposal into implementation tasks",
       "requester": "ux-designer",
@@ -6920,7 +6920,365 @@
         "CSS estimate reflects 500-600 lines per architect and engineer review feedback"
       ],
       "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
+    },
+    {
+      "id": 171,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Landscape grid shell: media query, grid redefinition, safe areas",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Add the foundational landscape phone layout to GameScreen. This is the CSS media query block and the structural grid change that all other landscape tasks build on.\n\nThe media query target is: @media (max-width: 932px) and (max-height: 500px) and (orientation: landscape).\n\nInside this block, redefine the game screen grid:\n- grid-template-rows: 40px 1fr 36px (top bar, content, prestige row)\n- grid-template-columns: 160px 1fr (verb column, content area)\n\nThe content area (right column, row 2) contains a platform strip (48px) stacked above the generator list (remaining height). This is an internal layout within the content cell, not additional grid rows.\n\nTop bar spans full width (both columns). Prestige row spans full width (both columns).\n\nSafe areas: apply padding via env(safe-area-inset-left), env(safe-area-inset-right), env(safe-area-inset-bottom) on the .game-screen container within the landscape media query. The Dynamic Island on iPhone 14 Pro creates a ~59px side inset in landscape — the verb column absorbs this via the container's padding-left.\n\nThe existing desktop layout (grid-template-rows: 80px 1fr; grid-template-columns: 320px 1fr 280px) must remain untouched outside the new media query.\n\nReference canvas: 812x375 (iPhone 12/13 landscape). Usable content height after safe areas and chrome: ~221px.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260407-landscape-phone-layout.md",
+          "purpose": "Source proposal — §2 Zone Map, §1 Breakpoint targeting"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Current desktop-only grid definition (lines 10-29)"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Current component structure — game-body div holds the three-column layout"
+        }
+      ],
+      "acceptance_criteria": [
+        "New @media block exists in GameScreen.css with the exact query: (max-width: 932px) and (max-height: 500px) and (orientation: landscape)",
+        "Inside the media query, .game-screen uses grid-template-rows: 40px 1fr 36px and .game-body uses grid-template-columns: 160px 1fr",
+        "Safe area insets applied via env() on the game screen container within the landscape query",
+        "Desktop layout is unchanged — no visual regression at 1280x800",
+        "The landscape layout renders a two-column structure at 812x375 viewport with top bar spanning full width",
+        "height: 100dvh is preserved so the layout fills the viewport without scrolling the outer container"
+      ],
+      "open_questions": [],
       "blocked_on": []
+    },
+    {
+      "id": 172,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Landscape top bar compression",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Compress the top bar to 40px height in the landscape media query. All elements go inline in a single row — no stacking.\n\nPer proposal §3:\n- Game icon: 28x28px (down from 48px)\n- Title: 18px Barlow Condensed 900 italic (down from 28px). RUN badge inline after title at 10px.\n- Engagement counter: 28px weight 600, tabular-nums (down from 64px)\n- Engagement rate: +X/s inline after counter, 12px weight 500, accent-green. No vertical stack.\n- Engagement icon: 24x24px (down from 40px), inline after counter number\n- Followers: 16px weight 500, right-aligned before gear\n- Settings gear: 20x20px icon, 40x40px hit area, anchored right\n- Engagement tooltip: suppressed on touch (pointer: coarse)\n- Viral gold: counter numerals crossfade to gold. Summary badge renders as inline flash after counter (not below — no vertical room), 12px, 1.5s duration.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260407-landscape-phone-layout.md",
+          "purpose": "§3 Top Bar (Compact Landscape)"
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "Current top bar component"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Current top bar CSS (search .top-bar)"
+        }
+      ],
+      "acceptance_criteria": [
+        "Top bar renders at 40px height in landscape media query with all elements in a single inline row",
+        "Font sizes match proposal spec: counter 28px, title 18px, rate 12px, followers 16px",
+        "Icon sizes match proposal spec: game icon 28px, engagement icon 24px, gear 20px (40px hit area)",
+        "Engagement tooltip suppressed on pointer: coarse devices",
+        "Viral summary badge renders inline after counter, not below it",
+        "Desktop top bar unchanged"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        171
+      ]
+    },
+    {
+      "id": 173,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Landscape verb column compression and float cap",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Compress the Actions Column (verb buttons) into a 160px-wide vertical strip for landscape phones.\n\nPer proposal §4:\n- Verb button height: 64px (down from 100px), width: 144px (160px minus 8px padding each side)\n- Name: 18px Barlow Condensed 900 italic (down from 24px), bottom-anchored in glass strip\n- Yield: +N inline after name, 11px\n- Cooldown fill: same ::before sweep, no change\n- Spotlight verb: scale 1.02 + deeper shadow (proportional to smaller size)\n- Ghost slot: 64px with grayscale image and threshold text\n- Column scrolls vertically if >3 verbs. scrollbar-width: none, momentum scroll on touch.\n- Floating numbers: contained within verb column, font sizes from floatStyle() capped at 24px (down from 32px)\n- Autoclicker badges: inline with verb name, x3 at 11px\n\nAll changes are CSS-only within the landscape media query. No structural JSX changes to ActionsColumn.tsx.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260407-landscape-phone-layout.md",
+          "purpose": "§4 Verb Column"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "Current verb button component"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Current actions column CSS"
+        }
+      ],
+      "acceptance_criteria": [
+        "Verb buttons render at 64x144px in landscape media query",
+        "Font sizes match proposal: name 18px, yield 11px, autoclicker badge 11px",
+        "Column scrolls vertically with hidden scrollbar when >3 verbs are present",
+        "Floating number font sizes capped at 24px in landscape (floatStyle cap override)",
+        "Floating numbers do not cross into the generator column",
+        "Desktop verb column unchanged"
+      ],
+      "open_questions": [
+        {
+          "question": "Floating number cap at 24px may need a JS change in floatStyle() rather than pure CSS if the font size is set inline. Verify at build time whether CSS max() or a media-query-aware JS branch is needed.",
+          "owner": "engineer"
+        }
+      ],
+      "blocked_on": [
+        171
+      ]
+    },
+    {
+      "id": 174,
+      "alias": "E4",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Landscape platform strip horizontal mode",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Convert the PlatformPanel from a vertical stacked panel (280px wide, right column) to a horizontal strip (48px tall) at the top of the content area in landscape.\n\nPer proposal §5:\n- Strip height: 48px\n- Card width: 140px, card height: 40px (48px strip minus 4px padding top/bottom)\n- Card anatomy: name 11px weight 500 left, followers 16px weight 600 right of name, affinity chips 8px bottom row\n- Card spacing: 8px\n- Total followers: trailing element after last card, 42K total at 11px muted\n- Horizontal scroll with scroll-snap-type: x mandatory. With 3 platforms at 140px + gaps, ~460px total — fits in available width (812 - 160 = 652px) without scrolling. Snap is there for 4+ platforms.\n- Locked card: same muted treatment, sized to mobile dimensions, threshold text in card body\n- Viral illuminate: source platform card edge-glows, same as desktop\n\nApproach: CSS-only via the landscape media query. PlatformPanel.tsx already renders cards in a map loop. Use flex-direction: row on .platform-panel, compact card sizing via class overrides. Do NOT add a compact prop or conditional rendering unless CSS-only proves insufficient at build time.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260407-landscape-phone-layout.md",
+          "purpose": "§5 Platform Strip"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "Current platform panel component — vertical card layout"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Current platform panel CSS"
+        }
+      ],
+      "acceptance_criteria": [
+        "Platform panel renders as a 48px horizontal strip in landscape media query",
+        "Cards render at 140x40px with correct font sizing per spec",
+        "Horizontal scroll with scroll-snap-type: x mandatory is applied",
+        "Total followers renders as trailing inline element after last card",
+        "Viral illuminate glow works on horizontal cards",
+        "Locked card renders with muted treatment at mobile dimensions",
+        "Desktop vertical panel layout unchanged",
+        "No new props or conditional rendering added to PlatformPanel.tsx unless CSS-only is proven insufficient"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        171
+      ]
+    },
+    {
+      "id": 175,
+      "alias": "E5",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Landscape generator row compression and pill abbreviation",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Compress generator rows and add pill label abbreviation for landscape phones.\n\nPer proposal §6:\n- Row height: 44px (down from ~56px desktop)\n- Badge: 28px (down from 32px). Breathing pulse preserved.\n- Name: 14px weight 500\n- Count: x3 at 13px, inline after name\n- Rate: 12px weight 500, muted, after count\n- Purchase pills: right-aligned, 36px min-width x 24px height (smaller than desktop 44x28)\n- Pill labels: full text (LVL, BUY, AUTO) on viewports >750px. Single-letter (L, B, A) below 750px.\n  Implementation: use a show/hide two-span pattern. Each pill contains two spans — one with full label, one with abbreviation. The landscape media query hides/shows the appropriate span based on viewport width.\n- Category dividers: same STARTER/MID/LATE/ABSURD labels, 10px uppercase, 16px padding above (down from 24px)\n- Vertical scroll, momentum, hidden scrollbar. ~173px visible height fits 3-4 rows.\n- Sweep button: 32px tall, full generator-list width, anchored at top of list.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260407-landscape-phone-layout.md",
+          "purpose": "§6 Generator List"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Current generator list component"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Current generator row CSS"
+        }
+      ],
+      "acceptance_criteria": [
+        "Generator rows render at 44px height in landscape media query",
+        "Badge, name, count, rate font sizes match proposal spec",
+        "Purchase pills render at 36px x 24px with correct labels: full text above 750px, single-letter below 750px",
+        "Pill abbreviation uses two-span show/hide pattern — no JS media query detection",
+        "Category dividers use 16px padding-top (down from 24px)",
+        "Generator list scrolls vertically with hidden scrollbar",
+        "Sweep button renders at 32px tall, full width",
+        "Desktop generator rows unchanged"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        171
+      ]
+    },
+    {
+      "id": 176,
+      "alias": "E6",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Landscape prestige row: move into grid, inline labels",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Move the prestige cluster from position: fixed outside <main> into the CSS grid as an in-flow bottom row for landscape phones. This is the one structural JSX change in the landscape layout work.\n\nCurrent state: the prestige cluster (<div className='prestige-cluster'>) renders after </main> in GameScreen.tsx as a position: fixed overlay at bottom: 16px, right: 16px.\n\nTarget state: move the prestige cluster JSX inside <main> so it participates in the grid. On desktop, it continues to render as position: fixed (no visual change). On landscape, CSS switches it to position: static with grid-area assignment spanning the full-width bottom row (row 3).\n\nPer proposal §7:\n- Full-width row, 36px tall, anchored at bottom above home indicator safe area\n- Two buttons side-by-side, each 32px tall, flex distributed\n- Visual weight: secondary — outlined, same as desktop prestige cluster\n- Clout balance shown inline on Upgrades button text (replaces hover tooltip — no hover on touch)\n- Rebrand preview shown inline on Rebrand button text (+N Clout)\n- Locked state: 3:1 muted, threshold inline\n\nThe inline clout/preview labels require a small JSX change: the button text content needs to include the clout balance and rebrand preview values on touch devices (currently shown via title attribute tooltips). Use the existing pointer: coarse detection or a landscape media query to determine which label to show.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260407-landscape-phone-layout.md",
+          "purpose": "§7 Prestige Row"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Current prestige cluster JSX — lines 447-477, renders outside <main>"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Current prestige cluster CSS — lines 1598-1650, position: fixed"
+        }
+      ],
+      "acceptance_criteria": [
+        "Prestige cluster JSX moved inside <main> in GameScreen.tsx",
+        "On desktop, prestige cluster still renders as position: fixed at bottom-right — no visual regression",
+        "On landscape, prestige cluster renders as in-flow grid row spanning full width at 36px height",
+        "Two buttons render at 32px tall, flex distributed across the row",
+        "Clout balance displays inline on Upgrades button text in landscape (not just in title tooltip)",
+        "Rebrand preview (+N Clout) displays inline on Rebrand button text in landscape",
+        "Locked state maintains 3:1 muted contrast with threshold shown inline"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        171
+      ]
+    },
+    {
+      "id": 177,
+      "alias": "E7",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Landscape modal max-height constraints",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Add max-height and max-width constraints to modals in landscape phone layout.\n\nPer proposal §8:\n- Max height: calc(100dvh - 80px) — 40px breathing room top and bottom\n- Max width: calc(100vw - 80px) — 40px breathing room left and right (respects safe areas)\n- Modal body scrolls internally if content exceeds available height (overflow-y: auto on modal body)\n- Rebrand Ceremony: fullscreen on landscape phones (same as portrait mobile spec). Phases adapt to horizontal layout — stanzas left-aligned, buttons centered.\n- No bottom-sheet pattern on landscape — centered overlays with scroll.\n\nAll changes are CSS-only within the landscape media query. Affects .shop-overlay, .ceremony-overlay, .offline-modal (and any other modal overlays).",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260407-landscape-phone-layout.md",
+          "purpose": "§8 Modal Adaptations"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Current modal CSS — search .shop-overlay, .ceremony-overlay"
+        },
+        {
+          "ref": "client/src/ui/CloutShopModal.tsx",
+          "purpose": "Clout shop modal"
+        },
+        {
+          "ref": "client/src/ui/RebrandCeremonyModal.tsx",
+          "purpose": "Rebrand ceremony modal"
+        },
+        {
+          "ref": "client/src/ui/OfflineGainsModal.tsx",
+          "purpose": "Offline gains modal"
+        }
+      ],
+      "acceptance_criteria": [
+        "All modals (shop, ceremony, offline gains, settings) have max-height: calc(100dvh - 80px) and max-width: calc(100vw - 80px) in landscape media query",
+        "Modal bodies scroll internally when content exceeds available height",
+        "Rebrand Ceremony renders fullscreen in landscape with stanzas left-aligned and buttons centered",
+        "Desktop modals unchanged"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        171
+      ]
+    },
+    {
+      "id": 178,
+      "alias": "E8",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Landscape touch interaction replacements",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Replace hover-dependent interactions with touch-friendly alternatives for landscape phones.\n\nPer proposal §9:\n- Hover engagement tooltip: removed — rate is visible inline in the compressed top bar (handled by E2)\n- Hover purchase pill cost ghost: replaced with long-press (300ms) popover above pill\n- Hover rebrand/upgrades tooltip: removed — clout/preview shown inline on buttons (handled by E6)\n- Keyboard shortcuts (B, Esc): suppressed on pointer: coarse devices\n- Floating numbers: emerge from tap location (Touch.clientX/Y) instead of button center\n\nThe long-press popover for purchase pill cost is the main new interaction. It should show the cost and dismiss on touch-end or after 2s timeout. The floating number origin change may already be implemented from the portrait mobile spec — verify and share the implementation.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260407-landscape-phone-layout.md",
+          "purpose": "§9 Touch Interactions"
+        },
+        {
+          "ref": "ux/mobile-layout.md",
+          "purpose": "Portrait mobile spec §8 — shared touch interaction definitions"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Purchase pill hover/interaction handling"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Keyboard shortcut handling"
+        }
+      ],
+      "acceptance_criteria": [
+        "Keyboard shortcuts (B, Esc) suppressed on pointer: coarse devices",
+        "Purchase pill long-press (300ms) shows cost popover above the pill, dismisses on touch-end or 2s timeout",
+        "Floating numbers originate from Touch.clientX/Y on touch devices instead of button center",
+        "No hover-dependent interactions remain active on pointer: coarse in landscape layout"
+      ],
+      "open_questions": [
+        {
+          "question": "Floating number tap-origin may already be implemented from portrait mobile work. Check before implementing from scratch.",
+          "owner": "engineer"
+        }
+      ],
+      "blocked_on": [
+        171
+      ]
+    },
+    {
+      "id": 179,
+      "alias": "U1",
+      "role": "ux-designer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Update portrait mobile spec §13: remove 'rotate to portrait' prompt",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "The portrait mobile spec (ux/mobile-layout.md) §13 currently shows a 'rotate to portrait' prompt when a player is in landscape orientation. Now that the landscape phone layout proposal has been accepted and will be implemented, this prompt is obsolete — landscape has its own real layout.\n\nUpdate §13 of the portrait mobile spec to remove the rotation prompt and note that landscape orientation uses the landscape layout spec (proposals/accepted/20260407-landscape-phone-layout.md). Also address OQ #6 from the landscape proposal: note that React state (modals, sweep, game state) is preserved across orientation changes since CSS media queries don't remount the component tree. Scroll positions may reset — this is acceptable.",
+      "related_items": [
+        {
+          "ref": "ux/mobile-layout.md",
+          "purpose": "Portrait mobile spec — §13 needs updating"
+        },
+        {
+          "ref": "proposals/accepted/20260407-landscape-phone-layout.md",
+          "purpose": "Landscape proposal — OQ #6 references this update"
+        }
+      ],
+      "acceptance_criteria": [
+        "Portrait mobile spec §13 no longer describes a 'rotate to portrait' prompt",
+        "§13 references the landscape layout spec as the landscape orientation handler",
+        "§13 notes that React state is preserved across orientation changes and scroll position reset is acceptable",
+        "No other sections of the portrait mobile spec are modified"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        171
+      ]
     }
   ]
 }

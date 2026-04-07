@@ -3,7 +3,7 @@ name: Landscape Phone Layout — Two-Column Reorganization
 description: Defines the game screen layout for phones in landscape orientation, using a two-column verb/content split instead of compressing the desktop three-column layout.
 created: 2026-04-07
 author: ux-designer
-status: accepted
+status: implementation
 reviewers: []
 ---
 
