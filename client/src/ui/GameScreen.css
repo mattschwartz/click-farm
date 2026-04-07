@@ -4960,6 +4960,11 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     font-size: 10px;
   }
 
+  /* Verb action buttons — hide name, keep rate indicator on landscape mobile */
+  .verb-name {
+    display: none;
+  }
+
 } /* end @media landscape phone */
 
 /* Suppress engagement hover tooltip on touch devices — the inline rate
