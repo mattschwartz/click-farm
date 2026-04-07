@@ -184,7 +184,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     manual_clickable: true,
     follower_conversion_rate: 0.06,
 
-    unlock_threshold: 100_000,
+    unlock_threshold: 1_000_000,
     base_buy_cost: 200_000_000,
     buy_cost_multiplier: 1.15,
     count_exponent: 1,
@@ -297,7 +297,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       deepfakes: 1.0,
       algorithmic_prophecy: 1.0,
     },
-    unlock_threshold: 100,
+    unlock_threshold: 200,
   },
   skroll: {
     id: 'skroll',
@@ -314,7 +314,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       deepfakes: 1.0,
       algorithmic_prophecy: 1.0,
     },
-    unlock_threshold: 500,
+    unlock_threshold: 2_000,
   },
   // BALANCE: placeholder — all podpod values below. Game-designer owns final
   // content_affinity and unlock_threshold (task #131 open question #1).
@@ -333,7 +333,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       deepfakes: 1.0,
       algorithmic_prophecy: 1.0,
     },
-    unlock_threshold: 2_000,
+    unlock_threshold: 100_000,
   },
 };
 

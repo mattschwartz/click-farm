@@ -107,7 +107,7 @@ describe('checkPlatformUnlocks', () => {
 
   it('returns a new object reference when something unlocks', () => {
     const platforms = makePlatforms(true, false, false);
-    const result = checkPlatformUnlocks(platforms, 100, STATIC_DATA);
+    const result = checkPlatformUnlocks(platforms, 200, STATIC_DATA);
     expect(result).not.toBe(platforms);
   });
 });
