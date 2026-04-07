@@ -465,6 +465,7 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   box-sizing: border-box;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: manipulation;
   /* Resting: 4px bottom depth + ambient shadow */
   box-shadow:
     0 4px 0 0 var(--verb-color-dark),

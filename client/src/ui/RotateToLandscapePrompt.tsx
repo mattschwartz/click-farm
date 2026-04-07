@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import faviconSrc from '../assets/favicon-sm.png';
 
 /**
  * Detects if the current viewport matches mobile portrait (≤767px width,
@@ -88,7 +89,7 @@ export function RotateToLandscapePrompt() {
 
         <img
           className="rotate-favicon"
-          src="/favicon.png"
+          src={faviconSrc}
           alt="Tap Farm"
           draggable={false}
         />
