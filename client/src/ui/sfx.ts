@@ -191,6 +191,22 @@ if (typeof window !== 'undefined') {
   for (const evt of ['click', 'touchstart', 'keydown']) {
     window.addEventListener(evt, onGesture, { capture: true, passive: true });
   }
+
+  // Pause all audio when the tab is hidden (minimized, backgrounded, or
+  // switched away in Safari). Resume when the tab becomes visible again.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      bgMusic?.pause();
+      silentLoop?.pause();
+      ctx?.suspend();
+    } else {
+      ctx?.resume();
+      silentLoop?.play().catch(() => {});
+      if (!masterMuted && bgMusicStarted) {
+        bgMusic?.play().catch(() => {});
+      }
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------
