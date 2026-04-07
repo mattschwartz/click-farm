@@ -342,6 +342,7 @@ function GeneratorRow({
       <div className="row-actions" onClick={(e) => e.stopPropagation()}>
         <CompactBuyButton
           costLabel={<TieredNumber value={buyCost} />}
+          costText={fmtCompact(buyCost)}
           canBuy={canBuy}
           count={g.count}
           onBuy={() => onBuy(id)}
@@ -375,6 +376,7 @@ function GeneratorRow({
         {def.manual_clickable && (
           <AutoPill
             costLabel={<TieredNumber value={autoCost} />}
+            costText={fmtCompact(autoCost)}
             canBuy={canBuyAuto}
             autoclickerCount={g.autoclicker_count}
             verbColor={display.color}
@@ -392,6 +394,7 @@ function GeneratorRow({
 
 interface AutoPillProps {
   costLabel: React.ReactNode;
+  costText: string;
   canBuy: boolean;
   autoclickerCount: number;
   verbColor: string;
@@ -475,7 +478,7 @@ function SpeedButton({
 
 // ---------------------------------------------------------------------------
 
-function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, generatorName }: AutoPillProps) {
+function AutoPill({ costLabel, costText, canBuy, autoclickerCount, verbColor, onBuy, generatorName }: AutoPillProps) {
   const [glowing, setGlowing] = useState(false);
   const [shaking, setShaking] = useState(false);
   const rgb = hexToRgbPill(verbColor);
@@ -501,10 +504,10 @@ function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, gener
       onClick={handleClick}
       aria-label={
         canBuy
-          ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costLabel} engagement`
-          : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costLabel} engagement`
+          ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costText} engagement`
+          : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`
       }
-      title={`Buy autoclicker for ${costLabel} engagement`}
+      title={`Buy autoclicker for ${costText} engagement`}
     >
       <span className="pill-label">HIRE{autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}</span>
       <span className="pill-cost">{costLabel}</span>
@@ -557,12 +560,13 @@ function BuyButton({ label, costLabel, canBuy, onBuy }: BuyButtonProps) {
 
 interface CompactBuyButtonProps {
   costLabel: React.ReactNode;
+  costText: string;
   canBuy: boolean;
   count: number;
   onBuy: () => void;
 }
 
-function CompactBuyButton({ costLabel, canBuy, count, onBuy }: CompactBuyButtonProps) {
+function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy }: CompactBuyButtonProps) {
   const [shaking, setShaking] = useState(false);
   const [glowing, setGlowing] = useState(false);
 
@@ -582,7 +586,7 @@ function CompactBuyButton({ costLabel, canBuy, count, onBuy }: CompactBuyButtonP
       className={`row-btn${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${!canBuy ? ' row-btn-disabled' : ''}`}
       onClick={handleClick}
       aria-disabled={!canBuy}
-      title={`Buy 1 unit for ${costLabel} engagement`}
+      title={`Buy 1 unit for ${costText} engagement`}
     >
       <span className="label">POWER{count > 0 ? ` +${count}` : ''}</span>
       {costLabel}
