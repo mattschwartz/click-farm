@@ -182,6 +182,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
   // Level speeds up both manual taps and autoclicker bursts.
   // ---------------------------------------------------------------------------
   const autoCount = genState.autoclicker_count;
+  const prevAutoCount = useRef(autoCount);
   const effectiveRate = genState.level * def.base_event_rate;
   const burstIntervalMs = effectiveRate > 0 ? 1000 / effectiveRate : Infinity;
 
@@ -232,9 +233,13 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
       }
     };
 
-    // Fire immediately so HIRE purchases give instant visual feedback,
-    // then continue on the regular interval.
-    emitBurst();
+    // Fire immediately on HIRE purchase (autoCount increased) so the player
+    // sees instant visual feedback. Skip on other dep changes (e.g. POWER
+    // changing perAuto) to avoid spurious bursts.
+    if (autoCount > prevAutoCount.current) {
+      emitBurst();
+    }
+    prevAutoCount.current = autoCount;
     const interval = window.setInterval(emitBurst, burstIntervalMs);
     return () => window.clearInterval(interval);
   }, [autoCount, burstIntervalMs, perAuto, prefersReducedMotion, showFloats, isPaused]);
