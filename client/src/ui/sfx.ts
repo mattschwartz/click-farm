@@ -136,7 +136,7 @@ function ensureSilentLoop(): void {
   if (silentLoop) return;
   silentLoop = new Audio(silentSfx);
   silentLoop.loop = true;
-  silentLoop.volume = 0;
+  silentLoop.volume = 1;
   silentLoop.play().catch(() => {});
 }
 
