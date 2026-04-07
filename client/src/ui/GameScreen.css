@@ -3092,7 +3092,12 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  z-index: 100;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.floating-toolbar > *:not(.alpha-row) {
+  pointer-events: auto;
 }
 
 .alpha-row {
