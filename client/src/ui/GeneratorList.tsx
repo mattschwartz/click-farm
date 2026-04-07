@@ -169,7 +169,6 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, o
         if (ids.length === 0) return null;
         return (
           <div key={cat}>
-            <div className="category-divider">{CATEGORY_LABEL[cat]}</div>
             {ids.map((id) => (
               <GeneratorRow
                 key={id}
