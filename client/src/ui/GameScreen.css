@@ -1028,9 +1028,10 @@
 
 /* Non-disabled state for controlled row buttons. */
 .row-btn.row-btn-disabled {
-  color: var(--text-receded);
+  background: transparent;
+  color: #9B9B9B;
+  border-color: rgba(240, 236, 231, 0.60);
   cursor: not-allowed;
-  border-color: var(--border-subtle);
 }
 
 /* Modifier chip (UX §4.5) */
@@ -2202,11 +2203,12 @@
  * Border-weight hierarchy (0.08 → 0.14 → full gold) keeps states
  * distinguishable without color. */
 
-/* Dormant — matches legacy row-btn-disabled visuals. */
+/* Dormant — greyed out like unaffordable pills. */
 .row-btn-upgrade.row-btn-lvl-dormant {
-  color: var(--text-receded);
+  background: transparent;
+  color: #9B9B9B;
+  border-color: rgba(240, 236, 231, 0.60);
   cursor: not-allowed;
-  border-color: var(--border-subtle);
 }
 .row-btn-upgrade.row-btn-lvl-dormant .label {
   color: var(--text-receded);
@@ -2363,17 +2365,15 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 
 /* Armed — stronger border than dormant, amber deficit glyph, no motion. */
 .row-btn-upgrade.row-btn-lvl-armed {
-  border-color: var(--border-default);
-  color: color-mix(in srgb, var(--accent-amber) 60%, transparent);
+  background: transparent;
+  color: #9B9B9B;
+  border-color: rgba(240, 236, 231, 0.60);
 }
 .row-btn-upgrade.row-btn-lvl-armed .label {
-  color: var(--text-secondary);
+  color: #9B9B9B;
 }
 .row-btn-upgrade.row-btn-lvl-armed .lvl-deficit-glyph {
-  display: inline-block;
-  font-size: 10px;
-  margin-right: 3px;
-  color: color-mix(in srgb, var(--accent-amber) 60%, transparent);
+  display: none;
 }
 
 /* Ready — gold border, gold cost numeral, breathing halo. */
