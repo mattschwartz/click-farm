@@ -544,7 +544,7 @@ describe('yield/rate split regression', () => {
     hot_takes: 24.0,            // 2 × 12.0
     tutorials: 60.0,            // 2 × 30.0
     livestreams: 2_540.0,       // 100_000 × 0.0254
-    podcasts: 30_800.0,         // 2_000_000 × 0.0154
+    podcasts: 18_480.0,         // 1_200_000 × 0.0154
     viral_stunts: 180_000.0,    // 18_000_000 × 0.01
     ai_slop: 1_280_000.0,      // 1 × 1_280_000
     deepfakes: 2_400_000.0,     // 1 × 2_400_000

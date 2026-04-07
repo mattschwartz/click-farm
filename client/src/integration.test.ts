@@ -119,10 +119,10 @@ describe('integration — end-to-end play loop', () => {
     for (let i = 0; i < 40; i++) { t += 1100; driver.click('chirps'); }
 
     const before = driver.getState().player.engagement;
-    // chirps buy cost at count=0 is 15 × 1.215^0 = 15
+    // chirps buy cost at count=0 is 1.5 × 1.215^0 = 1.5
     driver.buy('chirps');
     const after = driver.getState().player.engagement;
-    expect(before - after).toBeCloseTo(15);
+    expect(before - after).toBeCloseTo(1.5);
   });
 
   it('follower totals stay consistent with platform sums across a long run', () => {

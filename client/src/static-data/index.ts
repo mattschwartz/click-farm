@@ -55,12 +55,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.07,
 
     unlock_threshold: 0,
-    base_buy_cost: 15,
+    base_buy_cost: 1.5,
     buy_cost_multiplier: 1.215,
     count_exponent: 1.5,
     upgrade_costs: [100, 300, 1_000, 3_000, 10_000, 30_000, 100_000, 300_000, 1_000_000],
     max_level: 10,
-    base_autoclicker_cost: 50,
+    base_autoclicker_cost: 5,
     autoclicker_cost_multiplier: 2.0,
   },
   // §14a — ladder verb. Retuned: yield=5.0, rate=0.2 → passive 1.0 eng/s
@@ -74,12 +74,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.10,
 
     unlock_threshold: 100,
-    base_buy_cost: 100,
+    base_buy_cost: 500,
     buy_cost_multiplier: 1.15,
     count_exponent: 1,
-    upgrade_costs: [200, 600, 2_000, 6_000, 20_000, 60_000, 200_000, 600_000, 2_000_000],
+    upgrade_costs: [1_000, 3_000, 10_000, 30_000, 100_000, 300_000, 1_000_000, 3_000_000, 10_000_000],
     max_level: 10,
-    base_autoclicker_cost: 500,
+    base_autoclicker_cost: 2_500,
     autoclicker_cost_multiplier: 1.5,
   },
   // §14b — passive-only. yield=1, rate=5.0 (preserved).
@@ -158,7 +158,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // retune during balance pass (task #88) to match new output.
   podcasts: {
     id: 'podcasts',
-    base_event_yield: 2_000_000,
+    base_event_yield: 1_200_000,
     base_event_rate: 0.0154,
     manual_clickable: true,
     follower_conversion_rate: 0.11,
