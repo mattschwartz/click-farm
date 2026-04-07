@@ -1,5 +1,5 @@
 {
-  "next_id": 184,
+  "next_id": 192,
   "tasks": [
     {
       "id": 1,
@@ -7440,6 +7440,389 @@
         },
         {
           "question": "Does the top-bar toast compete with viral burst summary badges that also render near the engagement counter?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 184,
+      "role": "architect",
+      "state": "plan",
+      "status": "complete",
+      "date_assigned": "2026-04-07",
+      "title": "Decompose verb gear proposal into implementation tasks",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The Creator Kit — Per-Verb Gear Upgrades proposal has been accepted. The architect needs to decompose it into implementation tasks covering: (1) rip-out of the entire old Creator Kit system, (2) new verb-gear module, types, and static data, (3) tick pipeline integration (replace kit with gear_multiplier in verbYieldPerTap and computeGeneratorEffectiveRate), (4) save migration, (5) driver/UI wiring, and (6) replacement UX spec. The rip-out inventory in §6 of the proposal and the engineer's review contain exhaustive file-level detail. The architecture spec (architecture/verb-gear.md) is already written.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260407-creator-kit-verb-gear.md",
+          "purpose": "The accepted proposal — contains full system design, rip-out inventory, data model, and all three reviewer comments with file-level detail"
+        },
+        {
+          "ref": "architecture/verb-gear.md",
+          "purpose": "Architecture spec for the new system — data model, interface contracts, stacking position, coupling analysis"
+        }
+      ],
+      "acceptance_criteria": [
+        "All implementation tasks are filed with correct roles, states, and complexity",
+        "Rip-out of old Creator Kit is sequenced before new verb-gear integration to avoid type conflicts",
+        "Save migration task is sequenced after rip-out",
+        "UX spec replacement task is filed for ux-designer",
+        "Task blocked_on fields correctly capture sequencing dependencies"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
+    },
+    {
+      "id": 185,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Rip out entire old Creator Kit system",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Delete the entire old Creator Kit system — module, types, static data, UI components, integration points, and all references. The rip-out inventory in the source proposal §6 and architecture review N1 enumerate every file. This must land before any new verb-gear code to avoid type conflicts between the old and new systems coexisting.",
+      "related_items": [
+        {
+          "ref": "proposals/draft/20260407-creator-kit-verb-gear.md",
+          "purpose": "§6 has the exhaustive rip-out inventory"
+        },
+        {
+          "ref": "architecture/verb-gear.md",
+          "purpose": "§3–§5 list every old integration point being removed"
+        },
+        {
+          "ref": "architecture/creator-kit.md",
+          "purpose": "The architecture doc being killed — delete this file"
+        },
+        {
+          "ref": "client/src/creator-kit/index.ts",
+          "purpose": "Entire module deleted"
+        },
+        {
+          "ref": "client/src/creator-kit/index.test.ts",
+          "purpose": "Entire test file deleted"
+        },
+        {
+          "ref": "client/src/ui/CreatorKitPanel.tsx",
+          "purpose": "UI component deleted"
+        },
+        {
+          "ref": "client/src/ui/CreatorKitPanel.test.ts",
+          "purpose": "UI test deleted"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Remove KitItemId (L58–62), KitEffect (L78–82), KitItemDef (L84–91), Player.creator_kit (L134), StaticData.creatorKitItems (L390)"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Remove CREATOR_KIT_ITEM_DEFS (L425–464), KitItemDef/KitItemId imports, creatorKitItems on STATIC_DATA"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "Remove kitEngagementBonus/kitFollowerConversionBonus/kitViralBurstAmplifier imports and all call sites in computeGeneratorEffectiveRate, verbYieldPerTap, tick (L344–347), computeSnapshot (L466–469), evaluateViralTrigger (L256–259)"
+        },
+        {
+          "ref": "client/src/offline/index.ts",
+          "purpose": "Remove kitFollowerConversionBonus import (L31) and usage (L119–121, L134)"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "Remove creator_kit wipe (L178) and KitItemId import"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Remove purchaseKitItem import, buyKitItem action (L646–650), KitItemId from ActionName"
+        },
+        {
+          "ref": "client/src/ui/useGame.ts",
+          "purpose": "Remove buyKitItem binding"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "Remove creator_kit initialization (L69)"
+        },
+        {
+          "ref": "client/src/audience-mood/index.ts",
+          "purpose": "Update stacking order comment (L11) — remove kitEngagementBonus reference"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Remove CreatorKitPanel comment/import"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Remove Creator Kit panel styles"
+        },
+        {
+          "ref": "client/src/theme/tokens.css",
+          "purpose": "Remove Creator Kit CSS tokens"
+        },
+        {
+          "ref": "client/src/static-data/index.test.ts",
+          "purpose": "Remove tests validating CREATOR_KIT_ITEM_DEFS"
+        },
+        {
+          "ref": "client/src/game-loop/index.test.ts",
+          "purpose": "Remove/update tests that reference kit bonus functions"
+        }
+      ],
+      "acceptance_criteria": [
+        "All files listed in the rip-out inventory are deleted or cleaned of Creator Kit references",
+        "No import of anything from client/src/creator-kit/ exists anywhere in the codebase",
+        "No reference to KitItemId, KitEffect, KitItemDef, creatorKitItems, creator_kit, kitEngagementBonus, kitFollowerConversionBonus, kitViralBurstAmplifier, buyKitItem, or purchaseKitItem exists in any .ts/.tsx/.css file",
+        "The kit factor is removed from verbYieldPerTap, computeGeneratorEffectiveRate, computeSnapshot, offline earnings, and evaluateViralTrigger — these functions still work correctly without it (multiplying by 1.0 less)",
+        "architecture/creator-kit.md is deleted",
+        "All existing tests pass (with kit-specific tests removed/updated)",
+        "TypeScript compiles with no errors"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 186,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Add VerbGearId, VerbGearDef types and VERB_GEAR_DEFS static data",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Add the new type definitions and static data for the verb gear system. VerbGearId is a narrow 5-member union. VerbGearDef holds id, name, max_level, cost[], and multipliers[]. VERB_GEAR_DEFS populates the 5 items with the balance values from the proposal §3. Add verbGear field to StaticData and verb_gear field to Player.",
+      "related_items": [
+        {
+          "ref": "architecture/verb-gear.md",
+          "purpose": "§Data Model defines all types and fields"
+        },
+        {
+          "ref": "proposals/draft/20260407-creator-kit-verb-gear.md",
+          "purpose": "§3 has the cost/multiplier balance tables, §5 has the data model"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Add VerbGearId, VerbGearDef, Player.verb_gear, StaticData.verbGear"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Add VERB_GEAR_DEFS and wire into STATIC_DATA"
+        }
+      ],
+      "acceptance_criteria": [
+        "VerbGearId type is 'chirps' | 'selfies' | 'livestreams' | 'podcasts' | 'viral_stunts'",
+        "VerbGearDef interface has id, name, max_level, cost[], multipliers[] fields",
+        "Player.verb_gear field exists as Record<VerbGearId, number>",
+        "StaticData.verbGear field exists as Record<VerbGearId, VerbGearDef>",
+        "VERB_GEAR_DEFS has all 5 items with cost and multiplier values from proposal §3",
+        "STATIC_DATA exports verbGear: VERB_GEAR_DEFS",
+        "model/index.ts initializes verb_gear: {} on new player",
+        "TypeScript compiles with no errors"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        185
+      ]
+    },
+    {
+      "id": 187,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Implement verb-gear module (multiplier, purchase, cost, affordability)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Create client/src/verb-gear/ module exporting verbGearMultiplier, purchaseVerbGear, verbGearCost, and canPurchaseVerbGear. All four functions are specified in architecture/verb-gear.md §Interface Contracts. The module follows the same patterns as prestige/ (purchaseCloutUpgrade) and the old creator-kit/ (purchaseKitItem). Include full test coverage.",
+      "related_items": [
+        {
+          "ref": "architecture/verb-gear.md",
+          "purpose": "§Interface Contracts defines all four function signatures and behaviors"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "Pattern reference — purchaseCloutUpgrade follows the same throw-on-invariant-violation pattern"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "VerbGearId, VerbGearDef, GameState types"
+        }
+      ],
+      "acceptance_criteria": [
+        "client/src/verb-gear/index.ts exports verbGearMultiplier, purchaseVerbGear, verbGearCost, canPurchaseVerbGear",
+        "verbGearMultiplier returns 1.0 for non-gear generators, correct multiplier for geared generators at each level",
+        "purchaseVerbGear decrements engagement, increments level, throws on insufficient engagement or max level",
+        "verbGearCost returns correct cost for next level or null at max",
+        "canPurchaseVerbGear returns boolean affordability check",
+        "client/src/verb-gear/index.test.ts covers all functions including edge cases (level 0, max level, non-gear generator, insufficient engagement)",
+        "All tests pass, TypeScript compiles"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        186
+      ]
+    },
+    {
+      "id": 188,
+      "alias": "E4",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Integrate gear_multiplier into tick pipeline, snapshot, and offline",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Wire verbGearMultiplier into the two engagement yield formulas (verbYieldPerTap, computeGeneratorEffectiveRate) at stacking position §4 — replacing where the old kit factor was. Update computeSnapshot and offline/computeOfflineEarnings accordingly. The old kit had follower conversion and viral burst effects that touched snapshot and offline — those are gone, not replaced. The new gear multiplier only affects engagement yield. Update the stacking order comment in audience-mood/index.ts. Add verb_gear wipe to applyRebrand.",
+      "related_items": [
+        {
+          "ref": "architecture/verb-gear.md",
+          "purpose": "§Stacking Order and §Integration Points §1–§7 define exactly what changes where"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "verbYieldPerTap (L520–529), computeGeneratorEffectiveRate (L121–141), computeSnapshot (L444–496)"
+        },
+        {
+          "ref": "client/src/offline/index.ts",
+          "purpose": "Remove old kitFollowerConversionBonus (already gone from E1), confirm no new gear integration needed here"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "applyRebrand — add verb_gear = {} to reset pass"
+        },
+        {
+          "ref": "client/src/audience-mood/index.ts",
+          "purpose": "Update stacking order comment to reference verbGearMultiplier"
+        }
+      ],
+      "acceptance_criteria": [
+        "verbYieldPerTap multiplies by verbGearMultiplier(generator.id, state.player.verb_gear, staticData) at position §4",
+        "computeGeneratorEffectiveRate multiplies by the same verbGearMultiplier at position §4",
+        "computeSnapshot does NOT include any gear factor (gear only affects engagement yield, which is already captured by the rate computation)",
+        "offline/computeOfflineEarnings does NOT include any gear factor (same reason)",
+        "applyRebrand resets verb_gear to {} in the player reset pass",
+        "audience-mood/index.ts stacking order comment updated",
+        "Existing game-loop tests updated to cover gear multiplier integration",
+        "All tests pass, TypeScript compiles"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        187
+      ]
+    },
+    {
+      "id": 189,
+      "alias": "E5",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Wire purchaseVerbGear into driver and useGame hook",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Add buyVerbGear action to the driver interface and useGame hook, replacing the old buyKitItem. Follows the same pattern as buyCloutUpgrade. The action calls purchaseVerbGear from the verb-gear module, catches errors via runAction, and plays the purchase sound on success.",
+      "related_items": [
+        {
+          "ref": "architecture/verb-gear.md",
+          "purpose": "§Integration Points §8 (driver) and §9 (useGame)"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Add buyVerbGear action following buyCloutUpgrade pattern"
+        },
+        {
+          "ref": "client/src/ui/useGame.ts",
+          "purpose": "Add buyVerbGear binding following buyCloutUpgrade pattern"
+        }
+      ],
+      "acceptance_criteria": [
+        "driver exports buyVerbGear(gearId: VerbGearId) method",
+        "ActionName type includes 'buyVerbGear'",
+        "useGame hook exposes buyVerbGear callback that delegates to driver.buyVerbGear",
+        "Purchase sound plays on successful gear buy",
+        "Errors are caught and surfaced via onActionError",
+        "TypeScript compiles"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        187
+      ]
+    },
+    {
+      "id": 190,
+      "alias": "E6",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Save migration: strip creator_kit, add verb_gear",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Add a new save migration that strips the old player.creator_kit field and adds player.verb_gear = {}. Version bump. The old migrateV4toV5 (introduces creator_kit) and migrateV9toV10 (strips laptop) remain in the chain — they produce a creator_kit field that this migration removes.",
+      "related_items": [
+        {
+          "ref": "architecture/verb-gear.md",
+          "purpose": "§Save Schema Migration defines the migration"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Add migration to the chain after current latest version"
+        }
+      ],
+      "acceptance_criteria": [
+        "New migration function strips player.creator_kit and adds player.verb_gear = {}",
+        "Save version is bumped by 1",
+        "Migration is registered in the migration chain",
+        "A save with old creator_kit data round-trips correctly through the full migration chain",
+        "A fresh save (no creator_kit) also migrates cleanly",
+        "Tests in save/index.test.ts cover the new migration",
+        "All tests pass, TypeScript compiles"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        185
+      ]
+    },
+    {
+      "id": 191,
+      "alias": "U1",
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Design verb gear purchase UI and level-up treatment",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Design the UI for verb gear purchases and the visual treatment of gear level-ups. The proposal leaves two UX questions open: (1) where does the player buy gear — actions column, separate panel, inline on verb buttons? (2) what does the 10x moment look and feel like — the order-of-magnitude jump is the emotional payoff of the system. Also address OQ#3 from the proposal: should gear purchases have a confirmation step at 2B+ engagement prices? All 5 gear items are visible from the start (resolved OQ#1); unaffordable items are greyed out.",
+      "related_items": [
+        {
+          "ref": "proposals/draft/20260407-creator-kit-verb-gear.md",
+          "purpose": "§1 has the item/verb mapping and fantasy, §3 has cost structure, §9 has player psychology targets, §11 lists the open UX questions"
+        },
+        {
+          "ref": "architecture/verb-gear.md",
+          "purpose": "Data model and interface contracts the UI will consume"
+        }
+      ],
+      "acceptance_criteria": [
+        "UX spec written to .frames/sdlc/ux/ defining gear purchase placement, interaction pattern, and affordance states",
+        "Visual treatment for gear level-up moment is specified (the 10x breakthrough feeling)",
+        "Confirmation step decision is made and documented",
+        "Spec accounts for all 5 items visible from start with greyed-out unaffordable state"
+      ],
+      "open_questions": [
+        {
+          "question": "Should gear items appear in the actions column alongside verb buttons, or in a separate panel?",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "Does the level-up treatment need to differ per verb (thematic) or can it be a shared animation with per-verb color?",
           "owner": "ux-designer"
         }
       ],
