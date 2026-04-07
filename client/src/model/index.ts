@@ -11,7 +11,6 @@ import type {
   PlatformId,
   StaticData,
   UpgradeId,
-  KitItemId,
 } from '../types.ts';
 
 // ---------------------------------------------------------------------------
@@ -66,7 +65,6 @@ export function createPlayer(now: number = Date.now()): Player {
     has_started_run: false,
     rebrand_count: 0,
     clout_upgrades,
-    creator_kit: {} as Record<KitItemId, number>,
     last_manual_click_at: {} as Record<GeneratorId, number>,
     run_start_time: now,
     last_close_time: null,

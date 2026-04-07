@@ -421,7 +421,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               onStartSweep={startSweep}
               onCancelSweep={cancelSweep}
             />
-            {/* CreatorKitPanel hidden — to be redesigned */}
           </div>
           <PlatformPanel
             state={state}

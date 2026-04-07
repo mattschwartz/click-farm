@@ -31,11 +31,6 @@ import {
 } from '../platform/index.ts';
 import { checkGeneratorUnlocks } from '../generator/index.ts';
 import { syncTotalFollowers, clampEngagement } from '../model/index.ts';
-import {
-  kitEngagementBonus,
-  kitFollowerConversionBonus,
-  kitViralBurstAmplifier,
-} from '../creator-kit/index.ts';
 import { advanceNeglect, applyTickPosts } from '../audience-mood/index.ts';
 
 // ---------------------------------------------------------------------------
@@ -126,17 +121,13 @@ export function computeGeneratorEffectiveRate(
   if (!generator.owned || generator.autoclicker_count <= 0) return 0;
   const def = staticData.generators[generator.id];
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
-  // Kit effects fold in AFTER Clout per architecture/creator-kit.md §Stacking
-  // Order (§3 clout → §4 kit). Camera is the only item in this chain today.
-  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
   return (
     generator.autoclicker_count *
     generator.level *
     def.base_event_rate *
     def.base_event_yield *
     Math.pow(1 + generator.count, def.count_exponent) *
-    clout *
-    kit
+    clout
   );
 }
 
@@ -248,16 +239,9 @@ export function evaluateViralTrigger(
     config.durationMsMin +
       random() * (config.durationMsMax - config.durationMsMin),
   );
-  // Roll the raw boost factor, then apply Mogging's kit amplifier per
-  // architecture/creator-kit.md §Integration Points §6. Level 0 → 1.0, no-op.
-  const boostFactorRaw =
+  const boostFactor =
     config.magnitudeBoostMin +
     random() * (config.magnitudeBoostMax - config.magnitudeBoostMin);
-  const kitAmplifier = kitViralBurstAmplifier(
-    state.player.creator_kit,
-    staticData,
-  );
-  const boostFactor = boostFactorRaw * kitAmplifier;
   // During the viral: effective rate = normal_rate × boostFactor
   // Bonus = normal_rate × (boostFactor - 1) per ms
   const bonus_rate_per_ms = totalRatePerMs * (boostFactor - 1);
@@ -337,27 +321,17 @@ export function tick(
     staticData,
   );
 
-  // 4a. Wardrobe — kit follower_conversion_multiplier wraps the entire
-  // per-platform follower sum (architecture/creator-kit.md §Integration
-  // Points §3). Applied after computeFollowerDistribution so the platform
-  // module stays decoupled from kit state.
-  const kitFollowerMult = kitFollowerConversionBonus(
-    state.player.creator_kit,
-    staticData,
-  );
-
   // 5. Apply per-platform follower gains over deltaMs.
   //    Audience Mood retention enters here — per-platform multiplier applied
-  //    AFTER content-affinity distribution and kit follower-conversion
-  //    (platform-scoped, step 6 in the stacking-order chain declared in
-  //    audience-mood/index.ts module header).
+  //    AFTER content-affinity distribution (platform-scoped, step 6 in the
+  //    stacking-order chain declared in audience-mood/index.ts module header).
   let platforms = platformsWithMood;
   if (distribution.totalRate > 0) {
     const next: Record<PlatformId, PlatformState> = { ...platformsWithMood };
     for (const id of Object.keys(platformsWithMood) as PlatformId[]) {
       const retention = platformsWithMood[id].retention;
       const gained =
-        distribution.perPlatformRate[id] * kitFollowerMult * retention * deltaMs;
+        distribution.perPlatformRate[id] * retention * deltaMs;
       if (gained > 0) {
         next[id] = {
           ...platformsWithMood[id],
@@ -462,12 +436,6 @@ export function computeSnapshot(
     staticData,
   );
 
-  // Wardrobe multiplies the entire per-platform distribution (see tick).
-  const kitFollowerMult = kitFollowerConversionBonus(
-    state.player.creator_kit,
-    staticData,
-  );
-
   // distribution rates are per-ms. Convert to per-sec for the snapshot.
   // Audience Mood retention folded in per-platform — retention does NOT
   // advance offline (architecture/audience-mood.md §Integration — Offline),
@@ -477,7 +445,6 @@ export function computeSnapshot(
     (Object.keys(state.platforms) as PlatformId[]).map((id) => [
       id,
       distribution.perPlatformRate[id] *
-        kitFollowerMult *
         state.platforms[id].retention *
         1000,
     ]),
@@ -515,7 +482,7 @@ export function verbCooldownMs(
 /**
  * Engagement earned from a single manual tap. BUY count drives yield.
  *
- *   earned = base_event_yield × (1 + count)^count_exponent × (1 + autoclicker_count) × clout × kit
+ *   earned = base_event_yield × (1 + count)^count_exponent × (1 + autoclicker_count) × clout
  */
 export function verbYieldPerTap(
   generator: GeneratorState,
@@ -524,14 +491,13 @@ export function verbYieldPerTap(
 ): number {
   const def = staticData.generators[generator.id];
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
-  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
-  return def.base_event_yield * Math.pow(1 + generator.count, def.count_exponent) * (1 + generator.autoclicker_count) * clout * kit;
+  return def.base_event_yield * Math.pow(1 + generator.count, def.count_exponent) * (1 + generator.autoclicker_count) * clout;
 }
 
 /**
  * Engagement per single autoclicker fire. Same formula as manual tap:
  *
- *   earned = base_event_yield × (1 + count)^count_exponent × (1 + autoclicker_count) × clout × kit
+ *   earned = base_event_yield × (1 + count)^count_exponent × (1 + autoclicker_count) × clout
  */
 export function verbYieldPerAutoTap(
   generator: GeneratorState,

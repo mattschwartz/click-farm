@@ -6,7 +6,6 @@ import type {
   GameState,
   GeneratorId,
   GeneratorState,
-  KitItemId,
   PlatformId,
   PlatformState,
   SaveData,
@@ -285,17 +284,18 @@ export function migrateV3toV4(data: SaveData): SaveData {
 }
 
 /**
- * Migrate a V4 save to V5 — Creator Kit foundation.
+ * Migrate a V4 save to V5 — Creator Kit foundation (legacy).
  *
- * Task #73: `player.creator_kit` is introduced as a per-run map of
- * KitItemId → level. Existing saves default to an empty kit. The field is
- * wiped on rebrand (see prestige/applyRebrand), so defaulting to `{}` is
- * always correct on load.
+ * Task #73: `player.creator_kit` was introduced as a per-run map of
+ * kit item id → level. The Creator Kit system has since been removed
+ * (replaced by verb gear), but this migration remains in the chain for
+ * forward-compatibility with ancient saves. The `creator_kit` field it
+ * produces is stripped by a later migration.
  */
 export function migrateV4toV5(data: SaveData): SaveData {
   const oldState = data.state as GameState & {
     player: GameState['player'] & {
-      creator_kit?: Record<KitItemId, number>;
+      creator_kit?: Record<string, number>;
     };
   };
   return {
@@ -306,7 +306,7 @@ export function migrateV4toV5(data: SaveData): SaveData {
       player: {
         ...oldState.player,
         creator_kit:
-          oldState.player.creator_kit ?? ({} as Record<KitItemId, number>),
+          oldState.player.creator_kit ?? ({} as Record<string, number>),
       },
     },
   };
@@ -698,7 +698,7 @@ export function migrateV11toV12(data: SaveData): SaveData {
       player: {
         ...cleanPlayer,
         clout_upgrades: cleanUpgrades as Record<UpgradeId, number>,
-        creator_kit: cleanKit as Record<KitItemId, number>,
+        creator_kit: cleanKit as Record<string, number>,
         last_close_state: newCloseState,
       },
     } as GameState,

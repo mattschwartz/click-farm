@@ -7481,7 +7481,7 @@
       "alias": "E1",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Rip out entire old Creator Kit system",
       "requester": "architect",
@@ -7583,14 +7583,15 @@
         "TypeScript compiles with no errors"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 186,
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Add VerbGearId, VerbGearDef types and VERB_GEAR_DEFS static data",
       "requester": "architect",
@@ -7625,16 +7626,15 @@
         "TypeScript compiles with no errors"
       ],
       "open_questions": [],
-      "blocked_on": [
-        185
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 187,
       "alias": "E3",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Implement verb-gear module (multiplier, purchase, cost, affordability)",
       "requester": "architect",
@@ -7664,16 +7664,15 @@
         "All tests pass, TypeScript compiles"
       ],
       "open_questions": [],
-      "blocked_on": [
-        186
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 188,
       "alias": "E4",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Integrate gear_multiplier into tick pipeline, snapshot, and offline",
       "requester": "architect",
@@ -7712,16 +7711,15 @@
         "All tests pass, TypeScript compiles"
       ],
       "open_questions": [],
-      "blocked_on": [
-        187
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 189,
       "alias": "E5",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Wire purchaseVerbGear into driver and useGame hook",
       "requester": "architect",
@@ -7750,16 +7748,15 @@
         "TypeScript compiles"
       ],
       "open_questions": [],
-      "blocked_on": [
-        187
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 190,
       "alias": "E6",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Save migration: strip creator_kit, add verb_gear",
       "requester": "architect",
@@ -7785,16 +7782,15 @@
         "All tests pass, TypeScript compiles"
       ],
       "open_questions": [],
-      "blocked_on": [
-        185
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 191,
       "alias": "U1",
       "role": "ux-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Design verb gear purchase UI and level-up treatment",
       "requester": "architect",
@@ -7826,7 +7822,8 @@
           "owner": "ux-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     }
   ]
 }

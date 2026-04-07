@@ -2956,217 +2956,6 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 }
 
 
-/* --- Creator Kit panel (ux/creator-kit-panel.md) ------------------------ */
-/*
- * Visual weight: deliberately quieter than generator rows. Smaller type
- * scale, 40px rows, no left-edge stripe, no row fill. See §3.3 for the
- * explicit visual comparison.
- */
-
-/* --kit-accent hoisted to theme/tokens.css (task #108). See contrast flag
- * there — ux-designer to confirm indigo on light-mode. */
-
-.kit-panel {
-  flex: 0 0 auto;
-  background: var(--surface-panel);
-  border: 1px solid var(--border-default);
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  margin-top: -1px;
-  position: relative;
-  overflow: hidden;
-}
-
-.kit-panel-peek::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--kit-accent);
-  opacity: 0.5;
-}
-
-.kit-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 12px;
-  cursor: pointer;
-  border-top: 1px solid var(--border-subtle);
-  user-select: none;
-}
-
-.kit-header:focus-visible {
-  outline: 2px solid var(--kit-accent);
-  outline-offset: -2px;
-}
-
-.kit-header-icon {
-  font-size: 14px;
-  opacity: 0.6;
-}
-
-.kit-header-label {
-  font-size: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--kit-accent);
-  opacity: 0.7;
-  flex: 1 1 auto;
-}
-
-.kit-active-count {
-  font-size: 9px;
-  font-weight: 400;
-  color: var(--text-secondary);
-  margin-right: 8px;
-}
-
-.kit-chevron {
-  font-size: 12px;
-  color: var(--kit-accent);
-  opacity: 0.7;
-  transition: transform 220ms ease-out;
-}
-
-.kit-chevron.open {
-  transform: rotate(180deg);
-}
-
-.kit-rows {
-  display: flex;
-  flex-direction: column;
-  animation: kit-rows-fade-in 140ms ease-out 80ms both;
-}
-
-@keyframes kit-rows-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.kit-row {
-  display: grid;
-  grid-template-columns: 22px 1fr 22px;
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 4px 12px;
-  border-top: 1px solid var(--border-subtle);
-}
-
-.kit-row-icon {
-  font-size: 14px;
-  opacity: 0.6;
-  text-align: center;
-}
-
-.kit-row-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.kit-row-top {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  min-width: 0;
-}
-
-.kit-row-name {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.kit-row-flavor {
-  font-size: 10px;
-  font-weight: 400;
-  font-style: italic;
-  color: var(--text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-.kit-row-bottom {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.kit-row-level {
-  font-size: 10px;
-  font-weight: 400;
-  color: var(--text-secondary);
-}
-
-.kit-row-cost {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-left: auto;
-}
-
-.kit-row-buy {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--kit-accent);
-  font-size: 12px;
-  cursor: pointer;
-  transition: opacity 120ms ease-out, background 120ms ease-out;
-}
-
-.kit-row-buy:hover:not(:disabled) {
-  background: rgba(var(--kit-accent-rgb), 0.15);
-}
-
-.kit-row-buy:focus-visible {
-  outline: 2px solid var(--kit-accent);
-  outline-offset: 1px;
-}
-
-.kit-row-unaffordable .kit-row-buy,
-.kit-row-buy:disabled {
-  opacity: 0.25;
-  cursor: default;
-}
-
-/* Top-bar peek signal (§5.2) ------------------------------------------- */
-
-.kit-peek-signal {
-  font-size: 9px;
-  font-weight: 400;
-  color: var(--kit-accent);
-  opacity: 0.65;
-  margin-top: 1px;
-  letter-spacing: 0.02em;
-  animation: kit-peek-fade-in 300ms ease-out;
-}
-
-@keyframes kit-peek-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 0.65; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .kit-chevron { transition: none; }
-  .kit-rows { animation: none; }
-  .kit-peek-signal { animation: none; }
-}
-
 /* ==========================================================================
    Settings modal (ux/settings-screen.md)
    ==========================================================================
@@ -3328,8 +3117,8 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 }
 
 .settings-toggle-on {
-  background: rgba(var(--kit-accent-rgb),0.55);
-  border-color: rgba(var(--kit-accent-rgb),0.85);
+  background: rgba(var(--accent-indigo-rgb),0.55);
+  border-color: rgba(var(--accent-indigo-rgb),0.85);
 }
 
 .settings-toggle-on .settings-toggle-thumb {
@@ -3338,7 +3127,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 }
 
 .settings-toggle:focus-visible {
-  outline: 2px solid rgba(var(--kit-accent-rgb), 0.9);
+  outline: 2px solid rgba(var(--accent-indigo-rgb), 0.9);
   outline-offset: 2px;
 }
 
@@ -3359,7 +3148,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 .settings-slider {
   flex: 1;
   height: 4px;
-  accent-color: rgba(var(--kit-accent-rgb), 0.85);
+  accent-color: rgba(var(--accent-indigo-rgb), 0.85);
   cursor: pointer;
 }
 
@@ -3615,7 +3404,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 
   .settings-tab-active {
     color: var(--text-primary);
-    border-bottom-color: rgba(var(--kit-accent-rgb), 0.85);
+    border-bottom-color: rgba(var(--accent-indigo-rgb), 0.85);
   }
 
   .settings-body-scroll {
@@ -3745,7 +3534,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 
   .settings-tab-active {
     color: var(--text-primary);
-    border-bottom-color: rgba(var(--kit-accent-rgb), 0.85);
+    border-bottom-color: rgba(var(--accent-indigo-rgb), 0.85);
   }
 
   .settings-body-scroll {
@@ -3967,7 +3756,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 }
 
 .settings-gear-btn:focus-visible {
-  outline: 2px solid rgba(var(--kit-accent-rgb), 0.9);
+  outline: 2px solid rgba(var(--accent-indigo-rgb), 0.9);
   outline-offset: 2px;
 }
 
@@ -4064,10 +3853,6 @@ html[data-reduce-motion="true"] .viral-particles-overlay {
   display: none;
 }
 
-
-html[data-reduce-motion="true"] .kit-chevron { transition: none; }
-html[data-reduce-motion="true"] .kit-rows { animation: none; }
-html[data-reduce-motion="true"] .kit-peek-signal { animation: none; }
 
 html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   animation: none;

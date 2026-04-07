@@ -4,7 +4,7 @@
 
 > **Not in scope:** Balance values (costs, multiplier magnitudes — owned by game-designer), UI placement and visual treatment of gear purchases (owned by ux-designer), old Creator Kit removal (covered in the rip-out inventory of the source proposal §6).
 
-> **Source:** `.frames/sdlc/proposals/draft/20260407-creator-kit-verb-gear.md`. This spec supersedes `architecture/creator-kit.md`, which is dead.
+> **Source:** `.frames/sdlc/proposals/accepted/20260407-creator-kit-verb-gear.md`. This spec supersedes `architecture/creator-kit.md`, which is dead.
 
 ---
 

@@ -51,46 +51,6 @@ export type UpgradeEffect =
   | { type: 'platform_headstart'; platform_id: PlatformId };
 
 // ---------------------------------------------------------------------------
-// Creator Kit — per-run upgrades purchased with Engagement, wiped on rebrand
-// (architecture/creator-kit.md)
-// ---------------------------------------------------------------------------
-
-export type KitItemId =
-  | 'camera'
-  | 'phone'
-  | 'wardrobe'
-  | 'mogging';
-
-/**
- * KitEffect — tagged union of the five Creator Kit effect types.
- *
- * Per-level `values` / `lookaheads` arrays are length = `max_level`, indexed
- * by `level - 1`, storing the CUMULATIVE effect at that level (same
- * convention as CloutUpgradeDef).
- *
- * `platform_headstart_sequential` has no per-level array: the target
- * platform is computed dynamically at purchase/run-start time by walking
- * StaticData.platforms in declaration order and skipping platforms already
- * head-started by Clout upgrades.
- *
- * See architecture/creator-kit.md §Interface Contracts.
- */
-export type KitEffect =
-  | { type: 'engagement_multiplier'; values: number[] }
-  | { type: 'platform_headstart_sequential' }
-  | { type: 'follower_conversion_multiplier'; values: number[] }
-  | { type: 'viral_burst_amplifier'; values: number[] };
-
-export interface KitItemDef {
-  id: KitItemId;
-  /** Maximum purchasable level. ≥ 1. */
-  max_level: number;
-  /** Engagement cost per level, ascending. Length = max_level. */
-  cost: number[];
-  effect: KitEffect;
-}
-
-// ---------------------------------------------------------------------------
 // SnapshotState — captured on close, used by offline calculator
 // ---------------------------------------------------------------------------
 
@@ -126,12 +86,6 @@ export interface Player {
   rebrand_count: number;
   /** Purchased permanent meta-upgrades. Values ≥ 0. Survives rebrand. */
   clout_upgrades: Record<UpgradeId, number>;
-  /**
-   * Per-run Creator Kit purchases. Keys are KitItemIds, values are current
-   * level ≥ 0 and ≤ item's max_level. **Wiped on rebrand.**
-   * See architecture/creator-kit.md.
-   */
-  creator_kit: Record<KitItemId, number>;
   /** Epoch ms when the current run began. */
   run_start_time: number;
   /**
@@ -382,12 +336,6 @@ export interface StaticData {
   generators: Record<GeneratorId, GeneratorDef>;
   platforms: Record<PlatformId, PlatformDef>;
   cloutUpgrades: Record<UpgradeId, CloutUpgradeDef>;
-  /**
-   * Static definitions for Creator Kit items. Balance values (max_level,
-   * cost[], effect values) are owned by game-designer and populated in a
-   * separate task. See architecture/creator-kit.md.
-   */
-  creatorKitItems: Record<KitItemId, KitItemDef>;
   unlockThresholds: {
     /**
      * Total followers required to unlock a generator. Post-prestige

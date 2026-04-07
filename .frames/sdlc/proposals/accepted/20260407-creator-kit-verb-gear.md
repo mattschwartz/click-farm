@@ -182,6 +182,11 @@ The entire existing Creator Kit system is removed:
 **Architecture doc:**
 - `.frames/sdlc/architecture/creator-kit.md` — entire doc is dead, replaced by a new `architecture/verb-gear.md` (architect follow-up task)
 
+**Autoclicker cap scaling removal:**
+- `generator/index.ts` L96–100: `autoclickerCap(rebrandCount)` → flat constant `12`
+- `generator/index.ts` L351–354: `buyAutoclicker` cap check — remove `rebrand_count` parameter
+- `driver/index.ts` L450–452: HIRE track cap check — remove `rebrand_count` lookup
+
 **Proposal supersessions:**
 - `proposals/accepted/creator-kit-upgrades.md` — fully superseded
 - `proposals/accepted/brand-deal-boost.md` — fully superseded
@@ -228,13 +233,53 @@ No concerns.
 
 **Loss aversion:** Per-run wipe is a loss event. Mitigated by the same mechanism as generators: the player chooses when to rebrand, and Clout makes re-earning faster. The loss is voluntary and the recovery is visible.
 
-### 10. What This Locks In
+### 10. HIRE Button Transformation & Autoclicker Cap Change
+
+#### Autoclicker cap — flatten to 12
+
+The current autoclicker cap is `12 * (1 + rebrand_count)` (`generator/index.ts` L99–100, `autoclickerCap()`). This scales with prestige: 12 on first run, 24 after first rebrand, 36 after second, etc. **This scaling is removed.** The cap becomes a flat **12 autoclickers per verb**, regardless of rebrand count.
+
+**Code sites to change:**
+- `generator/index.ts` L96–100: `autoclickerCap(rebrandCount)` → return flat `12`
+- `generator/index.ts` L351–354: `buyAutoclicker` cap check — remove `rebrand_count` parameter
+- `driver/index.ts` L450–452: HIRE track cap check — remove `rebrand_count` lookup
+
+The `rebrand_count` parameter is no longer needed by the cap function. The cap is a static constant.
+
+#### HIRE → SUPER button lifecycle
+
+When a verb's `autoclicker_count` reaches the cap (12), the HIRE button **transforms into a SUPER button**. The button does not add more autoclickers — it purchases the next gear level for that verb.
+
+**Per-verb button lifecycle:**
+
+```
+HIRE (0/12) → HIRE (1/12) → ... → HIRE (12/12) → SUPER I → SUPER II → SUPER III → maxed
+```
+
+- **HIRE phase (0–11):** Button buys autoclickers as today. Shows count progress (e.g., "4/12").
+- **SUPER phase (I–III):** Button purchases the next gear level. Shows gear name + cost. When the player can afford it, the button glows and flashes — high-visibility "something big is available" signal.
+- **Maxed:** After SUPER III, the button is complete. Visual treatment TBD (greyed, hidden, or celebratory state — **Owner: ux-designer**).
+
+**No reset on SUPER purchase.** Autoclickers stay at 12. Count stays. Level stays. The player's existing army immediately benefits from the 10× multiplier. SUPER is purely additive — spend engagement, get 10×, keep everything else.
+
+**Purchase mechanics:** SUPER purchases use the same `purchaseVerbGear` function specified in §7. The only difference from the original proposal is that the purchase is gated behind `autoclicker_count >= 12` in addition to the engagement cost. The HIRE button in the UI checks both conditions to determine whether to show HIRE or SUPER.
+
+**Why this works (UX rationale from ux-designer):** No new UI elements are needed. The HIRE button is already per-verb, already in the Actions Column, already the right size on mobile. Reusing it for gear purchases solves the mobile spacing problem entirely. The transformation is also a natural progression signal — the button the player has been tapping changes appearance, which teaches without a tutorial.
+
+#### OQ1 revision — "all visible" applies to SUPER state, not separate gear UI
+
+The original OQ1 answer ("all 5 visible from the start, greyed when unaffordable") was written assuming gear items would have their own UI surface. Under the HIRE→SUPER model, gear visibility is implicit: the player sees the SUPER button when they've maxed HIREs for that verb. The "all visible" intent is preserved because all 5 verb buttons are always visible in the Actions Column — the player can see which verbs have reached SUPER and which haven't.
+
+### 11. What This Locks In
 
 - Creator Kit is 5 per-verb gear items, one per manual verb
 - Each item has 3 levels, each level ~10x multiplier (cumulative: x10, x100, x1000)
 - Purchased with Engagement, wiped on rebrand
 - Cheapest entry point is 2B (Mechanical Keyboard L1)
 - Multiplier applies to both manual taps and autoclicker fires
+- **Autoclicker cap is flat 12** — the rebrand-scaling formula (`12 * (1 + rebrand_count)`) is removed
+- **HIRE button transforms into SUPER at cap** — no new UI element, no separate gear panel
+- **No reset on SUPER purchase** — autoclickers, count, and level all stay; SUPER is purely additive
 - The entire old Creator Kit system (Camera, Phone, Wardrobe, Mogging) is removed
 - Brand Deal Boost and Brand Deal Milestones proposals are dead
 - All balance values live in static data and are easy to retune
@@ -242,8 +287,10 @@ No concerns.
 ### 11. What This Leaves Open
 
 - Exact cost and multiplier values — balance pass after playtesting (§3 provides starting cells)
-- UI placement of gear purchases — where does the player buy gear? Actions column? Separate panel? **Owner: ux-designer**
-- Visual treatment of gear level-ups — what does the 10x moment look and feel like? **Owner: ux-designer**
+- [RESOLVED] UI placement of gear purchases — **Owner: ux-designer**
+  - **Answer (ux-designer + game-designer):** HIRE button transforms into SUPER at autoclicker cap. No new UI element. See §10.
+- Visual treatment of the SUPER button (glow, flash, color) and the 10x moment — **Owner: ux-designer**
+- Visual treatment of the maxed state (after SUPER III) — **Owner: ux-designer**
 - Whether passive-only generators (memes, hot_takes, tutorials) ever get gear items — currently no, only manual verbs. **Owner: game-designer** (future scope)
 - Save migration strategy for existing saves with old creator_kit data — **Owner: engineer**
 - [RESOLVED] Whether `VerbGearId` is truly an alias for `GeneratorId` or a distinct type — **Owner: architect**
@@ -270,6 +317,11 @@ No concerns.
    - **Answer (architect):** Same position — §4 in the stacking chain. The per-verb scoping changes which value is read (per-generator lookup instead of a global product), but the position in the multiplicative chain is identical. The stacking order convention in `architecture/creator-kit.md` §Stacking Order remains correct with the substitution `kit_engagement_multiplier → gear_multiplier`. No new position needed.
 3. [RESOLVED] **Should gear purchases have a confirmation step?** At 2B+ engagement, a mis-tap is expensive. The old kit items had no confirmation. **Owner: ux-designer**
    - **Answer (ux-designer):** Yes — lightweight two-tap pattern. First tap reveals purchase details (cost, multiplier preview), second tap confirms. Prevents accidental purchases without blocking flow. Full spec in the replacement UX spec for verb gear. See ux-designer review O2.
+
+---
+## Revision: 2026-04-07 — game-designer (2)
+
+Adds §10 (HIRE Button Transformation & Autoclicker Cap Change). Per ux-designer feedback on mobile spacing: gear purchases are not a new UI surface — the HIRE button transforms into SUPER when autoclicker_count reaches cap (12). Autoclicker cap flattened from `12 * (1 + rebrand_count)` to flat 12. No reset on SUPER purchase — autoclickers, count, and level all stay. Rip-out of the rebrand-scaling cap formula added to §6. OQ1 revised — "all visible" now implicit via verb button visibility. UI placement OQ resolved. New OQs added for SUPER button visual treatment and maxed state.
 
 ---
 ## Revision: 2026-04-07 — game-designer
@@ -504,3 +556,40 @@ The following UX artifacts are fully superseded and should be marked dead or rep
 5. `ux/creator-kit-panel.md` — old UX spec (dead, to be replaced)
 6. `.frames/sdlc/architecture/verb-gear.md` — architecture spec for the new system
 7. `prog/Screenshot 2026-04-07 at 2.31.11 PM.png` — current game screen state
+
+---
+# Review: architect (post-acceptance implementation audit)
+
+**Date**: 2026-04-07
+**Decision**: Aligned (no status change — proposal already accepted)
+
+**Comments**
+
+Deep code trace through all integration points against the committed codebase and the engineer's in-progress rip-out (task #185). The proposal, architecture doc, and prior reviews are correct on all major points. Four implementation-planning gaps surfaced that should be captured in build tasks.
+
+**Note:** The engineer is actively removing the old Creator Kit system (task #185). Working directory diffs confirm the rip-out is clean: `kitEngagementBonus`, `kitFollowerConversionBonus`, and `kitViralBurstAmplifier` calls removed from `game-loop/index.ts`; `KitItemId`, `KitEffect`, `KitItemDef` stripped from `types.ts`; `buyKitItem` removed from driver interface; `creator_kit` wipe removed from `prestige/index.ts`. The rip-out correctly removes `kit` from the formulas without adding `gear_multiplier` — that's the build task's job.
+
+### Flags for implementation task planning
+
+**F1 — Sweep engine needs a `'gear'` purchase type.**
+
+`driver/index.ts` `buildAffordableList()` (L432–472) builds BUY, HIRE, and LVL UP items. When autoclicker_count reaches cap (12), that verb's HIRE row is skipped. After the HIRE→SUPER transformation, gear purchases should appear in the sweep when autoclickers are capped and engagement is sufficient. Without this, the auto-buy sweep button (ref: `proposals/accepted/20260406-auto-buy-sweep-button.md`) will skip gear purchases entirely.
+
+Needs: new `SweepItemType` value (`'gear'`), priority slot in the sort (likely between HIRE and BUY — SUPER is a bigger breakthrough than a single autoclicker but less urgent than a level-up), and the `fireSweepPurchase` dispatch case.
+
+**F2 — `createPlayer()` in `model/index.ts` L69 is not listed as an integration point.**
+
+`createPlayer()` currently initializes `creator_kit: {} as Record<KitItemId, number>`. The rip-out removes this line. The verb-gear build task must add `verb_gear: {} as Record<VerbGearId, number>` here. This call site is absent from both the proposal's §6/§7 and the architecture doc's integration points list. The compiler will catch it (Player requires the field), but it should be explicit in the task.
+
+**F3 — `purchaseVerbGear` contract doesn't specify the autoclicker-cap gate.**
+
+The architecture doc's `purchaseVerbGear` contract (§Interface Contracts) validates level < max and engagement >= cost. §10 of this proposal adds a third gate: `autoclicker_count >= 12`. The arch doc is silent on where this gate lives. Two options:
+
+- **In `purchaseVerbGear` itself** — safer, enforced at the model layer, testable. Requires passing `generators` state or the autoclicker count as an additional parameter.
+- **UI-only gate** — simpler function signature, but a direct call to `purchaseVerbGear` bypasses the check. Integration tests won't catch it.
+
+Recommendation: enforce in the model layer. The gate is a game rule, not a presentation concern. The arch doc should be updated to include it in the contract.
+
+**F4 — Architecture doc source path is stale.**
+
+`architecture/verb-gear.md` header references `proposals/draft/20260407-creator-kit-verb-gear.md`. The proposal has since moved to `proposals/accepted/`. Quick fix.

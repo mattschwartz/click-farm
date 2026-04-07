@@ -14,12 +14,10 @@
 import type {
   GameState,
   GeneratorId,
-  KitItemId,
   StaticData,
   UpgradeId,
   ViralBurstPayload,
 } from '../types.ts';
-import { purchaseKitItem } from '../creator-kit/index.ts';
 import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
 import {
   buyGenerator,
@@ -60,7 +58,7 @@ export type StateListener = (state: GameState) => void;
 export type ViralBurstListener = (payload: ViralBurstPayload) => void;
 
 /** Which driver action was attempted when the error fired. */
-export type ActionName = 'click' | 'buy' | 'upgrade' | 'unlock' | 'buyAutoclicker' | 'buyCloutUpgrade' | 'buyKitItem';
+export type ActionName = 'click' | 'buy' | 'upgrade' | 'unlock' | 'buyAutoclicker' | 'buyCloutUpgrade';
 
 /**
  * Fired when a player-triggered action throws out of the model layer. The
@@ -187,8 +185,6 @@ export interface GameDriver {
   canRebrand(): boolean;
   /** Spend Clout to level up a meta-upgrade. Throws when unaffordable. */
   buyCloutUpgrade(upgradeId: UpgradeId): void;
-  /** Spend Engagement on a Creator Kit item. Errors caught via onActionError. */
-  buyKitItem(itemId: KitItemId): void;
   /**
    * Build the affordable purchase list and begin the 80ms sweep loop.
    * No-op if a sweep is already active.
@@ -640,12 +636,6 @@ export function createDriver(options: DriverOptions): GameDriver {
     buyCloutUpgrade(upgradeId) {
       runAction('buyCloutUpgrade', { upgradeId }, () => {
         applyState(purchaseCloutUpgrade(state, upgradeId, staticData));
-      });
-    },
-
-    buyKitItem(itemId) {
-      runAction('buyKitItem', { itemId }, () => {
-        applyState(purchaseKitItem(state, itemId, staticData));
       });
     },
 
