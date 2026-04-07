@@ -524,7 +524,7 @@ export function verbYieldPerTap(
   const def = staticData.generators[generator.id];
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
   const kit = kitEngagementBonus(state.player.creator_kit, staticData);
-  return def.base_event_yield * (1 + generator.count) * clout * kit;
+  return def.base_event_yield * (1 + generator.count) * (1 + generator.autoclicker_count) * clout * kit;
 }
 
 // ---------------------------------------------------------------------------

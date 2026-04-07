@@ -1,5 +1,5 @@
 {
-  "next_id": 156,
+  "next_id": 157,
   "tasks": [
     {
       "id": 1,
@@ -6262,6 +6262,35 @@
         "Tier colors do not apply to non-suffix text (e.g., the number portion, labels, etc.)",
         "Reduced motion: no change needed (colors are static, not animated)",
         "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 156,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Manual tap yield scales with autoclicker count",
+      "requester": "game-designer",
+      "complexity": "haiku",
+      "overview": "Manual taps don't benefit from autoclicker hires. A player with 10 autoclickers watches their army outpace their hand — hiring feels like replacement, not empowerment. Fix: multiply manual tap yield by (1 + autoclicker_count) so the player's hand scales with their team. In postClick, earned changes from `base_event_yield × (1 + count) × clout × kit` to `base_event_yield × (1 + count) × (1 + autoclicker_count) × clout × kit`.",
+      "related_items": [
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "postClick — add (1 + genState.autoclicker_count) factor to the earned formula"
+        },
+        {
+          "ref": "client/src/game-loop/index.test.ts",
+          "purpose": "Update manual tap yield assertions to include autoclicker_count scaling"
+        }
+      ],
+      "acceptance_criteria": [
+        "postClick earned formula is: base_event_yield × (1 + count) × (1 + autoclicker_count) × clout × kit",
+        "Manual tap at autoclicker_count=0 is unchanged (multiplier is 1)",
+        "Manual tap at autoclicker_count=5 earns 6× what it would at autoclicker_count=0",
+        "Existing tests updated, all tests pass, build succeeds"
       ],
       "open_questions": [],
       "blocked_on": []

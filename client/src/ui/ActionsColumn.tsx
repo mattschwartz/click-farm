@@ -193,7 +193,10 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
       if (prefersReducedMotion) return;
 
       const rect = btnRef.current?.getBoundingClientRect();
-      const perAutoTap = perTap; // same yield formula for autoclicker fires
+      // Autoclicker yield per fire — strip the (1+autoclicker_count) manual-tap
+      // multiplier so autoclicker floats show base per-event yield, not the
+      // inflated manual-tap value.
+      const perAutoTap = perTap / (1 + autoCount);
 
       if (autoCount > AUTO_FLOAT_DENSITY_CAP) {
         // Batched float: +total ×N

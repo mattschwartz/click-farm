@@ -423,11 +423,11 @@ describe('postClick', () => {
     expect(next.player.engagement).toBeGreaterThan(state.player.engagement);
   });
 
-  it('click engagement = base_event_yield × (1 + count) × clout × kit', () => {
+  it('click engagement = base_event_yield × (1 + count) × (1 + autoclicker_count) × clout × kit', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     const def = STATIC_DATA.generators.chirps;
-    // count=0 → (1+0)=1
-    const expected = def.base_event_yield * (1 + 0) * 1.0 * 1.0;
+    // count=0, autoclicker_count=0 → (1+0)×(1+0)=1
+    const expected = def.base_event_yield * (1 + 0) * (1 + 0) * 1.0 * 1.0;
     const next = postClick(state, STATIC_DATA, 'chirps', T0);
     expect(next.player.engagement - state.player.engagement).toBeCloseTo(expected, 10);
   });
