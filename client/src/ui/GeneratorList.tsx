@@ -18,6 +18,7 @@ import type { GameState, GeneratorId, StaticData } from '../types.ts';
 import type { SweepItemType, SweepPurchaseEvent } from '../driver/index.ts';
 import {
   autoclickerBuyCost,
+  autoclickerCap,
   generatorBuyCost,
   generatorUpgradeCost,
 } from '../generator/index.ts';
@@ -447,6 +448,7 @@ function GeneratorRow({
             costLabel={<TieredNumber value={autoCost} />}
             costText={fmtCompact(autoCost)}
             canBuy={canBuyAuto}
+            isMaxed={g.autoclicker_count >= autoclickerCap(state.player.rebrand_count)}
             autoclickerCount={g.autoclicker_count}
             verbColor={display.color}
             onBuy={() => { onBuyAutoclicker(id); spawnCostFloat('autoclicker', autoCost); }}
@@ -477,6 +479,7 @@ interface AutoPillProps {
   costLabel: React.ReactNode;
   costText: string;
   canBuy: boolean;
+  isMaxed: boolean;
   autoclickerCount: number;
   verbColor: string;
   onBuy: () => void;
@@ -562,12 +565,13 @@ function SpeedButton({
 
 // ---------------------------------------------------------------------------
 
-function AutoPill({ costLabel, costText, canBuy, autoclickerCount, verbColor, onBuy, generatorName, sweepHit }: AutoPillProps) {
+function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verbColor, onBuy, generatorName, sweepHit }: AutoPillProps) {
   const [glowing, setGlowing] = useState(false);
   const [shaking, setShaking] = useState(false);
   const rgb = hexToRgbPill(verbColor);
 
   const handleClick = () => {
+    if (isMaxed) return;
     if (!canBuy) {
       setShaking(true);
       window.setTimeout(() => setShaking(false), 200);
@@ -578,23 +582,35 @@ function AutoPill({ costLabel, costText, canBuy, autoclickerCount, verbColor, on
     onBuy();
   };
 
+  const stateClass = isMaxed
+    ? ' purchase-pill-maxed'
+    : canBuy
+      ? ' purchase-pill-affordable'
+      : ' purchase-pill-unaffordable';
+
   return (
     <button
-      className={`purchase-pill purchase-pill-auto${canBuy ? ' purchase-pill-affordable' : ' purchase-pill-unaffordable'}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}${sweepHit ? ' sweep-hit' : ''}`}
-      style={canBuy ? {
+      className={`purchase-pill purchase-pill-auto${stateClass}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}${sweepHit ? ' sweep-hit' : ''}`}
+      style={!isMaxed && canBuy ? {
         '--pill-color': verbColor,
         '--pill-color-rgb': rgb,
       } as React.CSSProperties : undefined}
       onClick={handleClick}
+      disabled={isMaxed}
       aria-label={
-        canBuy
-          ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costText} engagement`
-          : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`
+        isMaxed
+          ? `${generatorName} autoclickers maxed at ${autoclickerCount}`
+          : canBuy
+            ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costText} engagement`
+            : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`
       }
-      title={`Buy autoclicker for ${costText} engagement`}
+      title={isMaxed ? `${generatorName} — max autoclickers (${autoclickerCount})` : `Buy autoclicker for ${costText} engagement`}
     >
-      <span className="pill-label">HIRE{autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}</span>
-      <span className="pill-cost">{costLabel}</span>
+      <span className="pill-label">
+        {isMaxed && <span className="pill-crown" aria-hidden>♛</span>}
+        {`HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`}
+      </span>
+      <span className="pill-cost">{isMaxed ? 'MAX' : costLabel}</span>
     </button>
   );
 }
