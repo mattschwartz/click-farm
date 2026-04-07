@@ -1,5 +1,45 @@
 // Core game screen — the main surface the player interacts with during a
 // normal session. Implements UX spec §§2–8, §9, and §11.
+
+// ---------------------------------------------------------------------------
+// Keyboard helper exports (for unit tests)
+// ---------------------------------------------------------------------------
+
+/** Whether B key should be ignored (any modal open). */
+export function shouldIgnoreBKey(
+  showCeremonyModal: boolean,
+  showShopModal: boolean,
+  showSettingsModal: boolean,
+  offlineResult: unknown,
+): boolean {
+  return (
+    showCeremonyModal ||
+    showShopModal ||
+    showSettingsModal ||
+    offlineResult !== null
+  );
+}
+
+/** What action to take when B is pressed. */
+export function getBKeyAction(
+  showCeremonyModal: boolean,
+  showShopModal: boolean,
+  showSettingsModal: boolean,
+  offlineResult: unknown,
+  sweepActive: boolean,
+): 'start' | 'cancel' | 'ignore' {
+  if (
+    shouldIgnoreBKey(
+      showCeremonyModal,
+      showShopModal,
+      showSettingsModal,
+      offlineResult,
+    )
+  ) {
+    return 'ignore';
+  }
+  return sweepActive ? 'cancel' : 'start';
+}
 //
 // Zones (per UX §2):
 //   - Top bar (80px): Title + Engagement
@@ -233,6 +273,37 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     showShopModal,
     showSettingsModal,
     offlineResult,
+  ]);
+
+  // B key shortcut — trigger/cancel auto-buy sweep when no modal is open.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'b' && e.key !== 'B') return;
+      if (
+        showCeremonyModal ||
+        showShopModal ||
+        showSettingsModal ||
+        offlineResult !== null
+      ) {
+        return;
+      }
+      e.preventDefault();
+      if (sweepActive) {
+        cancelSweep();
+      } else {
+        startSweep();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [
+    showCeremonyModal,
+    showShopModal,
+    showSettingsModal,
+    offlineResult,
+    sweepActive,
+    startSweep,
+    cancelSweep,
   ]);
 
   // Refs for returning focus to the triggering button on modal close.

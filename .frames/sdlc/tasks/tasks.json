@@ -6560,7 +6560,7 @@
       "alias": "E4",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Keyboard shortcut: B key triggers and cancels auto-buy sweep",
       "requester": "architect",
@@ -6589,7 +6589,8 @@
         "npm run build succeeds; full test suite passes"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     }
   ]
 }

@@ -220,6 +220,23 @@ export function SettingsModal({
             </div>
           </section>
 
+          {/* CONTROLS */}
+          <section className="settings-section">
+            <h2 className="settings-section-title">CONTROLS</h2>
+            <div className="settings-group">
+              <div className="settings-controls-list">
+                <div className="settings-control-row">
+                  <span className="settings-control-key">Esc</span>
+                  <span className="settings-control-desc">Open Settings</span>
+                </div>
+                <div className="settings-control-row">
+                  <span className="settings-control-key">B</span>
+                  <span className="settings-control-desc">Start / Stop Buy All sweep</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* AUDIO */}
           <section className="settings-section">
             <h2 className="settings-section-title">AUDIO</h2>

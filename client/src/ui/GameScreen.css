@@ -3011,6 +3011,35 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   text-decoration: underline;
 }
 
+/* Controls section — keyboard shortcut documentation. */
+.settings-controls-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-control-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.settings-control-key {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 32px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.settings-control-desc {
+  color: var(--text-secondary, #666);
+}
+
 /* Save-section buttons. */
 .settings-btn {
   font-family: inherit;
