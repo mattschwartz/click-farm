@@ -3538,6 +3538,98 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   border-color: rgba(var(--modal-success-rgb), 0.50);
 }
 
+/* --- Settings modal — mobile landscape adaptation ---------------------- */
+
+.settings-section-desktop-only {
+  display: none;
+}
+
+@media (max-width: 932px) and (max-height: 500px) and (orientation: landscape) {
+  /* Modal compression for landscape phones */
+  .settings-modal {
+    max-height: calc(100dvh - 44px);
+    max-width: calc(100vw - 32px);
+  }
+
+  .settings-header {
+    padding: 16px 20px 12px;
+  }
+
+  .settings-title {
+    font-size: 16px;
+  }
+
+  .settings-body {
+    padding: 12px 20px 16px;
+    gap: 16px;
+  }
+
+  .settings-section {
+    gap: 6px;
+  }
+
+  .settings-group {
+    gap: 8px;
+    padding: 8px 0;
+  }
+
+  .settings-toggle-row {
+    padding: 4px 0;
+    gap: 12px;
+  }
+
+  .settings-slider-row {
+    padding: 4px 0;
+    gap: 8px;
+  }
+
+  .settings-slider-label {
+    min-width: 40px;
+    font-size: 12px;
+  }
+
+  .settings-slider-value {
+    min-width: 24px;
+    font-size: 11px;
+  }
+
+  .settings-toggle-label {
+    font-size: 12px;
+  }
+
+  .settings-toggle-desc {
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
+  .settings-audio-credit {
+    font-size: 10px;
+  }
+
+  .settings-btn {
+    padding: 8px 16px;
+    font-size: 11px;
+  }
+
+  .settings-save-desc {
+    font-size: 11px;
+    margin: 0 0 6px;
+  }
+
+  .settings-reset-title {
+    font-size: 13px;
+  }
+
+  .settings-reset-body {
+    font-size: 11px;
+  }
+
+  .settings-pause-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+}
+
 /* --- Save-error banner (task #55) ---------------------------------------- */
 
 .save-error-banner {

@@ -226,8 +226,8 @@ export function SettingsModal({
             </div>
           </section>
 
-          {/* CONTROLS */}
-          <section className="settings-section">
+          {/* CONTROLS — hidden on mobile landscape */}
+          <section className="settings-section settings-section-desktop-only">
             <h2 className="settings-section-title">CONTROLS</h2>
             <div className="settings-group">
               <div className="settings-controls-list">
@@ -263,8 +263,8 @@ export function SettingsModal({
             </div>
           </section>
 
-          {/* DONATE */}
-          <section className="settings-section settings-donate-section">
+          {/* DONATE — hidden on mobile landscape */}
+          <section className="settings-section settings-donate-section settings-section-desktop-only">
             <a
               href="https://support.savethechildren.org/site/Donation2?df_id=1620&mfc_pref=T&1620.donation=form1"
               target="_blank"
