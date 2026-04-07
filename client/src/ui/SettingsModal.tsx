@@ -231,7 +231,7 @@ export function SettingsModal({
                 </div>
                 <div className="settings-control-row">
                   <span className="settings-control-key">B</span>
-                  <span className="settings-control-desc">Start / Stop Buy All sweep</span>
+                  <span className="settings-control-desc">Start / Stop Rush Buy sweep</span>
                 </div>
               </div>
             </div>

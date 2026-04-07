@@ -638,7 +638,7 @@ function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit 
 
 /** Label text for the BUY ALL button given current sweep state. */
 export function buyAllLabel(sweepActive: boolean, previewCount: number): string {
-  return sweepActive ? 'STOP' : `BUY ALL (${previewCount})`;
+  return sweepActive ? 'STOP' : `RUSH BUY (${previewCount})`;
 }
 
 /** Whether the BUY ALL button should be disabled. */
@@ -676,8 +676,8 @@ function BuyAllButton({ sweepActive, previewCount, onStartSweep, onCancelSweep }
       className={`buy-all-btn${sweepActive ? ' buy-all-btn-sweeping' : ''}${disabled ? ' buy-all-btn-empty' : ''}`}
       onClick={handleClick}
       disabled={disabled}
-      aria-label={sweepActive ? 'Stop auto-buy sweep' : `Buy all affordable upgrades (${previewCount})`}
-      title={sweepActive ? 'Stop' : `Buy all — ${previewCount} affordable`}
+      aria-label={sweepActive ? 'Stop auto-buy sweep' : `Rush buy all affordable upgrades (${previewCount})`}
+      title={sweepActive ? 'Stop' : `Rush buy — ${previewCount} affordable`}
     >
       {label}
     </button>
