@@ -38,7 +38,7 @@ export function shouldShowRunBadge(rebrandCount: number): boolean {
  * Format the run badge text — displays the rebrand count.
  */
 export function formatRunBadge(rebrandCount: number): string {
-  return `${rebrandCount} Rebrand${rebrandCount === 1 ? '' : 's'}`;
+  return `Rebrand${rebrandCount === 1 ? '' : 's'} +${rebrandCount}`;
 }
 
 export function TopBar({
@@ -105,7 +105,7 @@ export function TopBar({
       <div className="top-bar-title-group">
         <span className="top-bar-title">Click Farm</span>
         {badgeShown && (
-          <span className="run-badge">{formatRunBadge(rebrandCount)}</span>
+          <span className="run-badge"><span className="run-badge-crown" aria-hidden>♛</span> {formatRunBadge(rebrandCount)}</span>
         )}
       </div>
 
