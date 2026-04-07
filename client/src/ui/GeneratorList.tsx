@@ -449,7 +449,7 @@ function GeneratorRow({
             costLabel={<TieredNumber value={autoCost} />}
             costText={fmtCompact(autoCost)}
             canBuy={canBuyAuto}
-            isMaxed={g.autoclicker_count >= autoclickerCap(state.player.rebrand_count)}
+            isMaxed={g.autoclicker_count >= autoclickerCap()}
             autoclickerCount={g.autoclicker_count}
             verbColor={display.color}
             onBuy={() => { onBuyAutoclicker(id); spawnCostFloat('autoclicker', autoCost); }}

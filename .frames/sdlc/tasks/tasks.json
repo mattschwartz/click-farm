@@ -7891,7 +7891,7 @@
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Flatten autoclicker cap to 12",
       "requester": "architect",
@@ -7919,7 +7919,8 @@
         "All tests pass"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 194,
@@ -8056,7 +8057,6 @@
       "open_questions": [],
       "blocked_on": [
         192,
-        193,
         194,
         195
       ]

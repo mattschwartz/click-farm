@@ -93,11 +93,10 @@ export function autoclickerBuyCost(
 }
 
 /**
- * Maximum autoclickers per generator, based on rebrand count.
- * 12 on first run, +12 per completed rebrand.
+ * Maximum autoclickers per generator. Flat cap — does not scale with rebrand.
  */
-export function autoclickerCap(rebrandCount: number): number {
-  return 12 * (1 + rebrandCount);
+export function autoclickerCap(): number {
+  return 12;
 }
 
 // ---------------------------------------------------------------------------
@@ -348,10 +347,10 @@ export function buyAutoclicker(
     );
   }
 
-  const hireCap = autoclickerCap(state.player.rebrand_count);
+  const hireCap = autoclickerCap();
   if (gen.autoclicker_count >= hireCap) {
     throw new Error(
-      `buyAutoclicker: generator '${generatorId}' is at hire cap (${hireCap}) for rebrand count ${state.player.rebrand_count}`,
+      `buyAutoclicker: generator '${generatorId}' is at hire cap (${hireCap})`,
     );
   }
 

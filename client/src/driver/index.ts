@@ -443,9 +443,8 @@ export function createDriver(options: DriverOptions): GameDriver {
         if (canAffordEngagement(s.player, buyCost)) {
           items.push({ type: 'buy', generatorId: id, cost: buyCost });
         }
-        // HIRE track (capped at 12 × (1 + rebrand_count))
-        const cap = autoclickerCap(s.player.rebrand_count);
-        if (gen.autoclicker_count < cap) {
+        // HIRE track (flat cap of 12)
+        if (gen.autoclicker_count < autoclickerCap()) {
           const hireCost = autoclickerBuyCost(id, gen.autoclicker_count, staticData);
           if (hireCost > 0 && canAffordEngagement(s.player, hireCost)) {
             items.push({ type: 'autoclicker', generatorId: id, cost: hireCost });
