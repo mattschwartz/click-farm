@@ -456,11 +456,12 @@ export function createDriver(options: DriverOptions): GameDriver {
         }
       }
     }
-    // SPEED (upgrade) first, then cheapest within each priority tier.
+    // Priority: SPEED (upgrade) > HIRE (autoclicker) > POWER (buy), cheapest within tier.
+    const priority: Record<SweepItemType, number> = { upgrade: 0, autoclicker: 1, buy: 2 };
     return items.sort((a, b) => {
-      const aUpgrade = a.type === 'upgrade' ? 0 : 1;
-      const bUpgrade = b.type === 'upgrade' ? 0 : 1;
-      if (aUpgrade !== bUpgrade) return aUpgrade - bUpgrade;
+      const pa = priority[a.type];
+      const pb = priority[b.type];
+      if (pa !== pb) return pa - pb;
       return a.cost - b.cost;
     });
   }
