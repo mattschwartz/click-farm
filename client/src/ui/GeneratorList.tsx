@@ -480,7 +480,7 @@ function SpeedButton({
         {lvlState === 'maxed' && (
           <span className="lvl-crown" aria-hidden>♛</span>
         )}
-        SPEED{level > 1 ? ` ×${level}` : ''}
+        SPEED{level > 1 ? ` +${level}` : ''}
       </span>
       {lvlState === 'armed' && (
         <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
@@ -518,7 +518,7 @@ function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, gener
       }
       title={`Buy autoclicker for ${costLabel} engagement`}
     >
-      <span className="pill-label">HIRE{autoclickerCount > 0 ? ` ×${autoclickerCount}` : ''}</span>
+      <span className="pill-label">HIRE{autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}</span>
       <span className="pill-cost">{costLabel}</span>
     </button>
   );
@@ -596,7 +596,7 @@ function CompactBuyButton({ costLabel, canBuy, count, onBuy }: CompactBuyButtonP
       aria-disabled={!canBuy}
       title={`Buy 1 unit for ${costLabel} engagement`}
     >
-      <span className="label">POWER{count > 0 ? ` ×${count}` : ''}</span>
+      <span className="label">POWER{count > 0 ? ` +${count}` : ''}</span>
       {costLabel}
     </button>
   );
