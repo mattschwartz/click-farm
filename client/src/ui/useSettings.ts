@@ -26,6 +26,7 @@ export interface UseSettingsResult {
   toggleSound: () => void;
   setMusicVolume: (v: number) => void;
   setSfxVolume: (v: number) => void;
+  setShowVerbFloats: (v: boolean) => void;
 }
 
 export function useSettings(): UseSettingsResult {
@@ -78,6 +79,10 @@ export function useSettings(): UseSettingsResult {
     (v: number) => setSettings((s) => ({ ...s, sfxVolume: v })),
     [],
   );
+  const setShowVerbFloats = useCallback(
+    (v: boolean) => setSettings((s) => ({ ...s, showVerbFloats: v })),
+    [],
+  );
 
   return {
     settings,
@@ -87,5 +92,6 @@ export function useSettings(): UseSettingsResult {
     toggleSound,
     setMusicVolume,
     setSfxVolume,
+    setShowVerbFloats,
   };
 }
