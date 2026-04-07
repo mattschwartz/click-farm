@@ -9,7 +9,7 @@ import { createDriver, type ActionError, type SaveError } from '../driver/index.
 import type { OfflineResult } from '../offline/index.ts';
 import type { RebrandResult } from '../prestige/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
-import { playPurchase, playSweepStart, playSweepEnd } from './sfx.ts';
+import { playPurchase } from './sfx.ts';
 
 export interface UseGameResult {
   state: GameState;
@@ -104,11 +104,10 @@ export function useGame(): UseGameResult {
     return unsub;
   }, [driver]);
 
-  // Sweep end — reset active flag and play the bookend sound.
+  // Sweep end — reset active flag.
   useEffect(() => {
     const unsub = driver.onSweepEnd(() => {
       setSweepActive(false);
-      playSweepEnd();
     });
     return unsub;
   }, [driver]);
@@ -221,7 +220,6 @@ export function useGame(): UseGameResult {
         driver.startSweep();
         if (driver.getSweepState().active) {
           setSweepActive(true);
-          playSweepStart();
         }
       },
       cancelSweep: () => driver.cancelSweep(),

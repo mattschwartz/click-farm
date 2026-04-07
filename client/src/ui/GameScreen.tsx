@@ -274,9 +274,10 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     offlineResult,
   ]);
 
-  // B key shortcut — trigger/cancel auto-buy sweep when no modal is open.
+  // B key shortcut — hold to sweep, release to cancel.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onDown = (e: KeyboardEvent) => {
+      if (e.repeat) return;
       if (e.key !== 'b' && e.key !== 'B') return;
       if (
         showCeremonyModal ||
@@ -287,20 +288,23 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
         return;
       }
       e.preventDefault();
-      if (sweepActive) {
-        cancelSweep();
-      } else {
-        startSweep();
-      }
+      startSweep();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const onUp = (e: KeyboardEvent) => {
+      if (e.key !== 'b' && e.key !== 'B') return;
+      cancelSweep();
+    };
+    window.addEventListener('keydown', onDown);
+    window.addEventListener('keyup', onUp);
+    return () => {
+      window.removeEventListener('keydown', onDown);
+      window.removeEventListener('keyup', onUp);
+    };
   }, [
     showCeremonyModal,
     showShopModal,
     showSettingsModal,
     offlineResult,
-    sweepActive,
     startSweep,
     cancelSweep,
   ]);
