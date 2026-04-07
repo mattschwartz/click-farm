@@ -5753,7 +5753,7 @@
       "id": 145,
       "role": "engineer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Review proposal: Remove Algorithm Weather System",
       "requester": "architect",
@@ -5778,7 +5778,8 @@
         "Frontmatter updated per review outcome"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 146,
