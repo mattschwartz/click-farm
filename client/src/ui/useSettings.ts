@@ -17,6 +17,7 @@ import {
   setSoundEnabled,
   setMusicVolume as setSfxMusicVolume,
   setSfxVolume as setSfxSfxVolume,
+  setMusicInBackground as setSfxMusicInBackground,
 } from './sfx.ts';
 
 export interface UseSettingsResult {
@@ -28,6 +29,7 @@ export interface UseSettingsResult {
   setMusicVolume: (v: number) => void;
   setSfxVolume: (v: number) => void;
   setShowVerbFloats: (v: boolean) => void;
+  setMusicInBackground: (v: boolean) => void;
 }
 
 export function useSettings(): UseSettingsResult {
@@ -53,6 +55,7 @@ export function useSettings(): UseSettingsResult {
     setSoundEnabled(settings.sound);
     setSfxMusicVolume(settings.musicVolume);
     setSfxSfxVolume(settings.sfxVolume);
+    setSfxMusicInBackground(settings.musicInBackground);
   }, [settings]);
 
   const setReduceTimePressure = useCallback(
@@ -84,6 +87,10 @@ export function useSettings(): UseSettingsResult {
     (v: boolean) => setSettings((s) => ({ ...s, showVerbFloats: v })),
     [],
   );
+  const setMusicInBackground = useCallback(
+    (v: boolean) => setSettings((s) => ({ ...s, musicInBackground: v })),
+    [],
+  );
 
   return {
     settings,
@@ -94,5 +101,6 @@ export function useSettings(): UseSettingsResult {
     setMusicVolume,
     setSfxVolume,
     setShowVerbFloats,
+    setMusicInBackground,
   };
 }

@@ -1,10 +1,9 @@
 // Settings modal — utility surface per ux/settings-screen.md.
 //
-// Surface grammar matches CloutShopModal (~520×620px, 30% backdrop, game
-// continues running). Three sections (Motion, Audio, Save) rendered as a
-// vertical scroll with no tabs.
+// Desktop/iPad: floating ~520×620px modal, 30% backdrop, vertical scroll.
+// Mobile phones: full-screen with tab bar (Audio / Display / Data).
 //
-// Reduce Motion propagates via the settings hook — this component is a
+// Enable Motion propagates via the settings hook — this component is a
 // pure editor over those values plus the save-management actions. The
 // reduceTimePressure schema field is retained as dormant until a future
 // feature wires it back in (remove-scandals-interim.md AC #13).
@@ -22,6 +21,20 @@ import {
 import { formatExportFilename } from './formatExportFilename.ts';
 
 // ---------------------------------------------------------------------------
+// Tab type — mobile only
+// ---------------------------------------------------------------------------
+
+type SettingsTab = 'audio' | 'display' | 'data';
+
+const TAB_LABELS: Record<SettingsTab, string> = {
+  audio: 'Audio',
+  display: 'Display',
+  data: 'Saves',
+};
+
+const TAB_ORDER: SettingsTab[] = ['audio', 'display', 'data'];
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -32,6 +45,7 @@ interface Props {
   onSetMusicVolume: (v: number) => void;
   onSetSfxVolume: (v: number) => void;
   onSetShowVerbFloats: (v: boolean) => void;
+  onSetMusicInBackground: (v: boolean) => void;
   /** Current rebrand count — drives the export filename. */
   rebrandCount: number;
   onClose: () => void;
@@ -57,6 +71,7 @@ export function SettingsModal({
   onSetMusicVolume,
   onSetSfxVolume,
   onSetShowVerbFloats,
+  onSetMusicInBackground,
   rebrandCount,
   onClose,
   onResetRequested,
@@ -66,6 +81,7 @@ export function SettingsModal({
 }: Props) {
   const [resetStep, setResetStep] = useState<'idle' | 'confirm'>('idle');
   const [inlineStatus, setInlineStatus] = useState<InlineStatus>(null);
+  const [activeTab, setActiveTab] = useState<SettingsTab>('audio');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const firstToggleRef = useRef<HTMLButtonElement>(null);
@@ -164,6 +180,202 @@ export function SettingsModal({
     setResetStep('idle');
   };
 
+  // -------------------------------------------------------------------------
+  // Section renderers — shared between desktop (all visible) and mobile (tab)
+  // -------------------------------------------------------------------------
+
+  const audioSection = (
+    <section className="settings-section" data-tab="audio">
+      <h2 className="settings-section-title">AUDIO</h2>
+      <div className="settings-group">
+        <SettingsToggle
+          label="Sound"
+          checked={settings.sound}
+          onChange={onSetSound}
+        />
+        {settings.sound && (
+          <>
+            <SettingsToggle
+              label="Music in Background"
+              description="Keep music playing when the tab is hidden or the app is minimized."
+              checked={settings.musicInBackground}
+              onChange={onSetMusicInBackground}
+            />
+            <SettingsSlider
+              label="Music"
+              value={settings.musicVolume}
+              onChange={onSetMusicVolume}
+            />
+            <SettingsSlider
+              label="SFX"
+              value={settings.sfxVolume}
+              onChange={onSetSfxVolume}
+            />
+          </>
+        )}
+        <div className="settings-audio-credit">
+          Music by{' '}
+          <a
+            href="https://pixabay.com/users/djartmusic-46653586/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            DJARTMUSIC
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+
+  const controlsSection = (
+    <section className="settings-section settings-section-desktop-only">
+      <h2 className="settings-section-title">CONTROLS</h2>
+      <div className="settings-group">
+        <div className="settings-controls-list">
+          <div className="settings-control-row">
+            <span className="settings-control-key">Esc</span>
+            <span className="settings-control-desc">Open Settings</span>
+          </div>
+          <div className="settings-control-row">
+            <span className="settings-control-key">B</span>
+            <span className="settings-control-desc">Hold to auto-purchase upgrades</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const displaySection = (
+    <section className="settings-section" data-tab="display">
+      <h2 className="settings-section-title">PERFORMANCE</h2>
+      <div className="settings-group">
+        <SettingsToggle
+          buttonRef={firstToggleRef}
+          label="Enable Motion"
+          description="Smooth counter animation. Disables pulses, glows, floating numbers, and all decorative effects."
+          checked={!settings.reduceMotion}
+          onChange={(v) => onSetReduceMotion(!v)}
+        />
+        <SettingsToggle
+          label="Floating Numbers"
+          description="Show pop-up numbers from autoclicker taps. If this option is toggled off, the rate is shown instead. Significantly improves performance."
+          checked={settings.showVerbFloats}
+          onChange={onSetShowVerbFloats}
+        />
+      </div>
+    </section>
+  );
+
+  const donateSection = (
+    <section className="settings-section settings-donate-section settings-section-desktop-only">
+      <a
+        href="https://support.savethechildren.org/site/Donation2?df_id=1620&mfc_pref=T&1620.donation=form1"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="settings-donate-btn"
+      >
+        Donate to Save the Children
+      </a>
+    </section>
+  );
+
+  const dataSection = (
+    <section className="settings-section" data-tab="data">
+      <h2 className="settings-section-title">MANAGE SAVE FILE</h2>
+      <div className="settings-group settings-save-group">
+        <p className="settings-save-desc">Your progress is saved automatically.</p>
+        <button
+          type="button"
+          className="settings-btn"
+          onClick={handleExport}
+        >
+          Export Save
+        </button>
+        <button
+          type="button"
+          className="settings-btn"
+          onClick={handleImportClick}
+        >
+          Import Save
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          onChange={handleImportFile}
+          style={{ display: 'none' }}
+        />
+
+        {resetStep === 'idle' ? (
+          <button
+            type="button"
+            className="settings-btn settings-btn-danger"
+            onClick={handleResetClick}
+          >
+            Reset Game
+          </button>
+        ) : (
+          <div className="settings-reset-confirm" role="alertdialog">
+            <p className="settings-reset-title">Reset Game?</p>
+            <p className="settings-reset-body">
+              This erases your save. Clout, upgrades, rebrand count —
+              all of it.
+            </p>
+            <div className="settings-reset-actions">
+              <button
+                type="button"
+                className="settings-btn"
+                onClick={handleResetCancel}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="settings-btn settings-btn-danger"
+                onClick={handleResetConfirm}
+              >
+                Yes, reset
+              </button>
+            </div>
+          </div>
+        )}
+
+        {inlineStatus !== null && (
+          <p
+            className={`settings-status settings-status-${inlineStatus.kind}`}
+            aria-live="polite"
+          >
+            {inlineStatus.text}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+
+  const pauseSection = (
+    <section className="settings-section settings-pause-section">
+      <button
+        type="button"
+        className={`settings-pause-btn${isPaused ? ' settings-pause-btn-active' : ''}`}
+        onClick={onTogglePause}
+      >
+        {isPaused ? '▶  Resume Game' : '⏸  Pause Game'}
+      </button>
+    </section>
+  );
+
+  // Map tabs to their content for mobile view
+  const tabContent: Record<SettingsTab, React.ReactNode> = {
+    audio: audioSection,
+    display: displaySection,
+    data: (
+      <>
+        {dataSection}
+        {pauseSection}
+      </>
+    ),
+  };
+
   const modal = (
     <div
       className="settings-overlay"
@@ -189,174 +401,42 @@ export function SettingsModal({
           </button>
         </div>
 
-        <div className="settings-body">
-          {/* AUDIO */}
-          <section className="settings-section">
-            <h2 className="settings-section-title">AUDIO</h2>
-            <div className="settings-group">
-              <SettingsToggle
-                label="Sound"
-                checked={settings.sound}
-                onChange={onSetSound}
-              />
-              {settings.sound && (
-                <>
-                  <SettingsSlider
-                    label="Music"
-                    value={settings.musicVolume}
-                    onChange={onSetMusicVolume}
-                  />
-                  <SettingsSlider
-                    label="SFX"
-                    value={settings.sfxVolume}
-                    onChange={onSetSfxVolume}
-                  />
-                </>
-              )}
-              <div className="settings-audio-credit">
-                Music by{' '}
-                <a
-                  href="https://pixabay.com/users/djartmusic-46653586/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  DJARTMUSIC
-                </a>
-              </div>
-            </div>
-          </section>
-
-          {/* CONTROLS */}
-          <section className="settings-section">
-            <h2 className="settings-section-title">CONTROLS</h2>
-            <div className="settings-group">
-              <div className="settings-controls-list">
-                <div className="settings-control-row">
-                  <span className="settings-control-key">Esc</span>
-                  <span className="settings-control-desc">Open Settings</span>
-                </div>
-                <div className="settings-control-row">
-                  <span className="settings-control-key">B</span>
-                  <span className="settings-control-desc">Hold to auto-purchase upgrades</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* PERFORMANCE */}
-          <section className="settings-section">
-            <h2 className="settings-section-title">PERFORMANCE</h2>
-            <div className="settings-group">
-              <SettingsToggle
-                buttonRef={firstToggleRef}
-                label="Reduce Motion"
-                description="Replaces decorative motion with static alternatives. Number animations preserved."
-                checked={settings.reduceMotion}
-                onChange={onSetReduceMotion}
-              />
-              <SettingsToggle
-                label="Floating Numbers"
-                description="Show pop-up numbers from autoclicker taps. If this option is toggled off, the rate is shown instead. Significantly improves performance."
-                checked={settings.showVerbFloats}
-                onChange={onSetShowVerbFloats}
-              />
-            </div>
-          </section>
-
-          {/* DONATE */}
-          <section className="settings-section settings-donate-section">
-            <a
-              href="https://support.savethechildren.org/site/Donation2?df_id=1620&mfc_pref=T&1620.donation=form1"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="settings-donate-btn"
-            >
-              Donate to Save the Children
-            </a>
-          </section>
-
-          {/* MANAGE SAVE FILE */}
-          <section className="settings-section">
-            <h2 className="settings-section-title">MANAGE SAVE FILE</h2>
-            <div className="settings-group settings-save-group">
-              <p className="settings-save-desc">Your progress is saved automatically.</p>
-              <button
-                type="button"
-                className="settings-btn"
-                onClick={handleExport}
-              >
-                Export Save
-              </button>
-              <button
-                type="button"
-                className="settings-btn"
-                onClick={handleImportClick}
-              >
-                Import Save
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/json,.json"
-                onChange={handleImportFile}
-                style={{ display: 'none' }}
-              />
-
-              {resetStep === 'idle' ? (
-                <button
-                  type="button"
-                  className="settings-btn settings-btn-danger"
-                  onClick={handleResetClick}
-                >
-                  Reset Game
-                </button>
-              ) : (
-                <div className="settings-reset-confirm" role="alertdialog">
-                  <p className="settings-reset-title">Reset Game?</p>
-                  <p className="settings-reset-body">
-                    This erases your save. Clout, upgrades, rebrand count —
-                    all of it.
-                  </p>
-                  <div className="settings-reset-actions">
-                    <button
-                      type="button"
-                      className="settings-btn"
-                      onClick={handleResetCancel}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      className="settings-btn settings-btn-danger"
-                      onClick={handleResetConfirm}
-                    >
-                      Yes, reset
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {inlineStatus !== null && (
-                <p
-                  className={`settings-status settings-status-${inlineStatus.kind}`}
-                  aria-live="polite"
-                >
-                  {inlineStatus.text}
-                </p>
-              )}
-            </div>
-          </section>
-
-          {/* PAUSE */}
-          <section className="settings-section settings-pause-section">
+        {/* Tab bar — visible on mobile only via CSS */}
+        <nav className="settings-tab-bar" role="tablist">
+          {TAB_ORDER.map((tab) => (
             <button
+              key={tab}
               type="button"
-              className={`settings-pause-btn${isPaused ? ' settings-pause-btn-active' : ''}`}
-              onClick={onTogglePause}
+              role="tab"
+              id={`settings-tab-${tab}`}
+              aria-selected={activeTab === tab}
+              aria-controls="settings-tabpanel"
+              className={`settings-tab${activeTab === tab ? ' settings-tab-active' : ''}`}
+              onClick={() => setActiveTab(tab)}
             >
-              {isPaused ? '▶  Resume Game' : '⏸  Pause Game'}
+              {TAB_LABELS[tab]}
             </button>
-          </section>
+          ))}
+        </nav>
+
+        {/* Mobile body — shows active tab content only */}
+        <div
+          id="settings-tabpanel"
+          className="settings-body settings-body-tabbed"
+          role="tabpanel"
+          aria-labelledby={`settings-tab-${activeTab}`}
+        >
+          {tabContent[activeTab]}
+        </div>
+
+        {/* Desktop body — shows all sections in vertical scroll */}
+        <div className="settings-body settings-body-scroll">
+          {audioSection}
+          {controlsSection}
+          {displaySection}
+          {donateSection}
+          {dataSection}
+          {pauseSection}
         </div>
       </div>
     </div>

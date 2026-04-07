@@ -291,6 +291,13 @@ function Phase1Review({
       aria-label="Rebrand — Threshold Review"
       onKeyDown={handleKeyDown}
     >
+      <button
+        className="ceremony-close-btn"
+        onClick={onCancel}
+        aria-label="Cancel rebrand"
+      >
+        ×
+      </button>
       <p className="ceremony-headline">You are about to rebrand.</p>
 
       <div className="ceremony-stat-box">
@@ -338,7 +345,7 @@ function Phase1Review({
       <div className="ceremony-actions">
         <button
           ref={cancelBtnRef}
-          className="ceremony-btn ceremony-btn-cancel"
+          className="ceremony-btn ceremony-btn-cancel ceremony-btn-cancel-bottom"
           onClick={onCancel}
         >
           Cancel

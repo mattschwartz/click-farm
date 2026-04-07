@@ -128,6 +128,15 @@ export function TopBar({
         <div className={`engagement-value${viralGold ? ' viral-gold' : ''}`}>
           <TieredNumber value={displayedEngagement} />
           <img src={engagementIconSrc} alt="" className="engagement-icon" aria-hidden="true" />
+          {/* Inline rate + followers stack — hidden on desktop, shown in landscape. */}
+          <span className="engagement-meta-stack">
+            <span className="engagement-rate-inline">
+              +<TieredNumber value={engagementRate} />/s
+            </span>
+            <span className="engagement-followers-inline">
+              {fmtCompactInt(totalFollowers)} followers
+            </span>
+          </span>
           <span className="engagement-tooltip">
             Engagement
             <span className="tooltip-rate">+<TieredNumber value={engagementRate} />/s</span>

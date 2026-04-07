@@ -238,8 +238,16 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   align-self: stretch;
 }
 
-/* Rate is rendered inside the engagement hover tooltip, not standalone */
+/* Rate + followers stack — hidden on desktop, shown in landscape via media query */
+.engagement-meta-stack {
+  display: none;
+}
+
 .engagement-rate-inline {
+  display: none;
+}
+
+.engagement-followers-inline {
   display: none;
 }
 
@@ -425,6 +433,7 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 10px 10px 8px;
   min-height: 0;
   padding-bottom: 8px;
@@ -1615,7 +1624,9 @@ html[data-reduce-motion="true"] .sweep-cost-float {
 .offline-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(var(--palette-black-rgb),0.55);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   z-index: 10;
   display: flex;
   align-items: center;
@@ -1625,15 +1636,21 @@ html[data-reduce-motion="true"] .sweep-cost-float {
 
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
+/* Suppress offline gains modal when the rotate-to-landscape prompt is active.
+   State is preserved — the modal reappears when the user rotates. */
+@media (max-width: 767px) and (orientation: portrait) {
+  .offline-backdrop { display: none; }
+}
+
 .offline-modal {
-  background: var(--surface-overlay);
-  border: 1px solid var(--border-default);
+  background: transparent;
+  border: none;
+  box-shadow: none;
   border-radius: 10px;
   padding: 28px;
   width: 480px;
   max-width: 90vw;
   color: var(--text-primary);
-  box-shadow: var(--panel-shadow);
 }
 
 .offline-modal h2 {
@@ -1677,6 +1694,106 @@ html[data-reduce-motion="true"] .sweep-cost-float {
 
 .offline-modal .dismiss-btn:hover {
   background: var(--surface-pressed);
+}
+
+/* --- Rotate to landscape prompt (task #182) -------------------------------- */
+/* Frosted-glass overlay — sits above ALL modals (offline gains z:10, shop/
+   settings/ceremony z:60) so it's never buried behind a welcome-back modal
+   on load. Translucent so the verb buttons behind it bleed color through,
+   giving the player a taste of the game before they've even started. */
+
+.rotate-to-landscape-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--palette-white-rgb), 0.72);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  animation: fade-in 200ms ease-out;
+}
+
+/* Respect reduce-motion preference — replace fade with instant on/off. */
+@media (prefers-reduced-motion: reduce) {
+  .rotate-to-landscape-overlay {
+    animation: none;
+  }
+}
+
+/* Also respect the in-game Enable Motion toggle via data-reduce-motion. */
+html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
+  animation: none;
+}
+
+.rotate-to-landscape-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  color: var(--text-primary);
+}
+
+.rotate-icon {
+  width: 120px;
+  height: 80px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  display: block;
+  opacity: 0.7;
+}
+
+.rotate-text {
+  font-family: var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.rotate-subtext {
+  font-family: var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  margin: -12px 0 0;
+  text-align: center;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.rotate-favicon {
+  width: 120px;
+  height: 120px;
+  margin-top: 16px;
+  border-radius: 16px;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 4px 12px rgba(var(--palette-black-rgb), 0.10));
+  transition: transform 150ms ease-out;
+  cursor: pointer;
+}
+
+.rotate-favicon:active {
+  transform: scale(0.90);
+  transition: transform 60ms ease-in;
+}
+
+.rotate-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 4px 0 0;
+  text-align: center;
+  color: var(--text-primary);
 }
 
 /* --- Prestige cluster — two-button bottom-right affordance (spec §2.1–2.3) */
@@ -2013,14 +2130,16 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* ~80% opacity — main screen dims to ~20% per spec §4.1. */
-  background: rgba(var(--palette-black-rgb),0.82);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   animation: fade-in 300ms ease-out;
 }
 
 .ceremony-modal {
-  background: var(--surface-overlay);
-  border: 1px solid var(--border-default);
+  background: transparent;
+  border: none;
+  box-shadow: none;
   border-radius: 12px;
   padding: 36px 40px 32px;
   width: 520px;
@@ -2130,6 +2249,11 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   text-shadow: 0 0 8px rgba(255, 214, 107, 0.3);
 }
 
+/* X close button — hidden by default, shown in landscape mobile */
+.ceremony-close-btn {
+  display: none;
+}
+
 /* Actions */
 .ceremony-actions {
   display: flex;
@@ -2178,7 +2302,7 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   width: 560px;
   padding: 60px 48px 36px;
   text-align: center;
-  background: var(--surface-overlay);
+  background: transparent;
   /* Desaturation via custom property (0.0 → 0.4) */
   filter: saturate(calc(1 - var(--eulogy-desat, 0)));
   transition: filter 600ms ease-out;
@@ -3056,13 +3180,16 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(var(--palette-black-rgb),0.30);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   animation: fade-in 200ms ease-out;
 }
 
 .settings-modal {
-  background: var(--surface-overlay);
-  border: 1px solid var(--border-default);
+  background: transparent;
+  border: none;
+  box-shadow: none;
   border-radius: 12px;
   width: 520px;
   max-width: calc(100vw - 40px);
@@ -3430,6 +3557,287 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 .settings-pause-btn-active:hover {
   background: rgba(var(--modal-success-rgb), 0.14);
   border-color: rgba(var(--modal-success-rgb), 0.50);
+}
+
+/* --- Settings tab bar (mobile only) ------------------------------------ */
+/* Desktop default: tab bar and tabbed body hidden; scroll body shown. */
+
+.settings-tab-bar {
+  display: none;
+}
+
+.settings-body-tabbed {
+  display: none;
+}
+
+.settings-body-scroll {
+  /* inherits .settings-body styles */
+}
+
+/* --- Settings modal — mobile phone full-screen + tabs ------------------ */
+/* Portrait phones */
+@media (max-width: 767px) and (orientation: portrait) {
+  .settings-overlay {
+    background: none;
+  }
+
+  .settings-modal {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  .settings-tab-bar {
+    display: flex;
+    gap: 0;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+  }
+
+  .settings-tab {
+    flex: 1;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 0;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 120ms, border-color 120ms;
+  }
+
+  .settings-tab-active {
+    color: var(--text-primary);
+    border-bottom-color: rgba(var(--kit-accent-rgb), 0.85);
+  }
+
+  .settings-body-scroll {
+    display: none;
+  }
+
+  .settings-body-tabbed {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 16px 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .settings-section-desktop-only {
+    display: none;
+  }
+
+  /* Rebrand Ceremony — fullscreen on portrait phones, same pattern as
+   * settings. Overlay backdrop removed; modal fills viewport. Columns
+   * stack vertically and font sizes tighten for narrow screens. */
+  .ceremony-overlay {
+    background: none;
+  }
+
+  .ceremony-modal,
+  .ceremony-modal-eulogy,
+  .ceremony-modal-commit,
+  .ceremony-modal-dissolution {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    padding: 28px 20px 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    /* flex-start so overflow scrolls naturally — center clips the top */
+    justify-content: flex-start;
+  }
+
+  .ceremony-headline {
+    font-size: 16px;
+    margin: 0 0 16px;
+  }
+
+  .ceremony-stat-row {
+    font-size: 13px;
+  }
+
+  .ceremony-columns {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .ceremony-btn {
+    flex: 1;
+    min-height: 44px;
+  }
+
+  .ceremony-modal-eulogy {
+    padding: 40px 24px 28px;
+  }
+
+  .ceremony-modal-commit {
+    padding: 40px 24px 28px;
+    gap: 32px;
+    justify-content: center;
+  }
+
+  .commit-btn {
+    width: 240px;
+    height: 68px;
+  }
+
+  .ceremony-modal-dissolution {
+    justify-content: center;
+  }
+}
+
+/* Landscape phones */
+@media (max-width: 932px) and (orientation: landscape) {
+  .settings-overlay {
+    background: none;
+    animation: none; /* modal handles its own fade-in */
+  }
+
+  .settings-modal {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    animation: fade-in 200ms ease-out;
+  }
+
+  .settings-tab-bar {
+    display: flex;
+    gap: 0;
+    padding: 0 250px;
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+  }
+
+  .settings-tab {
+    flex: 1;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 0;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 120ms, border-color 120ms;
+  }
+
+  .settings-tab-active {
+    color: var(--text-primary);
+    border-bottom-color: rgba(var(--kit-accent-rgb), 0.85);
+  }
+
+  .settings-body-scroll {
+    display: none;
+  }
+
+  .settings-body-tabbed {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px 250px 16px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  /* Hide non-critical sections on mobile landscape */
+  .settings-section-desktop-only {
+    display: none;
+  }
+
+  .settings-header {
+    padding: 10px 250px 8px;
+  }
+
+  .settings-title {
+    font-size: 15px;
+  }
+
+  .settings-section {
+    gap: 6px;
+  }
+
+  .settings-group {
+    gap: 8px;
+    padding: 8px 0;
+  }
+
+  .settings-toggle-row {
+    padding: 4px 0;
+    gap: 12px;
+  }
+
+  .settings-slider-row {
+    padding: 4px 0;
+    gap: 8px;
+  }
+
+  .settings-slider-label {
+    min-width: 40px;
+    font-size: 12px;
+  }
+
+  .settings-slider-value {
+    min-width: 24px;
+    font-size: 11px;
+  }
+
+  .settings-toggle-label {
+    font-size: 12px;
+  }
+
+  .settings-toggle-desc {
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
+  .settings-audio-credit {
+    font-size: 10px;
+  }
+
+  .settings-btn {
+    padding: 8px 16px;
+    font-size: 11px;
+  }
+
+  .settings-save-desc {
+    font-size: 11px;
+    margin: 0 0 6px;
+  }
+
+  .settings-reset-title {
+    font-size: 13px;
+  }
+
+  .settings-reset-body {
+    font-size: 11px;
+  }
+
+  .settings-pause-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
 }
 
 /* --- Save-error banner (task #55) ---------------------------------------- */
@@ -3946,3 +4354,777 @@ html[data-reduce-motion="true"] .verb-float-auto { display: none; }
 html[data-reduce-motion="true"] .purchase-pill,
 html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
 
+
+/* =============================================================================
+ * LANDSCAPE PHONE LAYOUT
+ *
+ * Two-column layout replacing the desktop three-column layout on phones in
+ * landscape orientation. See accepted proposal:
+ * .frames/sdlc/proposals/accepted/20260407-landscape-phone-layout.md
+ *
+ * Breakpoint targets all landscape phones (up to iPhone Pro Max) while
+ * excluding tablets (max-height: 500px guard) and portrait phones.
+ * =============================================================================
+ */
+
+@media (max-width: 932px) and (max-height: 500px) and (orientation: landscape) {
+
+  /* --- Grid shell (task #171) ----------------------------------------------- */
+
+  /* Redefine game-screen rows:
+   *   Row 1 — top bar (40px)
+   *   Row 2 — content area (flex, absorbs remaining height)
+   *   Row 3 — prestige row (36px, wired in task #176)
+   *
+   * Safe area padding compensates for notched-device insets:
+   *   - Dynamic Island creates a ~59px side inset in landscape (not a top inset).
+   *     The padding-left absorbs this on the notch side.
+   *   - Home indicator adds ~34px bottom inset.
+   *
+   * height: 100dvh is preserved from the base .game-screen rule. */
+  .game-screen {
+    grid-template-rows: 40px 1fr;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Redefine game-body columns: verb column (160px) | content area (1fr).
+   *
+   * grid-template-rows: 48px (platform strip) | 1fr (generator list).
+   * The three children are placed explicitly below so PlatformPanel and
+   * generator-column stack vertically in column 2 without JSX changes.
+   *
+   * gap/padding zeroed — height budget is ~221px; every pixel counts. */
+  .game-body {
+    grid-template-columns: 160px 1fr;
+    grid-template-rows: 48px 1fr;
+    gap: 0;
+    padding: 0;
+    min-height: 0;
+    /* Explicit row placement — prevents save-error-banner (conditional child
+     * between top-bar and game-body) from displacing this to row 3. */
+    grid-row: 2;
+  }
+
+  /* Verb column — left column, spans both content rows (actions fill height). */
+  .actions-column {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    min-height: 0;
+  }
+
+  /* Platform strip — top of content column (48px).
+   * PlatformPanel is the third child in the DOM (.game-body order:
+   * actions-column → generator-column → platform-panel), so explicit
+   * placement is required to reorder it above the generator list. */
+  .platform-panel {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 0;
+  }
+
+  /* Generator list — fills remaining content column height. */
+  .generator-column {
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 0;
+  }
+
+  /* --- Generator row compression and pill abbreviation (task #175) --------- */
+
+  /* Generator list: hidden scrollbar, momentum scroll, reduced padding. */
+  .generator-list {
+    padding: 6px 8px;
+    border-radius: 8px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .generator-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Sweep button: 32px tall (down from 36px). */
+  .buy-all-btn {
+    height: 32px;
+    line-height: 32px;
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+
+  /* Generator row: tight padding to achieve ~44px row height.
+   * Buttons compress to 24px → row ≈ 10px padding×2 + 24px content = 44px. */
+  .generator-row {
+    padding: 10px 2px;
+    gap: 6px;
+  }
+
+  /* Badge: 28px (down from 40px). Breathing pulse animation unchanged. */
+  .badge {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+
+  /* Generator name: 14px weight 500 (down from 15px). */
+  .generator-name {
+    font-size: 14px;
+  }
+
+  /* Rate: 12px, suppress the large min-width that wastes horizontal space. */
+  .generator-rate {
+    font-size: 12px;
+    min-width: 0;
+  }
+
+  /* Category dividers: 10px uppercase, 16px padding-top (down from 24px). */
+  .category-divider {
+    font-size: 10px;
+    padding-top: 16px;
+  }
+
+  /* Row actions: tighter gap for the narrow column. */
+  .row-actions {
+    gap: 3px;
+  }
+
+  /* All three buttons (POWER, SPEED, HIRE) — uniform size.
+   * 84px wide × 48px tall so they read as a matched set.
+   * Explicit height + box-sizing on both ensures pixel-perfect match. */
+  .row-btn {
+    width: 84px;
+    min-width: 84px;
+    height: 48px;
+    box-sizing: border-box;
+    padding: 0 4px;
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .row-btn .label {
+    font-size: 7px;
+    margin-bottom: 0;
+  }
+
+  /* HIRE pill — same 84×38 footprint as POWER/SPEED.
+   * Column layout preserved so maxed state shows crown + label / MAX
+   * in the same two-line pattern as SPEED. Cost hidden in landscape. */
+  .purchase-pill {
+    width: 84px;
+    min-width: 84px;
+    height: 48px;
+    box-sizing: border-box;
+    line-height: 1.2;
+    padding: 0 4px;
+    font-size: 10px;
+    gap: 0;
+  }
+
+  .purchase-pill-auto {
+    flex-direction: column;
+    height: 48px;
+    padding: 0 4px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .purchase-pill-auto .pill-cost {
+    display: block;
+    font-size: 10px;
+    line-height: 1;
+    opacity: 0.75;
+  }
+
+  /* Maxed hire pill — show MAX as second line (mirrors SPEED maxed). */
+  .purchase-pill-maxed .pill-cost {
+    display: block;
+    font-size: 8px;
+    line-height: 1;
+  }
+
+  /* --- Platform strip: horizontal mode (task #174) ------------------------- */
+
+  /* Horizontal scroll strip — 48px tall, flex-row, snap-scroll.
+   * Scrollbar hidden; snap is for 4+ platforms (3 fit without scrolling). */
+  .platform-panel {
+    flex-direction: row;
+    height: 48px;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    gap: 8px;
+    padding: 4px 8px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .platform-panel::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Cards: fixed 140×40px, scroll-snap target. Grid layout puts
+   * name + followers inline on row 1, affinity chips on row 2. */
+  .platform-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 1px 4px;
+    width: 140px;
+    height: 40px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    padding: 3px 6px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* Header (name): top-left cell. */
+  .platform-card .platform-header {
+    grid-column: 1;
+    grid-row: 1;
+    margin-bottom: 0;
+    align-items: flex-end;
+  }
+
+  /* Followers row: top-right cell, right-aligned. */
+  .platform-card .platform-followers-row {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
+
+  /* Sub-label ("followers"): no room in 40px — hidden. */
+  .platform-card .platform-sub-label {
+    display: none;
+  }
+
+  /* Affinity chips: span both columns, bottom row. */
+  .platform-card .affinity-row {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 0;
+    gap: 3px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  /* Unlock teaser for locked cards: bottom row, truncated to single line. */
+  .platform-card .unlock-teaser {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 9px;
+  }
+
+  /* Platform name: 11px weight 500 (down from 14px). */
+  .platform-card .platform-name {
+    font-size: 11px;
+  }
+
+  /* Followers count: 16px weight 600 (down from 24px). */
+  .platform-card .platform-followers {
+    font-size: 16px;
+  }
+
+  /* Affinity chips: 8px font, tighter padding. */
+  .affinity-chip {
+    font-size: 8px;
+    padding: 1px 3px;
+    gap: 2px;
+  }
+
+  /* Gradient-border cards: override the desktop padding-top: 17px compensation.
+   * The ::after gradient bar is still position:absolute at top:0; our 3px
+   * card padding-top clears it without the large desktop offset. */
+  .platform-card[style*="--platform-accent-gradient"] {
+    padding-top: 3px;
+  }
+
+  /* Total followers: trailing inline element after last card.
+   * Removes the desktop border-top divider and centers vertically. */
+  .platform-total-followers {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    padding: 0 4px;
+    border-top: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .platform-total-label {
+    font-size: 11px;
+  }
+
+  /* --- Top bar compression (task #172) ------------------------------------- */
+
+  /* Strip margin (would add 8px to a 40px row), tighten gap/padding, and
+   * center children vertically. Border-radius removed — the bar is flush
+   * edge-to-edge at this screen size. */
+  .top-bar {
+    margin: 0;
+    border-radius: 0;
+    gap: 8px;
+    padding: 0 0 0 8px; /* no right padding — engagement badge sits flush */
+    align-items: center;
+  }
+
+  /* Game icon: 28px (down from 48px). */
+  .top-bar-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Title group: inline row — title and run badge side-by-side. */
+  .top-bar-title-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Title: 18px Barlow Condensed 900 italic (down from 28px). */
+  .top-bar-title {
+    font-size: 18px;
+  }
+
+  /* RUN badge: 10px inline, reduced margin and padding. */
+  .run-badge {
+    font-size: 10px;
+    margin-top: 0;
+    padding: 2px 6px;
+  }
+
+  /* Engagement counter: 28px (down from 64px), compressed padding.
+   * align-self: stretch so the frosted-glass block fills the 40px bar height
+   * and sits flush-right — matching the desktop treatment. border-radius: 0
+   * because the top-bar itself has border-radius: 0 on mobile. */
+  .engagement-value {
+    font-size: 28px;
+    padding: 0 8px;
+    gap: 4px;
+    align-self: stretch;
+    border-radius: 0;
+  }
+
+  /* Show rate + followers stack in landscape — replaces the hover tooltip
+   * which has no trigger on touch devices. */
+  .engagement-meta-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+    border-left: 1px solid var(--border-subtle);
+    padding-left: 8px;
+  }
+
+  .engagement-meta-stack::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 1px;
+    background: var(--border-subtle);
+    order: 1;
+  }
+
+  .engagement-rate-inline { order: 0; }
+  .engagement-followers-inline { order: 2; }
+
+  .engagement-rate-inline {
+    display: inline;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent-green, #2F7A3A);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .engagement-followers-inline {
+    display: inline;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Engagement icon: 24px (down from 40px). */
+  .engagement-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Viral summary badge: in-flow inline element after the counter.
+   * Position: static pulls it out of absolute positioning so it sits
+   * within the engagement-slot flex row. */
+  .viral-summary-badge {
+    position: static;
+    align-self: center;
+    font-size: 12px;
+    top: auto;
+    right: auto;
+  }
+
+  /* --- Floating toolbar: top-right in landscape, gear-only --------------- */
+
+  /* Reposition to top-right, sized to the 40px top bar row.
+   * Only the settings gear is relevant in landscape — the ALPHA badge,
+   * GitHub link, and music player are hidden below. */
+  .floating-toolbar {
+    bottom: auto;
+    left: auto;
+    top: 0;
+    right: 0;
+    height: 40px;
+    align-items: center;
+    gap: 0;
+    flex-wrap: nowrap;
+  }
+
+  /* Hide non-essential toolbar items to keep the top bar clean. */
+  .floating-toolbar .alpha-row,
+  .floating-toolbar .github-link,
+  .floating-toolbar .music-player {
+    display: none;
+  }
+
+  /* Settings gear: 20px icon in 40×40 hit area. */
+  .settings-gear-btn {
+    font-size: 20px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* --- Prestige cluster: right-side vertical stack below settings gear ----- */
+
+  /* Fixed column on the right edge, directly below the 40px top-bar row.
+   * Buttons stack vertically so they sit underneath the settings gear.
+   * z-index matches the floating toolbar so they layer together. */
+  .prestige-cluster {
+    position: fixed;
+    top: 40px;
+    right: env(safe-area-inset-right, 0px);
+    bottom: auto;
+    left: auto;
+    flex-direction: column;
+    z-index: 20;
+    border-radius: 0 0 0 8px;
+    padding: 4px;
+    gap: 4px;
+    border: none;
+    border-left: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.10);
+    background: var(--surface-panel);
+  }
+
+  /* Buttons: compact vertical pills. */
+  .prestige-btn {
+    height: auto;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    white-space: nowrap;
+  }
+
+  /* Show inline clout balance and rebrand preview in landscape.
+   * Replaces the hover tooltip — no hover on touch. */
+  .prestige-label-touch {
+    display: inline;
+    font-size: 8px;
+    opacity: 0.65;
+  }
+
+  /* --- Modals: max-height/max-width constraints (§8) ---------------------- */
+
+  /* Shop modal — constrain to viewport with breathing room; body already
+   * scrolls via overflow-y: auto on .shop-modal. */
+  .shop-modal {
+    max-height: calc(100dvh - 80px);
+    max-width: calc(100vw - 80px);
+  }
+
+  /* Settings modal — now full-screen with tabs; see earlier media query. */
+
+  /* Offline gains modal — constrain and allow internal scroll. */
+  .offline-modal {
+    max-height: calc(100dvh - 80px);
+    max-width: calc(100vw - 80px);
+    overflow-y: auto;
+  }
+
+  /* Rebrand Ceremony — fullscreen on landscape phones (§8).
+   * Each phase modal (eulogy / commit / dissolution) fills the overlay.
+   * Stanzas left-aligned for readability in wide/shallow viewport.
+   * Buttons centered — same as portrait mobile spec. */
+  .ceremony-overlay {
+    background: none;
+    animation: none; /* modals handle their own fade-in */
+  }
+
+  .ceremony-modal,
+  .ceremony-modal-eulogy,
+  .ceremony-modal-commit,
+  .ceremony-modal-dissolution {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    /* flex-start so overflow scrolls naturally — center clips the top */
+    justify-content: flex-start;
+    background: rgba(255, 255, 255, 0.55);
+    animation: fade-in 200ms ease-out;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Phase 1 — Threshold Review: compress for ~380px viewport */
+  .ceremony-modal {
+    padding: 14px 250px 16px;
+    gap: 0;
+    justify-content: center;
+  }
+
+  /* X close button — absolutely positioned, no layout impact, matches settings */
+  .ceremony-close-btn {
+    display: block;
+    position: absolute;
+    top: 15px;
+    right: 250px;
+    font-family: inherit;
+    font-size: 20px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+    transition: color 120ms, border-color 120ms;
+  }
+
+  .ceremony-close-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border-emphasis);
+  }
+
+  /* Hide the bottom Cancel button — X replaces it */
+  .ceremony-btn-cancel-bottom {
+    display: none;
+  }
+
+  .ceremony-headline {
+    font-size: 15px;
+    margin: -5px 0 10px;
+  }
+
+  .ceremony-stat-box {
+    padding: 8px 14px;
+    margin-bottom: 10px;
+  }
+
+  .ceremony-stat-row {
+    font-size: 12px;
+    padding: 3px 0;
+  }
+
+  .ceremony-stat-row-final {
+    padding-top: 5px;
+    margin-top: 2px;
+  }
+
+  .ceremony-columns {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .ceremony-column-header {
+    font-size: 10px;
+    margin: 0 0 4px;
+  }
+
+  .ceremony-column-row {
+    font-size: 11px;
+    padding: 2px 0;
+    gap: 4px;
+  }
+
+  .ceremony-col-bullet {
+    font-size: 8px;
+  }
+
+  .ceremony-col-value {
+    font-size: 10px;
+  }
+
+  .ceremony-col-value-highlight {
+    font-size: 11px;
+  }
+
+  .ceremony-actions {
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .ceremony-btn {
+    font-size: 12px;
+    padding: 8px 24px;
+    min-height: 38px;
+  }
+
+  /* Phase 2 — Eulogy: less vertical padding, smaller stanzas */
+  .ceremony-modal-eulogy {
+    padding: 20px 250px 16px;
+    justify-content: center;
+  }
+
+  .eulogy-stanzas {
+    align-items: flex-start;
+    text-align: left;
+    gap: 12px;
+    min-height: 100px;
+    margin-bottom: 12px;
+  }
+
+  .eulogy-stanza {
+    font-size: 14px;
+    text-align: left;
+    line-height: 1.4;
+  }
+
+  /* Phase 3 — Commit: compress the spacious desktop layout */
+  .ceremony-modal-commit {
+    padding: 24px 250px 20px;
+    gap: 24px;
+    justify-content: center;
+  }
+
+  .commit-headline {
+    font-size: 20px;
+  }
+
+  .commit-btn {
+    width: 220px;
+    height: 60px;
+    font-size: 14px;
+  }
+
+  /* Phase 4 — Dissolution: tighten vertical space */
+  .ceremony-modal-dissolution {
+    padding: 24px 250px 20px;
+    min-height: auto;
+  }
+
+  .dissolution-counter-value {
+    font-size: 28px;
+  }
+
+  .dissolution-counter-label {
+    font-size: 10px;
+  }
+
+  /* Verb action buttons — hide name, keep rate indicator on landscape mobile */
+  .verb-name {
+    display: none;
+  }
+
+  /* Ghost slots — lock to same height as live verb buttons */
+  .ghost-slot,
+  .ghost-promise,
+  .ghost-awakened {
+    min-height: 100px;
+    flex-shrink: 0;
+  }
+
+} /* end @media landscape phone */
+
+/* Suppress engagement hover tooltip on touch devices — the inline rate
+ * (shown in landscape) makes it redundant, and hover doesn't exist on touch. */
+@media (pointer: coarse) {
+  .engagement-value .engagement-tooltip {
+    display: none;
+  }
+}
+
+/* Inline prestige button labels for touch (task #176).
+ * Shown only in landscape via the media query above. Hidden everywhere else. */
+.prestige-label-touch {
+  display: none;
+}
+
+/* Pill label two-span pattern (task #175).
+ * .pill-label-full and .pill-label-abbr are added to each purchase pill's
+ * label span in GeneratorList.tsx. Full text is shown by default; the
+ * abbreviated single-letter is hidden globally and revealed only in the
+ * sub-750px landscape breakpoint below. */
+.pill-label-abbr {
+  display: none;
+}
+
+/* Sub-750px landscape phones: show abbreviations, hide full labels.
+ * Combined with the landscape grid shell query so this only fires on small
+ * landscape phones (not portrait or desktop). */
+@media (max-width: 750px) and (max-height: 500px) and (orientation: landscape) {
+  .pill-label-full {
+    display: none;
+  }
+
+  .pill-label-abbr {
+    display: inline;
+  }
+}
+
+/* Long-press cost popover — appears above the HIRE pill on touch devices
+ * in landscape, where the inline pill-cost is hidden. The pill needs
+ * position: relative (already set on affordable state; applied broadly here
+ * for unaffordable/maxed states). */
+.purchase-pill-auto {
+  position: relative;
+}
+
+.pill-cost-popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(var(--palette-black-rgb), 0.12);
+  animation: fade-in 120ms ease-out;
+}

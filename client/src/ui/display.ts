@@ -182,7 +182,7 @@ export const PLATFORM_DISPLAY: Record<PlatformId, PlatformDisplay> = {
     image: chirperImg,
   },
   picshift: {
-    name: 'PicShift',
+    name: 'Picshift',
     icon: '📸',
     accent: '#d6579e',
     tagline: 'Photos and curated aesthetics.',

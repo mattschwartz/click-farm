@@ -33,7 +33,7 @@ The journey between those two points is the joke — and the game.
 
 **Level up.** Speed upgrades make you tap faster. Power upgrades make every tap hit harder. Each investment axis feels different.
 
-**Grow across platforms.** Manage followers on Chirper, PicShift, Skroll, and PodPod. Each platform has its own audience and its own rewards.
+**Grow across platforms.** Manage followers on Chirper, Picshift, Skroll, and PodPod. Each platform has its own audience and its own rewards.
 
 **Rebrand.** When you've grown enough, wipe everything and start over — but keep Clout. Clout buys permanent upgrades that make your next run faster, stranger, and more absurd.
 

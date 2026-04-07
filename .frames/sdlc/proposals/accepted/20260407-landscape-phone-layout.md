@@ -39,7 +39,7 @@ The `max-height: 500px` guard ensures tablets in landscape (which have ample ver
 ┌──────────────────────────────────────────────────────────────────────────┐
 │  [icon] Click Farm    Engagement 12.4K  +6.8/s    42K followers    [gear]  │ ← top bar, 40px
 ├────────────────┬─────────────────────────────────────────────────────────┤
-│                │  [Chirper 12.4K]  [PicShift 8.2K]  [Skroll 2.1K]      │ ← platform strip, 48px
+│                │  [Chirper 12.4K]  [Picshift 8.2K]  [Skroll 2.1K]      │ ← platform strip, 48px
 │   [CHIRP]      ├─────────────────────────────────────────────────────────┤
 │                │                                                         │
 │   [SELFIE]     │  ▸ Selfies ×3    +2.4/s            [LVL] [BUY] [AUTO] │ ← generator list, flex

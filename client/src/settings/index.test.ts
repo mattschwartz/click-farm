@@ -74,6 +74,7 @@ describe('loadSettings', () => {
       musicVolume: 30,
       sfxVolume: 50,
       showVerbFloats: true,
+      musicInBackground: true,
     };
     saveSettings(chosen);
     expect(loadSettings(false)).toEqual(chosen);

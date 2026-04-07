@@ -39,6 +39,8 @@ export interface Settings {
   sfxVolume: number;
   /** Whether floating numbers appear on verb action buttons. Default true. */
   showVerbFloats: boolean;
+  /** Whether background music continues playing when the tab is hidden. Default false. */
+  musicInBackground: boolean;
 }
 
 interface StoredSettings {
@@ -65,6 +67,7 @@ export function getDefaultSettings(osReduceMotion = false, isSafari = false): Se
     musicVolume: 30,
     sfxVolume: 50,
     showVerbFloats: !isSafari,
+    musicInBackground: false,
   };
 }
 
@@ -139,6 +142,8 @@ export function loadSettings(osReduceMotion = readOsReduceMotion(), isSafari = d
       typeof stored.sfxVolume === 'number' ? stored.sfxVolume : defaults.sfxVolume,
     showVerbFloats:
       typeof stored.showVerbFloats === 'boolean' ? stored.showVerbFloats : defaults.showVerbFloats,
+    musicInBackground:
+      typeof stored.musicInBackground === 'boolean' ? stored.musicInBackground : defaults.musicInBackground,
   };
 }
 

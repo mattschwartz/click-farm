@@ -47,9 +47,9 @@ export const UPGRADE_DISPLAY: Record<UpgradeId, UpgradeDisplay> = {
     category: 'ENGAGEMENT',
   },
   platform_headstart_picshift: {
-    name: 'PicShift Head Start',
+    name: 'Picshift Head Start',
     icon: '📸',
-    description: 'Start each run with PicShift already unlocked.',
+    description: 'Start each run with Picshift already unlocked.',
     category: 'UNLOCKS',
   },
   platform_headstart_skroll: {

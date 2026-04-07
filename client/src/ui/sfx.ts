@@ -89,20 +89,50 @@ async function decodeBuffer(url: string, audioCtx: AudioContext): Promise<AudioB
 }
 
 // ---------------------------------------------------------------------------
-// Background music — HTML Audio element (streams, no decode needed).
-// Cycles through OST_TRACKS sequentially. When a track ends, the next one
-// starts automatically. After the last track, loops back to the first.
+// Background music — HTML Audio element routed through a Web Audio GainNode.
+// Streams (no decode needed), cycles through OST_TRACKS sequentially.
+// When a track ends, the next one starts automatically.
+//
+// Volume is controlled via GainNode, NOT HTMLAudioElement.volume, because
+// iOS Safari makes element.volume read-only on iPhone — the hardware buttons
+// are the only native volume control. Routing through Web Audio's GainNode
+// bypasses this restriction.
 // ---------------------------------------------------------------------------
 
 let bgMusic: HTMLAudioElement | null = null;
+let bgMusicGain: GainNode | null = null;
+let bgMusicConnected = false; // MediaElementSource can only be created once
 let bgMusicStarted = false;
 let currentTrackIndex = Math.floor(Math.random() * OST_TRACKS.length);
+
+/**
+ * Connect the bgMusic element to the AudioContext via a GainNode.
+ * Must be called after both bgMusic and AudioContext exist.
+ * createMediaElementSource can only be called once per element.
+ */
+function connectBgMusicToGain(): void {
+  if (bgMusicConnected || !bgMusic) return;
+  const audioCtx = getCtx();
+  if (!audioCtx) return;
+  try {
+    const source = audioCtx.createMediaElementSource(bgMusic);
+    bgMusicGain = audioCtx.createGain();
+    bgMusicGain.gain.value = musicVol;
+    source.connect(bgMusicGain).connect(audioCtx.destination);
+    bgMusicConnected = true;
+  } catch {
+    // Fallback: if Web Audio routing fails, element.volume is the only option.
+    // This won't help on iPhone but at least doesn't break playback.
+  }
+}
 
 /** Start playing the track at currentTrackIndex. */
 function playCurrentTrack(): void {
   if (!bgMusic) return;
   bgMusic.src = OST_TRACKS[currentTrackIndex];
+  // Set element volume as fallback; the GainNode is the primary control.
   bgMusic.volume = musicVol;
+  if (bgMusicGain) bgMusicGain.gain.value = musicVol;
   bgMusic.play().then(() => { bgMusicStarted = true; }).catch(() => {});
 }
 
@@ -119,6 +149,8 @@ function ensureBgMusic(): void {
       playCurrentTrack();
     });
   }
+  // Route through GainNode for iOS volume control.
+  connectBgMusicToGain();
   if (!masterMuted && !bgMusicStarted) {
     playCurrentTrack();
   }
@@ -159,6 +191,29 @@ if (typeof window !== 'undefined') {
   for (const evt of ['click', 'touchstart', 'keydown']) {
     window.addEventListener(evt, onGesture, { capture: true, passive: true });
   }
+
+  // Pause all audio when the tab is hidden (minimized, backgrounded, or
+  // switched away in Safari). Resume when the tab becomes visible again.
+  // If musicInBackground is enabled, music continues playing when hidden.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (musicInBackground) {
+        // Keep the AudioContext (and therefore the GainNode the music
+        // streams through) alive — only pause non-music audio.
+        silentLoop?.pause();
+      } else {
+        bgMusic?.pause();
+        silentLoop?.pause();
+        ctx?.suspend();
+      }
+    } else {
+      ctx?.resume();
+      silentLoop?.play().catch(() => {});
+      if (!masterMuted && bgMusicStarted) {
+        bgMusic?.play().catch(() => {});
+      }
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -218,6 +273,7 @@ function play(
 let masterMuted = false;
 let sfxVol = 0.5;   // 0–1
 let musicVol = 0.3;  // 0–1
+let musicInBackground = false;
 
 /** Called by settings UI when master sound toggle changes. */
 export function setSoundEnabled(enabled: boolean): void {
@@ -236,12 +292,19 @@ export function setSoundEnabled(enabled: boolean): void {
 /** Called by settings UI when music volume slider changes (0–100). */
 export function setMusicVolume(v: number): void {
   musicVol = Math.max(0, Math.min(1, v / 100));
+  // Primary: GainNode (works on iPhone). Fallback: element.volume (desktop).
+  if (bgMusicGain) bgMusicGain.gain.value = musicVol;
   if (bgMusic) bgMusic.volume = musicVol;
 }
 
 /** Called by settings UI when SFX volume slider changes (0–100). */
 export function setSfxVolume(v: number): void {
   sfxVol = Math.max(0, Math.min(1, v / 100));
+}
+
+/** Called by settings UI when music-in-background toggle changes. */
+export function setMusicInBackground(v: boolean): void {
+  musicInBackground = v;
 }
 
 // ---------------------------------------------------------------------------

@@ -554,12 +554,14 @@ function SpeedButton({
         {lvlState === 'maxed' && (
           <span className="lvl-crown" aria-hidden>♛</span>
         )}
-        SPEED{level > 1 ? ` +${level}` : ''}
+        {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
+        <span className="pill-label-full">SPEED{level > 1 ? ` +${level}` : ''}</span>
+        <span className="pill-label-abbr">L</span>
       </span>
       {lvlState === 'armed' && (
         <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
       )}
-      {costLabel}
+      <span className="row-btn-cost">{costLabel}</span>
     </button>
   );
 }
@@ -570,6 +572,49 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
   const [glowing, setGlowing] = useState(false);
   const [shaking, setShaking] = useState(false);
   const rgb = hexToRgbPill(verbColor);
+
+  // Long-press (300ms) reveals cost popover in landscape — replaces hover
+  // cost ghost on touch devices. Dismisses on touch-end or after 2s.
+  const [costPopover, setCostPopover] = useState(false);
+  const longPressTimer = useRef<number | null>(null);
+  const popoverTimer = useRef<number | null>(null);
+
+  const clearPopoverTimers = () => {
+    if (longPressTimer.current !== null) {
+      window.clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    if (popoverTimer.current !== null) {
+      window.clearTimeout(popoverTimer.current);
+      popoverTimer.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearPopoverTimers();
+    };
+  }, []);
+
+  const handleTouchStart = () => {
+    clearPopoverTimers();
+    longPressTimer.current = window.setTimeout(() => {
+      longPressTimer.current = null;
+      setCostPopover(true);
+      if (popoverTimer.current !== null) {
+        window.clearTimeout(popoverTimer.current);
+      }
+      popoverTimer.current = window.setTimeout(() => {
+        setCostPopover(false);
+        popoverTimer.current = null;
+      }, 2000);
+    }, 300);
+  };
+
+  const dismissPopover = () => {
+    clearPopoverTimers();
+    setCostPopover(false);
+  };
 
   const handleClick = () => {
     if (isMaxed) return;
@@ -597,6 +642,10 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
         '--pill-color-rgb': rgb,
       } as React.CSSProperties : undefined}
       onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={dismissPopover}
+      onTouchMove={dismissPopover}
+      onTouchCancel={dismissPopover}
       disabled={isMaxed}
       aria-label={
         isMaxed
@@ -609,9 +658,17 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
     >
       <span className="pill-label">
         {isMaxed && <span className="pill-crown" aria-hidden>♛</span>}
-        {`HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`}
+        {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
+        <span className="pill-label-full">{`HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`}</span>
+        <span className="pill-label-abbr">A</span>
       </span>
       <span className="pill-cost">{isMaxed ? 'MAX' : costLabel}</span>
+      {/* Long-press cost popover — visible in landscape where pill-cost is hidden. */}
+      {costPopover && (
+        <span className="pill-cost-popover" aria-hidden="true">
+          {isMaxed ? 'MAX' : costLabel}
+        </span>
+      )}
     </button>
   );
 }
@@ -690,8 +747,12 @@ function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit 
       aria-disabled={!canBuy}
       title={`Buy 1 unit for ${costText} engagement`}
     >
-      <span className="label">POWER{count > 0 ? ` +${count}` : ''}</span>
-      {costLabel}
+      <span className="label">
+        {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
+        <span className="pill-label-full">POWER{count > 0 ? ` +${count}` : ''}</span>
+        <span className="pill-label-abbr">B</span>
+      </span>
+      <span className="row-btn-cost">{costLabel}</span>
     </button>
   );
 }

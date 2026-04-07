@@ -74,10 +74,16 @@ import { OfflineGainsModal } from './OfflineGainsModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
 import { SettingsModal } from './SettingsModal.tsx';
+import { RotateToLandscapePrompt } from './RotateToLandscapePrompt.tsx';
 import { useSettings } from './useSettings.ts';
 import { prevTrack, nextTrack, togglePlayPause, isMusicPlaying } from './sfx.ts';
 import { fmtCompactInt } from './format.ts';
 import './GameScreen.css';
+
+/** True on touch-primary devices — keyboard shortcuts are suppressed. */
+const IS_TOUCH_DEVICE =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(pointer: coarse)').matches;
 
 // ---------------------------------------------------------------------------
 // Viral burst phase helpers (UX §9.2)
@@ -165,6 +171,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     setMusicVolume,
     setSfxVolume,
     setShowVerbFloats,
+    setMusicInBackground,
   } = useSettings();
 
   // Music player — sync UI with actual audio state. Poll at 250ms so mute
@@ -256,6 +263,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
   // any modal is visible so it doesn't double-handle.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (IS_TOUCH_DEVICE) return;
       if (e.key !== 'Escape') return;
       if (
         showCeremonyModal ||
@@ -280,6 +288,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
   // B key shortcut — hold to sweep, release to cancel.
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
+      if (IS_TOUCH_DEVICE) return;
       if (e.repeat) return;
       if (e.key !== 'b' && e.key !== 'B') return;
       if (
@@ -415,6 +424,49 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
             viralPlatformId={viralActive?.source_platform_id ?? null}
           />
         </div>
+
+        {/* Prestige cluster — moved inside <main> so it participates in the
+            landscape CSS grid as row 3. On desktop, position: fixed (CSS)
+            keeps it bottom-right with no visual change. On landscape phones,
+            CSS switches it to in-flow with grid-row: 3 (task #176).
+            Both buttons render at 3:1 contrast when locked (spec §2.1).
+            .prestige-label-touch spans are hidden on desktop, shown in
+            landscape to replace the hover tooltip (no hover on touch). */}
+        <div className="prestige-cluster">
+          <button
+            ref={upgradesBtnRef}
+            className={`prestige-btn prestige-btn-upgrades${!prestigeEligible ? ' prestige-btn-locked' : ''}`}
+            onClick={handleUpgradesClick}
+            title={`${fmtCompactInt(state.player.clout)} Clout`}
+            aria-label={`Rebrand Upgrades — ${fmtCompactInt(state.player.clout)} Clout`}
+          >
+            ⚙ Upgrades
+            <span className="prestige-label-touch">{fmtCompactInt(state.player.clout)} Clout</span>
+          </button>
+          <button
+            ref={rebrandBtnRef}
+            className={`prestige-btn prestige-btn-rebrand${!prestigeEligible ? ' prestige-btn-locked' : ''}`}
+            onClick={handleRebrandClick}
+            disabled={!prestigeEligible}
+            title={
+              prestigeEligible
+                ? `Rebrand → +${fmtCompactInt(rebrandPreview)} Clout`
+                : 'Earn followers first'
+            }
+            aria-label={
+              prestigeEligible
+                ? `Rebrand — earn ${fmtCompactInt(rebrandPreview)} Clout`
+                : 'Rebrand locked — earn followers first'
+            }
+          >
+            ↻ Rebrand
+            <span className="prestige-label-touch">
+              {prestigeEligible
+                ? `+${fmtCompactInt(rebrandPreview)} Clout`
+                : 'earn followers'}
+            </span>
+          </button>
+        </div>
       </main>
 
       {/* Viral particle burst — Phase 2 (Peak) only. Particles drift from the
@@ -444,38 +496,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
         <OfflineGainsModal result={offlineResult} onDismiss={clearOfflineResult} />
       )}
 
-      {/* Prestige cluster — bottom-right, two buttons, visually grouped.
-          Both buttons render at 3:1 contrast when locked (spec §2.1). */}
-      <div className="prestige-cluster">
-        <button
-          ref={upgradesBtnRef}
-          className={`prestige-btn prestige-btn-upgrades${!prestigeEligible ? ' prestige-btn-locked' : ''}`}
-          onClick={handleUpgradesClick}
-          title={`${fmtCompactInt(state.player.clout)} Clout`}
-          aria-label={`Rebrand Upgrades — ${fmtCompactInt(state.player.clout)} Clout`}
-        >
-          ⚙ Upgrades
-        </button>
-        <button
-          ref={rebrandBtnRef}
-          className={`prestige-btn prestige-btn-rebrand${!prestigeEligible ? ' prestige-btn-locked' : ''}`}
-          onClick={handleRebrandClick}
-          disabled={!prestigeEligible}
-          title={
-            prestigeEligible
-              ? `Rebrand → +${fmtCompactInt(rebrandPreview)} Clout`
-              : 'Earn followers first'
-          }
-          aria-label={
-            prestigeEligible
-              ? `Rebrand — earn ${fmtCompactInt(rebrandPreview)} Clout`
-              : 'Rebrand locked — earn followers first'
-          }
-        >
-          ↻ Rebrand
-        </button>
-      </div>
-
       {/* Clout Shop — game loop continues ticking (spec §3.1). */}
       {showShopModal && (
         <CloutShopModal
@@ -504,6 +524,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
           onSetMusicVolume={setMusicVolume}
           onSetSfxVolume={setSfxVolume}
           onSetShowVerbFloats={setShowVerbFloats}
+          onSetMusicInBackground={setMusicInBackground}
           rebrandCount={state.player.rebrand_count}
           onClose={() => setShowSettingsModal(false)}
           onResetRequested={() => {
@@ -530,6 +551,9 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
           }}
         />
       )}
+
+      {/* Rotate to landscape prompt — shows for phones in portrait mode. */}
+      <RotateToLandscapePrompt />
 
       {/* Floating bottom-left toolbar — settings + player */}
       <div className="floating-toolbar">
