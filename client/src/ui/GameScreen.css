@@ -3614,6 +3614,70 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   .settings-section-desktop-only {
     display: none;
   }
+
+  /* Rebrand Ceremony — fullscreen on portrait phones, same pattern as
+   * settings. Overlay backdrop removed; modal fills viewport. Columns
+   * stack vertically and font sizes tighten for narrow screens. */
+  .ceremony-overlay {
+    background: none;
+  }
+
+  .ceremony-modal,
+  .ceremony-modal-eulogy,
+  .ceremony-modal-commit,
+  .ceremony-modal-dissolution {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    padding: 28px 20px 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    /* flex-start so overflow scrolls naturally — center clips the top */
+    justify-content: flex-start;
+  }
+
+  .ceremony-headline {
+    font-size: 16px;
+    margin: 0 0 16px;
+  }
+
+  .ceremony-stat-row {
+    font-size: 13px;
+  }
+
+  .ceremony-columns {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .ceremony-btn {
+    flex: 1;
+    min-height: 44px;
+  }
+
+  .ceremony-modal-eulogy {
+    padding: 40px 24px 28px;
+  }
+
+  .ceremony-modal-commit {
+    padding: 40px 24px 28px;
+    gap: 32px;
+    justify-content: center;
+  }
+
+  .commit-btn {
+    width: 240px;
+    height: 68px;
+  }
+
+  .ceremony-modal-dissolution {
+    justify-content: center;
+  }
 }
 
 /* Landscape phones */
@@ -4753,6 +4817,10 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
    * Each phase modal (eulogy / commit / dissolution) fills the overlay.
    * Stanzas left-aligned for readability in wide/shallow viewport.
    * Buttons centered — same as portrait mobile spec. */
+  .ceremony-overlay {
+    background: none;
+  }
+
   .ceremony-modal,
   .ceremony-modal-eulogy,
   .ceremony-modal-commit,
@@ -4762,23 +4830,130 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     height: 100dvh;
     max-height: 100dvh;
     border-radius: 0;
+    border: none;
+    box-shadow: none;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    /* flex-start so overflow scrolls naturally — center clips the top */
+    justify-content: flex-start;
+  }
+
+  /* Phase 1 — Threshold Review: compress for ~380px viewport */
+  .ceremony-modal {
+    padding: 14px 250px 16px;
+    gap: 0;
+  }
+
+  .ceremony-headline {
+    font-size: 15px;
+    margin: 0 0 10px;
+  }
+
+  .ceremony-stat-box {
+    padding: 8px 14px;
+    margin-bottom: 10px;
+  }
+
+  .ceremony-stat-row {
+    font-size: 12px;
+    padding: 3px 0;
+  }
+
+  .ceremony-stat-row-final {
+    padding-top: 5px;
+    margin-top: 2px;
+  }
+
+  .ceremony-columns {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .ceremony-column-header {
+    font-size: 10px;
+    margin: 0 0 4px;
+  }
+
+  .ceremony-column-row {
+    font-size: 11px;
+    padding: 2px 0;
+    gap: 4px;
+  }
+
+  .ceremony-col-bullet {
+    font-size: 8px;
+  }
+
+  .ceremony-col-value {
+    font-size: 10px;
+  }
+
+  .ceremony-col-value-highlight {
+    font-size: 11px;
+  }
+
+  .ceremony-actions {
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .ceremony-btn {
+    font-size: 12px;
+    padding: 8px 24px;
+    min-height: 38px;
+  }
+
+  /* Phase 2 — Eulogy: less vertical padding, smaller stanzas */
+  .ceremony-modal-eulogy {
+    padding: 20px 250px 16px;
     justify-content: center;
   }
 
   .eulogy-stanzas {
     align-items: flex-start;
     text-align: left;
+    gap: 12px;
+    min-height: 100px;
+    margin-bottom: 12px;
   }
 
   .eulogy-stanza {
+    font-size: 14px;
     text-align: left;
+    line-height: 1.4;
   }
 
-  .ceremony-actions {
+  /* Phase 3 — Commit: compress the spacious desktop layout */
+  .ceremony-modal-commit {
+    padding: 24px 250px 20px;
+    gap: 24px;
     justify-content: center;
+  }
+
+  .commit-headline {
+    font-size: 20px;
+  }
+
+  .commit-btn {
+    width: 220px;
+    height: 60px;
+    font-size: 14px;
+  }
+
+  /* Phase 4 — Dissolution: tighten vertical space */
+  .ceremony-modal-dissolution {
+    padding: 24px 250px 20px;
+    min-height: auto;
+  }
+
+  .dissolution-counter-value {
+    font-size: 28px;
+  }
+
+  .dissolution-counter-label {
+    font-size: 10px;
   }
 
 } /* end @media landscape phone */
