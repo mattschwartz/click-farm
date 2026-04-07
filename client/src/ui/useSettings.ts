@@ -17,7 +17,7 @@ import {
   setSoundEnabled,
   setMusicVolume as setSfxMusicVolume,
   setSfxVolume as setSfxSfxVolume,
-  setMusicInBackground,
+  setMusicInBackground as setSfxMusicInBackground,
 } from './sfx.ts';
 
 export interface UseSettingsResult {
@@ -55,7 +55,7 @@ export function useSettings(): UseSettingsResult {
     setSoundEnabled(settings.sound);
     setSfxMusicVolume(settings.musicVolume);
     setSfxSfxVolume(settings.sfxVolume);
-    setMusicInBackground(settings.musicInBackground);
+    setSfxMusicInBackground(settings.musicInBackground);
   }, [settings]);
 
   const setReduceTimePressure = useCallback(
