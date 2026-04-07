@@ -554,7 +554,9 @@ function SpeedButton({
         {lvlState === 'maxed' && (
           <span className="lvl-crown" aria-hidden>♛</span>
         )}
-        SPEED{level > 1 ? ` +${level}` : ''}
+        {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
+        <span className="pill-label-full">SPEED{level > 1 ? ` +${level}` : ''}</span>
+        <span className="pill-label-abbr">L</span>
       </span>
       {lvlState === 'armed' && (
         <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
@@ -609,7 +611,9 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
     >
       <span className="pill-label">
         {isMaxed && <span className="pill-crown" aria-hidden>♛</span>}
-        {`HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`}
+        {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
+        <span className="pill-label-full">{`HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`}</span>
+        <span className="pill-label-abbr">A</span>
       </span>
       <span className="pill-cost">{isMaxed ? 'MAX' : costLabel}</span>
     </button>
@@ -690,7 +694,11 @@ function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit 
       aria-disabled={!canBuy}
       title={`Buy 1 unit for ${costText} engagement`}
     >
-      <span className="label">POWER{count > 0 ? ` +${count}` : ''}</span>
+      <span className="label">
+        {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
+        <span className="pill-label-full">POWER{count > 0 ? ` +${count}` : ''}</span>
+        <span className="pill-label-abbr">B</span>
+      </span>
       {costLabel}
     </button>
   );

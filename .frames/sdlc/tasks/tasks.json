@@ -7083,7 +7083,7 @@
       "alias": "E5",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Landscape generator row compression and pill abbreviation",
       "requester": "architect",
@@ -7114,7 +7114,8 @@
         "Desktop generator rows unchanged"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 176,

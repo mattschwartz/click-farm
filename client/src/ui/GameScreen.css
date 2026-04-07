@@ -1625,6 +1625,12 @@ html[data-reduce-motion="true"] .sweep-cost-float {
 
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
+/* Suppress offline gains modal when the rotate-to-landscape prompt is active.
+   State is preserved — the modal reappears when the user rotates. */
+@media (max-width: 767px) and (orientation: portrait) {
+  .offline-backdrop { display: none; }
+}
+
 .offline-modal {
   background: var(--surface-overlay);
   border: 1px solid var(--border-default);
@@ -1680,15 +1686,21 @@ html[data-reduce-motion="true"] .sweep-cost-float {
 }
 
 /* --- Rotate to landscape prompt (task #182) -------------------------------- */
+/* Frosted-glass overlay — sits above ALL modals (offline gains z:10, shop/
+   settings/ceremony z:60) so it's never buried behind a welcome-back modal
+   on load. Translucent so the verb buttons behind it bleed color through,
+   giving the player a taste of the game before they've even started. */
 
 .rotate-to-landscape-overlay {
   position: fixed;
   inset: 0;
-  z-index: 45;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-panel);
+  background: rgba(var(--palette-white-rgb), 0.72);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
   animation: fade-in 200ms ease-out;
 }
 
@@ -1709,26 +1721,60 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 32px;
+  gap: 24px;
   color: var(--text-primary);
 }
 
 .rotate-icon {
-  width: 80px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
   flex-shrink: 0;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   display: block;
+  opacity: 0.7;
 }
 
 .rotate-text {
   font-family: var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 600;
   margin: 0;
   text-align: center;
   color: var(--text-primary);
   line-height: 1.2;
+}
+
+.rotate-subtext {
+  font-family: var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  margin: -12px 0 0;
+  text-align: center;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.rotate-favicon {
+  width: 120px;
+  height: 120px;
+  margin-top: 16px;
+  border-radius: 16px;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  filter: drop-shadow(0 4px 12px rgba(var(--palette-black-rgb), 0.10));
+}
+
+.rotate-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 4px 0 0;
+  text-align: center;
+  color: var(--text-primary);
 }
 
 /* --- Prestige cluster — two-button bottom-right affordance (spec §2.1–2.3) */
@@ -4072,6 +4118,102 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     min-height: 0;
   }
 
+  /* --- Generator row compression and pill abbreviation (task #175) --------- */
+
+  /* Generator list: hidden scrollbar, momentum scroll, reduced padding. */
+  .generator-list {
+    padding: 6px 8px;
+    border-radius: 8px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .generator-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Sweep button: 32px tall (down from 36px). */
+  .buy-all-btn {
+    height: 32px;
+    line-height: 32px;
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+
+  /* Generator row: tight padding to achieve ~44px row height.
+   * Buttons compress to 24px → row ≈ 10px padding×2 + 24px content = 44px. */
+  .generator-row {
+    padding: 10px 2px;
+    gap: 6px;
+  }
+
+  /* Badge: 28px (down from 40px). Breathing pulse animation unchanged. */
+  .badge {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+
+  /* Generator name: 14px weight 500 (down from 15px). */
+  .generator-name {
+    font-size: 14px;
+  }
+
+  /* Rate: 12px, suppress the large min-width that wastes horizontal space. */
+  .generator-rate {
+    font-size: 12px;
+    min-width: 0;
+  }
+
+  /* Category dividers: 10px uppercase, 16px padding-top (down from 24px). */
+  .category-divider {
+    font-size: 10px;
+    padding-top: 16px;
+  }
+
+  /* Row actions: tighter gap for the narrow column. */
+  .row-actions {
+    gap: 3px;
+  }
+
+  /* Row buttons (POWER/SPEED): 36px min-width × 24px height.
+   * Padding compressed from 5px to 3px to achieve 24px height. */
+  .row-btn {
+    min-width: 36px;
+    width: auto;
+    padding: 3px 4px;
+    font-size: 10px;
+  }
+
+  .row-btn .label {
+    font-size: 7px;
+    margin-bottom: 0;
+  }
+
+  /* HIRE pill (purchase-pill): 36px min-width × 24px height.
+   * Switch purchase-pill-auto from column to row layout — 24px is too tight
+   * for two lines. pill-cost hidden in landscape. */
+  .purchase-pill {
+    min-width: 36px;
+    width: auto;
+    height: 24px;
+    line-height: 24px;
+    padding: 0 4px;
+    font-size: 10px;
+    gap: 2px;
+  }
+
+  .purchase-pill-auto {
+    flex-direction: row;
+    height: 24px;
+    padding: 0 4px;
+    align-items: center;
+  }
+
+  .purchase-pill-auto .pill-cost {
+    display: none;
+  }
+
   /* --- Platform strip: horizontal mode (task #174) ------------------------- */
 
   /* Horizontal scroll strip — 48px tall, flex-row, snap-scroll.
@@ -4309,5 +4451,27 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
 @media (pointer: coarse) {
   .engagement-value .engagement-tooltip {
     display: none;
+  }
+}
+
+/* Pill label two-span pattern (task #175).
+ * .pill-label-full and .pill-label-abbr are added to each purchase pill's
+ * label span in GeneratorList.tsx. Full text is shown by default; the
+ * abbreviated single-letter is hidden globally and revealed only in the
+ * sub-750px landscape breakpoint below. */
+.pill-label-abbr {
+  display: none;
+}
+
+/* Sub-750px landscape phones: show abbreviations, hide full labels.
+ * Combined with the landscape grid shell query so this only fires on small
+ * landscape phones (not portrait or desktop). */
+@media (max-width: 750px) and (max-height: 500px) and (orientation: landscape) {
+  .pill-label-full {
+    display: none;
+  }
+
+  .pill-label-abbr {
+    display: inline;
   }
 }
