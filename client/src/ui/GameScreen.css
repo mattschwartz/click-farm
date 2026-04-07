@@ -929,7 +929,7 @@
 
 /* Unowned row layout — badge + info + full buy button (§4.2). */
 .generator-row.generator-row-unowned {
-  grid-template-columns: 44px 1fr auto;
+  grid-template-columns: 1fr auto;
 }
 
 .unowned-info {
@@ -938,16 +938,14 @@
   gap: 4px;
 }
 
-/* Full buy button — first-purchase affordance (§4.2). Min 180×64px. */
+/* Full buy button — first-purchase affordance (§4.2). */
 .buy-btn {
-  min-width: 180px;
-  min-height: 64px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
   gap: 3px;
-  padding: 12px 16px;
+  padding: 8px 12px;
   border-radius: 6px;
   border: 1px solid var(--border-default);
   background: var(--surface-panel);
