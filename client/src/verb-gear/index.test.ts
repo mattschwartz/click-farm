@@ -76,7 +76,7 @@ describe('verbGearMultiplier', () => {
       { chirps: 1 } as Record<VerbGearId, number>,
       STATIC_DATA,
     );
-    expect(result).toBe(1_000);
+    expect(result).toBe(1_234);
   });
 
   it('returns cumulative multiplier at level 2', () => {
@@ -85,7 +85,7 @@ describe('verbGearMultiplier', () => {
       { chirps: 2 } as Record<VerbGearId, number>,
       STATIC_DATA,
     );
-    expect(result).toBe(1_000_000);
+    expect(result).toBe(1_522_756);
   });
 
   it('returns cumulative multiplier at level 3 (max)', () => {
@@ -94,7 +94,7 @@ describe('verbGearMultiplier', () => {
       { chirps: 3 } as Record<VerbGearId, number>,
       STATIC_DATA,
     );
-    expect(result).toBe(1_000_000_000);
+    expect(result).toBe(1_879_080_904);
   });
 
   it('returns 1.0 for passive-only generators (memes)', () => {
@@ -141,8 +141,8 @@ describe('verbGearMultiplier', () => {
 
   it('returns correct multiplier per-verb independently', () => {
     const gear = { chirps: 1, selfies: 2 } as Record<VerbGearId, number>;
-    expect(verbGearMultiplier('chirps', gear, STATIC_DATA)).toBe(1_000);
-    expect(verbGearMultiplier('selfies', gear, STATIC_DATA)).toBe(1_000_000);
+    expect(verbGearMultiplier('chirps', gear, STATIC_DATA)).toBe(1_234);
+    expect(verbGearMultiplier('selfies', gear, STATIC_DATA)).toBe(1_522_756);
     expect(verbGearMultiplier('livestreams', gear, STATIC_DATA)).toBe(1.0);
   });
 });

@@ -186,6 +186,7 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutocl
                 onBuy={onBuy}
                 onUpgrade={onUpgrade}
                 onBuyAutoclicker={onBuyAutoclicker}
+                onBuyVerbGear={onBuyVerbGear}
                 viralHalo={viralGeneratorId === id}
                 sweepHitType={lastSweepPurchase?.generatorId === id ? lastSweepPurchase.type : null}
                 sweepHitCost={lastSweepPurchase?.generatorId === id ? lastSweepPurchase.cost : 0}
@@ -208,6 +209,7 @@ interface RowProps {
   onBuy: (id: GeneratorId) => void;
   onUpgrade: (id: GeneratorId) => void;
   onBuyAutoclicker: (verbId: GeneratorId) => void;
+  onBuyVerbGear: (gearId: VerbGearId) => void;
   /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
   viralHalo?: boolean;
   /** Which button (if any) was just hit by a sweep purchase on this row. */
@@ -225,6 +227,7 @@ function GeneratorRow({
   onBuy,
   onUpgrade,
   onBuyAutoclicker,
+  onBuyVerbGear,
   viralHalo,
   sweepHitType,
   sweepHitCost,
