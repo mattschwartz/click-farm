@@ -9,8 +9,7 @@ import { createDriver, type ActionError, type SaveError } from '../driver/index.
 import type { OfflineResult } from '../offline/index.ts';
 import type { RebrandResult } from '../prestige/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
-import { playPurchase, setSoundEnabled } from './sfx.ts';
-import { loadSettings, readOsReduceMotion } from '../settings/index.ts';
+import { playPurchase } from './sfx.ts';
 
 export interface UseGameResult {
   state: GameState;
@@ -110,26 +109,18 @@ export function useGame(): UseGameResult {
       driver.saveNow();
     };
 
-    // Track whether sound was enabled before we muted on hide, so we don't
-    // unmute a player who had sound off.
-    let soundWasEnabled = false;
-
     const handleVisibilityChange = (): void => {
       if (document.hidden) {
-        // Tab going to background — save, pause, mute.
+        // Tab going to background — save and pause the loop.
+        // Music/SFX continue playing (user preference).
         driver.saveNow();
         driver.stop();
-        soundWasEnabled = loadSettings(readOsReduceMotion()).sound;
-        setSoundEnabled(false);
       } else {
         // Tab returning to foreground — run offline calc, show modal, resume.
         driver.runOfflineCalc();
         const result = driver.getOfflineResult();
         if (result) {
           setOfflineResult(result);
-        }
-        if (soundWasEnabled) {
-          setSoundEnabled(true);
         }
         driver.start();
       }
