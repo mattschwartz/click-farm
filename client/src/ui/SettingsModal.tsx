@@ -213,7 +213,7 @@ export function SettingsModal({
               />
               <SettingsToggle
                 label="Floating Numbers"
-                description="Show pop-up numbers on verb action buttons when tapping or autoclicking."
+                description="Show pop-up numbers from autoclicker taps."
                 checked={settings.showVerbFloats}
                 onChange={onSetShowVerbFloats}
               />
@@ -231,7 +231,7 @@ export function SettingsModal({
                 </div>
                 <div className="settings-control-row">
                   <span className="settings-control-key">B</span>
-                  <span className="settings-control-desc">Start / Stop Rush Buy sweep</span>
+                  <span className="settings-control-desc">Hold to auto-purchase upgrades</span>
                 </div>
               </div>
             </div>
