@@ -35,10 +35,10 @@ export function shouldShowRunBadge(rebrandCount: number): boolean {
 }
 
 /**
- * Format the RUN badge text — displays the current run number (rebrand_count + 1).
+ * Format the run badge text — displays the rebrand count.
  */
 export function formatRunBadge(rebrandCount: number): string {
-  return `RUN ${rebrandCount + 1}`;
+  return `${rebrandCount} Rebrand${rebrandCount === 1 ? '' : 's'}`;
 }
 
 export function TopBar({
