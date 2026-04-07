@@ -1,5 +1,5 @@
 {
-  "next_id": 183,
+  "next_id": 184,
   "tasks": [
     {
       "id": 1,
@@ -7395,6 +7395,55 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-07"
+    },
+    {
+      "id": 183,
+      "role": "ux-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Design off-screen verb cooldown-ready notification for mobile",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "When a verb in the Actions zone comes off cooldown on mobile but its button is not visible (scrolled out of the Actions zone, obscured by a bottom sheet, etc.), the player has no way to know it's ready. This is most relevant for long-cooldown verbs (livestreams 10s, podcasts 30s, viral_stunts 2min) where the ready-moment is an event worth surfacing. Two approaches were explored in conversation: (A) an edge beacon/pip on the Actions zone boundary, and (B) a transient top-bar toast pill showing verb icon + 'Ready'. Option B was favored because it works regardless of what's covering the Actions zone — bottom sheets, scroll position — and tells the player which verb is ready. The proposal should formalize one approach, specify the visual treatment, motion brief, interaction (tap-to-navigate), threshold for which verbs trigger it, queuing/debounce behavior for multiple near-simultaneous cooldown expiries, and accessibility implications.",
+      "related_items": [
+        {
+          "ref": "ux/mobile-layout.md",
+          "purpose": "Current mobile zone stack — Actions zone is §7, top bar is §3"
+        },
+        {
+          "ref": "proposals/accepted/manual-action-ladder.md",
+          "purpose": "Defines the 5-verb ladder and per-verb cooldown ranges"
+        },
+        {
+          "ref": "proposals/accepted/level-driven-manual-cooldown.md",
+          "purpose": "Defines cooldown formula and LVL UP progression — cooldowns shrink with level"
+        },
+        {
+          "ref": "proposals/accepted/actions-column.md",
+          "purpose": "Actions zone grows upward on mobile, caps at ~55% viewport height with internal scroll"
+        }
+      ],
+      "acceptance_criteria": [
+        "Proposal written to proposals/draft/ with a concrete visual spec for the notification",
+        "Motion brief included: trigger, animation, duration, easing, what it communicates",
+        "Interaction spec: what happens when the player taps the notification",
+        "Threshold defined: which verbs trigger the notification and under what conditions",
+        "Queuing/debounce behavior specified for multiple near-simultaneous cooldown expiries",
+        "Accessibility: contrast, reduced-motion fallback, screen reader announcement",
+        "Engagement line check included"
+      ],
+      "open_questions": [
+        {
+          "question": "Should landscape mode (if/when supported) use the same notification pattern or a different one?",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "Does the top-bar toast compete with viral burst summary badges that also render near the engagement counter?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": []
     }
   ]
 }
