@@ -6187,7 +6187,7 @@
       "id": 154,
       "role": "engineer",
       "state": "build",
-      "status": "complete",
+      "status": "open",
       "date_assigned": "2026-04-06",
       "title": "Apply level multiplier to autoclicker passive rate",
       "requester": "game-designer",
@@ -6210,8 +6210,7 @@
         "All tests pass, build succeeds"
       ],
       "open_questions": [],
-      "blocked_on": [],
-      "date_completed": "2026-04-06"
+      "blocked_on": []
     }
   ]
 }
