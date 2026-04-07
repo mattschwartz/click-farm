@@ -32,6 +32,7 @@ import {
 import { checkGeneratorUnlocks } from '../generator/index.ts';
 import { syncTotalFollowers, clampEngagement } from '../model/index.ts';
 import { advanceNeglect, applyTickPosts } from '../audience-mood/index.ts';
+import { verbGearMultiplier } from '../verb-gear/index.ts';
 
 // ---------------------------------------------------------------------------
 // Formula helpers
@@ -121,13 +122,17 @@ export function computeGeneratorEffectiveRate(
   if (!generator.owned || generator.autoclicker_count <= 0) return 0;
   const def = staticData.generators[generator.id];
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
+  // Gear multiplier folds in AFTER Clout per architecture/verb-gear.md
+  // §Stacking Order (§3 clout -> §4 gear).
+  const gear = verbGearMultiplier(generator.id, state.player.verb_gear, staticData);
   return (
     generator.autoclicker_count *
     generator.level *
     def.base_event_rate *
     def.base_event_yield *
     Math.pow(1 + generator.count, def.count_exponent) *
-    clout
+    clout *
+    gear
   );
 }
 
@@ -482,7 +487,7 @@ export function verbCooldownMs(
 /**
  * Engagement earned from a single manual tap. BUY count drives yield.
  *
- *   earned = base_event_yield × (1 + count)^count_exponent × (1 + autoclicker_count) × clout
+ *   earned = base_event_yield × (1 + count)^count_exponent × (1 + autoclicker_count) × clout × gear
  */
 export function verbYieldPerTap(
   generator: GeneratorState,
@@ -491,13 +496,14 @@ export function verbYieldPerTap(
 ): number {
   const def = staticData.generators[generator.id];
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
-  return def.base_event_yield * Math.pow(1 + generator.count, def.count_exponent) * (1 + generator.autoclicker_count) * clout;
+  const gear = verbGearMultiplier(generator.id, state.player.verb_gear, staticData);
+  return def.base_event_yield * Math.pow(1 + generator.count, def.count_exponent) * (1 + generator.autoclicker_count) * clout * gear;
 }
 
 /**
  * Engagement per single autoclicker fire. Same formula as manual tap:
  *
- *   earned = base_event_yield × (1 + count)^count_exponent × (1 + autoclicker_count) × clout
+ *   earned = base_event_yield × (1 + count)^count_exponent × (1 + autoclicker_count) × clout × gear
  */
 export function verbYieldPerAutoTap(
   generator: GeneratorState,

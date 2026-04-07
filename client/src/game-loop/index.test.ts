@@ -8,6 +8,8 @@ import {
   computeAllGeneratorEffectiveRates,
   computeSnapshot,
   evaluateViralTrigger,
+  verbYieldPerTap,
+  verbYieldPerAutoTap,
 } from './index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import {
@@ -812,9 +814,110 @@ describe('evaluateViralTrigger', () => {
   });
 });
 
-// Creator Kit tests removed — old system ripped out (task #185).
-// Creator Kit tests removed — old system ripped out (task #185).
+// ---------------------------------------------------------------------------
+// Verb Gear — multiplier integration in tick pipeline (task #194)
+// ---------------------------------------------------------------------------
 
+describe('Verb gear multiplier in tick pipeline', () => {
+  function withGear(
+    state: GameState,
+    gear: Partial<Record<'chirps' | 'selfies' | 'livestreams' | 'podcasts' | 'viral_stunts', number>>,
+  ): GameState {
+    return {
+      ...state,
+      player: {
+        ...state.player,
+        verb_gear: gear as GameState['player']['verb_gear'],
+      },
+    };
+  }
+
+  it('gear level 0 produces a 1.0 no-op on effective rate', () => {
+    const base = stateWithGenerator('selfies', 5, 1);
+    const rateBase = computeGeneratorEffectiveRate(base.generators.selfies, base, STATIC_DATA);
+    const rateGear0 = computeGeneratorEffectiveRate(
+      base.generators.selfies,
+      withGear(base, { selfies: 0 }),
+      STATIC_DATA,
+    );
+    expect(rateGear0).toBeCloseTo(rateBase, 6);
+  });
+
+  it('gear level 1 multiplies effective rate by 10', () => {
+    const base = stateWithGenerator('selfies', 5, 1);
+    const rateBase = computeGeneratorEffectiveRate(base.generators.selfies, base, STATIC_DATA);
+    const rateGear1 = computeGeneratorEffectiveRate(
+      base.generators.selfies,
+      withGear(base, { selfies: 1 }),
+      STATIC_DATA,
+    );
+    expect(rateGear1).toBeCloseTo(rateBase * 10, 6);
+  });
+
+  it('gear level 2 multiplies effective rate by 100', () => {
+    const base = stateWithGenerator('selfies', 5, 1);
+    const rateBase = computeGeneratorEffectiveRate(base.generators.selfies, base, STATIC_DATA);
+    const rateGear2 = computeGeneratorEffectiveRate(
+      base.generators.selfies,
+      withGear(base, { selfies: 2 }),
+      STATIC_DATA,
+    );
+    expect(rateGear2).toBeCloseTo(rateBase * 100, 6);
+  });
+
+  it('gear level 3 multiplies effective rate by 1000', () => {
+    const base = stateWithGenerator('selfies', 5, 1);
+    const rateBase = computeGeneratorEffectiveRate(base.generators.selfies, base, STATIC_DATA);
+    const rateGear3 = computeGeneratorEffectiveRate(
+      base.generators.selfies,
+      withGear(base, { selfies: 3 }),
+      STATIC_DATA,
+    );
+    expect(rateGear3).toBeCloseTo(rateBase * 1000, 6);
+  });
+
+  it('gear level 0 produces a 1.0 no-op on verbYieldPerTap', () => {
+    const base = stateWithGenerator('chirps', 5, 1);
+    const yieldBase = verbYieldPerTap(base.generators.chirps, base, STATIC_DATA);
+    const yieldGear0 = verbYieldPerTap(
+      base.generators.chirps,
+      withGear(base, { chirps: 0 }),
+      STATIC_DATA,
+    );
+    expect(yieldGear0).toBeCloseTo(yieldBase, 6);
+  });
+
+  it('gear level 1 multiplies verbYieldPerTap by 10', () => {
+    const base = stateWithGenerator('chirps', 5, 1);
+    const yieldBase = verbYieldPerTap(base.generators.chirps, base, STATIC_DATA);
+    const yieldGear1 = verbYieldPerTap(
+      base.generators.chirps,
+      withGear(base, { chirps: 1 }),
+      STATIC_DATA,
+    );
+    expect(yieldGear1).toBeCloseTo(yieldBase * 10, 6);
+  });
+
+  it('passive-only generators are unaffected by gear', () => {
+    const base = stateWithGenerator('memes', 5, 1);
+    const rateBase = computeGeneratorEffectiveRate(base.generators.memes, base, STATIC_DATA);
+    const rateGeared = computeGeneratorEffectiveRate(
+      base.generators.memes,
+      withGear(base, { chirps: 3 }),
+      STATIC_DATA,
+    );
+    expect(rateGeared).toBeCloseTo(rateBase, 6);
+  });
+
+  it('verbYieldPerAutoTap delegates to verbYieldPerTap (no separate gear integration needed)', () => {
+    const base = stateWithGenerator('chirps', 5, 1);
+    const geared = withGear(base, { chirps: 2 });
+    expect(verbYieldPerAutoTap(geared.generators.chirps, geared, STATIC_DATA))
+      .toBe(verbYieldPerTap(geared.generators.chirps, geared, STATIC_DATA));
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Audience Mood retention × follower gain (task #104 AC #6)
 //
 // Verifies that per-platform follower gain scales linearly with the

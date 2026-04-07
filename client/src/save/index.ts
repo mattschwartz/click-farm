@@ -16,7 +16,7 @@ import { recomputeAllRetention } from '../audience-mood/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 14;
+const CURRENT_VERSION = 15;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -743,6 +743,36 @@ export function migrateV13toV14(data: SaveData): SaveData {
   };
 }
 
+/**
+ * V14→V15: Strip old Creator Kit, add verb gear.
+ *
+ * The old Creator Kit system (camera, phone, wardrobe, mogging) has been
+ * replaced by per-verb gear upgrades. This migration strips `player.creator_kit`
+ * (which may still exist from migrateV4toV5 / migrateV11toV12 in the chain)
+ * and adds `player.verb_gear = {}`.
+ *
+ * See proposals/accepted/20260407-creator-kit-verb-gear.md.
+ */
+export function migrateV14toV15(data: SaveData): SaveData {
+  const player = data.state.player as any;
+  // Strip old creator_kit (may still exist from earlier migrations)
+  delete player.creator_kit;
+  // Add verb_gear, defaulting to empty (no gear owned)
+  if (!player.verb_gear) {
+    player.verb_gear = {};
+  }
+  return {
+    ...data,
+    version: 15,
+    state: {
+      ...data.state,
+      player: {
+        ...player,
+      },
+    },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -797,6 +827,11 @@ export function migrate(data: SaveData): SaveData {
   if (current.version === 13) {
     current = migrateV13toV14(current);
   }
+
+  if (current.version === 14) {
+    current = migrateV14toV15(current);
+  }
+
 
   if (current.version !== CURRENT_VERSION) {
     throw new Error(

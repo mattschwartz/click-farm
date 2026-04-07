@@ -13,6 +13,7 @@ import {
   migrateV6toV7,
   migrateV7toV8,
   migrateV9toV10,
+  migrateV14toV15,
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -256,7 +257,7 @@ describe('migrate', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(14);
+    expect(result.version).toBe(15);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -404,13 +405,12 @@ describe('migrateV3toV4', () => {
 
   it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(14);
+    expect(result.version).toBe(15);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
-    // creator_kit no longer exists on Player — old migration still produces
-    // the field but a later migration would strip it. Cast through any to
-    // verify the legacy chain.
-    expect((result.state.player as any).creator_kit).toEqual({});
+    // V14→V15 strips creator_kit and adds verb_gear
+    expect((result.state.player as any).creator_kit).toBeUndefined();
+    expect(result.state.player.verb_gear).toEqual({});
   });
 });
 
@@ -456,8 +456,10 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version via the chain', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(14);
-    expect((result.state.player as any).creator_kit).toEqual({});
+    expect(result.version).toBe(15);
+    // V14→V15 strips creator_kit and adds verb_gear
+    expect((result.state.player as any).creator_kit).toBeUndefined();
+    expect(result.state.player.verb_gear).toEqual({});
   });
 
   it('defaults player.creator_kit to empty object when absent', () => {
@@ -483,8 +485,9 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(14);
-    expect((result.state.player as any).creator_kit).toEqual({});
+    expect(result.version).toBe(15);
+    expect((result.state.player as any).creator_kit).toBeUndefined();
+    expect(result.state.player.verb_gear).toEqual({});
   });
 });
 
@@ -585,7 +588,7 @@ describe('migrateV5toV6', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(14);
+    expect(result.version).toBe(15);
     expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
 });
@@ -838,6 +841,72 @@ describe('migrateV9toV10', () => {
   it('preserves chirper unchanged', () => {
     const result = migrateV9toV10(makeV9SaveData());
     expect(result.state.platforms.chirper.id).toBe('chirper');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// migrateV14toV15 — strip Creator Kit, add verb gear
+// ---------------------------------------------------------------------------
+
+describe('migrateV14toV15', () => {
+  function makeV14SaveData(): SaveData {
+    const base = createInitialGameState(STATIC_DATA, 0);
+    return {
+      version: 14,
+      state: {
+        ...base,
+        player: {
+          ...base.player,
+          // Simulate a save with old creator_kit data from earlier migrations
+          creator_kit: { camera: 2, wardrobe: 1 },
+        } as any,
+      },
+      lastCloseTime: 0,
+      lastCloseState: null,
+    };
+  }
+
+  it('bumps version from 14 to 15', () => {
+    const result = migrateV14toV15(makeV14SaveData());
+    expect(result.version).toBe(15);
+  });
+
+  it('strips player.creator_kit', () => {
+    const result = migrateV14toV15(makeV14SaveData());
+    expect((result.state.player as any).creator_kit).toBeUndefined();
+  });
+
+  it('adds player.verb_gear = {} when absent', () => {
+    const result = migrateV14toV15(makeV14SaveData());
+    expect(result.state.player.verb_gear).toEqual({});
+  });
+
+  it('preserves existing verb_gear if somehow already present', () => {
+    const data = makeV14SaveData();
+    (data.state.player as any).verb_gear = { chirps: 1 };
+    const result = migrateV14toV15(data);
+    expect(result.state.player.verb_gear).toEqual({ chirps: 1 });
+  });
+
+  it('handles save with no creator_kit gracefully', () => {
+    const base = createInitialGameState(STATIC_DATA, 0);
+    const data: SaveData = {
+      version: 14,
+      state: base,
+      lastCloseTime: 0,
+      lastCloseState: null,
+    };
+    const result = migrateV14toV15(data);
+    expect(result.version).toBe(15);
+    expect((result.state.player as any).creator_kit).toBeUndefined();
+    expect(result.state.player.verb_gear).toEqual({});
+  });
+
+  it('integrates with migrate() — a v14 save reaches current version', () => {
+    const result = migrate(makeV14SaveData());
+    expect(result.version).toBe(15);
+    expect((result.state.player as any).creator_kit).toBeUndefined();
+    expect(result.state.player.verb_gear).toEqual({});
   });
 });
 
