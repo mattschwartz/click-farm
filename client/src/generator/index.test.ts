@@ -102,34 +102,16 @@ describe('generatorBuyCost', () => {
 // ---------------------------------------------------------------------------
 
 describe('generatorUpgradeCost', () => {
-  // Formula (per proposals/accepted/generator-level-growth-curves.md):
-  //   cost(currentLevel) = ceil(base × levelMultiplier(currentLevel + 1))
-  //   levelMultiplier(L) = 2^(L² / 5)
-  it('matches the levelMultiplier formula at level 1 (cost to reach L2)', () => {
-    const base = STATIC_DATA.generators.selfies.base_upgrade_cost;
-    const expected = Math.ceil(base * Math.pow(2, (2 * 2) / 5));
-    expect(generatorUpgradeCost('selfies', 1, STATIC_DATA)).toBe(expected);
+  it('returns the first entry in upgrade_costs at level 1', () => {
+    const costs = STATIC_DATA.generators.selfies.upgrade_costs;
+    expect(generatorUpgradeCost('selfies', 1, STATIC_DATA)).toBe(costs[0]);
   });
 
-  it('matches the super-exponential curve at several levels', () => {
-    const base = STATIC_DATA.generators.selfies.base_upgrade_cost;
-    for (const currentLevel of [1, 2, 3, 5, 9]) {
-      const target = currentLevel + 1;
-      const expected = Math.ceil(base * Math.pow(2, (target * target) / 5));
-      expect(generatorUpgradeCost('selfies', currentLevel, STATIC_DATA)).toBe(
-        expected,
-      );
+  it('returns correct entry for each level', () => {
+    const costs = STATIC_DATA.generators.selfies.upgrade_costs;
+    for (let l = 1; l <= costs.length; l++) {
+      expect(generatorUpgradeCost('selfies', l, STATIC_DATA)).toBe(costs[l - 1]);
     }
-  });
-
-  it('doubles from cost(L) to cost(L+1) at the formula ratio', () => {
-    // cost(L+1)/cost(L) = 2^(((L+2)² - (L+1)²)/5) = 2^((2L+3)/5)
-    // For L=1 → 2^1 = 2; for L=2 → 2^(7/5) ≈ 2.639; for L=3 → 2^(9/5) ≈ 3.482
-    const c1 = generatorUpgradeCost('selfies', 1, STATIC_DATA);
-    const c2 = generatorUpgradeCost('selfies', 2, STATIC_DATA);
-    // Tolerance: ceil rounding can introduce up to 1 unit of drift. At these
-    // magnitudes the relative error is << 1%.
-    expect(c2 / c1).toBeCloseTo(2, 1);
   });
 
   it('increases monotonically with level', () => {
@@ -140,10 +122,9 @@ describe('generatorUpgradeCost', () => {
     }
   });
 
-  it('is always a positive integer (ceil)', () => {
+  it('is always positive', () => {
     for (let l = 1; l <= 5; l++) {
       const cost = generatorUpgradeCost('selfies', l, STATIC_DATA);
-      expect(Number.isInteger(cost)).toBe(true);
       expect(cost).toBeGreaterThan(0);
     }
   });
@@ -389,12 +370,11 @@ describe('upgradeGenerator', () => {
     expect(next.player.engagement).toBeCloseTo(999, 6);
   });
 
-  it('cost(L+1) is ~2× cost(L) at the low end of the curve', () => {
-    // From the super-exponential formula 2^(L²/5):
-    //   ratio(1→2) = 2^((9-4)/5) = 2^1 = 2
+  it('cost increases between successive levels (~3× per level)', () => {
     const level1Cost = generatorUpgradeCost('selfies', 1, STATIC_DATA);
     const level2Cost = generatorUpgradeCost('selfies', 2, STATIC_DATA);
-    expect(level2Cost / level1Cost).toBeCloseTo(2, 1);
+    expect(level2Cost).toBeGreaterThan(level1Cost);
+    expect(level2Cost / level1Cost).toBeCloseTo(3, 0);
   });
 
   it('higher count increases effective engagement rate via (1+count) multiplier', () => {

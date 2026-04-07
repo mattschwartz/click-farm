@@ -280,13 +280,11 @@ export interface GeneratorDef {
    */
   buy_cost_multiplier: number;
   /**
-   * Engagement cost to upgrade from level 1 → 2.
-   * Subsequent levels track the reward curve 1:1 via `levelMultiplier`:
-   *   cost(L→L+1) = ceil(base_upgrade_cost × levelMultiplier(L+1))
-   * See proposals/accepted/generator-level-growth-curves.md.
+   * Hand-tuned cost table for each level upgrade. Index 0 = cost of L1→L2,
+   * index 1 = cost of L2→L3, etc. Length must equal max_level - 1.
    * TODO(game-designer): provisional — tune during balance pass (task #88).
    */
-  base_upgrade_cost: number;
+  upgrade_costs: number[];
   /**
    * Maximum upgradable level for this generator. Hard cap — the L=10
    * ceiling from the growth-curves proposal prevents runaway multipliers
