@@ -19,7 +19,6 @@ import {
 import { playClick } from './sfx.ts';
 import { GENERATOR_DISPLAY } from './display.ts';
 import { fmtCompact } from './format.ts';
-import { TieredNumber } from './TieredNumber.tsx';
 
 // Verb icon images — imported via Vite so they resolve to hashed asset URLs.
 import chirpImg from '../assets/chirp.png';
@@ -273,7 +272,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
 
   return (
     <div className="verb-btn-wrap">
-      <span className="verb-badge">+<TieredNumber value={perTap} /></span>
+      <span className="verb-badge">+{fmtCompact(perTap)}</span>
       <button
         ref={btnRef}
         className={`live-verb-btn${isSpotlight ? ' live-verb-spotlight' : ''}${isReady || atFloor ? ' live-verb-ready' : ' live-verb-cooldown'}`}
