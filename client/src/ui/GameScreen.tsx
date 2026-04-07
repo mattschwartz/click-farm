@@ -522,7 +522,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
       {/* Floating bottom-left toolbar — settings + player */}
       <div className="floating-toolbar">
         <span className="alpha-row">
-          <span className="alpha-version">v0.1.0</span>
+          <span className="alpha-version">v{__APP_VERSION__}</span>
           <span className="alpha-label">ALPHA</span>
         </span>
         <button
