@@ -93,8 +93,8 @@ export type SaveErrorListener = (e: SaveError) => void;
 /** Public read model returned by getSweepState(). Derived on every call. */
 export interface SweepState {
   active: boolean;
-  /** Number of affordable purchases across all tracks right now. */
-  previewCount: number;
+  /** Whether at least one purchase is affordable right now. */
+  canAfford: boolean;
 }
 
 /** Which track a sweep purchase targeted. */
@@ -197,7 +197,7 @@ export interface GameDriver {
   cancelSweep(): void;
   /**
    * Synchronous read of current sweep status and affordable-purchase count.
-   * previewCount is always recomputed from live state — accurate at any time.
+   * canAfford is always recomputed from live state — accurate at any time.
    */
   getSweepState(): SweepState;
   /**
@@ -654,7 +654,7 @@ export function createDriver(options: DriverOptions): GameDriver {
     getSweepState(): SweepState {
       return {
         active: sweep.active,
-        previewCount: buildAffordableList(state).length,
+        canAfford: buildAffordableList(state).length > 0,
       };
     },
 

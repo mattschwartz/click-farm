@@ -722,7 +722,7 @@ function makeSweeperDriver(engagementAmount: number = 1_000_000) {
 }
 
 describe('driver — sweep engine', () => {
-  it('getSweepState returns active=false and previewCount=0 on fresh low-engagement state', () => {
+  it('getSweepState returns active=false and canAfford=false on fresh low-engagement state', () => {
     const driver = createDriver({
       staticData: STATIC_DATA,
       now: () => 1_000_000,
@@ -733,15 +733,14 @@ describe('driver — sweep engine', () => {
     });
     const s = driver.getSweepState();
     expect(s.active).toBe(false);
-    expect(s.previewCount).toBe(0);
+    expect(s.canAfford).toBe(false);
   });
 
-  it('getSweepState.previewCount reflects affordable items when engagement is high', () => {
+  it('getSweepState.canAfford is true when engagement is high', () => {
     const { driver } = makeSweeperDriver(1_000_000);
     const s = driver.getSweepState();
     expect(s.active).toBe(false);
-    // chirps is owned — BUY, HIRE, and LVL UP should all be affordable at 1M engagement
-    expect(s.previewCount).toBeGreaterThan(0);
+    expect(s.canAfford).toBe(true);
   });
 
   it('startSweep is a no-op when already active', () => {

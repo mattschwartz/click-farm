@@ -72,18 +72,18 @@ function makeDriver(engagement: number = 1_000_000) {
 }
 
 describe('BUY ALL button — sweep driver contract', () => {
-  it('idle/available: getSweepState returns active=false and previewCount > 0 with high engagement', () => {
+  it('idle/available: getSweepState returns active=false and canAfford=true with high engagement', () => {
     const { driver } = makeDriver(1_000_000);
     const s = driver.getSweepState();
     expect(s.active).toBe(false);
-    expect(s.previewCount).toBeGreaterThan(0);
+    expect(s.canAfford).toBe(true);
   });
 
-  it('idle/empty: getSweepState returns previewCount=0 with no engagement', () => {
+  it('idle/empty: getSweepState returns canAfford=false with no engagement', () => {
     const { driver } = makeDriver(0);
     const s = driver.getSweepState();
     expect(s.active).toBe(false);
-    expect(s.previewCount).toBe(0);
+    expect(s.canAfford).toBe(false);
   });
 
   it('sweeping: getSweepState returns active=true after startSweep with affordable items', () => {
@@ -139,11 +139,11 @@ describe('BUY ALL button — sweep driver contract', () => {
     expect(ends).toHaveLength(0);
   });
 
-  it('previewCount updates to 0 after sweep exhausts funds', () => {
+  it('canAfford becomes false after sweep exhausts funds', () => {
     const buyCost = generatorBuyCost('chirps', 0, STATIC_DATA);
     const { driver } = makeDriver(buyCost);
     driver.startSweep();
     // After sweep ends, nothing more is affordable
-    expect(driver.getSweepState().previewCount).toBe(0);
+    expect(driver.getSweepState().canAfford).toBe(false);
   });
 });
