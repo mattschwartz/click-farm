@@ -527,6 +527,24 @@ export function verbYieldPerTap(
   return def.base_event_yield * (1 + generator.count) * (1 + generator.autoclicker_count) * clout * kit;
 }
 
+/**
+ * Engagement per single autoclicker fire. Same as manual tap but WITHOUT
+ * the (1 + autoclicker_count) amplifier — each autoclicker click earns
+ * the base per-event yield.
+ *
+ *   earned = base_event_yield × (1 + count) × clout × kit
+ */
+export function verbYieldPerAutoTap(
+  generator: GeneratorState,
+  state: GameState,
+  staticData: StaticData,
+): number {
+  const def = staticData.generators[generator.id];
+  const clout = cloutBonus(state.player.clout_upgrades, staticData);
+  const kit = kitEngagementBonus(state.player.creator_kit, staticData);
+  return def.base_event_yield * (1 + generator.count) * clout * kit;
+}
+
 // ---------------------------------------------------------------------------
 // Manual click — "Post" beat of the core loop
 // ---------------------------------------------------------------------------

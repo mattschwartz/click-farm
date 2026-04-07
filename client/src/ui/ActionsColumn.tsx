@@ -14,6 +14,7 @@ import type { GameState, GeneratorId, StaticData } from '../types.ts';
 import {
   verbCooldownMs,
   verbYieldPerTap,
+  verbYieldPerAutoTap,
 } from '../game-loop/index.ts';
 import { playClick } from './sfx.ts';
 import { GENERATOR_DISPLAY } from './display.ts';
@@ -142,6 +143,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
   const display = GENERATOR_DISPLAY[verbId];
   const color = VERB_COLOR[verbId] ?? display.color;
   const perTap = verbYieldPerTap(state.generators[verbId], state, staticData);
+  const perAuto = verbYieldPerAutoTap(state.generators[verbId], state, staticData);
   const def = staticData.generators[verbId];
   const cdMs = verbCooldownMs(state.generators[verbId].level, def.base_event_rate);
   const lastTap = state.player.last_manual_click_at[verbId] ?? 0;
@@ -193,10 +195,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
       if (prefersReducedMotion) return;
 
       const rect = btnRef.current?.getBoundingClientRect();
-      // Autoclicker yield per fire — strip the (1+autoclicker_count) manual-tap
-      // multiplier so autoclicker floats show base per-event yield, not the
-      // inflated manual-tap value.
-      const perAutoTap = perTap / (1 + autoCount);
+      const perAutoTap = perAuto;
 
       if (autoCount > AUTO_FLOAT_DENSITY_CAP) {
         // Batched float: +total ×N
@@ -232,7 +231,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick }: Liv
 
     const interval = window.setInterval(emitBurst, burstIntervalMs);
     return () => window.clearInterval(interval);
-  }, [autoCount, burstIntervalMs, perTap, prefersReducedMotion]);
+  }, [autoCount, burstIntervalMs, perAuto, prefersReducedMotion]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     // Only show float feedback if the cooldown gate will accept the tap.

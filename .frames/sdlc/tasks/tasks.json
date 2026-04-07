@@ -6270,7 +6270,7 @@
       "id": 156,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Manual tap yield scales with autoclicker count",
       "requester": "game-designer",
@@ -6293,7 +6293,8 @@
         "Existing tests updated, all tests pass, build succeeds"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     }
   ]
 }
