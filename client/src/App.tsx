@@ -16,6 +16,11 @@ import { DebugApp } from './ui/DebugApp.tsx';
 import { OfflineGainsModal } from './ui/OfflineGainsModal.tsx';
 import type { OfflineResult } from './offline/index.ts';
 import coverSrc from './assets/cover.png';
+import coverMobileSrc from './assets/cover-mobile.png';
+
+const isMobile =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(pointer: coarse)').matches;
 
 const SAVE_KEY = 'click_farm_save';
 
@@ -71,7 +76,7 @@ function NewGameGate({ onStart }: { onStart: () => void }) {
         animation: popping ? 'pop-shrink 250ms ease-in forwards' : undefined,
       }}>
         <img
-          src={coverSrc}
+          src={isMobile ? coverMobileSrc : coverSrc}
           alt="Game cover"
           style={{
             maxWidth: '75vw',
