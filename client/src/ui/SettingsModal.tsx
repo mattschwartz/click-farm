@@ -398,8 +398,11 @@ export function SettingsModal({
           {TAB_ORDER.map((tab) => (
             <button
               key={tab}
+              type="button"
               role="tab"
+              id={`settings-tab-${tab}`}
               aria-selected={activeTab === tab}
+              aria-controls="settings-tabpanel"
               className={`settings-tab${activeTab === tab ? ' settings-tab-active' : ''}`}
               onClick={() => setActiveTab(tab)}
             >
@@ -409,7 +412,12 @@ export function SettingsModal({
         </nav>
 
         {/* Mobile body — shows active tab content only */}
-        <div className="settings-body settings-body-tabbed" role="tabpanel">
+        <div
+          id="settings-tabpanel"
+          className="settings-body settings-body-tabbed"
+          role="tabpanel"
+          aria-labelledby={`settings-tab-${activeTab}`}
+        >
           {tabContent[activeTab]}
         </div>
 

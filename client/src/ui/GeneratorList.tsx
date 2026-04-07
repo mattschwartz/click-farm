@@ -579,23 +579,41 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
   const longPressTimer = useRef<number | null>(null);
   const popoverTimer = useRef<number | null>(null);
 
-  const handleTouchStart = () => {
-    longPressTimer.current = window.setTimeout(() => {
-      setCostPopover(true);
-      popoverTimer.current = window.setTimeout(() => setCostPopover(false), 2000);
-    }, 300);
-  };
-
-  const dismissPopover = () => {
+  const clearPopoverTimers = () => {
     if (longPressTimer.current !== null) {
       window.clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
-    setCostPopover(false);
     if (popoverTimer.current !== null) {
       window.clearTimeout(popoverTimer.current);
       popoverTimer.current = null;
     }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearPopoverTimers();
+    };
+  }, []);
+
+  const handleTouchStart = () => {
+    clearPopoverTimers();
+    longPressTimer.current = window.setTimeout(() => {
+      longPressTimer.current = null;
+      setCostPopover(true);
+      if (popoverTimer.current !== null) {
+        window.clearTimeout(popoverTimer.current);
+      }
+      popoverTimer.current = window.setTimeout(() => {
+        setCostPopover(false);
+        popoverTimer.current = null;
+      }, 2000);
+    }, 300);
+  };
+
+  const dismissPopover = () => {
+    clearPopoverTimers();
+    setCostPopover(false);
   };
 
   const handleClick = () => {

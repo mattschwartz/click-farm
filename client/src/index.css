@@ -36,7 +36,7 @@ body {
 /* Lock the document against page-level scroll on mobile phones.
    Individual scrollable containers (generator list, settings body, etc.)
    are unaffected — only the root viewport scroll is suppressed. */
-@media (max-width: 932px) {
+@media (max-width: 932px) and (pointer: coarse) {
   html, body {
     overflow: hidden;
     overscroll-behavior: none;

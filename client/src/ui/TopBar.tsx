@@ -129,7 +129,7 @@ export function TopBar({
           <TieredNumber value={displayedEngagement} />
           <img src={engagementIconSrc} alt="" className="engagement-icon" aria-hidden="true" />
           {/* Inline rate + followers stack — hidden on desktop, shown in landscape. */}
-          <span className="engagement-meta-stack" aria-hidden="true">
+          <span className="engagement-meta-stack">
             <span className="engagement-rate-inline">
               +<TieredNumber value={engagementRate} />/s
             </span>

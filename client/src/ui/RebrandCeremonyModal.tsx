@@ -292,7 +292,6 @@ function Phase1Review({
       onKeyDown={handleKeyDown}
     >
       <button
-        ref={cancelBtnRef}
         className="ceremony-close-btn"
         onClick={onCancel}
         aria-label="Cancel rebrand"
@@ -345,6 +344,7 @@ function Phase1Review({
 
       <div className="ceremony-actions">
         <button
+          ref={cancelBtnRef}
           className="ceremony-btn ceremony-btn-cancel ceremony-btn-cancel-bottom"
           onClick={onCancel}
         >
