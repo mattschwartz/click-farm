@@ -322,11 +322,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               onBuyAutoclicker={buyAutoclicker}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
             />
-            <CreatorKitPanel
-              state={state}
-              staticData={STATIC_DATA}
-              onBuy={buyKitItem}
-            />
+            {/* CreatorKitPanel hidden — to be redesigned */}
           </div>
           <PlatformPanel
             state={state}
