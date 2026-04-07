@@ -232,20 +232,21 @@ export function setSfxVolume(v: number): void {
 
 /** Skip to the previous track (wraps around). */
 export function prevTrack(): void {
-  if (!bgMusic) return;
+  ensureBgMusic();
   currentTrackIndex = (currentTrackIndex - 1 + OST_TRACKS.length) % OST_TRACKS.length;
   playCurrentTrack();
 }
 
 /** Skip to the next track (wraps around). */
 export function nextTrack(): void {
-  if (!bgMusic) return;
+  ensureBgMusic();
   currentTrackIndex = (currentTrackIndex + 1) % OST_TRACKS.length;
   playCurrentTrack();
 }
 
 /** Toggle play/pause on the current track. Returns true if now playing. */
 export function togglePlayPause(): boolean {
+  ensureBgMusic();
   if (!bgMusic) return false;
   if (bgMusic.paused) {
     bgMusic.play().catch(() => {});

@@ -8,7 +8,6 @@ import type {
   StaticData,
 } from '../types.ts';
 import { computeAllGeneratorEffectiveRates } from '../game-loop/index.ts';
-import { computeFollowerDistribution } from '../platform/index.ts';
 import {
   GENERATOR_DISPLAY,
   PLATFORM_DISPLAY,
@@ -30,17 +29,7 @@ interface Props {
 }
 
 export function PlatformPanel({ state, staticData, viralPlatformId }: Props) {
-  // Compute follower rates per platform for the rate indicators (UX §7.1).
   const engagementRates = computeAllGeneratorEffectiveRates(state, staticData);
-  const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
-  for (const id of Object.keys(engagementRates) as GeneratorId[]) {
-    ratesPerMs[id] = (engagementRates[id] ?? 0) / 1000;
-  }
-  const distribution = computeFollowerDistribution(
-    ratesPerMs,
-    state.platforms,
-    staticData,
-  );
 
   // Identify the single heaviest-contributing generator per platform for
   // the affinity-chip glow (UX §7.2).
@@ -55,15 +44,12 @@ export function PlatformPanel({ state, staticData, viralPlatformId }: Props) {
       {PLATFORM_ORDER.map((id) => {
         const p = state.platforms[id];
         const threshold = staticData.unlockThresholds.platforms[id] ?? 0;
-        // perPlatformRate is per-ms; convert to per-sec for display.
-        const ratePerSec = distribution.perPlatformRate[id] * 1000;
         return (
           <PlatformCard
             key={id}
             id={id}
             unlocked={p.unlocked}
             followers={p.followers}
-            ratePerSec={ratePerSec}
             unlockThreshold={threshold}
             staticData={staticData}
             heaviestGenerator={heaviestByPlatform[id]}
@@ -81,7 +67,6 @@ interface CardProps {
   id: PlatformId;
   unlocked: boolean;
   followers: number;
-  ratePerSec: number;
   unlockThreshold: number;
   staticData: StaticData;
   heaviestGenerator: GeneratorId | null;
@@ -93,7 +78,6 @@ function PlatformCard({
   id,
   unlocked,
   followers,
-  ratePerSec: _ratePerSec,
   unlockThreshold,
   staticData,
   heaviestGenerator,

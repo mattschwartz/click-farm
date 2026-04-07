@@ -1,12 +1,8 @@
-// Top bar — Engagement (P0) + Followers (P1).
+// Top bar — Click Farm title + Engagement counter.
 // Per UX spec §2 and §5.
 //
-// Per purchase-feedback-and-rate-visibility.md:
-// - §2.1: Rate is promoted to P0 weight — 20px/500 with P1 contrast.
-// - §3:   Engagement counter is smoothed via RAF interpolation at ~60fps
-//         so it never batches between 100ms game ticks.
-// - §5.1: Rate display flares (scale + color shift) when rate changes.
-// - §5.2: Delta readout appears inline for 800ms on rate change.
+// Engagement counter is smoothed via RAF interpolation at ~60fps
+// so it never batches between 100ms game ticks.
 
 import { useEffect, useRef, useState } from 'react';
 import { fmtCompactInt } from './format.ts';

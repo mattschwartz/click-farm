@@ -2,7 +2,7 @@
 // normal session. Implements UX spec §§2–8, §9, and §11.
 //
 // Zones (per UX §2):
-//   - Top bar (80px): Engagement + Followers
+//   - Top bar (80px): Title + Engagement
 //   - Post zone (left, 320px): click-to-post button
 //   - Generators (center, flex): ledger with category dividers
 //   - Platforms (right, 280px): 3 cards with follower counts
@@ -33,7 +33,6 @@ import { PlatformPanel } from './PlatformPanel.tsx';
 import { OfflineGainsModal } from './OfflineGainsModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
-// CreatorKitPanel hidden — to be redesigned
 import { SettingsModal } from './SettingsModal.tsx';
 import { useSettings } from './useSettings.ts';
 import { prevTrack, nextTrack, togglePlayPause, isMusicPlaying } from './sfx.ts';
@@ -101,7 +100,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     pauseLoop,
     resumeLoop,
     buyCloutUpgrade,
-    buyKitItem: _buyKitItem,
     saveError,
     clearSaveError,
     resetGame,
@@ -119,7 +117,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     settings,
     setReduceMotion,
     setSound,
-    toggleSound: _toggleSound,
     setMusicVolume,
     setSfxVolume,
   } = useSettings();
@@ -132,9 +129,9 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     return () => window.clearInterval(t);
   }, []);
 
-  const handlePrev = () => { prevTrack(); setMusicPlaying(true); };
-  const handleNext = () => { nextTrack(); setMusicPlaying(true); };
-  const handlePlayPause = () => { const playing = togglePlayPause(); setMusicPlaying(playing); };
+  const handlePrev = () => { prevTrack(); setMusicPlaying(isMusicPlaying()); };
+  const handleNext = () => { nextTrack(); setMusicPlaying(isMusicPlaying()); };
+  const handlePlayPause = () => { togglePlayPause(); setMusicPlaying(isMusicPlaying()); };
 
   // Render-time derived values --------------------------------------------
   const engagementRate = useMemo(() => {
