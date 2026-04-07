@@ -73,7 +73,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     manual_clickable: true,
     follower_conversion_rate: 0.10,
 
-    unlock_threshold: 200,
+    unlock_threshold: 100,
     base_buy_cost: 500,
     buy_cost_multiplier: 1.15,
     count_exponent: 1,
@@ -164,7 +164,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.11,
 
     unlock_threshold: 250_000,
-    base_buy_cost: 14_000_000,
+    base_buy_cost: 25_000_000,
     buy_cost_multiplier: 1.15,
     count_exponent: 1,
     upgrade_costs: [10_000_000, 30_000_000, 100_000_000, 300_000_000, 1_000_000_000, 3_000_000_000, 10_000_000_000, 30_000_000_000, 100_000_000_000],
@@ -185,7 +185,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.06,
 
     unlock_threshold: 5_000_000,
-    base_buy_cost: 200_000_000,
+    base_buy_cost: 100_000_000,
     buy_cost_multiplier: 1.15,
     count_exponent: 1,
     upgrade_costs: [100_000_000, 300_000_000, 1_000_000_000, 3_000_000_000, 10_000_000_000, 30_000_000_000, 100_000_000_000, 300_000_000_000, 1_000_000_000_000],
@@ -297,7 +297,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       deepfakes: 1.0,
       algorithmic_prophecy: 1.0,
     },
-    unlock_threshold: 200,
+    unlock_threshold: 100,
   },
   skroll: {
     id: 'skroll',
