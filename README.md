@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="client/src/assets/cover.png" alt="Click Farm — Grow Your Fame" width="600" />
+  <a href="https://click-farm.barelyconscious.games/">
+    <img src="client/src/assets/cover.png" alt="Click Farm — Grow Your Fame" width="600" />
+  </a>
 </p>
 
 <h1 align="center">Click Farm</h1>
