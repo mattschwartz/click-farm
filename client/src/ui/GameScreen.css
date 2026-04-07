@@ -953,8 +953,9 @@
   font-size: 11px;
   color: var(--text-receded);
   font-style: italic;
-  grid-column: 2 / -1;
-  text-align: right;
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 12px 0;
 }
 
 /* Unowned row layout — badge + info + full buy button (§4.2). */
