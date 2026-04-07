@@ -18,10 +18,10 @@ import { canAffordEngagement, spendEngagement } from '../model/index.ts';
 /**
  * Engagement cost to buy the next unit of a generator.
  *
- *   cost = ceil(base_buy_cost × buy_cost_multiplier^currentCount)
+ *   cost = base_buy_cost × buy_cost_multiplier^currentCount
  *
  * Standard clicker scaling: each additional unit costs slightly more than the
- * last. The ceil keeps costs whole numbers for clean UI display.
+ * last. Full precision — no rounding.
  *
  * TODO(game-designer): provisional formula and base values — tune during balance pass.
  */
@@ -36,8 +36,8 @@ export function generatorBuyCost(
     );
   }
   const def = staticData.generators[generatorId];
-  return Math.ceil(
-    def.base_buy_cost * Math.pow(def.buy_cost_multiplier, currentCount),
+  return (
+    def.base_buy_cost * Math.pow(def.buy_cost_multiplier, currentCount)
   );
 }
 

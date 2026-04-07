@@ -55,7 +55,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.07,
 
     unlock_threshold: 0,
-    base_buy_cost: 5,
+    base_buy_cost: 1.5,
     buy_cost_multiplier: 1.15,
     base_upgrade_cost: 50,
     max_level: 10,

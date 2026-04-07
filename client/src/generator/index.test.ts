@@ -61,7 +61,7 @@ function stateWithOwnedGenerator(
 describe('generatorBuyCost', () => {
   it('returns the base cost when count is 0', () => {
     const cost = generatorBuyCost('selfies', 0, STATIC_DATA);
-    expect(cost).toBe(Math.ceil(STATIC_DATA.generators.selfies.base_buy_cost));
+    expect(cost).toBe(STATIC_DATA.generators.selfies.base_buy_cost);
   });
 
   it('increases monotonically with each unit owned', () => {
@@ -74,16 +74,14 @@ describe('generatorBuyCost', () => {
 
   it('applies buy_cost_multiplier per unit owned', () => {
     const def = STATIC_DATA.generators.selfies;
-    const expected = Math.ceil(
-      def.base_buy_cost * Math.pow(def.buy_cost_multiplier, 5),
-    );
-    expect(generatorBuyCost('selfies', 5, STATIC_DATA)).toBe(expected);
+    const expected =
+      def.base_buy_cost * Math.pow(def.buy_cost_multiplier, 5);
+    expect(generatorBuyCost('selfies', 5, STATIC_DATA)).toBeCloseTo(expected);
   });
 
-  it('is always a positive integer (ceil)', () => {
+  it('is always positive', () => {
     for (const id of Object.keys(STATIC_DATA.generators) as (keyof typeof STATIC_DATA.generators)[]) {
       const cost = generatorBuyCost(id, 0, STATIC_DATA);
-      expect(Number.isInteger(cost)).toBe(true);
       expect(cost).toBeGreaterThan(0);
     }
   });
