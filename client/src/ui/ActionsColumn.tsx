@@ -244,7 +244,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
     return () => window.clearInterval(interval);
   }, [autoCount, burstIntervalMs, perAuto, prefersReducedMotion, showFloats, isPaused]);
 
-  const handleClick = useCallback((e: React.MouseEvent) => {
+  const handleTap = useCallback((e: React.PointerEvent | React.MouseEvent) => {
     // Only show float feedback if the cooldown gate will accept the tap.
     const cdNow = Date.now();
     const lastTapNow = state.player.last_manual_click_at[verbId] ?? 0;
@@ -254,7 +254,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
     onClick(verbId);
     const id = nextId.current++;
 
-    // Position the float near the mouse cursor with random scatter.
+    // Position the float near the pointer with random scatter.
     // Keyboard-triggered clicks have clientX/Y = 0 — fall back to center.
     const rect = btnRef.current?.getBoundingClientRect();
     const isKeyboard = e.clientX === 0 && e.clientY === 0;
@@ -290,7 +290,8 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
           '--verb-color-rgb': hexToRgb(color),
           '--cd-fill': `${fillHeight}%`,
         } as React.CSSProperties}
-        onClick={handleClick}
+        onPointerDown={handleTap}
+        onClick={(e) => e.preventDefault()}
         aria-label={`${display.name}, ${fmtCompact(perTap)} engagement per tap, cooldown ${Math.round(cdMs)}ms${autoCountForBadge > 0 ? `, ${autoCountForBadge} autoclickers` : ''}`}
       >
 
