@@ -239,32 +239,39 @@ function GeneratorRow({
   // Declared before the sweep-hit effect so the ref is available.
   const rowRef = useRef<HTMLDivElement>(null);
 
+  // Cost float — one at a time per row, used by both sweep and manual purchases.
+  const [costFloat, setCostFloat] = useState<{ key: number; cost: number; top: number; right: number } | null>(null);
+  const costFloatId = useRef(0);
+  const costFloatTimer = useRef<number | null>(null);
+
+  const spawnCostFloat = (btnType: SweepItemType, cost: number) => {
+    const btnSelector = btnType === 'buy' ? '.row-btn:not(.row-btn-upgrade)'
+      : btnType === 'upgrade' ? '.row-btn-upgrade'
+      : '.purchase-pill-auto';
+    const btnEl = rowRef.current?.querySelector(btnSelector);
+    const rect = (btnEl ?? rowRef.current)?.getBoundingClientRect();
+    const key = costFloatId.current++;
+    const top = rect ? rect.top - 4 : 0;
+    const right = rect ? window.innerWidth - rect.right : 0;
+    setCostFloat({ key, cost, top, right });
+    if (costFloatTimer.current !== null) window.clearTimeout(costFloatTimer.current);
+    costFloatTimer.current = window.setTimeout(() => {
+      setCostFloat((prev) => prev?.key === key ? null : prev);
+      costFloatTimer.current = null;
+    }, 800);
+  };
+
   // Sweep-hit animation — fires when a sweep purchase targets this row's
   // buy / upgrade / autoclicker button. Toggles a class for 64ms + spawns cost float.
   const [sweepHitBtn, setSweepHitBtn] = useState<SweepItemType | null>(null);
-  // One float at a time per row — replace on each purchase to avoid stacking.
-  const [sweepFloat, setSweepFloat] = useState<{ key: number; cost: number; top: number; right: number } | null>(null);
-  const sweepFloatId = useRef(0);
   const prevSweepSeq = useRef(0);
   useEffect(() => {
     if (sweepHitType && sweepHitSeq !== prevSweepSeq.current) {
       prevSweepSeq.current = sweepHitSeq;
       setSweepHitBtn(sweepHitType);
       const t = window.setTimeout(() => setSweepHitBtn(null), 64);
-      // Position at the purchased button's viewport location.
-      const btnSelector = sweepHitType === 'buy' ? '.row-btn:not(.row-btn-upgrade)'
-        : sweepHitType === 'upgrade' ? '.row-btn-upgrade'
-        : '.purchase-pill-auto';
-      const btnEl = rowRef.current?.querySelector(btnSelector);
-      const rect = (btnEl ?? rowRef.current)?.getBoundingClientRect();
-      const key = sweepFloatId.current++;
-      const top = rect ? rect.top - 4 : 0;
-      const right = rect ? window.innerWidth - rect.right : 0;
-      setSweepFloat({ key, cost: sweepHitCost, top, right });
-      const t2 = window.setTimeout(() => {
-        setSweepFloat((prev) => prev?.key === key ? null : prev);
-      }, 800);
-      return () => { window.clearTimeout(t); window.clearTimeout(t2); };
+      spawnCostFloat(sweepHitType, sweepHitCost);
+      return () => { window.clearTimeout(t); };
     }
   }, [sweepHitType, sweepHitCost, sweepHitSeq]);
 
@@ -395,7 +402,7 @@ function GeneratorRow({
           costText={fmtCompact(buyCost)}
           canBuy={canBuy}
           count={g.count}
-          onBuy={() => onBuy(id)}
+          onBuy={() => { onBuy(id); spawnCostFloat('buy', buyCost); }}
           sweepHit={sweepHitBtn === 'buy'}
         />
         {/* SPEED — fires upgrade directly (task #150).
@@ -408,7 +415,7 @@ function GeneratorRow({
           breatheDelayMs={breatheDelayMs}
           canAfford={state.player.engagement >= upgradeCost}
           level={g.level}
-          onUpgrade={() => onUpgrade(id)}
+          onUpgrade={() => { onUpgrade(id); spawnCostFloat('upgrade', upgradeCost); }}
           sweepHit={sweepHitBtn === 'upgrade'}
           title={
             lvlState === 'maxed'
@@ -432,20 +439,20 @@ function GeneratorRow({
             canBuy={canBuyAuto}
             autoclickerCount={g.autoclicker_count}
             verbColor={display.color}
-            onBuy={() => onBuyAutoclicker(id)}
+            onBuy={() => { onBuyAutoclicker(id); spawnCostFloat('autoclicker', autoCost); }}
             generatorName={display.name}
             sweepHit={sweepHitBtn === 'autoclicker'}
           />
         )}
       </div>
-      {/* Sweep cost float — portalled to body to escape backdrop-filter containing block */}
-      {sweepFloat && createPortal(
+      {/* Cost float — portalled to body to escape backdrop-filter containing block */}
+      {costFloat && createPortal(
         <span
-          key={sweepFloat.key}
+          key={costFloat.key}
           className="sweep-cost-float"
-          style={{ top: sweepFloat.top, right: sweepFloat.right }}
+          style={{ top: costFloat.top, right: costFloat.right }}
         >
-          &minus;{fmtCompact(sweepFloat.cost)}
+          &minus;{fmtCompact(costFloat.cost)}
         </span>,
         document.body,
       )}
