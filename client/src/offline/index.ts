@@ -155,6 +155,7 @@ export function calculateOffline(
   let newPlayer = {
     ...state.player,
     engagement: clampEngagement(state.player.engagement + engagementGained),
+    lifetime_engagement: state.player.lifetime_engagement + engagementGained,
     lifetime_followers: state.player.lifetime_followers + totalFollowersGained,
   };
   // syncTotalFollowers recomputes total_followers from platforms.

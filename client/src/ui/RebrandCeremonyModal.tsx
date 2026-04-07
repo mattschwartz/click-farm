@@ -68,6 +68,7 @@ export function buildResetItems(state: GameState): ResetItem[] {
 export interface PersistItem {
   label: string;
   value: string;
+  highlight?: boolean;
 }
 
 /** Items to show in "What persists" — meta-state that survives the rebrand. */
@@ -79,7 +80,8 @@ export function buildPersistItems(state: GameState): PersistItem[] {
   return [
     { label: 'Clout', value: '' },
     { label: 'Clout upgrades', value: `${ownedUpgrades} owned` },
-    { label: 'Lifetime followers', value: fmtCompactInt(state.player.lifetime_followers) },
+    { label: 'Lifetime followers', value: fmtCompactInt(state.player.lifetime_followers), highlight: true },
+    { label: 'Lifetime engagement', value: fmtCompactInt(state.player.lifetime_engagement), highlight: true },
     { label: 'Rebrand count', value: `→ ${state.player.rebrand_count + 1}` },
   ];
 }
@@ -323,11 +325,11 @@ function Phase1Review({
         <div className="ceremony-column">
           <p className="ceremony-column-header">What persists</p>
           {persistItems.map((item) => (
-            <div key={item.label} className="ceremony-column-row">
+            <div key={item.label} className={`ceremony-column-row${item.highlight ? ' ceremony-column-row-highlight' : ''}`}>
               <span className="ceremony-col-bullet">▸</span>
               <span className="ceremony-col-label">{item.label}</span>
               {item.value && (
-                <span className="ceremony-col-value">{item.value}</span>
+                <span className={`ceremony-col-value${item.highlight ? ' ceremony-col-value-highlight' : ''}`}>{item.value}</span>
               )}
             </div>
           ))}

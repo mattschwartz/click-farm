@@ -17,7 +17,7 @@ import { recomputeAllRetention } from '../audience-mood/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 12;
+const CURRENT_VERSION = 13;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -705,6 +705,25 @@ export function migrateV11toV12(data: SaveData): SaveData {
   };
 }
 
+/**
+ * V12→V13: Add lifetime_engagement to player (defaults to 0).
+ * Existing saves won't have tracked this, so it starts fresh.
+ */
+export function migrateV12toV13(data: SaveData): SaveData {
+  const state = data.state as GameState;
+  return {
+    ...data,
+    version: 13,
+    state: {
+      ...state,
+      player: {
+        ...state.player,
+        lifetime_engagement: (state.player as Record<string, unknown>).lifetime_engagement as number ?? 0,
+      },
+    },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -750,6 +769,10 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 11) {
     current = migrateV11toV12(current);
+  }
+
+  if (current.version === 12) {
+    current = migrateV12toV13(current);
   }
 
   if (current.version !== CURRENT_VERSION) {

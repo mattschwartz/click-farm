@@ -314,6 +314,7 @@ export function tick(
   let player: Player = {
     ...state.player,
     engagement: clampEngagement(state.player.engagement + engagementEarned),
+    lifetime_engagement: state.player.lifetime_engagement + engagementEarned,
   };
 
   // 3a. Audience Mood pressure update (architect resolution 2026-04-05).
@@ -591,6 +592,7 @@ export function postClick(
     player: {
       ...state.player,
       engagement: clampEngagement(state.player.engagement + earned),
+      lifetime_engagement: state.player.lifetime_engagement + earned,
       last_manual_click_at: {
         ...state.player.last_manual_click_at,
         [verbId]: now,

@@ -2033,6 +2033,13 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   font-size: 12px;
 }
 
+.ceremony-col-value-highlight {
+  color: #FFD66B;
+  font-weight: 700;
+  font-size: 13px;
+  text-shadow: 0 0 8px rgba(255, 214, 107, 0.3);
+}
+
 /* Actions */
 .ceremony-actions {
   display: flex;

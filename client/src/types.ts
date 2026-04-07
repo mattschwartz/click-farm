@@ -118,6 +118,8 @@ export interface Player {
   total_followers: number;
   /** Total followers ever earned across all runs. Never resets. ≥ 0. */
   lifetime_followers: number;
+  /** Total engagement ever earned across all runs. Never resets. ≥ 0. */
+  lifetime_engagement: number;
   /** Number of completed rebrands. ≥ 0. */
   rebrand_count: number;
   /** Purchased permanent meta-upgrades. Values ≥ 0. Survives rebrand. */

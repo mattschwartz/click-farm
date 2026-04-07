@@ -62,6 +62,7 @@ export function createPlayer(now: number = Date.now()): Player {
     clout: 0,
     total_followers: 0,
     lifetime_followers: 0,
+    lifetime_engagement: 0,
     rebrand_count: 0,
     clout_upgrades,
     creator_kit: {} as Record<KitItemId, number>,
