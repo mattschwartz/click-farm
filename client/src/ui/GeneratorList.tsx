@@ -685,7 +685,7 @@ function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit 
 
 /** Label text for the BUY ALL button given current sweep state. */
 export function buyAllLabel(sweepActive: boolean): string {
-  return sweepActive ? 'STOP' : 'RUSH BUY';
+  return sweepActive ? 'BUYING...' : 'RUSH BUY (HOLD)';
 }
 
 /** Whether the BUY ALL button should be disabled. */
@@ -708,23 +708,26 @@ function BuyAllButton({ sweepActive, canAfford, onStartSweep, onCancelSweep }: B
   const disabled = buyAllDisabled(sweepActive, canAfford);
   const label = buyAllLabel(sweepActive);
 
-  const handleClick = () => {
-    if (disabled) return;
-    if (sweepActive) {
-      onCancelSweep();
-    } else {
-      onStartSweep();
-    }
+  const handleDown = () => {
+    if (disabled || sweepActive) return;
+    onStartSweep();
+  };
+
+  const handleUp = () => {
+    if (sweepActive) onCancelSweep();
   };
 
   return (
     <button
       type="button"
       className={`buy-all-btn${sweepActive ? ' buy-all-btn-sweeping' : ''}${disabled ? ' buy-all-btn-empty' : ''}`}
-      onClick={handleClick}
+      onPointerDown={handleDown}
+      onPointerUp={handleUp}
+      onPointerLeave={handleUp}
+      onPointerCancel={handleUp}
       disabled={disabled}
-      aria-label={sweepActive ? 'Stop auto-buy sweep' : 'Rush buy all affordable upgrades'}
-      title={sweepActive ? 'Stop' : 'Rush buy'}
+      aria-label={sweepActive ? 'Buying — release to stop' : 'Hold to rush buy all affordable upgrades'}
+      title={sweepActive ? 'Release to stop' : 'Hold to rush buy'}
     >
       {label}
     </button>

@@ -96,12 +96,12 @@ describe('shouldApplyManyReady', () => {
 // ---------------------------------------------------------------------------
 
 describe('buyAllLabel', () => {
-  it('returns STOP when sweep is active', () => {
-    expect(buyAllLabel(true)).toBe('STOP');
+  it('returns BUYING... when sweep is active', () => {
+    expect(buyAllLabel(true)).toBe('BUYING...');
   });
 
-  it('returns RUSH BUY when idle', () => {
-    expect(buyAllLabel(false)).toBe('RUSH BUY');
+  it('returns RUSH BUY (HOLD) when idle', () => {
+    expect(buyAllLabel(false)).toBe('RUSH BUY (HOLD)');
   });
 });
 
@@ -114,7 +114,7 @@ describe('buyAllDisabled', () => {
     expect(buyAllDisabled(false, true)).toBe(false);
   });
 
-  it('is enabled when sweeping (STOP is tappable), even if nothing affordable', () => {
+  it('is not disabled when sweeping, even if nothing affordable', () => {
     expect(buyAllDisabled(true, false)).toBe(false);
     expect(buyAllDisabled(true, true)).toBe(false);
   });
