@@ -1624,7 +1624,9 @@ html[data-reduce-motion="true"] .sweep-cost-float {
 .offline-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(var(--palette-black-rgb),0.55);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   z-index: 10;
   display: flex;
   align-items: center;
@@ -1641,14 +1643,14 @@ html[data-reduce-motion="true"] .sweep-cost-float {
 }
 
 .offline-modal {
-  background: var(--surface-overlay);
-  border: 1px solid var(--border-default);
+  background: transparent;
+  border: none;
+  box-shadow: none;
   border-radius: 10px;
   padding: 28px;
   width: 480px;
   max-width: 90vw;
   color: var(--text-primary);
-  box-shadow: var(--panel-shadow);
 }
 
 .offline-modal h2 {
