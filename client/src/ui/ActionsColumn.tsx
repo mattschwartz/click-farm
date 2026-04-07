@@ -232,6 +232,9 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
       }
     };
 
+    // Fire immediately so HIRE purchases give instant visual feedback,
+    // then continue on the regular interval.
+    emitBurst();
     const interval = window.setInterval(emitBurst, burstIntervalMs);
     return () => window.clearInterval(interval);
   }, [autoCount, burstIntervalMs, perAuto, prefersReducedMotion, showFloats, isPaused]);
