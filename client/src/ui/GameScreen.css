@@ -4500,6 +4500,60 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     opacity: 0.65;
   }
 
+  /* --- Modals: max-height/max-width constraints (§8) ---------------------- */
+
+  /* Shop modal — constrain to viewport with breathing room; body already
+   * scrolls via overflow-y: auto on .shop-modal. */
+  .shop-modal {
+    max-height: calc(100dvh - 80px);
+    max-width: calc(100vw - 80px);
+  }
+
+  /* Settings modal — body scrolls via .settings-body overflow-y: auto. */
+  .settings-modal {
+    max-height: calc(100dvh - 80px);
+    max-width: calc(100vw - 80px);
+  }
+
+  /* Offline gains modal — constrain and allow internal scroll. */
+  .offline-modal {
+    max-height: calc(100dvh - 80px);
+    max-width: calc(100vw - 80px);
+    overflow-y: auto;
+  }
+
+  /* Rebrand Ceremony — fullscreen on landscape phones (§8).
+   * Each phase modal (eulogy / commit / dissolution) fills the overlay.
+   * Stanzas left-aligned for readability in wide/shallow viewport.
+   * Buttons centered — same as portrait mobile spec. */
+  .ceremony-modal,
+  .ceremony-modal-eulogy,
+  .ceremony-modal-commit,
+  .ceremony-modal-dissolution {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .eulogy-stanzas {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .eulogy-stanza {
+    text-align: left;
+  }
+
+  .ceremony-actions {
+    justify-content: center;
+  }
+
 } /* end @media landscape phone */
 
 /* Suppress engagement hover tooltip on touch devices — the inline rate

@@ -7160,7 +7160,7 @@
       "alias": "E7",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Landscape modal max-height constraints",
       "requester": "architect",
@@ -7195,7 +7195,8 @@
         "Desktop modals unchanged"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 178,
