@@ -4118,9 +4118,9 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
 
 /* Affordable SUPER — verb-tinted with elevated visual weight */
 .purchase-pill-super.purchase-pill-affordable {
-  border: 2px solid rgba(var(--pill-color-rgb), 0.50);
-  background: rgba(var(--pill-color-rgb), 0.25);
-  box-shadow: 0 0 8px rgba(var(--pill-color-rgb), 0.30);
+  border: 2px solid rgba(255, 140, 40, 0.50);
+  background: rgba(255, 140, 40, 0.18);
+  box-shadow: 0 0 8px rgba(255, 140, 40, 0.30);
   color: var(--text-primary);
   position: relative;
   overflow: hidden;
