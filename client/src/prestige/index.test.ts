@@ -221,6 +221,13 @@ describe('applyRebrand — preservation of meta', () => {
     expect(next.player.run_start_time).toBe(T0 + 5_000);
   });
 
+  it('wipes verb_gear — per-run gear does NOT survive rebrand', () => {
+    const state = seedState({ total_followers: 1_000 });
+    (state.player.verb_gear as Record<string, number>).chirps = 2;
+    (state.player.verb_gear as Record<string, number>).selfies = 1;
+    const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
+    expect(next.player.verb_gear).toEqual({});
+  });
 });
 
 // ---------------------------------------------------------------------------

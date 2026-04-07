@@ -7830,7 +7830,7 @@
       "alias": "E1",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Verb gear module — types, static data, pure functions, state init, rebrand wipe",
       "requester": "architect",
@@ -7884,7 +7884,8 @@
       "open_questions": [],
       "blocked_on": [
         185
-      ]
+      ],
+      "date_completed": "2026-04-07"
     },
     {
       "id": 193,
@@ -7969,8 +7970,7 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        185,
-        192
+        185
       ]
     },
     {
@@ -8007,9 +8007,7 @@
         "All tests pass"
       ],
       "open_questions": [],
-      "blocked_on": [
-        192
-      ]
+      "blocked_on": []
     },
     {
       "id": 196,
@@ -8056,7 +8054,6 @@
       ],
       "open_questions": [],
       "blocked_on": [
-        192,
         194,
         195
       ]

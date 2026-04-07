@@ -51,6 +51,31 @@ export type UpgradeEffect =
   | { type: 'platform_headstart'; platform_id: PlatformId };
 
 // ---------------------------------------------------------------------------
+// Verb Gear — per-run per-verb equipment upgrades purchased with Engagement,
+// wiped on rebrand (architecture/verb-gear.md)
+// ---------------------------------------------------------------------------
+
+/** The 5 manual-clickable generator IDs that have gear items. */
+export type VerbGearId =
+  | 'chirps'
+  | 'selfies'
+  | 'livestreams'
+  | 'podcasts'
+  | 'viral_stunts';
+
+export interface VerbGearDef {
+  id: VerbGearId;
+  /** Display name ("Mechanical Keyboard", "Phone", etc.) */
+  name: string;
+  /** Maximum purchasable level. >= 1. */
+  max_level: number;
+  /** Engagement cost per level, ascending. Length = max_level. */
+  cost: number[];
+  /** Cumulative multiplier at each level, ascending. Length = max_level. */
+  multipliers: number[];
+}
+
+// ---------------------------------------------------------------------------
 // SnapshotState — captured on close, used by offline calculator
 // ---------------------------------------------------------------------------
 
@@ -86,6 +111,11 @@ export interface Player {
   rebrand_count: number;
   /** Purchased permanent meta-upgrades. Values ≥ 0. Survives rebrand. */
   clout_upgrades: Record<UpgradeId, number>;
+  /**
+   * Per-run verb gear purchases. Values ≥ 0 and ≤ item's max_level.
+   * **Wiped on rebrand.** See architecture/verb-gear.md.
+   */
+  verb_gear: Record<VerbGearId, number>;
   /** Epoch ms when the current run began. */
   run_start_time: number;
   /**
@@ -336,6 +366,7 @@ export interface StaticData {
   generators: Record<GeneratorId, GeneratorDef>;
   platforms: Record<PlatformId, PlatformDef>;
   cloutUpgrades: Record<UpgradeId, CloutUpgradeDef>;
+  verbGear: Record<VerbGearId, VerbGearDef>;
   unlockThresholds: {
     /**
      * Total followers required to unlock a generator. Post-prestige

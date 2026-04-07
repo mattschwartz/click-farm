@@ -29,6 +29,7 @@ import type {
   Player,
   StaticData,
   UpgradeId,
+  VerbGearId,
   ViralBurstState,
 } from '../types.ts';
 import { spendClout } from '../model/index.ts';
@@ -172,6 +173,9 @@ export function applyRebrand(
     clout: state.player.clout + result.cloutEarned,
     rebrand_count: state.player.rebrand_count + 1,
     run_start_time: now,
+    // verb_gear is per-run (architecture/verb-gear.md §Rebrand) — wiped
+    // here and MUST NOT appear in any preservation list.
+    verb_gear: {} as Record<VerbGearId, number>,
     // last_manual_click_at reset — per arch spec, cooldown timestamps are
     // meaningless after rebrand wipes generator count and level.
     last_manual_click_at: {} as Record<GeneratorId, number>,

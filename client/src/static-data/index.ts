@@ -16,6 +16,8 @@ import type {
   CloutUpgradeDef,
   UpgradeId,
   ViralBurstConfig,
+  VerbGearDef,
+  VerbGearId,
   AudienceMoodStaticData,
 } from '../types.ts';
 
@@ -407,6 +409,53 @@ const VIRAL_BURST_CONFIG: ViralBurstConfig = {
 };
 
 // ---------------------------------------------------------------------------
+// Verb Gear — per-verb equipment upgrades (architecture/verb-gear.md)
+//
+// One gear item per manual verb. Each level provides ~10x multiplier.
+// Costs are in Engagement. Balance values from proposal §3 — all values are
+// tuning targets owned by game-designer.
+// BALANCE: starting cells — all five item definitions below.
+// ---------------------------------------------------------------------------
+
+const VERB_GEAR_DEFS: Record<VerbGearId, VerbGearDef> = {
+  chirps: {
+    id: 'chirps',
+    name: 'Mechanical Keyboard',
+    max_level: 3,
+    cost: [2e9, 2e12, 2e15],         // 2B, 2T, 2Qa
+    multipliers: [10, 100, 1000],     // cumulative per-level
+  },
+  selfies: {
+    id: 'selfies',
+    name: 'Phone',
+    max_level: 3,
+    cost: [20e9, 20e12, 20e15],       // 20B, 20T, 20Qa
+    multipliers: [10, 100, 1000],
+  },
+  livestreams: {
+    id: 'livestreams',
+    name: 'Camera',
+    max_level: 3,
+    cost: [200e9, 200e12, 200e15],    // 200B, 200T, 200Qa
+    multipliers: [10, 100, 1000],
+  },
+  podcasts: {
+    id: 'podcasts',
+    name: 'Microphone',
+    max_level: 3,
+    cost: [2e12, 2e15, 2e18],        // 2T, 2Qa, 2Qi
+    multipliers: [10, 100, 1000],
+  },
+  viral_stunts: {
+    id: 'viral_stunts',
+    name: 'Shameless',
+    max_level: 3,
+    cost: [20e12, 20e15, 20e18],     // 20T, 20Qa, 20Qi
+    multipliers: [10, 100, 1000],
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Audience Mood tuning
 //
 // A "post" is a per-tick contribution from one owned generator (architect
@@ -436,6 +485,7 @@ export const STATIC_DATA: StaticData = {
   generators: GENERATOR_DEFS,
   platforms: PLATFORM_DEFS,
   cloutUpgrades: CLOUT_UPGRADE_DEFS,
+  verbGear: VERB_GEAR_DEFS,
   unlockThresholds: {
     // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
     // intentionally absent — they are unlocked only via Clout `generator_unlock`
