@@ -116,13 +116,13 @@ describe('integration — end-to-end play loop', () => {
     });
     driver.step(1); // unlock chirps
     // chirps cooldown at level=1 = max(50, 1000/(1×1.0)) = 1000ms
-    for (let i = 0; i < 10; i++) { t += 1100; driver.click('chirps'); }
+    for (let i = 0; i < 40; i++) { t += 1100; driver.click('chirps'); }
 
     const before = driver.getState().player.engagement;
-    // chirps buy cost at count=0 is 1.5 × 1.15^0 = 1.5
+    // chirps buy cost at count=0 is 15 × 1.215^0 = 15
     driver.buy('chirps');
     const after = driver.getState().player.engagement;
-    expect(before - after).toBeCloseTo(1.5);
+    expect(before - after).toBeCloseTo(15);
   });
 
   it('follower totals stay consistent with platform sums across a long run', () => {

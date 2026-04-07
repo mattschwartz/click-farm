@@ -55,13 +55,13 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.07,
 
     unlock_threshold: 0,
-    base_buy_cost: 1.5,
+    base_buy_cost: 15,
     buy_cost_multiplier: 1.215,
-    // Hand-tuned ~3× ramp: cheap start, trophy finish.
-    upgrade_costs: [10, 30, 100, 300, 1_000, 3_000, 10_000, 30_000, 100_000],
+    count_exponent: 1.5,
+    upgrade_costs: [100, 300, 1_000, 3_000, 10_000, 30_000, 100_000, 300_000, 1_000_000],
     max_level: 10,
-    base_autoclicker_cost: 5,
-    autoclicker_cost_multiplier: 1.5,
+    base_autoclicker_cost: 50,
+    autoclicker_cost_multiplier: 2.0,
   },
   // §14a — ladder verb. Retuned: yield=5.0, rate=0.2 → passive 1.0 eng/s
   // at autoclicker_count=1, count=0.
@@ -69,16 +69,17 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   selfies: {
     id: 'selfies',
     base_event_yield: 100,
-    base_event_rate: 0.2,
+    base_event_rate: 0.154,
     manual_clickable: true,
     follower_conversion_rate: 0.10,
 
     unlock_threshold: 100,
-    base_buy_cost: 10,
+    base_buy_cost: 100,
     buy_cost_multiplier: 1.15,
-    upgrade_costs: [20, 60, 200, 600, 2_000, 6_000, 20_000, 60_000, 200_000],
+    count_exponent: 1,
+    upgrade_costs: [200, 600, 2_000, 6_000, 20_000, 60_000, 200_000, 600_000, 2_000_000],
     max_level: 10,
-    base_autoclicker_cost: 50,
+    base_autoclicker_cost: 500,
     autoclicker_cost_multiplier: 1.5,
   },
   // §14b — passive-only. yield=1, rate=5.0 (preserved).
@@ -90,9 +91,10 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.08,
 
     unlock_threshold: 50,
-    base_buy_cost: 100,
+    base_buy_cost: 1_000,
     buy_cost_multiplier: 1.15,
-    upgrade_costs: [100, 300, 1_000, 3_000, 10_000, 30_000, 100_000, 300_000, 1_000_000],
+    count_exponent: 1,
+    upgrade_costs: [1_000, 3_000, 10_000, 30_000, 100_000, 300_000, 1_000_000, 3_000_000, 10_000_000],
     max_level: 10,
     base_autoclicker_cost: 0,    // passive-only — no manual tap
     autoclicker_cost_multiplier: 0,
@@ -106,9 +108,10 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.05,
 
     unlock_threshold: 200,
-    base_buy_cost: 1_100,
+    base_buy_cost: 11_000,
     buy_cost_multiplier: 1.15,
-    upgrade_costs: [1_000, 3_000, 10_000, 30_000, 100_000, 300_000, 1_000_000, 3_000_000, 10_000_000],
+    count_exponent: 1,
+    upgrade_costs: [10_000, 30_000, 100_000, 300_000, 1_000_000, 3_000_000, 10_000_000, 30_000_000, 100_000_000],
     max_level: 10,
     base_autoclicker_cost: 0,    // passive-only — no manual tap
     autoclicker_cost_multiplier: 0,
@@ -122,9 +125,10 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.07,
 
     unlock_threshold: 1_000,
-    base_buy_cost: 12_000,
+    base_buy_cost: 120_000,
     buy_cost_multiplier: 1.15,
-    upgrade_costs: [10_000, 30_000, 100_000, 300_000, 1_000_000, 3_000_000, 10_000_000, 30_000_000, 100_000_000],
+    count_exponent: 1,
+    upgrade_costs: [100_000, 300_000, 1_000_000, 3_000_000, 10_000_000, 30_000_000, 100_000_000, 300_000_000, 1_000_000_000],
     max_level: 10,
     base_autoclicker_cost: 0,    // passive-only — no manual tap
     autoclicker_cost_multiplier: 0,
@@ -134,16 +138,17 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   livestreams: {
     id: 'livestreams',
     base_event_yield: 100_000,
-    base_event_rate: 0.033,
+    base_event_rate: 0.0254,
     manual_clickable: true,
     follower_conversion_rate: 0.09,
 
     unlock_threshold: 5_000,
-    base_buy_cost: 130_000,
+    base_buy_cost: 1_300_000,
     buy_cost_multiplier: 1.15,
-    upgrade_costs: [100_000, 300_000, 1_000_000, 3_000_000, 10_000_000, 30_000_000, 100_000_000, 300_000_000, 1_000_000_000],
+    count_exponent: 1,
+    upgrade_costs: [1_000_000, 3_000_000, 10_000_000, 30_000_000, 100_000_000, 300_000_000, 1_000_000_000, 3_000_000_000, 10_000_000_000],
     max_level: 10,
-    base_autoclicker_cost: 650_000,
+    base_autoclicker_cost: 6_500_000,
     autoclicker_cost_multiplier: 1.5,
   },
   // Ladder verb. Retuned for wider cooldown gap vs livestreams.
@@ -154,16 +159,17 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   podcasts: {
     id: 'podcasts',
     base_event_yield: 2_000_000,
-    base_event_rate: 0.02,
+    base_event_rate: 0.0154,
     manual_clickable: true,
     follower_conversion_rate: 0.11,
 
     unlock_threshold: 20_000,
-    base_buy_cost: 1_400_000,
+    base_buy_cost: 14_000_000,
     buy_cost_multiplier: 1.15,
-    upgrade_costs: [1_000_000, 3_000_000, 10_000_000, 30_000_000, 100_000_000, 300_000_000, 1_000_000_000, 3_000_000_000, 10_000_000_000],
+    count_exponent: 1,
+    upgrade_costs: [10_000_000, 30_000_000, 100_000_000, 300_000_000, 1_000_000_000, 3_000_000_000, 10_000_000_000, 30_000_000_000, 100_000_000_000],
     max_level: 10,
-    base_autoclicker_cost: 7_000_000,
+    base_autoclicker_cost: 70_000_000,
     autoclicker_cost_multiplier: 1.5,
   },
   // Ladder verb. Retuned for wider cooldown gap vs podcasts.
@@ -179,11 +185,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.06,
 
     unlock_threshold: 100_000,
-    base_buy_cost: 20_000_000,
+    base_buy_cost: 200_000_000,
     buy_cost_multiplier: 1.15,
-    upgrade_costs: [10_000_000, 30_000_000, 100_000_000, 300_000_000, 1_000_000_000, 3_000_000_000, 10_000_000_000, 30_000_000_000, 100_000_000_000],
+    count_exponent: 1,
+    upgrade_costs: [100_000_000, 300_000_000, 1_000_000_000, 3_000_000_000, 10_000_000_000, 30_000_000_000, 100_000_000_000, 300_000_000_000, 1_000_000_000_000],
     max_level: 10,
-    base_autoclicker_cost: 100_000_000,
+    base_autoclicker_cost: 1_000_000_000,
     autoclicker_cost_multiplier: 1.5,
   },
   // -------------------------------------------------------------------------
@@ -205,11 +212,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.6,
 
     unlock_threshold: Infinity,
-    base_buy_cost: 200_000_000,
+    base_buy_cost: 2_000_000_000,
     buy_cost_multiplier: 1.15,
-    upgrade_costs: [100_000_000, 300_000_000, 1_000_000_000, 3_000_000_000, 10_000_000_000, 30_000_000_000, 100_000_000_000, 300_000_000_000, 1_000_000_000_000],
+    count_exponent: 1,
+    upgrade_costs: [1_000_000_000, 3_000_000_000, 10_000_000_000, 30_000_000_000, 100_000_000_000, 300_000_000_000, 1_000_000_000_000, 3_000_000_000_000, 10_000_000_000_000],
     max_level: 10,
-    base_autoclicker_cost: 0,    // post-prestige, passive-only
+    base_autoclicker_cost: 0,
     autoclicker_cost_multiplier: 0,
   },
   deepfakes: {
@@ -220,11 +228,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.3,
 
     unlock_threshold: Infinity,
-    base_buy_cost: 2_000_000_000,
+    base_buy_cost: 20_000_000_000,
     buy_cost_multiplier: 1.15,
-    upgrade_costs: [1_000_000_000, 3_000_000_000, 10_000_000_000, 30_000_000_000, 100_000_000_000, 300_000_000_000, 1_000_000_000_000, 3_000_000_000_000, 10_000_000_000_000],
+    count_exponent: 1,
+    upgrade_costs: [10_000_000_000, 30_000_000_000, 100_000_000_000, 300_000_000_000, 1_000_000_000_000, 3_000_000_000_000, 10_000_000_000_000, 30_000_000_000_000, 100_000_000_000_000],
     max_level: 10,
-    base_autoclicker_cost: 0,    // post-prestige, passive-only
+    base_autoclicker_cost: 0,
     autoclicker_cost_multiplier: 0,
   },
   algorithmic_prophecy: {
@@ -235,11 +244,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     follower_conversion_rate: 0.5,
 
     unlock_threshold: Infinity,
-    base_buy_cost: 20_000_000_000,
+    base_buy_cost: 200_000_000_000,
     buy_cost_multiplier: 1.15,
-    upgrade_costs: [10_000_000_000, 30_000_000_000, 100_000_000_000, 300_000_000_000, 1_000_000_000_000, 3_000_000_000_000, 10_000_000_000_000, 30_000_000_000_000, 100_000_000_000_000],
+    count_exponent: 1,
+    upgrade_costs: [100_000_000_000, 300_000_000_000, 1_000_000_000_000, 3_000_000_000_000, 10_000_000_000_000, 30_000_000_000_000, 100_000_000_000_000, 300_000_000_000_000, 1_000_000_000_000_000],
     max_level: 10,
-    base_autoclicker_cost: 0,    // post-prestige, passive-only
+    base_autoclicker_cost: 0,
     autoclicker_cost_multiplier: 0,
   },
 };
