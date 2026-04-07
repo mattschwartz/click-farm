@@ -843,7 +843,7 @@ describe('Verb gear multiplier in tick pipeline', () => {
     expect(rateGear0).toBeCloseTo(rateBase, 6);
   });
 
-  it('gear level 1 multiplies effective rate by 1_000', () => {
+  it('gear level 1 multiplies effective rate by 1_234', () => {
     const base = stateWithGenerator('selfies', 5, 1);
     const rateBase = computeGeneratorEffectiveRate(base.generators.selfies, base, STATIC_DATA);
     const rateGear1 = computeGeneratorEffectiveRate(
@@ -851,10 +851,10 @@ describe('Verb gear multiplier in tick pipeline', () => {
       withGear(base, { selfies: 1 }),
       STATIC_DATA,
     );
-    expect(rateGear1).toBeCloseTo(rateBase * 1_000, 6);
+    expect(rateGear1).toBeCloseTo(rateBase * 1_234, 6);
   });
 
-  it('gear level 2 multiplies effective rate by 1_000_000', () => {
+  it('gear level 2 multiplies effective rate by 1_522_756', () => {
     const base = stateWithGenerator('selfies', 5, 1);
     const rateBase = computeGeneratorEffectiveRate(base.generators.selfies, base, STATIC_DATA);
     const rateGear2 = computeGeneratorEffectiveRate(
@@ -862,10 +862,10 @@ describe('Verb gear multiplier in tick pipeline', () => {
       withGear(base, { selfies: 2 }),
       STATIC_DATA,
     );
-    expect(rateGear2).toBeCloseTo(rateBase * 1_000_000, 6);
+    expect(rateGear2).toBeCloseTo(rateBase * 1_522_756, 6);
   });
 
-  it('gear level 3 multiplies effective rate by 1_000_000_000', () => {
+  it('gear level 3 multiplies effective rate by 1_879_080_904', () => {
     const base = stateWithGenerator('selfies', 5, 1);
     const rateBase = computeGeneratorEffectiveRate(base.generators.selfies, base, STATIC_DATA);
     const rateGear3 = computeGeneratorEffectiveRate(
@@ -873,7 +873,7 @@ describe('Verb gear multiplier in tick pipeline', () => {
       withGear(base, { selfies: 3 }),
       STATIC_DATA,
     );
-    expect(rateGear3).toBeCloseTo(rateBase * 1_000_000_000, 6);
+    expect(rateGear3).toBeCloseTo(rateBase * 1_879_080_904, 6);
   });
 
   it('gear level 0 produces a 1.0 no-op on verbYieldPerTap', () => {
@@ -887,7 +887,7 @@ describe('Verb gear multiplier in tick pipeline', () => {
     expect(yieldGear0).toBeCloseTo(yieldBase, 6);
   });
 
-  it('gear level 1 multiplies verbYieldPerTap by 1_000', () => {
+  it('gear level 1 multiplies verbYieldPerTap by 1_234', () => {
     const base = stateWithGenerator('chirps', 5, 1);
     const yieldBase = verbYieldPerTap(base.generators.chirps, base, STATIC_DATA);
     const yieldGear1 = verbYieldPerTap(
@@ -895,7 +895,7 @@ describe('Verb gear multiplier in tick pipeline', () => {
       withGear(base, { chirps: 1 }),
       STATIC_DATA,
     );
-    expect(yieldGear1).toBeCloseTo(yieldBase * 1_000, 6);
+    expect(yieldGear1).toBeCloseTo(yieldBase * 1_234, 6);
   });
 
   it('passive-only generators are unaffected by gear', () => {

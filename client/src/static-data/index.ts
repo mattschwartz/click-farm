@@ -423,35 +423,35 @@ const VERB_GEAR_DEFS: Record<VerbGearId, VerbGearDef> = {
     name: 'Mechanical Keyboard',
     max_level: 3,
     cost: [2e9, 2e12, 2e15],         // 2B, 2T, 2Qa
-    multipliers: [1_000, 1_000_000, 1_000_000_000],     // cumulative per-level
+    multipliers: [1_234, 1_522_756, 1_879_080_904],     // cumulative per-level
   },
   selfies: {
     id: 'selfies',
     name: 'Phone',
     max_level: 3,
     cost: [20e9, 20e12, 20e15],       // 20B, 20T, 20Qa
-    multipliers: [1_000, 1_000_000, 1_000_000_000],
+    multipliers: [1_234, 1_522_756, 1_879_080_904],
   },
   livestreams: {
     id: 'livestreams',
     name: 'Camera',
     max_level: 3,
     cost: [200e9, 200e12, 200e15],    // 200B, 200T, 200Qa
-    multipliers: [1_000, 1_000_000, 1_000_000_000],
+    multipliers: [1_234, 1_522_756, 1_879_080_904],
   },
   podcasts: {
     id: 'podcasts',
     name: 'Microphone',
     max_level: 3,
     cost: [2e12, 2e15, 2e18],        // 2T, 2Qa, 2Qi
-    multipliers: [1_000, 1_000_000, 1_000_000_000],
+    multipliers: [1_234, 1_522_756, 1_879_080_904],
   },
   viral_stunts: {
     id: 'viral_stunts',
     name: 'Shameless',
     max_level: 3,
     cost: [20e12, 20e15, 20e18],     // 20T, 20Qa, 20Qi
-    multipliers: [1_000, 1_000_000, 1_000_000_000],
+    multipliers: [1_234, 1_522_756, 1_879_080_904],
   },
 };
 
