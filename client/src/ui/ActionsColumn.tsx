@@ -257,13 +257,11 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
       y = ((e.clientY - rect.top + Math.sin(angle) * radius) / rect.height) * 100;
     }
 
-    if (showFloats) {
-      setFloats((prev) => [...prev, { id, value: perTap, x, y }]);
-      window.setTimeout(() => {
-        setFloats((prev) => prev.filter((f) => f.id !== id));
-      }, FLOAT_TTL_MS);
-    }
-  }, [onClick, verbId, perTap, cdMs, state.player.last_manual_click_at, showFloats]);
+    setFloats((prev) => [...prev, { id, value: perTap, x, y }]);
+    window.setTimeout(() => {
+      setFloats((prev) => prev.filter((f) => f.id !== id));
+    }, FLOAT_TTL_MS);
+  }, [onClick, verbId, perTap, cdMs, state.player.last_manual_click_at]);
 
   const fillHeight = atFloor ? 100 : progress * 100;
 
