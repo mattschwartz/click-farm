@@ -10,7 +10,7 @@
 // 5. The global gesture listener also resumes suspended contexts (post-idle),
 //    so the context is always running by the time play() fires.
 
-import clickSfx from '../assets/click.wav';
+import clickSfx from '../assets/verb-click.mp3';
 import purchaseSfx from '../assets/purchase.mp3';
 import sweepStartSfx from '../assets/sweep-start.wav';
 import sweepEndSfx from '../assets/sweep-end.wav';
