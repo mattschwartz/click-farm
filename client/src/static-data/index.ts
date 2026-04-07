@@ -68,7 +68,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // §14d — threshold moved from 0 → 100 (chirps takes the starter position).
   selfies: {
     id: 'selfies',
-    base_event_yield: 5.0,
+    base_event_yield: 250,
     base_event_rate: 0.2,
     manual_clickable: true,
     follower_conversion_rate: 0.10,
@@ -84,7 +84,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // §14b — passive-only. yield=1, rate=5.0 (preserved).
   memes: {
     id: 'memes',
-    base_event_yield: 1,
+    base_event_yield: 3,
     base_event_rate: 5.0,
     manual_clickable: false,
     follower_conversion_rate: 0.08,
@@ -100,7 +100,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // §14b — passive-only. yield=1, rate=12.0 (preserved).
   hot_takes: {
     id: 'hot_takes',
-    base_event_yield: 1,
+    base_event_yield: 2,
     base_event_rate: 12.0,
     manual_clickable: false,
     follower_conversion_rate: 0.05,
@@ -116,7 +116,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // §14b — passive-only. yield=1, rate=30.0 (preserved).
   tutorials: {
     id: 'tutorials',
-    base_event_yield: 1,
+    base_event_yield: 2,
     base_event_rate: 30.0,
     manual_clickable: false,
     follower_conversion_rate: 0.07,
@@ -133,8 +133,8 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // yield×rate = 1,600. L1 cooldown 10,000ms, L10 cooldown 1,000ms.
   livestreams: {
     id: 'livestreams',
-    base_event_yield: 16_000,
-    base_event_rate: 0.1,
+    base_event_yield: 550_000,
+    base_event_rate: 0.033,
     manual_clickable: true,
     follower_conversion_rate: 0.09,
 
@@ -153,8 +153,8 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // retune during balance pass (task #88) to match new output.
   podcasts: {
     id: 'podcasts',
-    base_event_yield: 484_848,
-    base_event_rate: 0.033,
+    base_event_yield: 2_000_000,
+    base_event_rate: 0.02,
     manual_clickable: true,
     follower_conversion_rate: 0.11,
 
@@ -173,7 +173,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // retune during balance pass (task #88) to match new output.
   viral_stunts: {
     id: 'viral_stunts',
-    base_event_yield: 16_000_000,
+    base_event_yield: 18_000_000,
     base_event_rate: 0.01,
     manual_clickable: true,
     follower_conversion_rate: 0.06,
