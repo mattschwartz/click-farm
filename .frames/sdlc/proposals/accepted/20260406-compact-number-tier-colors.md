@@ -112,6 +112,14 @@ Addresses game-designer's three review comments: (1) Fixed table column order �
 
 The ramp direction is right — neutral grey at K through hot magenta at Dc reads as "getting bigger." The suffix-only application rule is correct. Three issues need fixing before this can be accepted:
 
+**1. Table formatting error.** Row 1 has columns in Token/Hex order (`--tier-k` | `#787878`), but rows 2–11 swap to Hex/Token (`#5B748A` | `--tier-m`). Pick one column order and apply it consistently.
+
+**2. Contrast measured against wrong background.** The table measures contrast against `#FFF` (pure white), but the game uses a warm rust background (`#FAF8F5` per visual-identity). Contrast ratios must be re-measured against the actual game background. K at 4.6:1 against white may dip below the 4.5:1 WCAG floor against the warmer surface. Re-run the numbers.
+
+**3. Collision avoidance table references dead systems.** "Algorithm modifier chips" (boost green, penalty amber) — the algorithm system is being removed per the accepted Remove Algorithm Weather System proposal. Those chips will not exist. "Scandal, loss" for danger red — scandals were removed and replaced by audience mood. The collision table should reference the systems that actually survive: audience mood edge colors, viral burst glow, generator badge breathing, platform card accents, and the buy/level affordance states.
+
+**OQ1 resolved.** Floating numbers stay gold. Answer written inline.
+
 ---
 # Review: game-designer (re-review)
 
@@ -120,19 +128,19 @@ The ramp direction is right — neutral grey at K through hot magenta at Dc read
 
 **Comments**
 
-All three issues from the first review are resolved. Table columns consistent, contrast re-measured against actual background, collision table references surviving systems only. OQ1 resolved.
+All three issues from the first review are resolved.
 
-Minor: §2.5 prose says "4.6:1 (K) to 7.6:1 (Dc)" but the updated table shows 4.8:1 and 6.7:1. Stale numbers in the rationale paragraph — non-blocking, fix at build time.
+1. Table column order is now consistent across all rows — Token before Hex throughout. No more swap between row 1 and the rest.
+
+2. Contrast re-measured against `#FAF8F5`. K was darkened from `#787878` to `#6E6E6E` to hold at 4.8:1, clearing the 4.5:1 floor on the warmer surface. All other tiers pass comfortably.
+
+3. Collision table references only surviving systems: audience mood colors, viral burst glow, platform card accents, generator badge breathing, accent gold affordance states. Dead algorithm chips and scandal/loss entries are gone.
+
+OQ1 resolved inline — floating numbers stay gold.
+
+Minor: §2.5 rationale prose still reads "4.6:1 (K) to 7.6:1 (Dc)" but the updated table shows 4.8:1 and 6.7:1. Stale copy — non-blocking, fix at build time.
 
 Removing game-designer from reviewers.
-
-**1. Table formatting error.** Row 1 has columns in Token/Hex order (`--tier-k` | `#787878`), but rows 2–11 swap to Hex/Token (`#5B748A` | `--tier-m`). Pick one column order and apply it consistently.
-
-**2. Contrast measured against wrong background.** The table measures contrast against `#FFF` (pure white), but the game uses a warm rust background (`#FAF8F5` per visual-identity). Contrast ratios must be re-measured against the actual game background. K at 4.6:1 against white may dip below the 4.5:1 WCAG floor against the warmer surface. Re-run the numbers.
-
-**3. Collision avoidance table references dead systems.** "Algorithm modifier chips" (boost green, penalty amber) — the algorithm system is being removed per the accepted Remove Algorithm Weather System proposal. Those chips will not exist. "Scandal, loss" for danger red — scandals were removed and replaced by audience mood. The collision table should reference the systems that actually survive: audience mood edge colors, viral burst glow, generator badge breathing, platform card accents, and the buy/level affordance states.
-
-**OQ1 resolved.** Floating numbers stay gold. Answer written inline.
 
 ---
 # Review: engineer

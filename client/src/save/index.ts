@@ -17,7 +17,7 @@ import { recomputeAllRetention } from '../audience-mood/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 11;
+const CURRENT_VERSION = 12;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -435,13 +435,15 @@ export function migrateV7toV8(data: SaveData): SaveData {
       neglect?: number;
       algorithm_misalignment?: number;
     };
+    // V8 added algorithm_misalignment — stripped later by V11→V12.
+    // Cast through unknown to satisfy both the intermediate and final types.
     newPlatforms[id] = {
       ...p,
       retention: p.retention ?? 1.0,
       content_fatigue: p.content_fatigue ?? {},
       neglect: p.neglect ?? 0,
-      algorithm_misalignment: p.algorithm_misalignment ?? 0,
-    };
+      algorithm_misalignment: (p.algorithm_misalignment ?? 0),
+    } as unknown as PlatformState;
   }
   return {
     ...data,
@@ -519,6 +521,7 @@ export function migrateV9toV10(data: SaveData): SaveData {
     chirper: oldPlatforms.chirper as PlatformState,
     picshift: { ...(oldPlatforms.instasham as PlatformState), id: 'picshift' as PlatformId },
     skroll: { ...(oldPlatforms.grindset as PlatformState), id: 'skroll' as PlatformId },
+    // V10 seeds podpod. algorithm_misalignment stripped later by V11→V12.
     podpod: {
       id: 'podpod' as PlatformId,
       unlocked: false,
@@ -527,12 +530,13 @@ export function migrateV9toV10(data: SaveData): SaveData {
       content_fatigue: {},
       neglect: 0,
       algorithm_misalignment: 0,
-    },
+    } as unknown as PlatformState,
   };
 
   // 2) Remap clout_upgrades.
   const oldUpgrades = oldState.player.clout_upgrades;
-  const newUpgrades: Record<UpgradeId, number> = {
+  // V10 includes algorithm_insight — stripped later by V11→V12.
+  const newUpgrades = {
     engagement_boost: oldUpgrades.engagement_boost ?? 0,
     algorithm_insight: oldUpgrades.algorithm_insight ?? 0,
     platform_headstart_picshift: oldUpgrades.platform_headstart_instasham ?? 0,
@@ -541,7 +545,7 @@ export function migrateV9toV10(data: SaveData): SaveData {
     ai_slop_unlock: oldUpgrades.ai_slop_unlock ?? 0,
     deepfakes_unlock: oldUpgrades.deepfakes_unlock ?? 0,
     algorithmic_prophecy_unlock: oldUpgrades.algorithmic_prophecy_unlock ?? 0,
-  };
+  } as unknown as Record<UpgradeId, number>;
 
   // 3) Remap snapshot platform_rates if present.
   let newCloseState = oldState.player.last_close_state;
@@ -617,6 +621,90 @@ export function migrateV10toV11(data: SaveData): SaveData {
   };
 }
 
+/**
+ * Migrate a V11 save to V12 — strip algorithm weather system.
+ *
+ * Removes: state.algorithm, player.algorithm_seed,
+ * player.last_close_state.algorithm_state_index,
+ * platforms[*].algorithm_misalignment, player.clout_upgrades.algorithm_insight,
+ * player.creator_kit.laptop.
+ *
+ * See proposals/accepted/20260406-remove-algorithm-weather-system.md.
+ * Silent strip, no refund.
+ */
+export function migrateV11toV12(data: SaveData): SaveData {
+  const oldState = data.state as GameState & {
+    algorithm?: unknown;
+    player: GameState['player'] & {
+      algorithm_seed?: number;
+      clout_upgrades: Record<string, number>;
+      creator_kit: Record<string, number>;
+      last_close_state: (GameState['player']['last_close_state'] & {
+        algorithm_state_index?: number;
+      }) | null;
+    };
+    platforms: Record<string, PlatformState & { algorithm_misalignment?: number }>;
+  };
+
+  // Strip algorithm from state
+  const { algorithm: _algo, ...cleanState } = oldState;
+  void _algo;
+
+  // Strip algorithm_seed from player
+  const { algorithm_seed: _seed, ...cleanPlayer } = cleanState.player;
+  void _seed;
+
+  // Strip algorithm_insight from clout_upgrades
+  const { algorithm_insight: _ai, ...cleanUpgrades } = cleanPlayer.clout_upgrades;
+  void _ai;
+
+  // Strip laptop from creator_kit
+  const { laptop: _laptop, ...cleanKit } = cleanPlayer.creator_kit;
+  void _laptop;
+
+  // Strip algorithm_misalignment from platforms and algorithm_state_index from snapshot
+  const newPlatforms: Record<PlatformId, PlatformState> = {} as Record<PlatformId, PlatformState>;
+  for (const id of Object.keys(cleanState.platforms) as PlatformId[]) {
+    const platform = cleanState.platforms[id] as unknown as Record<string, unknown>;
+    const { algorithm_misalignment: _am, ...cleanPlatform } = platform;
+    void _am;
+    newPlatforms[id] = cleanPlatform as unknown as PlatformState;
+  }
+
+  // Strip algorithm_state_index from last_close_state
+  let newCloseState = cleanPlayer.last_close_state;
+  if (newCloseState) {
+    const { algorithm_state_index: _asi, ...cleanSnapshot } = newCloseState;
+    void _asi;
+    newCloseState = cleanSnapshot as GameState['player']['last_close_state'];
+  }
+
+  // Also strip from top-level lastCloseState on SaveData if present
+  let newLastCloseState = data.lastCloseState;
+  if (newLastCloseState) {
+    const { algorithm_state_index: _asi2, ...cleanTopSnapshot } =
+      newLastCloseState as typeof newLastCloseState & { algorithm_state_index?: number };
+    void _asi2;
+    newLastCloseState = cleanTopSnapshot as typeof newLastCloseState;
+  }
+
+  return {
+    ...data,
+    version: 12,
+    lastCloseState: newLastCloseState,
+    state: {
+      ...cleanState,
+      platforms: newPlatforms,
+      player: {
+        ...cleanPlayer,
+        clout_upgrades: cleanUpgrades as Record<UpgradeId, number>,
+        creator_kit: cleanKit as Record<KitItemId, number>,
+        last_close_state: newCloseState,
+      },
+    } as GameState,
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -658,6 +746,10 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 10) {
     current = migrateV10toV11(current);
+  }
+
+  if (current.version === 11) {
+    current = migrateV11toV12(current);
   }
 
   if (current.version !== CURRENT_VERSION) {

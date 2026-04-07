@@ -8,14 +8,14 @@ import type {
   StaticData,
 } from '../types.ts';
 import { computeAllGeneratorEffectiveRates } from '../game-loop/index.ts';
-import { computeFollowerDistribution } from '../platform/index.ts';
 import {
   GENERATOR_DISPLAY,
   PLATFORM_DISPLAY,
   PLATFORM_ORDER,
   topAffinityGenerators,
 } from './display.ts';
-import { fmtCompact, fmtCompactInt } from './format.ts';
+// fmtCompact removed — rate display currently disabled per user edit
+import { TieredNumber } from './TieredNumber.tsx';
 
 interface Props {
   state: GameState;
@@ -26,21 +26,10 @@ interface Props {
    * When true, dims the platform panel to 40% opacity while the upgrade
    * drawer is open (per UX spec ux/upgrade-curve-drawer-spec.md §1).
    */
-  drawerDimmed?: boolean;
 }
 
-export function PlatformPanel({ state, staticData, viralPlatformId, drawerDimmed }: Props) {
-  // Compute follower rates per platform for the rate indicators (UX §7.1).
+export function PlatformPanel({ state, staticData, viralPlatformId }: Props) {
   const engagementRates = computeAllGeneratorEffectiveRates(state, staticData);
-  const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
-  for (const id of Object.keys(engagementRates) as GeneratorId[]) {
-    ratesPerMs[id] = (engagementRates[id] ?? 0) / 1000;
-  }
-  const distribution = computeFollowerDistribution(
-    ratesPerMs,
-    state.platforms,
-    staticData,
-  );
 
   // Identify the single heaviest-contributing generator per platform for
   // the affinity-chip glow (UX §7.2).
@@ -51,19 +40,16 @@ export function PlatformPanel({ state, staticData, viralPlatformId, drawerDimmed
   );
 
   return (
-    <aside className={`platform-panel${drawerDimmed ? ' drawer-dimmed' : ''}`}>
+    <aside className="platform-panel">
       {PLATFORM_ORDER.map((id) => {
         const p = state.platforms[id];
         const threshold = staticData.unlockThresholds.platforms[id] ?? 0;
-        // perPlatformRate is per-ms; convert to per-sec for display.
-        const ratePerSec = distribution.perPlatformRate[id] * 1000;
         return (
           <PlatformCard
             key={id}
             id={id}
             unlocked={p.unlocked}
             followers={p.followers}
-            ratePerSec={ratePerSec}
             unlockThreshold={threshold}
             staticData={staticData}
             heaviestGenerator={heaviestByPlatform[id]}
@@ -81,7 +67,6 @@ interface CardProps {
   id: PlatformId;
   unlocked: boolean;
   followers: number;
-  ratePerSec: number;
   unlockThreshold: number;
   staticData: StaticData;
   heaviestGenerator: GeneratorId | null;
@@ -93,7 +78,6 @@ function PlatformCard({
   id,
   unlocked,
   followers,
-  ratePerSec,
   unlockThreshold,
   staticData,
   heaviestGenerator,
@@ -133,10 +117,7 @@ function PlatformCard({
         <span className="platform-name">{display.name}</span>
       </div>
       <div className="platform-followers-row">
-        <span className="platform-followers">{fmtCompactInt(followers)}</span>
-        <span className={`platform-rate${ratePerSec > 0 ? ' gaining' : ''}`}>
-          {ratePerSec > 0 ? `▲ +${fmtCompact(ratePerSec)}/s` : '— stalled'}
-        </span>
+        <span className="platform-followers"><TieredNumber value={followers} int /></span>
       </div>
       <div className="platform-sub-label">{display.audienceLabel ?? 'followers'}</div>
 

@@ -248,7 +248,6 @@ describe('driver — persistence', () => {
     const snap = driver.getState().player.last_close_state;
     expect(snap).not.toBeNull();
     expect(snap!.total_engagement_rate).toBeGreaterThanOrEqual(0);
-    expect(snap!.algorithm_state_index).toBeGreaterThanOrEqual(0);
   });
 
   it('loads persisted state on a subsequent driver creation', () => {
@@ -330,9 +329,6 @@ describe('driver — persistence', () => {
     expect(result!.durationMs).toBe(10 * 60 * 1000);
     expect(result!.engagementGained).toBeGreaterThan(0);
     expect(result!.totalFollowersGained).toBeGreaterThan(0);
-    // Algorithm should have shifted at least once (base interval 5 min).
-    expect(result!.algorithmAdvances).toBeGreaterThanOrEqual(1);
-
     // State reflects the offline application.
     expect(driverB.getState().player.engagement).toBeGreaterThan(
       driverA.getState().player.engagement,
@@ -497,19 +493,6 @@ describe('driver — persistence', () => {
     expect(driver.getState().player.clout).toBe(100 - cost);
     expect(driver.getState().player.clout_upgrades.engagement_boost).toBe(1);
     expect(notified).toBe(1);
-  });
-
-  it('getUpcomingShifts returns [] when algorithm_insight is unpurchased', () => {
-    const t = 1_000_000;
-    const driver = createDriver({
-      staticData: STATIC_DATA,
-      now: () => t,
-      setInterval: () => 0,
-      clearInterval: () => {},
-      loadFromStorage: false,
-      persistToStorage: false,
-    });
-    expect(driver.getUpcomingShifts()).toEqual([]);
   });
 
   it('does not write to storage when persistToStorage is false', () => {

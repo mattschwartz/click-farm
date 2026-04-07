@@ -92,19 +92,6 @@ describe('save and load', () => {
     expect(loaded.platforms.skroll.followers).toBe(0);
   });
 
-  it('preserves algorithm state', () => {
-    const state = createInitialGameState(STATIC_DATA, 0);
-    save(state);
-    const loaded = expectLoaded(load());
-
-    expect(loaded.algorithm.current_state_id).toBe(
-      state.algorithm.current_state_id
-    );
-    expect(loaded.algorithm.current_state_index).toBe(
-      state.algorithm.current_state_index
-    );
-  });
-
   it('sets player.last_close_time on save', () => {
     const now = 9_000_000;
     vi.setSystemTime(now);
@@ -260,16 +247,16 @@ describe('importSaveJSON', () => {
 // ---------------------------------------------------------------------------
 
 describe('migrate', () => {
-  it('passes through current-version (v11) data unchanged', () => {
+  it('passes through current-version (v12) data unchanged', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const data: SaveData = {
-      version: 11,
+      version: 12,
       state,
       lastCloseTime: 0,
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(11);
+    expect(result.version).toBe(12);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -390,7 +377,8 @@ describe('migrateV3toV4', () => {
 
   it('preserves algorithm_insight and other platform_headstart levels', () => {
     const result = migrateV3toV4(makeV3SaveData());
-    expect(result.state.player.clout_upgrades.algorithm_insight).toBe(1);
+    // algorithm_insight exists on the V4 intermediate shape; V11→V12 strips it.
+    expect((result.state.player.clout_upgrades as Record<string, number>).algorithm_insight).toBe(1);
     // V3→V4 output still uses the old platform names — V9→V10 renames them.
     expect((result.state.player.clout_upgrades as Record<string, number>).platform_headstart_instasham).toBe(1);
     expect((result.state.player.clout_upgrades as Record<string, number>).platform_headstart_grindset).toBe(0);
@@ -416,7 +404,7 @@ describe('migrateV3toV4', () => {
 
   it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(11);
+    expect(result.version).toBe(12);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
     expect(result.state.player.creator_kit).toEqual({});
@@ -464,7 +452,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version via the chain', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(11);
+    expect(result.version).toBe(12);
     expect(result.state.player.creator_kit).toEqual({});
   });
 
@@ -493,7 +481,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(11);
+    expect(result.version).toBe(12);
     expect(result.state.player.creator_kit).toEqual({});
   });
 });
@@ -595,7 +583,7 @@ describe('migrateV5toV6', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(11);
+    expect(result.version).toBe(12);
     expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
 });
@@ -666,7 +654,7 @@ describe('migrateV6toV7', () => {
     ).toBeUndefined();
   });
 
-  it('preserves every other GameState field (player, generators, platforms, algorithm, viralBurst)', () => {
+  it('preserves every other GameState field (player, generators, platforms, viralBurst)', () => {
     const data = makeV6SaveData();
     data.state.player.engagement = 4242;
     data.state.player.clout = 7;
@@ -676,7 +664,6 @@ describe('migrateV6toV7', () => {
     expect(result.state.player.clout).toBe(7);
     expect(result.state.generators).toEqual(data.state.generators);
     expect(result.state.platforms).toEqual(data.state.platforms);
-    expect(result.state.algorithm).toEqual(data.state.algorithm);
     expect(result.state.viralBurst).toEqual(data.state.viralBurst);
   });
 
@@ -706,9 +693,9 @@ describe('migrateV7toV8', () => {
     const base = createInitialGameState(STATIC_DATA, 0);
     const strippedPlatforms = Object.fromEntries(
       Object.keys(base.platforms).map((id) => {
-        const { retention: _r, content_fatigue: _cf, neglect: _n, algorithm_misalignment: _am, ...rest } =
+        const { retention: _r, content_fatigue: _cf, neglect: _n, ...rest } =
           base.platforms[id as keyof typeof base.platforms];
-        void _r; void _cf; void _n; void _am;
+        void _r; void _cf; void _n;
         return [id, rest];
       }),
     ) as unknown as SaveData['state']['platforms'];
@@ -743,13 +730,12 @@ describe('migrateV7toV8', () => {
     }
   });
 
-  it('initialises neglect=0 and algorithm_misalignment=0 on every platform', () => {
+  it('initialises neglect=0 on every platform', () => {
     const result = migrateV7toV8(makeV7SaveData());
     for (const id of Object.keys(result.state.platforms) as Array<
       keyof typeof result.state.platforms
     >) {
       expect(result.state.platforms[id].neglect).toBe(0);
-      expect(result.state.platforms[id].algorithm_misalignment).toBe(0);
     }
   });
 
@@ -862,11 +848,10 @@ describe('migrateV9toV10', () => {
 // ---------------------------------------------------------------------------
 
 describe('KitEffect discriminators', () => {
-  it('covers all five effect types exhaustively', () => {
+  it('covers all four effect types exhaustively', () => {
     const tagOf = (e: KitEffect): string => {
       switch (e.type) {
         case 'engagement_multiplier': return 'camera';
-        case 'algorithm_lookahead': return 'laptop';
         case 'platform_headstart_sequential': return 'phone';
         case 'follower_conversion_multiplier': return 'wardrobe';
         case 'viral_burst_amplifier': return 'mogging';
@@ -878,13 +863,12 @@ describe('KitEffect discriminators', () => {
     };
     const samples: KitEffect[] = [
       { type: 'engagement_multiplier', values: [1.1] },
-      { type: 'algorithm_lookahead', lookaheads: [1] },
       { type: 'platform_headstart_sequential' },
       { type: 'follower_conversion_multiplier', values: [1.2] },
       { type: 'viral_burst_amplifier', values: [1.5] },
     ];
     expect(samples.map(tagOf)).toEqual([
-      'camera', 'laptop', 'phone', 'wardrobe', 'mogging',
+      'camera', 'phone', 'wardrobe', 'mogging',
     ]);
   });
 });

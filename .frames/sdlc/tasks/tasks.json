@@ -1,5 +1,5 @@
 {
-  "next_id": 152,
+  "next_id": 157,
   "tasks": [
     {
       "id": 1,
@@ -5753,7 +5753,7 @@
       "id": 145,
       "role": "engineer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Review proposal: Remove Algorithm Weather System",
       "requester": "architect",
@@ -5778,13 +5778,14 @@
         "Frontmatter updated per review outcome"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 146,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Remove algorithm weather system from codebase",
       "requester": "game-designer",
@@ -5906,7 +5907,8 @@
         "Verify no stale comments referencing the algorithm system remain (platform/index.ts docstring, others)"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 147,
@@ -6023,7 +6025,7 @@
       "id": 150,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "SPEED button fires level-up directly — no drawer",
       "requester": "ux-designer",
@@ -6052,13 +6054,14 @@
         "npm run build succeeds; full test suite passes"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     },
     {
       "id": 151,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Remove upgrade curve drawer",
       "requester": "ux-designer",
@@ -6091,9 +6094,208 @@
         "npm run build succeeds; full test suite passes"
       ],
       "open_questions": [],
-      "blocked_on": [
-        150
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 152,
+      "role": "architect",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Design music player integration with react-h5-audio-player",
+      "requester": "engineer",
+      "complexity": "sonnet",
+      "overview": "The game currently has a custom music player (prev/play-pause/next buttons in the floating toolbar) backed by raw HTMLAudioElement usage in sfx.ts. It cycles through 8 djart-ost tracks sequentially. The user wants to replace this with react-h5-audio-player (v3.10.2), a purpose-built React audio component with transport controls, seek bar, progress display, and volume. The architect should design how this integrates: where it renders (floating toolbar? dedicated panel?), how it interfaces with the existing sfx.ts mute/volume system and settings persistence, whether it replaces the HTMLAudioElement approach entirely or wraps it, and how track cycling works through the library's API.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/sfx.ts",
+          "purpose": "Current music playback implementation — HTMLAudioElement, track cycling, volume/mute state, prev/next/togglePlayPause exports"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Current player UI — prev/play-pause/next buttons in .floating-toolbar, imports from sfx.ts"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.css",
+          "purpose": "Current .music-player and .music-player-btn styles"
+        },
+        {
+          "ref": "client/src/ui/useSettings.ts",
+          "purpose": "Settings hook — musicVolume, sfxVolume, sound toggle that drive sfx.ts"
+        },
+        {
+          "ref": "client/src/ui/SettingsModal.tsx",
+          "purpose": "Music/SFX volume sliders that call setMusicVolume/setSfxVolume"
+        },
+        {
+          "ref": "client/src/assets/djart-ost/",
+          "purpose": "8 MP3 tracks that the player cycles through"
+        }
+      ],
+      "acceptance_criteria": [
+        "Decision on whether react-h5-audio-player replaces the HTMLAudioElement in sfx.ts or lives as a separate UI-only component",
+        "Layout spec: where the player renders, sizing constraints, how it fits with the existing floating toolbar",
+        "Integration contract: how the library's volume/mute state syncs with the existing settings system (useSettings, SettingsModal sliders)",
+        "Track cycling contract: how prev/next/auto-advance work through the library's onEnded/onClickPrevious/onClickNext callbacks",
+        "Decision on whether SFX (click, purchase) remain on the Web Audio API path or move to the same system"
+      ],
+      "open_questions": [
+        {
+          "question": "Should the player show a seek/progress bar, or just transport controls (prev/play/next)?",
+          "owner": "ux-designer"
+        },
+        {
+          "question": "Should the player show track name/title, or remain anonymous?",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 153,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Autoclicker floats: max 6 individual pops, batch with ×N suffix above 6",
+      "requester": "ux-designer",
+      "complexity": "haiku",
+      "overview": "Change the autoclicker floating number emission logic in ActionsColumn.tsx. Currently, individual floats show at ≤8 autoclickers and a single batched float shows at >8. New behavior: always emit `min(autoclicker_count, 6)` floats, staggered across the burst window. When autoclicker_count > 6, each float shows the total engagement for its batch with a ×N suffix where N = ceil(autoclicker_count / 6). The ×N is a feel indicator — total engagement earned per burst is still computed from the real formula and divided evenly across the 6 floats.\n\nExamples:\n- 4 autoclickers: 4 floats, each +24, no suffix\n- 6 autoclickers: 6 floats, each +24, no suffix\n- 8 autoclickers: 6 floats, each +48 ×2\n- 18 autoclickers: 6 floats, each +72 ×3\n- 60 autoclickers: 6 floats, each +240 ×10\n\nThe ×N suffix appears only when ceil(autoclicker_count / 6) > 1. Each float's engagement value = (total burst engagement / 6), so the numbers are honest even though the batching is approximate.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "Autoclicker float emission logic — the burst handler that creates FloatItems"
+        },
+        {
+          "ref": ".frames/sdlc/ux/manual-action-ladder.md",
+          "purpose": "§4.6 autoclicker floating-number spec — this task supersedes the density cap at 8"
+        }
+      ],
+      "acceptance_criteria": [
+        "At 1–6 autoclickers: that many individual floats, no ×N suffix",
+        "At 7+ autoclickers: exactly 6 floats, each showing (total burst engagement / 6) with ×N suffix where N = ceil(autoclicker_count / 6)",
+        "×N suffix only appears when N > 1",
+        "Floats are staggered across the burst window per existing stagger timing logic",
+        "Visual differentiation from manual taps preserved (80% size, 0.7 opacity per §4.6)",
+        "Reduced motion: autoclicker floats still suppressed per existing behavior",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 154,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Apply level multiplier to autoclicker passive rate",
+      "requester": "game-designer",
+      "complexity": "haiku",
+      "overview": "LVL UP currently only speeds manual taps. Change the passive rate formula so autoclickers also benefit from level. The formula in computeGeneratorEffectiveRate changes from `autoclicker_count × base_event_rate × base_event_yield × (1 + count) × clout × kit` to `autoclicker_count × level × base_event_rate × base_event_yield × (1 + count) × clout × kit`. This is an experimental change — game-designer wants to feel how it plays before committing to it permanently.",
+      "related_items": [
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "computeGeneratorEffectiveRate — add generator.level factor to the passive rate product"
+        },
+        {
+          "ref": "client/src/game-loop/index.test.ts",
+          "purpose": "Update passive rate assertions to expect level × old values"
+        }
+      ],
+      "acceptance_criteria": [
+        "computeGeneratorEffectiveRate multiplies by generator.level (passive formula includes level factor)",
+        "Offline calculator inherits the change automatically (no separate change needed — verify)",
+        "Existing tests updated to reflect new formula",
+        "All tests pass, build succeeds"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 155,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Implement per-tier color ramp for compact number suffixes",
+      "requester": "ux-designer",
+      "complexity": "sonnet",
+      "overview": "Apply the accepted tier color ramp to compact number suffixes (K through Dc). The suffix portion of formatted numbers gets colored by magnitude tier — grey at K, deepening blue through M/B/T, violet-purple through Qa/Qi/Sx, hot magenta through Sp/Oc/No/Dc. The number itself stays in default text color; only the suffix letter(s) carry the tier color.\n\nThis requires splitting the formatter output so the rendering layer can wrap the suffix in a colored span. The formatter itself (`fmtCompact`/`fmtCompactInt`) stays a pure string function — add a companion function that returns `{ number: string, suffix: string, tierIndex: number }` or similar, so call sites can render the suffix with the appropriate color.\n\nTier colors apply everywhere compact numbers display EXCEPT floating numbers on verb buttons (those stay gold per game-designer decision).\n\nThe color tokens should be added to tokens.css as `--tier-k` through `--tier-dc`.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-compact-number-tier-colors.md",
+          "purpose": "Accepted proposal — full color ramp table, contrast ratios, collision avoidance, application rules"
+        },
+        {
+          "ref": "client/src/ui/format.ts",
+          "purpose": "fmtCompact / fmtCompactInt — need a companion that returns structured output (number + suffix + tier)"
+        },
+        {
+          "ref": "client/src/theme/tokens.css",
+          "purpose": "Add --tier-k through --tier-dc tokens"
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "Engagement counter, follower count — render suffix with tier color"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Rate display, cost labels — render suffix with tier color"
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "Follower count, rate — render suffix with tier color"
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "Yield display gets tier color. Floating numbers do NOT — stay gold"
+        }
+      ],
+      "acceptance_criteria": [
+        "11 tier color tokens added to tokens.css: --tier-k (#6E6E6E) through --tier-dc (#B00840) per the accepted proposal table",
+        "A structured formatter companion exists that returns { number, suffix, tierIndex } or equivalent — fmtCompact/fmtCompactInt stay unchanged as pure string functions",
+        "All compact number displays render the suffix in the tier color and the number in default text color",
+        "Floating numbers on verb buttons (ActionsColumn verb-float) do NOT get tier colors — they stay gold/white",
+        "All tier colors pass 4.5:1 contrast against #FAF8F5 (verified via accessibility-checker.sh ramp)",
+        "Tier colors do not apply to non-suffix text (e.g., the number portion, labels, etc.)",
+        "Reduced motion: no change needed (colors are static, not animated)",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 156,
+      "role": "engineer",
+      "state": "build",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Manual tap yield scales with autoclicker count",
+      "requester": "game-designer",
+      "complexity": "haiku",
+      "overview": "Manual taps don't benefit from autoclicker hires. A player with 10 autoclickers watches their army outpace their hand — hiring feels like replacement, not empowerment. Fix: multiply manual tap yield by (1 + autoclicker_count) so the player's hand scales with their team. In postClick, earned changes from `base_event_yield × (1 + count) × clout × kit` to `base_event_yield × (1 + count) × (1 + autoclicker_count) × clout × kit`.",
+      "related_items": [
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "postClick — add (1 + genState.autoclicker_count) factor to the earned formula"
+        },
+        {
+          "ref": "client/src/game-loop/index.test.ts",
+          "purpose": "Update manual tap yield assertions to include autoclicker_count scaling"
+        }
+      ],
+      "acceptance_criteria": [
+        "postClick earned formula is: base_event_yield × (1 + count) × (1 + autoclicker_count) × clout × kit",
+        "Manual tap at autoclicker_count=0 is unchanged (multiplier is 1)",
+        "Manual tap at autoclicker_count=5 earns 6× what it would at autoclicker_count=0",
+        "Existing tests updated, all tests pass, build succeeds"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
     }
   ]
 }

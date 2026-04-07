@@ -61,7 +61,7 @@ function stateWithOwnedGenerator(
 describe('generatorBuyCost', () => {
   it('returns the base cost when count is 0', () => {
     const cost = generatorBuyCost('selfies', 0, STATIC_DATA);
-    expect(cost).toBe(Math.ceil(STATIC_DATA.generators.selfies.base_buy_cost));
+    expect(cost).toBe(STATIC_DATA.generators.selfies.base_buy_cost);
   });
 
   it('increases monotonically with each unit owned', () => {
@@ -74,16 +74,14 @@ describe('generatorBuyCost', () => {
 
   it('applies buy_cost_multiplier per unit owned', () => {
     const def = STATIC_DATA.generators.selfies;
-    const expected = Math.ceil(
-      def.base_buy_cost * Math.pow(def.buy_cost_multiplier, 5),
-    );
-    expect(generatorBuyCost('selfies', 5, STATIC_DATA)).toBe(expected);
+    const expected =
+      def.base_buy_cost * Math.pow(def.buy_cost_multiplier, 5);
+    expect(generatorBuyCost('selfies', 5, STATIC_DATA)).toBeCloseTo(expected);
   });
 
-  it('is always a positive integer (ceil)', () => {
+  it('is always positive', () => {
     for (const id of Object.keys(STATIC_DATA.generators) as (keyof typeof STATIC_DATA.generators)[]) {
       const cost = generatorBuyCost(id, 0, STATIC_DATA);
-      expect(Number.isInteger(cost)).toBe(true);
       expect(cost).toBeGreaterThan(0);
     }
   });
@@ -104,34 +102,16 @@ describe('generatorBuyCost', () => {
 // ---------------------------------------------------------------------------
 
 describe('generatorUpgradeCost', () => {
-  // Formula (per proposals/accepted/generator-level-growth-curves.md):
-  //   cost(currentLevel) = ceil(base × levelMultiplier(currentLevel + 1))
-  //   levelMultiplier(L) = 2^(L² / 5)
-  it('matches the levelMultiplier formula at level 1 (cost to reach L2)', () => {
-    const base = STATIC_DATA.generators.selfies.base_upgrade_cost;
-    const expected = Math.ceil(base * Math.pow(2, (2 * 2) / 5));
-    expect(generatorUpgradeCost('selfies', 1, STATIC_DATA)).toBe(expected);
+  it('returns the first entry in upgrade_costs at level 1', () => {
+    const costs = STATIC_DATA.generators.selfies.upgrade_costs;
+    expect(generatorUpgradeCost('selfies', 1, STATIC_DATA)).toBe(costs[0]);
   });
 
-  it('matches the super-exponential curve at several levels', () => {
-    const base = STATIC_DATA.generators.selfies.base_upgrade_cost;
-    for (const currentLevel of [1, 2, 3, 5, 9]) {
-      const target = currentLevel + 1;
-      const expected = Math.ceil(base * Math.pow(2, (target * target) / 5));
-      expect(generatorUpgradeCost('selfies', currentLevel, STATIC_DATA)).toBe(
-        expected,
-      );
+  it('returns correct entry for each level', () => {
+    const costs = STATIC_DATA.generators.selfies.upgrade_costs;
+    for (let l = 1; l <= costs.length; l++) {
+      expect(generatorUpgradeCost('selfies', l, STATIC_DATA)).toBe(costs[l - 1]);
     }
-  });
-
-  it('doubles from cost(L) to cost(L+1) at the formula ratio', () => {
-    // cost(L+1)/cost(L) = 2^(((L+2)² - (L+1)²)/5) = 2^((2L+3)/5)
-    // For L=1 → 2^1 = 2; for L=2 → 2^(7/5) ≈ 2.639; for L=3 → 2^(9/5) ≈ 3.482
-    const c1 = generatorUpgradeCost('selfies', 1, STATIC_DATA);
-    const c2 = generatorUpgradeCost('selfies', 2, STATIC_DATA);
-    // Tolerance: ceil rounding can introduce up to 1 unit of drift. At these
-    // magnitudes the relative error is << 1%.
-    expect(c2 / c1).toBeCloseTo(2, 1);
   });
 
   it('increases monotonically with level', () => {
@@ -142,10 +122,9 @@ describe('generatorUpgradeCost', () => {
     }
   });
 
-  it('is always a positive integer (ceil)', () => {
+  it('is always positive', () => {
     for (let l = 1; l <= 5; l++) {
       const cost = generatorUpgradeCost('selfies', l, STATIC_DATA);
-      expect(Number.isInteger(cost)).toBe(true);
       expect(cost).toBeGreaterThan(0);
     }
   });
@@ -391,12 +370,11 @@ describe('upgradeGenerator', () => {
     expect(next.player.engagement).toBeCloseTo(999, 6);
   });
 
-  it('cost(L+1) is ~2× cost(L) at the low end of the curve', () => {
-    // From the super-exponential formula 2^(L²/5):
-    //   ratio(1→2) = 2^((9-4)/5) = 2^1 = 2
+  it('cost increases between successive levels (~3× per level)', () => {
     const level1Cost = generatorUpgradeCost('selfies', 1, STATIC_DATA);
     const level2Cost = generatorUpgradeCost('selfies', 2, STATIC_DATA);
-    expect(level2Cost / level1Cost).toBeCloseTo(2, 1);
+    expect(level2Cost).toBeGreaterThan(level1Cost);
+    expect(level2Cost / level1Cost).toBeCloseTo(3, 0);
   });
 
   it('higher count increases effective engagement rate via (1+count) multiplier', () => {
@@ -510,7 +488,7 @@ describe('tick — generator unlocks', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     // selfies is manual_clickable=true — checkGeneratorUnlocks skips it
     const next = tick(
-      { ...state, algorithm: { ...state.algorithm, shift_time: T0 + 10_000_000 } },
+      state,
       T0 + 100,
       100,
       STATIC_DATA,
@@ -524,7 +502,6 @@ describe('tick — generator unlocks', () => {
     const base = createInitialGameState(STATIC_DATA, T0);
     const state: GameState = {
       ...base,
-      algorithm: { ...base.algorithm, shift_time: T0 + 10_000_000 },
       generators: {
         ...base.generators,
         podcasts: { ...base.generators.podcasts, owned: true, count: 500, level: 1, autoclicker_count: 500 },
@@ -541,7 +518,7 @@ describe('tick — generator unlocks', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     // No active generators → no followers → nothing auto-unlocks
     const next = tick(
-      { ...state, algorithm: { ...state.algorithm, shift_time: T0 + 10_000_000 } },
+      state,
       T0 + 100,
       100,
       STATIC_DATA,
@@ -677,12 +654,11 @@ describe('autoclickerBuyCost', () => {
     expect(cost).toBe(STATIC_DATA.generators.chirps.base_autoclicker_cost);
   });
 
-  it('scales exponentially: ceil(base × 1.15^count)', () => {
+  it('scales exponentially: base × autoclicker_cost_multiplier^count', () => {
     const def = STATIC_DATA.generators.chirps;
     const cost3 = autoclickerBuyCost('chirps', 3, STATIC_DATA);
-    expect(cost3).toBe(
-      Math.ceil(def.base_autoclicker_cost * Math.pow(def.buy_cost_multiplier, 3)),
-    );
+    const expected = def.base_autoclicker_cost * Math.pow(def.autoclicker_cost_multiplier, 3);
+    expect(cost3).toBeCloseTo(expected);
   });
 
   it('increases monotonically', () => {

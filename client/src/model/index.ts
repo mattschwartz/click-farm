@@ -6,11 +6,9 @@ import type {
   Player,
   GeneratorState,
   PlatformState,
-  AlgorithmState,
   GameState,
   GeneratorId,
   PlatformId,
-  AlgorithmStateId,
   StaticData,
   UpgradeId,
   KitItemId,
@@ -42,10 +40,9 @@ const ALL_PLATFORM_IDS: PlatformId[] = ['chirper', 'picshift', 'skroll', 'podpod
 // Player factory
 // ---------------------------------------------------------------------------
 
-export function createPlayer(seed: number, now: number = Date.now()): Player {
+export function createPlayer(now: number = Date.now()): Player {
   const allUpgradeIds: UpgradeId[] = [
     'engagement_boost',
-    'algorithm_insight',
     'platform_headstart_picshift',
     'platform_headstart_skroll',
     'platform_headstart_podpod',
@@ -67,7 +64,6 @@ export function createPlayer(seed: number, now: number = Date.now()): Player {
     clout_upgrades,
     creator_kit: {} as Record<KitItemId, number>,
     last_manual_click_at: {} as Record<GeneratorId, number>,
-    algorithm_seed: seed,
     run_start_time: now,
     last_close_time: null,
     last_close_state: null,
@@ -107,7 +103,6 @@ export function createPlatformState(
     retention: 1.0,
     content_fatigue: {},
     neglect: 0,
-    algorithm_misalignment: 0,
   };
 }
 
@@ -120,9 +115,7 @@ export function createInitialGameState(
   staticData: StaticData,
   now: number = Date.now()
 ): GameState {
-  // Seed from crypto so it's different each run
-  const seed = Math.floor(Math.random() * 2 ** 32);
-  const player = createPlayer(seed, now);
+  const player = createPlayer(now);
 
   // Mark generators owned if their threshold is 0 — mirrors the platform
   // logic below and prevents a fresh-start race where the UI offers a buy
@@ -143,37 +136,13 @@ export function createInitialGameState(
     })
   ) as Record<PlatformId, PlatformState>;
 
-  // Start on the first algorithm state in the list
-  const firstStateId = Object.keys(staticData.algorithmStates)[0] as AlgorithmStateId;
-  const algorithm = createAlgorithmState(firstStateId, 0, staticData, now);
-
   const viralBurst = { active_ticks_since_last: 0, active: null };
 
   return {
     player,
     generators,
     platforms,
-    algorithm,
     viralBurst,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// AlgorithmState factory
-// ---------------------------------------------------------------------------
-
-export function createAlgorithmState(
-  stateId: AlgorithmStateId,
-  stateIndex: number,
-  staticData: StaticData,
-  now: number = Date.now()
-): AlgorithmState {
-  const def = staticData.algorithmStates[stateId];
-  return {
-    current_state_id: stateId,
-    current_state_index: stateIndex,
-    shift_time: now + staticData.algorithmSchedule.baseIntervalMs,
-    state_modifiers: { ...def.state_modifiers },
   };
 }
 

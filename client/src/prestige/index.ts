@@ -1,11 +1,10 @@
 // Prestige module — the Rebrand.
 //
 // Responsibility: compute Clout earned at rebrand, apply the rebrand (reset a
-// run while preserving meta), purchase Clout upgrades, and surface the
-// algorithm lookahead granted by the algorithm_insight upgrade.
+// run while preserving meta), and purchase Clout upgrades.
 //
 // Architecture contracts (core-systems.md §Prestige):
-//   calculateRebrand(state) → { cloutEarned, newSeed }
+//   calculateRebrand(state) → { cloutEarned }
 //   applyRebrand(state, result) → GameState
 //
 // Clout formula (core-systems.md §Open Questions #1 — resolved):
@@ -14,7 +13,7 @@
 //
 // What rebrand resets:
 //   engagement, total_followers, platforms.{followers, unlocked}, generators
-//   (owned, count, level), algorithm (new seed, new shift schedule)
+//   (owned, count, level)
 // What rebrand preserves:
 //   id, clout, lifetime_followers, clout_upgrades, last_close_time/state
 // Meta-upgrade effects applied at rebrand:
@@ -22,8 +21,6 @@
 //   generator_unlock   → the named generator starts owned at level 1
 
 import type {
-  AlgorithmState,
-  AlgorithmStateId,
   GameState,
   GeneratorId,
   GeneratorState,
@@ -35,9 +32,7 @@ import type {
   UpgradeId,
   ViralBurstState,
 } from '../types.ts';
-import { deriveNewSeed, getShiftAtIndex, type ScheduledShift } from '../algorithm/index.ts';
-import { createAlgorithmState, spendClout } from '../model/index.ts';
-import { kitAlgorithmLookaheadBonus } from '../creator-kit/index.ts';
+import { spendClout } from '../model/index.ts';
 
 // ---------------------------------------------------------------------------
 // Clout-from-followers formula
@@ -61,19 +56,13 @@ export function cloutForRebrand(totalFollowers: number): number {
 // ---------------------------------------------------------------------------
 
 export interface RebrandResult {
-  /** Clout awarded for this rebrand. ≥ 0. Integer. */
+  /** Clout awarded for this rebrand. >= 0. Integer. */
   cloutEarned: number;
-  /** New algorithm seed for the post-rebrand run. */
-  newSeed: number;
 }
 
 export function calculateRebrand(state: GameState): RebrandResult {
   const cloutEarned = cloutForRebrand(state.player.total_followers);
-  const newSeed = deriveNewSeed(
-    state.player.algorithm_seed,
-    state.player.rebrand_count + 1,
-  );
-  return { cloutEarned, newSeed };
+  return { cloutEarned };
 }
 
 // ---------------------------------------------------------------------------
@@ -142,7 +131,6 @@ export function applyRebrand(
         retention: 1.0,
         content_fatigue: {},
         neglect: 0,
-        algorithm_misalignment: 0,
       }];
     }),
   ) as Record<PlatformId, PlatformState>;
@@ -167,18 +155,6 @@ export function applyRebrand(
     }),
   ) as Record<GeneratorId, GeneratorState>;
 
-  // Fresh algorithm state from the new seed. Start at index 0, first state
-  // in the list (matches createInitialGameState behaviour).
-  const firstStateId = Object.keys(
-    staticData.algorithmStates,
-  )[0] as AlgorithmStateId;
-  const algorithm: AlgorithmState = createAlgorithmState(
-    firstStateId,
-    0,
-    staticData,
-    now,
-  );
-
   // Player: preserve meta, reset run state, add earned clout, bump count.
   // creator_kit is per-run (architecture/creator-kit.md §Rebrand) — wiped
   // here and MUST NOT appear in any preservation list.
@@ -189,7 +165,6 @@ export function applyRebrand(
     // lifetime_followers preserved (compounds across runs)
     clout: state.player.clout + result.cloutEarned,
     rebrand_count: state.player.rebrand_count + 1,
-    algorithm_seed: result.newSeed,
     run_start_time: now,
     creator_kit: {} as Record<KitItemId, number>,
     // last_manual_click_at reset — per arch spec, cooldown timestamps are
@@ -211,7 +186,6 @@ export function applyRebrand(
     player,
     generators,
     platforms,
-    algorithm,
     viralBurst,
   };
 }
@@ -257,8 +231,7 @@ export function canPurchaseCloutUpgrade(
  * insufficient Clout or max-level. Returns new GameState.
  *
  * Effect of the upgrade is NOT applied at purchase time — it's read at runtime
- * by the consumers (cloutBonus in game-loop, head-start logic in applyRebrand,
- * algorithm-insight lookahead in getUpcomingShifts).
+ * by the consumers (cloutBonus in game-loop, head-start logic in applyRebrand).
  */
 export function purchaseCloutUpgrade(
   state: GameState,
@@ -290,52 +263,3 @@ export function purchaseCloutUpgrade(
   };
 }
 
-// ---------------------------------------------------------------------------
-// Algorithm insight — reveal upcoming shifts
-// ---------------------------------------------------------------------------
-
-/**
- * Return up to N upcoming shifts, where N is the lookahead granted by the
- * algorithm_insight upgrade PLUS the kit `algorithm_lookahead` contribution
- * (Laptop). Level 0 everywhere → no lookahead → [].
- *
- * The per-level clout lookahead is read from `effect.lookaheads[level - 1]`
- * (each entry is the absolute number of shifts revealed at that level).
- * Multiple algorithm_insight upgrades stack additively, and Laptop adds to
- * the same sum — per architecture/creator-kit.md §Stacking Order (additive).
- */
-export function getUpcomingShifts(
-  state: GameState,
-  staticData: StaticData,
-): ScheduledShift[] {
-  // Find all algorithm_insight upgrades and sum their contributions.
-  let lookahead = 0;
-  for (const upgradeId of Object.keys(state.player.clout_upgrades) as UpgradeId[]) {
-    const level = state.player.clout_upgrades[upgradeId];
-    if (level <= 0) continue;
-    const def = staticData.cloutUpgrades[upgradeId];
-    if (def.effect.type === 'algorithm_insight') {
-      const n = def.effect.lookaheads[level - 1];
-      if (n === undefined) {
-        throw new Error(
-          `getUpcomingShifts: upgrade '${upgradeId}' has no lookaheads[${level - 1}] ` +
-            `for level ${level} (max_level ${def.max_level})`,
-        );
-      }
-      lookahead += n;
-    }
-  }
-
-  // Kit Laptop lookahead stacks ADDITIVELY with Clout algorithm_insight.
-  lookahead += kitAlgorithmLookaheadBonus(state.player.creator_kit, staticData);
-
-  if (lookahead <= 0) return [];
-
-  const shifts: ScheduledShift[] = [];
-  const seed = state.player.algorithm_seed;
-  const currentIndex = state.algorithm.current_state_index;
-  for (let i = 1; i <= lookahead; i++) {
-    shifts.push(getShiftAtIndex(seed, currentIndex + i, staticData));
-  }
-  return shifts;
-}

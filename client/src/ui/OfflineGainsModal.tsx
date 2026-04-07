@@ -55,12 +55,6 @@ export function OfflineGainsModal({ result, onDismiss }: Props) {
             </div>
           );
         })}
-        {result.algorithmAdvances > 0 && (
-          <div className="gain-row">
-            <span>Algorithm shifts</span>
-            <span className="value">{result.algorithmAdvances}</span>
-          </div>
-        )}
 
         <button className="dismiss-btn" onClick={onDismiss}>
           Nice.

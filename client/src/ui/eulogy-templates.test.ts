@@ -3,7 +3,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   unlockedPlatformsList,
-  currentAlgorithmStateName,
   buildEulogyStanzas,
 } from './eulogy-templates.ts';
 import { createInitialGameState } from '../model/index.ts';
@@ -45,21 +44,11 @@ describe('unlockedPlatformsList', () => {
   });
 });
 
-describe('currentAlgorithmStateName', () => {
-  it('returns the name of the current algorithm state', () => {
-    const state = createInitialGameState(STATIC_DATA, 0);
-    const result = currentAlgorithmStateName(state);
-    // Should be a non-empty string that matches some mood name.
-    expect(result.length).toBeGreaterThan(0);
-    expect(result).not.toBe('an unknown state');
-  });
-});
-
 describe('buildEulogyStanzas', () => {
-  it('returns an array of strings (4 placeholder stanzas)', () => {
+  it('returns an array of strings (3 stanzas)', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const stanzas = buildEulogyStanzas(state);
-    expect(stanzas).toHaveLength(4);
+    expect(stanzas).toHaveLength(3);
     for (const s of stanzas) {
       expect(typeof s).toBe('string');
       expect(s.length).toBeGreaterThan(0);

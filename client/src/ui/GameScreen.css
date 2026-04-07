@@ -6,88 +6,6 @@
  * its own — palette changes happen in one place.
  */
 
-/* --- Ambient background layer (Algorithm mood) -------------------------- */
-
-.algorithm-background {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  background: var(--surface-canvas, #FAF8F5);
-  background-size: 200% 200%;
-  transition: background-image 400ms ease-in-out;
-  animation: mood-drift var(--mood-cycle, 6s) ease-in-out infinite;
-  pointer-events: none;
-}
-
-/* --- Algorithm mood edge vignette ----------------------------------------
- * Radial gradient wash at screen edges. Color and opacity driven by
- * --mood-color-edge / --mood-edge-opacity tokens bound per algorithm state
- * in tokens.css. Instability and viral burst override opacity/color inline.
- * Architecture: visual-theming.md §Vignette Layer — DOM Contract. */
-
-.algorithm-vignette {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 120% 100% at 50% 50%,
-    transparent 40%,
-    var(--mood-color-edge, transparent) 100%
-  );
-  transition: background 400ms ease-in-out, opacity 400ms ease-in-out;
-}
-
-/* Viral burst peak: pulse the vignette opacity at 2s cycle. */
-.algorithm-vignette.vignette-pulse {
-  animation: vignette-mood-pulse 2s ease-in-out infinite;
-}
-
-@keyframes vignette-mood-pulse {
-  0%, 100% { opacity: 0.16; }
-  50%      { opacity: 0.32; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .algorithm-vignette {
-    transition: none;
-  }
-  .algorithm-vignette.vignette-pulse {
-    animation: none;
-  }
-}
-
-.algorithm-background::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  /* Shimmer overlay — white-on-warm-white (near-invisible on light-mode
-   * canvas). Retained as a structural hook for a follow-up particle pass.
-   * Tokenized per no-literals rule (task #108 AC7). */
-  background:
-    radial-gradient(ellipse at 30% 20%, rgba(var(--palette-white-rgb), 0.04), transparent 55%),
-    radial-gradient(ellipse at 70% 80%, rgba(var(--palette-white-rgb), 0.03), transparent 60%);
-  animation: mood-shimmer calc(var(--mood-cycle, 6s) * 1.5) ease-in-out infinite;
-}
-
-/* Instability intensification — the UX spec §4.3 says motion speeds up and
- * saturation nudges in the final 20% of the shift interval. We scale the
- * animation-duration down via --mood-cycle and bump saturation via filter. */
-.algorithm-background.instability {
-  filter: saturate(1.15) brightness(1.08);
-}
-
-@keyframes mood-drift {
-  0%   { background-position: 0%   0%;   }
-  50%  { background-position: 100% 100%; }
-  100% { background-position: 0%   0%;   }
-}
-
-@keyframes mood-shimmer {
-  0%, 100% { opacity: 0.6; transform: translateY(0); }
-  50%      { opacity: 1.0; transform: translateY(-8px); }
-}
-
 /* --- Screen layout ------------------------------------------------------- */
 
 .game-screen {
@@ -113,7 +31,7 @@
 /* --- Top bar (UX §2, §3, §5) -------------------------------------------- */
 
 /* Three-zone strip per game-screen-hud-refinements §1.2.
- * Zone A (algorithm): left, max 40%.
+ * Zone A: left, max 40% (empty after algorithm removal).
  * Zone B (engagement): center, min 30%.
  * Zone C (followers): right, max 30%.
  * Settings gear sits outside the zone budget.
@@ -127,7 +45,8 @@
   border-bottom: 2px solid var(--border-default);
   backdrop-filter: blur(6px);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  z-index: 10;
 }
 
 /* Pixel-art skyline backdrop — atmospheric, behind all top-bar content. */
@@ -154,7 +73,23 @@
   flex-shrink: 0;
 }
 
-/* Zone A — algorithm label (max 40% width, §1.2). */
+.top-bar-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.top-bar-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+/* Zone A — empty after algorithm removal (max 40% width, §1.2). */
 .algo-label {
   display: flex;
   flex-direction: column;
@@ -203,13 +138,14 @@
   text-overflow: ellipsis;
 }
 
-/* RUN badge — appears inline with algorithm state name (task #66, UX §5).
+/* RUN badge — appears in Zone A (task #66, UX §5).
    Hidden at rebrand_count 0; 400ms fade-in on first appearance (rebrand_count 1). */
 .run-badge {
   display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-receded); /* ~4.5:1 contrast, muted per spec */
   margin-left: 8px;
@@ -227,20 +163,76 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: center;
   line-height: 1;
   position: relative; /* anchor for viral-summary-badge absolute positioning */
   flex: 1 1 auto;
   min-width: 30%;
 }
 
-/* Engagement counter — overflow truncates per §1.3, never wraps. */
+/* Engagement counter — frosted glass that hugs the number. */
 .engagement-value {
-  font-size: 48px;
+  position: relative;
+  font-size: 64px;
+  user-select: none;
+  -webkit-user-select: none;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: var(--text-primary);
+  color: #3A3530;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  box-shadow:
+    0 2px 8px -2px rgba(0, 0, 0, 0.08),
+    0 8px 24px -4px rgba(0, 0, 0, 0.05);
+  padding: 4px 16px;
+  align-items: center;
+  gap: 8px;
+}
+
+.engagement-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Hover tooltip bubble */
+.engagement-value::after {
+  content: 'Engagement';
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  z-index: 100;
+  transform: translateX(-50%) scale(0.9);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--surface-panel, #fff);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: 2px 10px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+}
+
+.engagement-value:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .engagement-value {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #E8E4DF;
+  }
 }
 
 /* Rate promoted to P0 weight per purchase-feedback spec §2.1.
@@ -823,7 +815,7 @@
 
 .generator-row {
   display: grid;
-  grid-template-columns: 44px 1fr auto auto auto auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 12px;
   padding: 10px 4px;
@@ -832,7 +824,7 @@
 }
 
 .generator-row:hover {
-  background: var(--surface-hover);
+  background: none;
 }
 
 .generator-row.locked {
@@ -961,13 +953,14 @@
   font-size: 11px;
   color: var(--text-receded);
   font-style: italic;
-  grid-column: 2 / -1;
-  text-align: right;
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 12px 0;
 }
 
 /* Unowned row layout — badge + info + full buy button (§4.2). */
 .generator-row.generator-row-unowned {
-  grid-template-columns: 44px 1fr auto;
+  grid-template-columns: 1fr auto;
 }
 
 .unowned-info {
@@ -976,16 +969,17 @@
   gap: 4px;
 }
 
-/* Full buy button — first-purchase affordance (§4.2). Min 180×64px. */
+/* Full buy button — first-purchase affordance (§4.2). */
 .buy-btn {
-  min-width: 180px;
-  min-height: 64px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
   gap: 3px;
-  padding: 12px 16px;
+  width: 236px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: 8px 12px;
   border-radius: 6px;
   border: 1px solid var(--border-default);
   background: var(--surface-panel);
@@ -1065,9 +1059,10 @@
 
 /* Non-disabled state for controlled row buttons. */
 .row-btn.row-btn-disabled {
-  color: var(--text-receded);
+  background: transparent;
+  color: #9B9B9B;
+  border-color: rgba(240, 236, 231, 0.60);
   cursor: not-allowed;
-  border-color: var(--border-subtle);
 }
 
 /* Modifier chip (UX §4.5) */
@@ -1105,17 +1100,22 @@
 .row-actions {
   display: flex;
   gap: 6px;
+  margin-left: auto;
 }
 
 .row-btn {
   font-family: inherit;
   font-size: 12px;
-  padding: 5px 10px;
+  padding: 5px 0;
+  width: 72px;
+  text-align: center;
   border-radius: 4px;
   border: 1px solid var(--border-default);
   background: var(--surface-panel);
   color: var(--text-primary);
   cursor: pointer;
+  box-sizing: border-box;
+  flex-shrink: 0;
   font-variant-numeric: tabular-nums;
   transition: background 120ms ease-out, border-color 120ms ease-out;
 }
@@ -2040,17 +2040,6 @@
    Three phases: Build (0–1500ms) → Peak (variable) → Decay (last 1000ms).
    ========================================================================== */
 
-/* --- Algorithm background saturation bump (Phase 1 / Phase 2) ------------ */
-
-.algorithm-background.viral-saturation {
-  filter: saturate(1.2) brightness(1.05);
-}
-
-/* Combined: instability + viral */
-.algorithm-background.instability.viral-saturation {
-  filter: saturate(1.3) brightness(1.1);
-}
-
 /* --- Engagement counter gold color (Phase 1 onset → Phase 3 end) --------- */
 
 /* Transition on base rule handles both directions:
@@ -2158,9 +2147,6 @@
   }
 }
 
-/* --- Legacy viral-vignette block removed by task #109. The viral burst
- * edge vignette is now handled by AlgorithmBackground's .algorithm-vignette
- * layer with viralBurst override. See algorithm-mood-visibility proposal. */
 
 /* --- Camera-style zoom pulse (Phase 2 only) --------------------------------
  * ±1% scale on the game-screen. Fixed-position siblings (vignette, particles,
@@ -2232,239 +2218,7 @@
 
 /*
  * Backdrop — transparent full-screen overlay that catches outside-tap to
- * dismiss the drawer. Z-order: above normal content, below the drawer itself.
- */
-.upgrade-drawer-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  background: transparent;
-}
-
-/*
- * The drawer itself — fixed position, slides in from the right edge of the
- * generator list, overlapping the platform panel column.
- * Width: 340px per spec §1.
- * right: 16px — aligned to the screen's right margin.
- */
-.upgrade-drawer {
-  position: fixed;
-  right: 16px;
-  width: 340px;
-  z-index: 201;
-  background: var(--surface-panel);
-  border: 1px solid var(--border-default);
-  border-top: 3px solid var(--drawer-color, var(--border-default));
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(var(--palette-near-black-rgb),0.18);
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  overflow: hidden;
-  animation: drawer-slide-in 300ms ease-out both;
-}
-
-.upgrade-drawer.upgrade-drawer-closing {
-  animation: drawer-slide-out 150ms ease-in both;
-}
-
-@keyframes drawer-slide-in {
-  from { transform: translateX(110%); opacity: 0.6; }
-  to   { transform: translateX(0);    opacity: 1;   }
-}
-
-@keyframes drawer-slide-out {
-  from { transform: translateX(0);    opacity: 1;   }
-  to   { transform: translateX(110%); opacity: 0;   }
-}
-
-/* Header — generator name + current level readout */
-.upgrade-drawer-header {
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.upgrade-drawer-title {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.upgrade-drawer-current {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-/* Level rows */
-.upgrade-drawer-levels {
-  padding: 10px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.upgrade-level-row {
-  display: grid;
-  grid-template-columns: 48px 72px 1fr auto;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 6px;
-}
-
-/* Action row — elevated treatment with tinted background. */
-.upgrade-level-row.action-row {
-  background: rgba(var(--drawer-color-rgb, 200, 180, 150), 0.08);
-  /* Button sits on the drawer edge nearest the row trigger (left edge) —
-     cuts pointer travel for repeat upgrades. See spec §2.3 / Decision #6. */
-  grid-template-columns: auto 48px 72px 1fr;
-}
-
-.upgrade-level-row.action-row .upgrade-btn {
-  grid-column: 1;
-  grid-row: 1;
-}
-.upgrade-level-row.action-row .upgrade-level-lv {
-  grid-column: 2;
-}
-.upgrade-level-row.action-row .upgrade-level-multi {
-  grid-column: 3;
-}
-.upgrade-level-row.action-row .upgrade-level-cost {
-  grid-column: 4;
-}
-
-.upgrade-level-row.action-row:hover {
-  background: rgba(var(--drawer-color-rgb, 200, 180, 150), 0.12);
-}
-
-/* Preview rows — readable but clearly not actionable (4.5:1 contrast). */
-.upgrade-level-row.preview-row {
-  opacity: 0.65;
-}
-
-.upgrade-level-lv {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.upgrade-level-multi {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--drawer-color, var(--text-primary));
-}
-
-.upgrade-level-cost {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.upgrade-level-cost.insufficient {
-  color: var(--accent-amber); /* matches Buy button insufficient treatment */
-}
-
-/* "need N more" hint below action row. */
-.upgrade-insufficient-hint {
-  font-size: 11px;
-  font-style: italic;
-  color: var(--accent-amber);
-  padding: 2px 10px 4px;
-  animation: hint-fade-in 150ms ease-out both;
-}
-
-@keyframes hint-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* Upgrade button — left-aligned in the action row (spec §2.3 / Decision #6). */
-.upgrade-btn {
-  width: 100px;
-  height: 36px;
-  padding: 0 12px;
-  background: var(--drawer-color, var(--text-secondary));
-  color: var(--text-inverse);
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: filter 120ms ease-out, transform 60ms ease-out;
-  flex-shrink: 0;
-}
-
-.upgrade-btn:hover {
-  filter: brightness(1.10);
-}
-
-.upgrade-btn:active {
-  transform: scale(0.97);
-  filter: brightness(1.15);
-}
-
-.upgrade-btn.insufficient {
-  background: var(--surface-pressed);
-  color: var(--accent-amber);
-  cursor: default;
-}
-
-.upgrade-btn.upgrade-btn-shake {
-  animation: upgrade-btn-shake 200ms ease-out;
-}
-
-@keyframes upgrade-btn-shake {
-  0%   { transform: translateX(0); }
-  20%  { transform: translateX(-4px); }
-  40%  { transform: translateX(4px); }
-  60%  { transform: translateX(-3px); }
-  80%  { transform: translateX(3px); }
-  100% { transform: translateX(0); }
-}
-
-/* Footer */
-.upgrade-drawer-footer {
-  padding: 10px 16px 12px;
-  border-top: 1px solid var(--border-subtle);
-  display: flex;
-  justify-content: flex-end;
-}
-
-.upgrade-close-btn {
-  width: 80px;
-  height: 32px;
-  background: transparent;
-  border: 1px solid var(--border-emphasis);
-  border-radius: 6px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  cursor: pointer;
-  transition: border-color 100ms, color 100ms;
-}
-
-.upgrade-close-btn:hover {
-  border-color: var(--border-strong);
-  color: var(--text-primary);
-}
-
-/* Platform panel dims to 40% opacity while upgrade drawer is open (spec §1). */
-.platform-panel.drawer-dimmed {
-  opacity: 0.40;
-  pointer-events: none;
-  transition: opacity 200ms ease-out;
-}
-
-.platform-panel {
-  transition: opacity 200ms ease-out;
-}
-
-/* Generator row highlight when its drawer is open. */
-.generator-row.drawer-open {
-  background: var(--surface-hover);
-}
-
-/* Upgrade affordance button — distinct visual from Buy. */
+ * Upgrade affordance button — distinct visual from Buy. */
 .row-btn-upgrade.active {
   background: var(--surface-pressed);
   border-color: var(--border-strong);
@@ -2474,21 +2228,8 @@
  * Proposal: proposals/accepted/lvl-up-button-affordance-states.md
  * Three mutually-exclusive states so players can tell at a glance whether
  * tapping opens a drawer with a purchasable upgrade:
- *   dormant — no units owned; disabled placeholder
- *   armed   — owned but can't afford; amber deficit glyph, stillness
- *   ready   — owned and affordable; gold border + breathing halo
- * Border-weight hierarchy (0.08 → 0.14 → full gold) keeps states
- * distinguishable without color. */
-
-/* Dormant — matches legacy row-btn-disabled visuals. */
-.row-btn-upgrade.row-btn-lvl-dormant {
-  color: var(--text-receded);
-  cursor: not-allowed;
-  border-color: var(--border-subtle);
-}
-.row-btn-upgrade.row-btn-lvl-dormant .label {
-  color: var(--text-receded);
-}
+ *   armed   — can't afford; greyed out
+ *   ready   — affordable; gold border + breathing halo */
 
 /* Maxed — cap reached. Platinum plaque, inset, unpressable-looking.
    Spec: ux/generator-max-level-state.md §3.2. --accent-gold is reserved
@@ -2641,17 +2382,16 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 
 /* Armed — stronger border than dormant, amber deficit glyph, no motion. */
 .row-btn-upgrade.row-btn-lvl-armed {
-  border-color: var(--border-default);
-  color: color-mix(in srgb, var(--accent-amber) 60%, transparent);
+  background: transparent;
+  color: #9B9B9B;
+  border-color: rgba(240, 236, 231, 0.60);
+  cursor: not-allowed;
 }
 .row-btn-upgrade.row-btn-lvl-armed .label {
-  color: var(--text-secondary);
+  color: #9B9B9B;
 }
 .row-btn-upgrade.row-btn-lvl-armed .lvl-deficit-glyph {
-  display: inline-block;
-  font-size: 10px;
-  margin-right: 3px;
-  color: color-mix(in srgb, var(--accent-amber) 60%, transparent);
+  display: none;
 }
 
 /* Ready — gold border, gold cost numeral, breathing halo. */
@@ -2766,16 +2506,6 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   to { opacity: 0; }
 }
 
-/* Reduce Motion — drawer appears/disappears instantly; dim still applies. */
-@media (prefers-reduced-motion: reduce) {
-  .upgrade-drawer {
-    animation: none;
-  }
-
-  .upgrade-drawer.upgrade-drawer-closing {
-    animation: none;
-  }
-}
 
 /* --- Creator Kit panel (ux/creator-kit-panel.md) ------------------------ */
 /*
@@ -3183,6 +2913,17 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   font-variant-numeric: tabular-nums;
 }
 
+.settings-audio-credit {
+  font-size: 11px;
+  color: var(--text-receded, #999);
+  margin-top: 4px;
+}
+
+.settings-audio-credit a {
+  color: var(--text-secondary, #666);
+  text-decoration: underline;
+}
+
 /* Save-section buttons. */
 .settings-btn {
   font-family: inherit;
@@ -3410,6 +3151,46 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   padding: 10px 14px;
 }
 
+/* --- Music player controls (prev / play-pause / next) -------------------- */
+
+.music-player {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 2px 4px;
+}
+
+.music-player-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #555);
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 0;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.music-player-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-primary, #1a1a1a);
+}
+
+.music-player-btn:active {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.music-player-btn-play {
+  width: 32px;
+  height: 32px;
+}
+
 /* ==========================================================================
    Reduce Motion — in-game mirror of @media (prefers-reduced-motion: reduce).
    ==========================================================================
@@ -3419,19 +3200,6 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
    (prefers-reduced-motion: reduce) counterpart above — search for the same
    selectors if you're modifying motion behavior. */
 
-html[data-reduce-motion="true"] .algorithm-background,
-html[data-reduce-motion="true"] .algorithm-background::after,
-html[data-reduce-motion="true"] .algorithm-background.instability {
-  animation: none;
-}
-
-html[data-reduce-motion="true"] .algorithm-vignette {
-  transition: none;
-}
-
-html[data-reduce-motion="true"] .algorithm-vignette.vignette-pulse {
-  animation: none;
-}
 
 html[data-reduce-motion="true"] .badge.badge-owned {
   animation: none;
@@ -3466,10 +3234,6 @@ html[data-reduce-motion="true"] .viral-particles-overlay {
   display: none;
 }
 
-html[data-reduce-motion="true"] .upgrade-drawer,
-html[data-reduce-motion="true"] .upgrade-drawer.upgrade-drawer-closing {
-  animation: none;
-}
 
 html[data-reduce-motion="true"] .kit-chevron { transition: none; }
 html[data-reduce-motion="true"] .kit-rows { animation: none; }
@@ -3487,10 +3251,10 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
  * --------------------------------------------------------------------------- */
 
 .purchase-pill {
-  min-width: 44px;
+  width: 80px;
   height: 28px;
   border-radius: 6px;
-  padding: 0 8px;
+  padding: 0 4px;
   font-size: 11px;
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
@@ -3606,10 +3370,23 @@ html[data-reduce-motion="true"] .purchase-pill-auto.purchase-pill-affordable::be
   background: transparent;
   color: #9B9B9B;
   border-color: rgba(240, 236, 231, 0.60);
-  cursor: default;
+  cursor: not-allowed;
 }
 .purchase-pill-unaffordable:active {
   transform: none;
+}
+
+.purchase-pill-shake {
+  animation: pill-shake 200ms ease-out;
+}
+
+@keyframes pill-shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(4px); }
+  40%  { transform: translateX(-4px); }
+  60%  { transform: translateX(4px); }
+  80%  { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
 }
 
 /* Label flash on purchase (§5.2) — 120ms bright flash */

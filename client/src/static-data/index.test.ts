@@ -11,13 +11,12 @@ import type { KitItemId } from '../types.ts';
 describe('STATIC_DATA.creatorKitItems', () => {
   const expectedIds: KitItemId[] = [
     'camera',
-    'laptop',
     'phone',
     'wardrobe',
     'mogging',
   ];
 
-  it('contains exactly the five expected item ids', () => {
+  it('contains exactly the four expected item ids', () => {
     const keys = Object.keys(STATIC_DATA.creatorKitItems).sort();
     expect(keys).toEqual([...expectedIds].sort());
   });
@@ -35,7 +34,7 @@ describe('STATIC_DATA.creatorKitItems', () => {
     }
   });
 
-  it('each value/lookahead array (if present) has length === max_level', () => {
+  it('each value array (if present) has length === max_level', () => {
     for (const id of expectedIds) {
       const def = STATIC_DATA.creatorKitItems[id];
       switch (def.effect.type) {
@@ -43,9 +42,6 @@ describe('STATIC_DATA.creatorKitItems', () => {
         case 'follower_conversion_multiplier':
         case 'viral_burst_amplifier':
           expect(def.effect.values.length).toBe(def.max_level);
-          break;
-        case 'algorithm_lookahead':
-          expect(def.effect.lookaheads.length).toBe(def.max_level);
           break;
         case 'platform_headstart_sequential':
           // no value array — sequential semantics
@@ -63,15 +59,13 @@ describe('STATIC_DATA.creatorKitItems', () => {
     }
   });
 
-  it('value/lookahead arrays are non-decreasing (monotonic cumulative effect)', () => {
+  it('value arrays are non-decreasing (monotonic cumulative effect)', () => {
     for (const id of expectedIds) {
       const { effect } = STATIC_DATA.creatorKitItems[id];
       const arr =
-        effect.type === 'algorithm_lookahead'
-          ? effect.lookaheads
-          : effect.type === 'platform_headstart_sequential'
-            ? null
-            : effect.values;
+        effect.type === 'platform_headstart_sequential'
+          ? null
+          : effect.values;
       if (arr === null) continue;
       for (let i = 1; i < arr.length; i++) {
         expect(arr[i]).toBeGreaterThanOrEqual(arr[i - 1]);
@@ -81,7 +75,6 @@ describe('STATIC_DATA.creatorKitItems', () => {
 
   it('each item has the correct effect type for its role', () => {
     expect(STATIC_DATA.creatorKitItems.camera.effect.type).toBe('engagement_multiplier');
-    expect(STATIC_DATA.creatorKitItems.laptop.effect.type).toBe('algorithm_lookahead');
     expect(STATIC_DATA.creatorKitItems.phone.effect.type).toBe('platform_headstart_sequential');
     expect(STATIC_DATA.creatorKitItems.wardrobe.effect.type).toBe('follower_conversion_multiplier');
     expect(STATIC_DATA.creatorKitItems.mogging.effect.type).toBe('viral_burst_amplifier');

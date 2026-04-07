@@ -4,7 +4,6 @@ import {
   postClick,
   levelMultiplier,
   cloutBonus,
-  effectiveAlgorithmModifier,
   computeGeneratorEffectiveRate,
   computeAllGeneratorEffectiveRates,
   computeSnapshot,
@@ -25,9 +24,7 @@ import { computeFollowerDistribution } from '../platform/index.ts';
 const T0 = 1_700_000_000_000;
 
 /**
- * Build a deterministic game state with a known algorithm state and the given
- * generator owned + configured. `algorithm.shift_time` is far in the future to
- * keep tests insensitive to algorithm shift advancement.
+ * Build a deterministic game state with the given generator owned + configured.
  */
 function stateWithGenerator(
   id: GeneratorId,
@@ -51,8 +48,6 @@ function stateWithGenerator(
         autoclicker_count: autoclicker_count ?? count,
       },
     },
-    algorithm: { ...base.algorithm, shift_time: T0 + 10_000_000 },
-    player: { ...base.player, algorithm_seed: 0xDEADBEEF },
   };
 }
 
@@ -132,34 +127,12 @@ describe('engagement clamp — write-site integration', () => {
 });
 
 // ---------------------------------------------------------------------------
-// effectiveAlgorithmModifier
-// ---------------------------------------------------------------------------
-
-describe('effectiveAlgorithmModifier', () => {
-  it('returns 1.0 when trend_sensitivity is 0, regardless of raw modifier', () => {
-    expect(effectiveAlgorithmModifier(2.0, 0)).toBe(1.0);
-    expect(effectiveAlgorithmModifier(0.5, 0)).toBe(1.0);
-  });
-
-  it('returns the raw modifier when trend_sensitivity is 1', () => {
-    expect(effectiveAlgorithmModifier(2.0, 1)).toBe(2.0);
-    expect(effectiveAlgorithmModifier(0.5, 1)).toBe(0.5);
-  });
-
-  it('linearly interpolates between 1.0 and raw modifier', () => {
-    expect(effectiveAlgorithmModifier(2.0, 0.5)).toBeCloseTo(1.5, 10);
-    expect(effectiveAlgorithmModifier(0.6, 0.5)).toBeCloseTo(0.8, 10);
-  });
-});
-
-// ---------------------------------------------------------------------------
 // cloutBonus
 // ---------------------------------------------------------------------------
 
 describe('cloutBonus', () => {
   const zeroUpgrades = {
     engagement_boost: 0,
-    algorithm_insight: 0,
     platform_headstart_picshift: 0,
     platform_headstart_skroll: 0,
     platform_headstart_podpod: 0,
@@ -188,8 +161,8 @@ describe('cloutBonus', () => {
   it('ignores non-engagement upgrade types', () => {
     const upgrades = {
       ...zeroUpgrades,
-      algorithm_insight: 2, // not an engagement_multiplier
       platform_headstart_picshift: 1,
+      ai_slop_unlock: 1,
     };
     expect(cloutBonus(upgrades, STATIC_DATA)).toBe(1.0);
   });
@@ -227,23 +200,14 @@ describe('computeGeneratorEffectiveRate', () => {
     expect(rate).toBe(0);
   });
 
-  it('applies autoclicker_count, base rate, (1+count), algorithm modifier, and clout', () => {
+  it('applies autoclicker_count, level, base rate, (1+count), clout, and kit', () => {
     const state = stateWithGenerator('selfies', 2, 1, 3);
-    // New formula: autoclicker_count × base_event_rate × base_event_yield
-    //              × (1 + count) × algo_mod × clout
+    // Formula: autoclicker_count × level × base_event_rate × base_event_yield
+    //          × (1 + count) × clout × kit
     const selfiesDef = STATIC_DATA.generators.selfies;
-    const firstAlgoStateId = Object.keys(STATIC_DATA.algorithmStates)[0];
-    const rawMod =
-      STATIC_DATA.algorithmStates[
-        firstAlgoStateId as keyof typeof STATIC_DATA.algorithmStates
-      ].state_modifiers.selfies;
-    const algoMod = effectiveAlgorithmModifier(
-      rawMod,
-      selfiesDef.trend_sensitivity,
-    );
-    // autoclicker_count=3, base_rate=0.2, base_yield=5.0, (1+count)=(1+2)=3
-    const expected = 3 * selfiesDef.base_event_rate * selfiesDef.base_event_yield
-      * (1 + 2) * algoMod * 1.0;
+    // autoclicker_count=3, level=1, base_rate=0.2, base_yield=5.0, (1+count)=(1+2)=3
+    const expected = 3 * 1 * selfiesDef.base_event_rate * selfiesDef.base_event_yield
+      * (1 + 2) * 1.0 * 1.0;
     const rate = computeGeneratorEffectiveRate(
       state.generators.selfies,
       state,
@@ -299,13 +263,7 @@ describe('tick — engagement', () => {
   it('is a no-op on engagement when no generators are owned', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     state.player.engagement = 42;
-    // algorithm shift_time is in the future, won't advance
-    const next = tick(
-      { ...state, algorithm: { ...state.algorithm, shift_time: T0 + 10_000_000 } },
-      T0 + 500,
-      500,
-      STATIC_DATA,
-    );
+    const next = tick(state, T0 + 500, 500, STATIC_DATA);
     expect(next.player.engagement).toBe(42);
   });
 
@@ -316,38 +274,16 @@ describe('tick — engagement', () => {
     expect(ten.player.engagement).toBeCloseTo(one.player.engagement * 10, 6);
   });
 
-  it('produces more engagement from a trend-sensitive generator in a boosted state', () => {
-    // memes trend_sensitivity = 0.8; algorithm boost varies by state.
-    // We compare two otherwise-identical states but override the algorithm
-    // state_modifiers directly on the GameState to isolate the effect.
-    const state = stateWithGenerator('memes', 1, 1);
-    const boosted: GameState = {
-      ...state,
-      algorithm: {
-        ...state.algorithm,
-        state_modifiers: { ...state.algorithm.state_modifiers, memes: 2.0 },
-      },
-    };
-    const neutral: GameState = {
-      ...state,
-      algorithm: {
-        ...state.algorithm,
-        state_modifiers: { ...state.algorithm.state_modifiers, memes: 1.0 },
-      },
-    };
-    const boostedNext = tick(boosted, T0 + 1000, 1000, STATIC_DATA);
-    const neutralNext = tick(neutral, T0 + 1000, 1000, STATIC_DATA);
-    expect(boostedNext.player.engagement).toBeGreaterThan(
-      neutralNext.player.engagement,
+  it('rate scales with count (yield multiplier from BUY track)', () => {
+    // Two otherwise identical states, one with count=0 and one with count=5.
+    const low = stateWithGenerator('memes', 0, 1);
+    const high = stateWithGenerator('memes', 5, 1);
+    const lowNext = tick(low, T0 + 1000, 1000, STATIC_DATA);
+    const highNext = tick(high, T0 + 1000, 1000, STATIC_DATA);
+    // (1+5)/(1+0) = 6x more engagement from higher count
+    expect(highNext.player.engagement).toBeGreaterThan(
+      lowNext.player.engagement,
     );
-  });
-
-  it('trend-immune generator is unaffected by algorithm state', () => {
-    // Tutorials have trend_sensitivity = 0.1 (close to immune).
-    // Manually set sensitivity to 0 by using a generator override approach:
-    // we exercise the formula via effectiveAlgorithmModifier directly.
-    expect(effectiveAlgorithmModifier(2.0, 0)).toBe(1.0);
-    expect(effectiveAlgorithmModifier(0.5, 0)).toBe(1.0);
   });
 });
 
@@ -399,12 +335,7 @@ describe('tick — followers', () => {
 
   it('earns zero followers when no generators are active', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
-    const next = tick(
-      { ...state, algorithm: { ...state.algorithm, shift_time: T0 + 10_000_000 } },
-      T0 + 1000,
-      1000,
-      STATIC_DATA,
-    );
+    const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
     expect(next.player.total_followers).toBe(0);
     expect(next.platforms.chirper.followers).toBe(0);
   });
@@ -443,47 +374,6 @@ describe('tick — platform unlocks', () => {
     // tiny production — picshift should remain locked
     expect(next.platforms.picshift.unlocked).toBe(false);
     expect(next.platforms.skroll.unlocked).toBe(false);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// tick — algorithm advancement
-// ---------------------------------------------------------------------------
-
-describe('tick — algorithm', () => {
-  it('advances the algorithm when now >= shift_time', () => {
-    const base = stateWithGenerator('selfies', 1, 1);
-    // Set shift_time to happen within deltaMs
-    const state: GameState = {
-      ...base,
-      algorithm: { ...base.algorithm, shift_time: T0 + 500 },
-    };
-    const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
-    expect(next.algorithm.current_state_index).toBeGreaterThan(
-      state.algorithm.current_state_index,
-    );
-  });
-
-  it('does not advance the algorithm before shift_time', () => {
-    const state = stateWithGenerator('selfies', 1, 1);
-    const next = tick(state, T0 + 100, 100, STATIC_DATA);
-    expect(next.algorithm.current_state_index).toBe(
-      state.algorithm.current_state_index,
-    );
-  });
-
-  it('deltaMs=0 still advances algorithm if shift boundary was crossed', () => {
-    const base = stateWithGenerator('selfies', 1, 1);
-    const state: GameState = {
-      ...base,
-      algorithm: { ...base.algorithm, shift_time: T0 - 1 },
-    };
-    const next = tick(state, T0, 0, STATIC_DATA);
-    expect(next.algorithm.current_state_index).toBeGreaterThan(
-      state.algorithm.current_state_index,
-    );
-    // Engagement unchanged — deltaMs is 0
-    expect(next.player.engagement).toBe(state.player.engagement);
   });
 });
 
@@ -533,13 +423,11 @@ describe('postClick', () => {
     expect(next.player.engagement).toBeGreaterThan(state.player.engagement);
   });
 
-  it('click engagement = base_event_yield × (1 + count) × algo_mod × clout × kit', () => {
+  it('click engagement = base_event_yield × (1 + count) × (1 + autoclicker_count) × clout × kit', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     const def = STATIC_DATA.generators.chirps;
-    const rawMod = state.algorithm.state_modifiers.chirps;
-    const algoMod = effectiveAlgorithmModifier(rawMod, def.trend_sensitivity);
-    // count=0 → (1+0)=1
-    const expected = def.base_event_yield * (1 + 0) * algoMod * 1.0 * 1.0;
+    // count=0, autoclicker_count=0 → (1+0)×(1+0)=1
+    const expected = def.base_event_yield * (1 + 0) * (1 + 0) * 1.0 * 1.0;
     const next = postClick(state, STATIC_DATA, 'chirps', T0);
     expect(next.player.engagement - state.player.engagement).toBeCloseTo(expected, 10);
   });
@@ -671,8 +559,8 @@ describe('yield/rate split regression', () => {
     });
   }
 
-  it('computeGeneratorEffectiveRate output for selfies at ac=1, count=0', () => {
-    // autoclicker_count=1, count=0 → formula: 1 × rate × yield × (1+0) × algoMod × clout × kit
+  it('computeGeneratorEffectiveRate output for selfies at ac=1, level=1, count=0', () => {
+    // autoclicker_count=1, level=1, count=0 → formula: 1 × 1 × rate × yield × (1+0) × clout × kit
     const state = stateWithGenerator('selfies', 0, 1, 1);
     const rate = computeGeneratorEffectiveRate(
       state.generators.selfies,
@@ -680,10 +568,8 @@ describe('yield/rate split regression', () => {
       STATIC_DATA,
     );
     const def = STATIC_DATA.generators.selfies;
-    const rawMod = state.algorithm.state_modifiers.selfies;
-    const algoMod = effectiveAlgorithmModifier(rawMod, def.trend_sensitivity);
     const expected = 1 * def.base_event_rate * def.base_event_yield *
-      (1 + 0) * algoMod * 1.0 * 1.0;
+      (1 + 0) * 1.0 * 1.0;
     expect(rate).toBeCloseTo(expected, 10);
   });
 });
@@ -704,10 +590,12 @@ describe('computeSnapshot', () => {
     expect(snap.platform_rates.podpod).toBe(0);
   });
 
-  it('captures current algorithm_state_index', () => {
+  it('snapshot has required fields (rates and platform_rates)', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     const snap = computeSnapshot(state, STATIC_DATA);
-    expect(snap.algorithm_state_index).toBe(state.algorithm.current_state_index);
+    expect(snap.total_engagement_rate).toBeDefined();
+    expect(snap.total_follower_rate).toBeDefined();
+    expect(snap.platform_rates).toBeDefined();
   });
 
   it('rates are expressed per second, matching tick accumulation over 1s', () => {
@@ -727,7 +615,6 @@ describe('computeSnapshot', () => {
           ...base.platforms.chirper,
           content_fatigue: { selfies: 1.0 },
           neglect: 0,
-          algorithm_misalignment: 0,
         },
       },
     };
@@ -822,7 +709,6 @@ describe('evaluateViralTrigger', () => {
         active_ticks_since_last: STATIC_DATA.viralBurst.minCooldownTicks + 1,
         active: null,
       },
-      algorithm: { ...base.algorithm, shift_time: T0 + 10_000_000 },
     };
     const result = evaluateViralTrigger(state, STATIC_DATA, T0, alwaysZero);
     expect(result).toBeNull();
@@ -865,49 +751,11 @@ describe('evaluateViralTrigger', () => {
     expect(result!.source_platform_id).toBe('picshift');
   });
 
-  it('Gate 3: algorithm boost doubles p_viral and increases fire rate vs no boost', () => {
-    // With a boosted algorithm state, the viral should fire more readily.
-    // We verify by counting how many out of N rolls produce a trigger:
-    // with boost active, p_viral × 2, so fires should be ~2× as frequent.
-    const baseState = stateReadyToViral();
-
-    // (leftover `unboosted`/`boosted` intermediates from an earlier refactor
-    // were removed — this test drives the boost via memes below.)
-    void baseState;
-
-    // Use memes (trend_sensitivity=0.8) with a 3.0 modifier:
-    // effective = 1 + 0.8 × (3.0 - 1) = 1 + 1.6 = 2.6 > 1.5 → triggers boost
-    const memesState = {
-      ...stateReadyToViral(),
-      generators: {
-        ...stateReadyToViral().generators,
-        memes: { ...createGeneratorState('memes'), owned: true, count: 10, level: 1, autoclicker_count: 10 },
-        selfies: { ...createGeneratorState('selfies'), owned: false, count: 0, level: 1, autoclicker_count: 0 },
-      },
-      algorithm: {
-        ...stateReadyToViral().algorithm,
-        state_modifiers: {
-          ...stateReadyToViral().algorithm.state_modifiers,
-          memes: 3.0,
-        },
-      },
-    };
-
-    // Count fires at exactly the boundary probability
-    // p_viral_base (early) ≈ 0.000037; with boost × 2 ≈ 0.000074
-    // Use a roll just inside the boosted p_viral but above base p_viral
-    const p_base = STATIC_DATA.viralBurst.baseProbabilityEarly;
-    const p_boosted = p_base * STATIC_DATA.viralBurst.algorithmBoostMultiplier;
-    // A value between p_base and p_boosted should fire only with boost active
-    const betweenRoll = (p_base + p_boosted) / 2;
-
-    const withBoostRandom = () => betweenRoll;
-    const noBoostState = stateReadyToViral(); // selfies, trend_sensitivity=0.3, modifier~1.2 → effective < 1.5
-    const noBoostResult = evaluateViralTrigger(noBoostState, STATIC_DATA, T0, withBoostRandom);
-    const boostedResult = evaluateViralTrigger(memesState, STATIC_DATA, T0, withBoostRandom);
-
-    expect(noBoostResult).toBeNull(); // roll > base p_viral → no fire
-    expect(boostedResult).not.toBeNull(); // roll < boosted p_viral → fire
+  it('fires consistently with a sufficiently low roll', () => {
+    const state = stateReadyToViral();
+    // A roll of 0 should always fire (below any positive p_viral)
+    const result = evaluateViralTrigger(state, STATIC_DATA, T0, alwaysZero);
+    expect(result).not.toBeNull();
   });
 
   it('tick integrates viral burst — active_ticks_since_last resets to 0 on trigger', () => {
@@ -972,7 +820,7 @@ describe('evaluateViralTrigger', () => {
 describe('Creator Kit — Camera engagement_multiplier', () => {
   function withKit(
     state: GameState,
-    kit: Partial<Record<'camera' | 'laptop' | 'phone' | 'wardrobe' | 'mogging', number>>,
+    kit: Partial<Record<'camera' | 'phone' | 'wardrobe' | 'mogging', number>>,
   ): GameState {
     return {
       ...state,

@@ -2,7 +2,7 @@
 // normal session. Implements UX spec §§2–8, §9, and §11.
 //
 // Zones (per UX §2):
-//   - Top bar (80px): Algorithm state + Engagement + Followers
+//   - Top bar (80px): Title + Engagement
 //   - Post zone (left, 320px): click-to-post button
 //   - Generators (center, flex): ledger with category dividers
 //   - Platforms (right, 280px): 3 cards with follower counts
@@ -26,7 +26,6 @@ import {
 import { cloutForRebrand } from '../prestige/index.ts';
 import type { ActiveViralEvent, GeneratorId } from '../types.ts';
 import type { OfflineResult } from '../offline/index.ts';
-import { AlgorithmBackground } from './AlgorithmBackground.tsx';
 import { TopBar } from './TopBar.tsx';
 import { ActionsColumn } from './ActionsColumn.tsx';
 import { GeneratorList } from './GeneratorList.tsx';
@@ -34,10 +33,9 @@ import { PlatformPanel } from './PlatformPanel.tsx';
 import { OfflineGainsModal } from './OfflineGainsModal.tsx';
 import { RebrandCeremonyModal, isEligibleToRebrand } from './RebrandCeremonyModal.tsx';
 import { CloutShopModal } from './CloutShopModal.tsx';
-import { CreatorKitPanel } from './CreatorKitPanel.tsx';
 import { SettingsModal } from './SettingsModal.tsx';
 import { useSettings } from './useSettings.ts';
-import { PLATFORM_DISPLAY } from './display.ts';
+import { prevTrack, nextTrack, togglePlayPause, isMusicPlaying } from './sfx.ts';
 import { fmtCompactInt } from './format.ts';
 import './GameScreen.css';
 
@@ -78,13 +76,6 @@ const VIRAL_PARTICLES = Array.from({ length: 18 }, (_, i) => ({
   duration: 85 + (i % 4) * 20,  // 85–145 (÷100 = 0.85–1.45s)
 }));
 
-/**
- * Whether the first-rebrand ambient copy should be shown.
- * Only appears on the first rebrand (rebrand_count === 1). Task #66, UX §5.
- */
-export function shouldShowAmbientCopy(rebrandCount: number): boolean {
-  return rebrandCount === 1;
-}
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -109,7 +100,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     pauseLoop,
     resumeLoop,
     buyCloutUpgrade,
-    buyKitItem,
     saveError,
     clearSaveError,
     resetGame,
@@ -127,10 +117,21 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     settings,
     setReduceMotion,
     setSound,
-    toggleSound,
     setMusicVolume,
     setSfxVolume,
   } = useSettings();
+
+  // Music player — sync UI with actual audio state. Poll at 250ms so mute
+  // toggle, background-tab pause, and track-end transitions are reflected.
+  const [musicPlaying, setMusicPlaying] = useState(() => isMusicPlaying());
+  useEffect(() => {
+    const t = window.setInterval(() => setMusicPlaying(isMusicPlaying()), 250);
+    return () => window.clearInterval(t);
+  }, []);
+
+  const handlePrev = () => { prevTrack(); setMusicPlaying(isMusicPlaying()); };
+  const handleNext = () => { nextTrack(); setMusicPlaying(isMusicPlaying()); };
+  const handlePlayPause = () => { togglePlayPause(); setMusicPlaying(isMusicPlaying()); };
 
   // Render-time derived values --------------------------------------------
   const engagementRate = useMemo(() => {
@@ -189,30 +190,9 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     : 0;
   const effectiveEngagementRate = engagementRate + viralBonusRatePerSec;
 
-  // Vignette color for the edge glow during viral (UX §9.2 Phase 2).
-  const vignetteColor = viralActive
-    ? PLATFORM_DISPLAY[viralActive.source_platform_id].accent
-    : null;
-
   // ---------------------------------------------------------------------------
   // Offline modal moved to the App-level start gate (welcome back variant).
   // The standalone OfflineGainsModal is no longer rendered here.
-
-  // Upgrade drawer open state — used to dim the platform panel per spec §1.
-  const [upgradeDrawerOpen, setUpgradeDrawerOpen] = useState(false);
-
-  // Approximate algorithm interval from static schedule — used for
-  // instability scaling (we don't have the exact current-interval value
-  // available; base ± variance is close enough for visual intent).
-  const intervalMs = STATIC_DATA.algorithmSchedule.baseIntervalMs;
-
-  // Live `now` for the instability computation. Tick once a second — we
-  // only need coarse resolution to scale animation speed.
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(t);
-  }, []);
 
   // Prestige cluster — two-button affordance bottom-right (spec §2.1–2.3).
   // Replaces the old single rebrand-corner button and window.confirm.
@@ -254,31 +234,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
   const rebrandBtnRef = useRef<HTMLButtonElement>(null);
   const upgradesBtnRef = useRef<HTMLButtonElement>(null);
 
-  // First-rebrand ambient copy (task #66, UX §5).
-  // Show 'You are new again.' top-right on first rebrand (rebrand_count === 1),
-  // fade in 600ms, hold 4s, fade out 600ms, then dismiss.
-  const [showAmbientCopy, setShowAmbientCopy] = useState(false);
-  const [ambientCopyFading, setAmbientCopyFading] = useState(false);
-  const ambientCopyShownRef = useRef(false);
-
-  useEffect(() => {
-    if (shouldShowAmbientCopy(state.player.rebrand_count) && !ambientCopyShownRef.current) {
-      ambientCopyShownRef.current = true;
-      setShowAmbientCopy(true);
-      // Hold for 4s, then fade out for 600ms
-      const t1 = window.setTimeout(() => {
-        setAmbientCopyFading(true);
-      }, 4000);
-      const t2 = window.setTimeout(() => {
-        setShowAmbientCopy(false);
-        setAmbientCopyFading(false);
-      }, 4600);
-      return () => {
-        window.clearTimeout(t1);
-        window.clearTimeout(t2);
-      };
-    }
-  }, [state.player.rebrand_count]);
 
   // Upgrades button — opens Clout Shop shell.
   const handleUpgradesClick = () => {
@@ -317,29 +272,8 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
 
   return (
     <>
-      <AlgorithmBackground
-        algorithm={state.algorithm}
-        now={now}
-        intervalMs={intervalMs}
-        viralActive={viralPhase !== null}
-        viralBurst={
-          viralPhase !== null && vignetteColor
-            ? {
-                color: vignetteColor,
-                phase:
-                  viralPhase === 'build'
-                    ? 'entering'
-                    : viralPhase === 'decay'
-                      ? 'exiting'
-                      : 'peak',
-              }
-            : undefined
-        }
-      />
-
       <main className={`game-screen${viralPhase === 'peak' ? ' viral-zoom-pulse' : ''}`}>
         <TopBar
-          algorithm={state.algorithm}
           engagement={state.player.engagement}
           engagementRate={effectiveEngagementRate}
           totalFollowers={state.player.total_followers}
@@ -384,19 +318,13 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               onUnlock={unlock}
               onBuyAutoclicker={buyAutoclicker}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
-              onDrawerOpenChange={setUpgradeDrawerOpen}
             />
-            <CreatorKitPanel
-              state={state}
-              staticData={STATIC_DATA}
-              onBuy={buyKitItem}
-            />
+            {/* CreatorKitPanel hidden — to be redesigned */}
           </div>
           <PlatformPanel
             state={state}
             staticData={STATIC_DATA}
             viralPlatformId={viralActive?.source_platform_id ?? null}
-            drawerDimmed={upgradeDrawerOpen}
           />
         </div>
       </main>
@@ -504,24 +432,12 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
         />
       )}
 
-      {/* First-rebrand ambient copy (task #66, UX §5) — top-right, 600ms fade-in,
-          4s hold, 600ms fade-out. Never shown after rebrand_count >= 2. */}
-      {/* Floating bottom-left toolbar — mute + settings */}
+      {/* Floating bottom-left toolbar — settings + player */}
       <div className="floating-toolbar">
         <span className="alpha-row">
           <span className="alpha-version">v0.1.0</span>
           <span className="alpha-label">ALPHA</span>
         </span>
-        <button
-          type="button"
-          className="settings-gear-btn"
-          onClick={toggleSound}
-          aria-label={settings.sound ? 'Mute' : 'Unmute'}
-          title={settings.sound ? 'Mute' : 'Unmute'}
-        >
-          {settings.sound ? '♪' : '♪'}
-          {!settings.sound && <span className="mute-cross">╲</span>}
-        </button>
         <button
           type="button"
           className="settings-gear-btn"
@@ -543,13 +459,51 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
           </svg>
         </a>
+        {settings.sound && (
+          <div className="music-player">
+            <button
+              type="button"
+              className="music-player-btn"
+              onClick={handlePrev}
+              aria-label="Previous track"
+              title="Previous track"
+            >
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                <path d="M3 2h2v12H3zM7 8l7-5v10z"/>
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="music-player-btn music-player-btn-play"
+              onClick={handlePlayPause}
+              aria-label={musicPlaying ? 'Pause' : 'Play'}
+              title={musicPlaying ? 'Pause' : 'Play'}
+            >
+              {musicPlaying ? (
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                  <path d="M4 2h3v12H4zM9 2h3v12H9z"/>
+                </svg>
+              ) : (
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                  <path d="M4 2l10 6-10 6z"/>
+                </svg>
+              )}
+            </button>
+            <button
+              type="button"
+              className="music-player-btn"
+              onClick={handleNext}
+              aria-label="Next track"
+              title="Next track"
+            >
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                <path d="M2 3l7 5-7 5zM11 2h2v12h-2z"/>
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
-      {showAmbientCopy && (
-        <div className={`ambient-copy${ambientCopyFading ? ' ambient-copy-fading' : ''}`}>
-          You are new again.
-        </div>
-      )}
     </>
   );
 }

@@ -5,7 +5,6 @@ import {
   purchaseKitItem,
   kitEngagementBonus,
   kitFollowerConversionBonus,
-  kitAlgorithmLookaheadBonus,
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -34,9 +33,9 @@ describe('kitItemCost', () => {
   });
 
   it('returns the cost for each subsequent level', () => {
-    const def = STATIC_DATA.creatorKitItems.laptop;
+    const def = STATIC_DATA.creatorKitItems.wardrobe;
     for (let level = 0; level < def.max_level; level++) {
-      expect(kitItemCost(level, 'laptop', STATIC_DATA)).toBe(def.cost[level]);
+      expect(kitItemCost(level, 'wardrobe', STATIC_DATA)).toBe(def.cost[level]);
     }
   });
 
@@ -95,17 +94,17 @@ describe('purchaseKitItem — success path', () => {
   });
 
   it('increments from an existing level correctly', () => {
-    const def = STATIC_DATA.creatorKitItems.laptop;
+    const def = STATIC_DATA.creatorKitItems.wardrobe;
     // Start at level 1, buy level 2 — cost is def.cost[1].
     const state: GameState = {
       ...seed(def.cost[1]),
       player: {
         ...seed(def.cost[1]).player,
-        creator_kit: { laptop: 1 } as GameState['player']['creator_kit'],
+        creator_kit: { wardrobe: 1 } as GameState['player']['creator_kit'],
       },
     };
-    const next = purchaseKitItem(state, 'laptop', STATIC_DATA);
-    expect(next.player.creator_kit.laptop).toBe(2);
+    const next = purchaseKitItem(state, 'wardrobe', STATIC_DATA);
+    expect(next.player.creator_kit.wardrobe).toBe(2);
   });
 
   it('decrements engagement by exactly the cost of the next level', () => {
@@ -129,11 +128,11 @@ describe('purchaseKitItem — success path', () => {
       ...seed(cost + 9_999),
       player: {
         ...seed(cost + 9_999).player,
-        creator_kit: { laptop: 2 } as GameState['player']['creator_kit'],
+        creator_kit: { wardrobe: 2 } as GameState['player']['creator_kit'],
       },
     };
     const next = purchaseKitItem(state, 'camera', STATIC_DATA);
-    expect(next.player.creator_kit.laptop).toBe(2);
+    expect(next.player.creator_kit.wardrobe).toBe(2);
     expect(next.player.creator_kit.camera).toBe(1);
   });
 });
@@ -282,10 +281,10 @@ describe('kitEngagementBonus', () => {
   });
 
   it('ignores items whose effect is not engagement_multiplier', () => {
-    // Mogging, Wardrobe, Laptop, Phone — all non-engagement effects.
+    // Mogging, Wardrobe, Phone — all non-engagement effects.
     expect(
       kitEngagementBonus(
-        { mogging: 2, wardrobe: 2, laptop: 2, phone: 2 } as Record<KitItemId, number>,
+        { mogging: 2, wardrobe: 2, phone: 2 } as Record<KitItemId, number>,
         STATIC_DATA,
       ),
     ).toBe(1.0);
@@ -324,49 +323,10 @@ describe('kitFollowerConversionBonus', () => {
   it('ignores items whose effect is not follower_conversion_multiplier', () => {
     expect(
       kitFollowerConversionBonus(
-        { camera: 2, mogging: 2, laptop: 2, phone: 2 } as Record<KitItemId, number>,
+        { camera: 2, mogging: 2, phone: 2 } as Record<KitItemId, number>,
         STATIC_DATA,
       ),
     ).toBe(1.0);
-  });
-});
-
-describe('kitAlgorithmLookaheadBonus', () => {
-  it('returns 0 for an empty kit', () => {
-    expect(
-      kitAlgorithmLookaheadBonus({} as Record<KitItemId, number>, STATIC_DATA),
-    ).toBe(0);
-  });
-
-  it('returns 0 when laptop is at level 0', () => {
-    expect(
-      kitAlgorithmLookaheadBonus(
-        { laptop: 0 } as Record<KitItemId, number>,
-        STATIC_DATA,
-      ),
-    ).toBe(0);
-  });
-
-  it('returns laptop.lookaheads[level-1] at each level', () => {
-    const def = STATIC_DATA.creatorKitItems.laptop;
-    if (def.effect.type !== 'algorithm_lookahead') throw new Error('bad def');
-    for (let level = 1; level <= def.max_level; level++) {
-      expect(
-        kitAlgorithmLookaheadBonus(
-          { laptop: level } as Record<KitItemId, number>,
-          STATIC_DATA,
-        ),
-      ).toBe(def.effect.lookaheads[level - 1]);
-    }
-  });
-
-  it('ignores items whose effect is not algorithm_lookahead', () => {
-    expect(
-      kitAlgorithmLookaheadBonus(
-        { camera: 2, wardrobe: 2, mogging: 2, phone: 2 } as Record<KitItemId, number>,
-        STATIC_DATA,
-      ),
-    ).toBe(0);
   });
 });
 

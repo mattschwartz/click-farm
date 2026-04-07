@@ -4,10 +4,6 @@
 // shape, and stable ordering grouped under category dividers. Locked rows
 // are shown at 3:1 contrast with their unlock threshold (§6.4).
 //
-// Modifier chips reflect the effective algorithm multiplier (raw state
-// modifier folded with the generator's trend_sensitivity — this is the
-// number the player actually feels in their rates).
-//
 // Per purchase-feedback-and-rate-visibility.md:
 // - §2.2: Generator rate text weight promoted to 500.
 // - §4.2: Unowned buy button is full-width with name + cost sub-label (≥180×64px).
@@ -24,12 +20,6 @@ import {
   generatorUpgradeCost,
 } from '../generator/index.ts';
 import {
-  computeGeneratorEffectiveRate,
-  effectiveAlgorithmModifier,
-} from '../game-loop/index.ts';
-import { getAlgorithmModifier } from '../algorithm/index.ts';
-import {
-  CATEGORY_LABEL,
   CATEGORY_ORDER,
   GENERATOR_DISPLAY,
   GENERATOR_ORDER,
@@ -37,7 +27,7 @@ import {
   type GeneratorCategory,
 } from './display.ts';
 import { fmtCompact } from './format.ts';
-import { UpgradeDrawer } from './UpgradeDrawer.tsx';
+import { TieredNumber } from './TieredNumber.tsx';
 
 interface Props {
   state: GameState;
@@ -54,7 +44,6 @@ interface Props {
    * Called when the upgrade drawer opens or closes. Parent uses this to dim
    * the platform panel while the drawer is open (per UX spec §1).
    */
-  onDrawerOpenChange?: (open: boolean) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -62,29 +51,27 @@ interface Props {
 // ---------------------------------------------------------------------------
 
 /**
- * Affordance states for the per-row Lvl ↑ button.
+ * Affordance states for the per-row SPEED button.
  *
- * - dormant: count===0 — the row has no units to upgrade yet. Disabled.
- * - armed:   count>0 but engagement < upgradeCost. Clickable, but the teased
+ * - armed:   engagement < upgradeCost. Clickable, but the teased
  *            action is out of reach. Stillness communicates "not now."
- * - ready:   count>0 and engagement >= upgradeCost. Breathes gold to pull
- *            the eye toward the drawer.
+ * - ready:   engagement >= upgradeCost. Breathes gold to pull
+ *            the eye toward the button.
  * - maxed:   level >= max_level — the cap is hit, no further upgrade is
  *            possible. Shows "MAX" in place of cost. Task #89.
  *
  * See proposals/accepted/lvl-up-button-affordance-states.md and
  * proposals/accepted/generator-level-growth-curves.md.
  */
-export type LvlBtnState = 'dormant' | 'armed' | 'ready' | 'maxed';
+export type LvlBtnState = 'armed' | 'ready' | 'maxed';
 
 export function classifyLvlBtnState(
-  count: number,
+  _count: number,
   level: number,
   maxLevel: number,
   engagement: number,
   upgradeCost: number,
 ): LvlBtnState {
-  if (count <= 0) return 'dormant';
   if (level >= maxLevel) return 'maxed';
   if (engagement >= upgradeCost) return 'ready';
   return 'armed';
@@ -126,12 +113,6 @@ export function shouldApplyManyReady(readyCount: number): boolean {
   return readyCount >= MANY_READY_THRESHOLD;
 }
 
-const BADGE_SHAPE: Record<GeneratorCategory, string> = {
-  starter: 'shape-circle',
-  mid: 'shape-hexagon',
-  late: 'shape-diamond',
-};
-
 // Breathing animation constants (per generator-badge-breathing proposal).
 // Uniform 2.5s cadence, staggered by generator index so badges breathe
 // organically rather than in sync. Rate-coupled cadence was considered and
@@ -139,41 +120,7 @@ const BADGE_SHAPE: Record<GeneratorCategory, string> = {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, onBuyAutoclicker, viralGeneratorId, onDrawerOpenChange }: Props) {
-  // Track modifier pulses — when the algorithm state index changes, each
-  // affected row pulses once (UX §4.4).
-  const [pulseKey, setPulseKey] = useState(0);
-  const prevIndex = useRef(state.algorithm.current_state_index);
-  useEffect(() => {
-    if (state.algorithm.current_state_index !== prevIndex.current) {
-      prevIndex.current = state.algorithm.current_state_index;
-      setPulseKey((k) => k + 1);
-    }
-  }, [state.algorithm.current_state_index]);
-
-  // Upgrade drawer state — only one open at a time.
-  const [openDrawerId, setOpenDrawerId] = useState<GeneratorId | null>(null);
-  const [drawerAnchorTop, setDrawerAnchorTop] = useState<number>(0);
-
-  const handleOpenDrawer = (id: GeneratorId, anchorTop: number) => {
-    setOpenDrawerId(id);
-    setDrawerAnchorTop(anchorTop);
-  };
-
-  const handleCloseDrawer = () => {
-    setOpenDrawerId(null);
-  };
-
-  // Notify parent when drawer open state changes so it can dim the platform panel.
-  const prevDrawerOpen = useRef(false);
-  useEffect(() => {
-    const isOpen = openDrawerId !== null;
-    if (isOpen !== prevDrawerOpen.current) {
-      prevDrawerOpen.current = isOpen;
-      onDrawerOpenChange?.(isOpen);
-    }
-  }, [openDrawerId, onDrawerOpenChange]);
-
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, onBuyAutoclicker, viralGeneratorId }: Props) {
   // Build rows grouped by category in stable order.
   // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
   // excluded from the main list — they render in the Clout Shop modal instead.
@@ -211,7 +158,6 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, o
         if (ids.length === 0) return null;
         return (
           <div key={cat}>
-            <div className="category-divider">{CATEGORY_LABEL[cat]}</div>
             {ids.map((id) => (
               <GeneratorRow
                 key={id}
@@ -222,29 +168,12 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onUnlock, o
                 onUpgrade={onUpgrade}
                 onUnlock={onUnlock}
                 onBuyAutoclicker={onBuyAutoclicker}
-                pulseKey={pulseKey}
                 viralHalo={viralGeneratorId === id}
-                isDrawerOpen={openDrawerId === id}
-                onOpenDrawer={handleOpenDrawer}
               />
             ))}
           </div>
         );
       })}
-
-      {/* Upgrade drawer — portal-rendered over the platform column. */}
-      {openDrawerId && (
-        <UpgradeDrawer
-          id={openDrawerId}
-          generatorState={state.generators[openDrawerId]}
-          display={GENERATOR_DISPLAY[openDrawerId]}
-          staticData={staticData}
-          engagement={state.player.engagement}
-          anchorTop={drawerAnchorTop}
-          onUpgrade={() => onUpgrade(openDrawerId)}
-          onClose={handleCloseDrawer}
-        />
-      )}
     </section>
   );
 }
@@ -259,16 +188,8 @@ interface RowProps {
   onUpgrade: (id: GeneratorId) => void;
   onUnlock: (id: GeneratorId) => void;
   onBuyAutoclicker: (verbId: GeneratorId) => void;
-  pulseKey: number;
   /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
   viralHalo?: boolean;
-  /** True while this generator's upgrade drawer is open. */
-  isDrawerOpen?: boolean;
-  /**
-   * Called when the player taps the row or the ⬆ affordance to open the
-   * upgrade drawer. Passes viewport-relative anchorTop of the row.
-   */
-  onOpenDrawer?: (id: GeneratorId, anchorTop: number) => void;
 }
 
 function GeneratorRow({
@@ -277,12 +198,9 @@ function GeneratorRow({
   staticData,
   onBuy,
   onUnlock,
-  onUpgrade: _onUpgrade, // kept in RowProps for GeneratorList to wire to drawer; not called directly by row
+  onUpgrade,
   onBuyAutoclicker,
-  pulseKey,
   viralHalo,
-  isDrawerOpen,
-  onOpenDrawer,
 }: RowProps) {
   const g = state.generators[id];
   const def = staticData.generators[id];
@@ -292,12 +210,6 @@ function GeneratorRow({
   const thresholdMet = state.player.total_followers >= threshold;
   const isDiscovered = g.owned || thresholdMet;
 
-  const rawMod = getAlgorithmModifier(state.algorithm, id);
-  const effMod = effectiveAlgorithmModifier(rawMod, def.trend_sensitivity);
-
-  const rate = computeGeneratorEffectiveRate(g, state, staticData);
-
-  const badgeShape = BADGE_SHAPE[display.category];
   const style = { '--gen-color': display.color } as React.CSSProperties;
 
   // Row ref — used to read bounding rect for drawer anchor. Declared here
@@ -321,7 +233,7 @@ function GeneratorRow({
 
   // Count numeral pulse — fires when count increases on an owned generator.
   const prevCount = useRef(g.count);
-  const [countPulsing, setCountPulsing] = useState(false);
+  const [_countPulsing, setCountPulsing] = useState(false);
   useEffect(() => {
     if (g.owned && g.count > prevCount.current) {
       setCountPulsing(true);
@@ -340,7 +252,7 @@ function GeneratorRow({
   // Lvl ↑ affordance state computed UNCONDITIONALLY so the hooks below can
   // depend on it without skipping on unowned/locked renders. classifyLvlBtnState
   // returns 'dormant' when count===0, which is correct for pre-owned rows.
-  const upgradeCostUnconditional = generatorUpgradeCost(id, g.level, staticData);
+  const upgradeCostUnconditional = g.level >= def.max_level ? Infinity : generatorUpgradeCost(id, g.level, staticData);
   const lvlStateUnconditional = classifyLvlBtnState(
     g.count,
     g.level,
@@ -373,7 +285,6 @@ function GeneratorRow({
   if (!isDiscovered) {
     return (
       <div className="generator-row locked" style={style}>
-        <div className={`badge hollow ${badgeShape}`} />
         <div className="unlock-label">
           Unlocks at {threshold.toLocaleString()} followers
         </div>
@@ -391,10 +302,8 @@ function GeneratorRow({
     const label = def.manual_clickable ? `Unlock ${display.name}` : `Buy ${display.name}`;
     return (
       <div className="generator-row generator-row-unowned" style={style}>
-        <div className={`badge hollow ${badgeShape}`}>{display.icon}</div>
         <div className="unowned-info">
           <div className="generator-name">{display.name}</div>
-          <ModifierChip value={effMod} pulseKey={pulseKey} />
         </div>
         <BuyButton
           label={label}
@@ -412,9 +321,6 @@ function GeneratorRow({
   // Autoclicker cost — only relevant for manual-clickable generators.
   const autoCost = def.manual_clickable ? autoclickerBuyCost(id, g.autoclicker_count, staticData) : 0;
   const canBuyAuto = def.manual_clickable && state.player.engagement >= autoCost;
-  // Upgrading requires at least one unit. This can be 0 post-rebrand when a
-  // generator_unlock head-start grants owned=true without any units.
-  const canOpenDrawer = g.count > 0;
 
   // Lvl ↑ button affordance state — spec tracks distinct visuals
   // (dormant / armed / ready / maxed) so players can tell at a glance
@@ -424,95 +330,43 @@ function GeneratorRow({
   const lvlState = lvlStateUnconditional;
   const lvlDeficit = Math.max(0, upgradeCost - state.player.engagement);
 
-  const openDrawer = () => {
-    if (!canOpenDrawer) return;
-    if (!onOpenDrawer) return;
-    const rect = rowRef.current?.getBoundingClientRect();
-    onOpenDrawer(id, rect?.top ?? 100);
-  };
-
-  const drawerOpenClass = isDrawerOpen ? ' drawer-open' : '';
   return (
     <div
       ref={rowRef}
-      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}${viralHalo ? ' viral-halo' : ''}${drawerOpenClass}`}
+      className={`generator-row${firstBuyAnim ? ' first-buy-anim' : ''}${viralHalo ? ' viral-halo' : ''}`}
       style={style}
-      onClick={openDrawer}
-      role={canOpenDrawer ? 'button' : undefined}
-      tabIndex={canOpenDrawer ? 0 : undefined}
-      onKeyDown={canOpenDrawer ? (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          openDrawer();
-        }
-      } : undefined}
-      aria-expanded={canOpenDrawer ? isDrawerOpen : undefined}
-      aria-label={canOpenDrawer ? `${display.name} — tap to view upgrade options` : undefined}
     >
-      <div
-        className={`badge ${badgeShape}${g.owned ? ' badge-owned' : ''}`}
-        style={g.owned ? { '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties : undefined}
-      >
-        {display.icon}
-      </div>
       <div className="generator-name">
-        {display.name} <span className="generator-level">L{g.level}</span>
+        {display.name}
       </div>
-      <div className={`generator-count${countPulsing ? ' count-pulse' : ''}`}>
-        ×{g.count}
-      </div>
-      <div className="generator-rate">{fmtCompact(rate)}/s</div>
-      {/* Stop propagation on chip so chip-taps don't open the drawer. */}
-      <span onClick={(e) => e.stopPropagation()}>
-        <ModifierChip value={effMod} pulseKey={pulseKey} />
-      </span>
       <div className="row-actions" onClick={(e) => e.stopPropagation()}>
         <CompactBuyButton
-          costLabel={fmtCompact(buyCost)}
+          costLabel={<TieredNumber value={buyCost} />}
           canBuy={canBuy}
+          count={g.count}
           onBuy={() => onBuy(id)}
         />
-        {/* ⬆ affordance — opens the upgrade drawer.
-            Three states per task #69 / lvl-up-button-affordance-states:
-              dormant (count===0): disabled placeholder
-              armed   (owned, can't afford): still, amber deficit glyph
-              ready   (owned, affordable): gold breathing halo pulling eye
-                                           toward the drawer */}
-        <button
-          className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${isDrawerOpen ? ' active' : ''}${maxedArrival ? ' lvl-maxed-arrival' : ''}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!canOpenDrawer || !onOpenDrawer) return;
-            const rect = rowRef.current?.getBoundingClientRect();
-            onOpenDrawer(id, rect?.top ?? 100);
-          }}
-          disabled={lvlState === 'dormant' || lvlState === 'maxed'}
-          style={{ '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties}
+        {/* SPEED — fires upgrade directly (task #150).
+            Two affordance states:
+              armed   (can't afford): greyed out
+              ready   (affordable): gold breathing halo */}
+        <SpeedButton
+          lvlState={lvlState}
+          maxedArrival={maxedArrival}
+          breatheDelayMs={breatheDelayMs}
+          canAfford={state.player.engagement >= upgradeCost}
+          level={g.level}
+          onUpgrade={() => onUpgrade(id)}
           title={
-            lvlState === 'dormant'
-              ? `Buy at least one ${display.name} before upgrading`
-              : lvlState === 'maxed'
+            lvlState === 'maxed'
                 ? `${display.name} is at max level (L${g.level})`
                 : lvlState === 'armed'
                   ? `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ${fmtCompact(lvlDeficit)} more engagement`
                   : `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ready`
           }
-          aria-label={`Open upgrade drawer for ${display.name}`}
-        >
-          <span className="label">
-            {lvlState === 'ready' && (
-              <span className="lvl-chevron" aria-hidden>▲</span>
-            )}
-            {lvlState === 'maxed' && (
-              <span className="lvl-crown" aria-hidden>♛</span>
-            )}
-            SPEED
-          </span>
-          {lvlState === 'armed' && (
-            <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
-          )}
-          {lvlState === 'maxed' ? 'MAX' : fmtCompact(upgradeCost)}
-        </button>
+          ariaLabel={`Upgrade ${display.name}`}
+          costLabel={lvlState === 'maxed' ? 'MAX' : <TieredNumber value={upgradeCost} />}
+        />
         {/* AUTO pill — per generator-purchase-pills.md §2–3.
             Only rendered for manual-clickable generators. Pill shape: 44px
             min-width, 28px height, 14px border-radius. Three affordance
@@ -520,7 +374,7 @@ function GeneratorRow({
             maxed (not currently capped). */}
         {def.manual_clickable && (
           <AutoPill
-            costLabel={fmtCompact(autoCost)}
+            costLabel={<TieredNumber value={autoCost} />}
             canBuy={canBuyAuto}
             autoclickerCount={g.autoclicker_count}
             verbColor={display.color}
@@ -537,7 +391,7 @@ function GeneratorRow({
 // Auto pill — purchase button for autoclickers (generator-purchase-pills.md).
 
 interface AutoPillProps {
-  costLabel: string;
+  costLabel: React.ReactNode;
   canBuy: boolean;
   autoclickerCount: number;
   verbColor: string;
@@ -551,12 +405,87 @@ function hexToRgbPill(hex: string): string {
   return `${(n >> 16) & 0xff}, ${(n >> 8) & 0xff}, ${n & 0xff}`;
 }
 
+// ---------------------------------------------------------------------------
+// Speed button — fires upgrade directly (task #150).
+
+interface SpeedButtonProps {
+  lvlState: LvlBtnState;
+  maxedArrival: boolean;
+  breatheDelayMs: number;
+  canAfford: boolean;
+  level: number;
+  onUpgrade: () => void;
+  title: string;
+  ariaLabel: string;
+  costLabel: React.ReactNode;
+}
+
+function SpeedButton({
+  lvlState,
+  maxedArrival,
+  breatheDelayMs,
+  canAfford,
+  level,
+  onUpgrade,
+  title,
+  ariaLabel,
+  costLabel,
+}: SpeedButtonProps) {
+  const [shaking, setShaking] = useState(false);
+  const [glowing, setGlowing] = useState(false);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (lvlState === 'maxed') return;
+    if (!canAfford) {
+      setShaking(true);
+      window.setTimeout(() => setShaking(false), 200);
+      return;
+    }
+    setGlowing(true);
+    window.setTimeout(() => setGlowing(false), 200);
+    onUpgrade();
+  };
+
+  return (
+    <button
+      className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${maxedArrival ? ' lvl-maxed-arrival' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}`}
+      onClick={handleClick}
+      disabled={lvlState === 'maxed'}
+      style={{ '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties}
+      title={title}
+      aria-label={ariaLabel}
+    >
+      <span className="label">
+        {lvlState === 'ready' && (
+          <span className="lvl-chevron" aria-hidden>▲</span>
+        )}
+        {lvlState === 'maxed' && (
+          <span className="lvl-crown" aria-hidden>♛</span>
+        )}
+        SPEED{level > 1 ? ` +${level}` : ''}
+      </span>
+      {lvlState === 'armed' && (
+        <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
+      )}
+      {costLabel}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
 function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, generatorName }: AutoPillProps) {
   const [glowing, setGlowing] = useState(false);
+  const [shaking, setShaking] = useState(false);
   const rgb = hexToRgbPill(verbColor);
 
   const handleClick = () => {
-    if (!canBuy) return; // no-op, no shake (per pills spec §5.3)
+    if (!canBuy) {
+      setShaking(true);
+      window.setTimeout(() => setShaking(false), 200);
+      return;
+    }
     setGlowing(true);
     window.setTimeout(() => setGlowing(false), 120);
     onBuy();
@@ -564,7 +493,7 @@ function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, gener
 
   return (
     <button
-      className={`purchase-pill purchase-pill-auto${canBuy ? ' purchase-pill-affordable' : ' purchase-pill-unaffordable'}${glowing ? ' purchase-pill-flash' : ''}`}
+      className={`purchase-pill purchase-pill-auto${canBuy ? ' purchase-pill-affordable' : ' purchase-pill-unaffordable'}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}`}
       style={canBuy ? {
         '--pill-color': verbColor,
         '--pill-color-rgb': rgb,
@@ -577,7 +506,7 @@ function AutoPill({ costLabel, canBuy, autoclickerCount, verbColor, onBuy, gener
       }
       title={`Buy autoclicker for ${costLabel} engagement`}
     >
-      <span className="pill-label">HIRE{autoclickerCount > 0 ? ` ×${autoclickerCount}` : ''}</span>
+      <span className="pill-label">HIRE{autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}</span>
       <span className="pill-cost">{costLabel}</span>
     </button>
   );
@@ -627,12 +556,13 @@ function BuyButton({ label, costLabel, canBuy, onBuy }: BuyButtonProps) {
 // Compact buy button — for owned rows (additional purchase, §6.4).
 
 interface CompactBuyButtonProps {
-  costLabel: string;
+  costLabel: React.ReactNode;
   canBuy: boolean;
+  count: number;
   onBuy: () => void;
 }
 
-function CompactBuyButton({ costLabel, canBuy, onBuy }: CompactBuyButtonProps) {
+function CompactBuyButton({ costLabel, canBuy, count, onBuy }: CompactBuyButtonProps) {
   const [shaking, setShaking] = useState(false);
   const [glowing, setGlowing] = useState(false);
 
@@ -654,39 +584,10 @@ function CompactBuyButton({ costLabel, canBuy, onBuy }: CompactBuyButtonProps) {
       aria-disabled={!canBuy}
       title={`Buy 1 unit for ${costLabel} engagement`}
     >
-      <span className="label">POWER</span>
+      <span className="label">POWER{count > 0 ? ` +${count}` : ''}</span>
       {costLabel}
     </button>
   );
 }
 
 // ---------------------------------------------------------------------------
-
-interface ChipProps {
-  value: number;
-  pulseKey: number;
-}
-
-function ModifierChip({ value, pulseKey }: ChipProps) {
-  const [pulsing, setPulsing] = useState(false);
-  useEffect(() => {
-    if (pulseKey === 0) return; // don't pulse on initial render
-    setPulsing(true);
-    const t = window.setTimeout(() => setPulsing(false), 400);
-    return () => window.clearTimeout(t);
-  }, [pulseKey]);
-
-  // Per UX §4.5: green for boosted (>1.0), amber for penalized (<1.0),
-  // neutral for ≈ 1.0. We treat within ±2% as neutral.
-  const kind =
-    value > 1.02 ? 'boost' : value < 0.98 ? 'penalty' : 'neutral';
-  const arrow = kind === 'boost' ? '▲' : kind === 'penalty' ? '▼' : '—';
-  return (
-    <span
-      className={`modifier-chip ${kind}${pulsing ? ' pulse' : ''}`}
-      aria-label={`algorithm modifier ${value.toFixed(2)}x`}
-    >
-      {arrow} ×{value.toFixed(2)}
-    </span>
-  );
-}

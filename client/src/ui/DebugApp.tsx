@@ -3,7 +3,7 @@
 // to verify the integrated game loop is working correctly: clicks produce
 // engagement, engagement buys generators, generators produce engagement,
 // engagement converts to followers, followers unlock platforms, the
-// algorithm shifts. Intentionally unstyled and dense.
+// followers unlock platforms. Intentionally unstyled and dense.
 //
 // Accessible via `?debug` or `#debug` in the URL.
 
@@ -23,7 +23,6 @@ import '../App.css';
 
 const UPGRADE_ORDER: UpgradeId[] = [
   'engagement_boost',
-  'algorithm_insight',
   'platform_headstart_picshift',
   'platform_headstart_skroll',
   'platform_headstart_podpod',
@@ -34,9 +33,6 @@ const UPGRADE_ORDER: UpgradeId[] = [
 
 const GENERATOR_ORDER: GeneratorId[] = [
   'selfies',
-  'memes',
-  'hot_takes',
-  'tutorials',
   'livestreams',
   'podcasts',
   'viral_stunts',
@@ -107,8 +103,7 @@ export function DebugApp() {
             <strong>Welcome back.</strong> Away for {fmtDuration(offlineResult.durationMs)}.
             {' '}Gained <strong>{fmt(offlineResult.engagementGained)}</strong> engagement
             {' '}and <strong>{fmtInt(offlineResult.totalFollowersGained)}</strong> followers
-            {offlineResult.algorithmAdvances > 0
-              && ` (${offlineResult.algorithmAdvances} algorithm shifts)`}.
+.
           </div>
           <button onClick={clearOfflineResult} style={{ cursor: 'pointer' }}>Dismiss</button>
         </section>
@@ -121,12 +116,6 @@ export function DebugApp() {
         <div><strong>Clout</strong><br />{state.player.clout}</div>
         <div><strong>Lifetime</strong><br />{fmtInt(state.player.lifetime_followers)}</div>
         <div><strong>Rebrands</strong><br />{state.player.rebrand_count}</div>
-      </section>
-
-      {/* Algorithm ----------------------------------------------------- */}
-      <section style={{ padding: 12, border: '1px solid #ccc', borderRadius: 4, marginBottom: 16 }}>
-        <strong>Algorithm:</strong> {state.algorithm.current_state_id}{' '}
-        <span style={{ opacity: 0.6 }}>(shift #{state.algorithm.current_state_index})</span>
       </section>
 
       {/* Click --------------------------------------------------------- */}

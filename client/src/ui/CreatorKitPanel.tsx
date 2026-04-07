@@ -35,11 +35,6 @@ export const KIT_ITEM_DISPLAY: Record<KitItemId, KitItemDisplay> = {
     icon: '📷',
     flavor: 'Better glass. Better content. Allegedly.',
   },
-  laptop: {
-    name: 'Laptop',
-    icon: '💻',
-    flavor: "You're analyzing trends. Definitely.",
-  },
   phone: {
     name: 'Phone',
     icon: '📱',
@@ -61,7 +56,6 @@ export const KIT_ITEM_DISPLAY: Record<KitItemId, KitItemDisplay> = {
 // be relied on in dense code. This is the order the panel renders rows in.
 export const KIT_ITEM_ORDER: readonly KitItemId[] = [
   'camera',
-  'laptop',
   'phone',
   'wardrobe',
   'mogging',

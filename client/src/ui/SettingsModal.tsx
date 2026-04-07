@@ -235,6 +235,16 @@ export function SettingsModal({
                   />
                 </>
               )}
+              <div className="settings-audio-credit">
+                Music by{' '}
+                <a
+                  href="https://pixabay.com/users/djartmusic-46653586/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  DJARTMUSIC
+                </a>
+              </div>
             </div>
           </section>
 

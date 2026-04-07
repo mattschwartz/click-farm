@@ -51,7 +51,7 @@ describe('countActiveKitItems', () => {
   it('returns 0 when all items are at L0', () => {
     expect(
       countActiveKitItems(
-        { camera: 0, laptop: 0, phone: 0, wardrobe: 0, mogging: 0 },
+        { camera: 0, phone: 0, wardrobe: 0, mogging: 0 },
       ),
     ).toBe(0);
   });
@@ -59,17 +59,17 @@ describe('countActiveKitItems', () => {
   it('counts items at L1+', () => {
     expect(
       countActiveKitItems(
-        { camera: 1, laptop: 0, phone: 2, wardrobe: 0, mogging: 3 },
+        { camera: 1, phone: 2, wardrobe: 0, mogging: 3 },
       ),
     ).toBe(3);
   });
 
-  it('counts all five when every item is owned', () => {
+  it('counts all four when every item is owned', () => {
     expect(
       countActiveKitItems(
-        { camera: 1, laptop: 1, phone: 1, wardrobe: 1, mogging: 1 },
+        { camera: 1, phone: 1, wardrobe: 1, mogging: 1 },
       ),
-    ).toBe(5);
+    ).toBe(4);
   });
 });
 

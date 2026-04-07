@@ -26,20 +26,11 @@ export type GeneratorId =
 export type PlatformId = 'chirper' | 'picshift' | 'skroll' | 'podpod';
 
 // Audience Mood pressure families. See architecture/audience-mood.md §Data Model.
-export type PressureId = 'content_fatigue' | 'neglect' | 'algorithm_misalignment';
-
-// Algorithm state names from the spec (short_form_surge, authenticity_era,
-// engagement_bait) plus 2 provisional additions.
-export type AlgorithmStateId =
-  | 'short_form_surge'
-  | 'authenticity_era'
-  | 'engagement_bait'
-  | 'nostalgia_wave'
-  | 'corporate_takeover';
+// Algorithm misalignment removed — proposals/accepted/20260406-remove-algorithm-weather-system.md.
+export type PressureId = 'content_fatigue' | 'neglect';
 
 export type UpgradeId =
   | 'engagement_boost'
-  | 'algorithm_insight'
   | 'platform_headstart_picshift'
   | 'platform_headstart_skroll'
   | 'platform_headstart_podpod'
@@ -57,7 +48,6 @@ export type UpgradeId =
 export type UpgradeEffect =
   | { type: 'engagement_multiplier'; values: number[] }
   | { type: 'generator_unlock'; generator_id: GeneratorId }
-  | { type: 'algorithm_insight'; lookaheads: number[] }
   | { type: 'platform_headstart'; platform_id: PlatformId };
 
 // ---------------------------------------------------------------------------
@@ -67,7 +57,6 @@ export type UpgradeEffect =
 
 export type KitItemId =
   | 'camera'
-  | 'laptop'
   | 'phone'
   | 'wardrobe'
   | 'mogging';
@@ -88,7 +77,6 @@ export type KitItemId =
  */
 export type KitEffect =
   | { type: 'engagement_multiplier'; values: number[] }
-  | { type: 'algorithm_lookahead'; lookaheads: number[] }
   | { type: 'platform_headstart_sequential' }
   | { type: 'follower_conversion_multiplier'; values: number[] }
   | { type: 'viral_burst_amplifier'; values: number[] };
@@ -111,8 +99,6 @@ export interface SnapshotState {
   total_engagement_rate: number;
   /** Aggregate followers/sec at time of close. ≥ 0. */
   total_follower_rate: number;
-  /** Algorithm position at close. ≥ 0. */
-  algorithm_state_index: number;
   /** Per-platform follower earn rate at close. */
   platform_rates: Record<PlatformId, number>;
 }
@@ -142,8 +128,6 @@ export interface Player {
    * See architecture/creator-kit.md.
    */
   creator_kit: Record<KitItemId, number>;
-  /** Seed for the PRNG driving Algorithm shifts. Immutable per run. */
-  algorithm_seed: number;
   /** Epoch ms when the current run began. */
   run_start_time: number;
   /**
@@ -209,23 +193,6 @@ export interface PlatformState {
   content_fatigue: Partial<Record<GeneratorId, number>>;
   /** Time-since-last-post accumulator. [0, 1]. */
   neglect: number;
-  /** Accumulates on posts misaligned with current Algorithm state. [0, 1]. */
-  algorithm_misalignment: number;
-}
-
-// ---------------------------------------------------------------------------
-// AlgorithmState — the shifting modifier driving which strategies perform best
-// ---------------------------------------------------------------------------
-
-export interface AlgorithmState {
-  /** Active algorithm state. */
-  current_state_id: AlgorithmStateId;
-  /** Position in the seeded shift schedule. ≥ 0. */
-  current_state_index: number;
-  /** Epoch ms when the next shift occurs. */
-  shift_time: number;
-  /** Per-generator multiplier for the current state. Values typically [0.5, 2.0]. */
-  state_modifiers: Record<GeneratorId, number>;
 }
 
 // ---------------------------------------------------------------------------
@@ -268,7 +235,6 @@ export interface GameState {
   player: Player;
   generators: Record<GeneratorId, GeneratorState>;
   platforms: Record<PlatformId, PlatformState>;
-  algorithm: AlgorithmState;
   viralBurst: ViralBurstState;
 }
 
@@ -299,8 +265,6 @@ export interface GeneratorDef {
   manual_clickable: boolean;
   /** Fraction of engagement that converts to followers. (0, 1]. */
   follower_conversion_rate: number;
-  /** How much Algorithm state affects output. [0, 1]. */
-  trend_sensitivity: number;
   /** Total followers required to unlock (appear in the shop). */
   unlock_threshold: number;
   /**
@@ -316,13 +280,11 @@ export interface GeneratorDef {
    */
   buy_cost_multiplier: number;
   /**
-   * Engagement cost to upgrade from level 1 → 2.
-   * Subsequent levels track the reward curve 1:1 via `levelMultiplier`:
-   *   cost(L→L+1) = ceil(base_upgrade_cost × levelMultiplier(L+1))
-   * See proposals/accepted/generator-level-growth-curves.md.
+   * Hand-tuned cost table for each level upgrade. Index 0 = cost of L1→L2,
+   * index 1 = cost of L2→L3, etc. Length must equal max_level - 1.
    * TODO(game-designer): provisional — tune during balance pass (task #88).
    */
-  base_upgrade_cost: number;
+  upgrade_costs: number[];
   /**
    * Maximum upgradable level for this generator. Hard cap — the L=10
    * ceiling from the growth-curves proposal prevents runaway multipliers
@@ -331,11 +293,16 @@ export interface GeneratorDef {
   max_level: number;
   /**
    * Engagement cost to buy the first autoclicker unit.
-   * Subsequent units cost more: base_autoclicker_cost × buy_cost_multiplier^autoclicker_count.
+   * Subsequent units cost more: base_autoclicker_cost × autoclicker_cost_multiplier^autoclicker_count.
    * 0 for passive-only and post-prestige generators (not manual-clickable).
    * See proposals/accepted/manual-action-ladder.md §level-driven-cooldown OQ5.
    */
   base_autoclicker_cost: number;
+  /**
+   * Cost escalation per autoclicker purchased. Higher = steeper curve.
+   * Separate from buy_cost_multiplier so BUY and autoclicker costs scale independently.
+   */
+  autoclicker_cost_multiplier: number;
 }
 
 export interface PlatformDef {
@@ -344,12 +311,6 @@ export interface PlatformDef {
   content_affinity: Record<GeneratorId, number>;
   /** Total followers required to unlock. */
   unlock_threshold: number;
-}
-
-export interface AlgorithmStateDef {
-  id: AlgorithmStateId;
-  /** Per-generator multiplier when this state is active. Values typically [0.5, 2.0]. */
-  state_modifiers: Record<GeneratorId, number>;
 }
 
 export interface CloutUpgradeDef {
@@ -380,24 +341,12 @@ export interface AudienceMoodStaticData {
   neglect_per_tick: number;
   /** Neglect removed on any post to a platform. 1.0 = full reset. */
   neglect_reset_on_post: number;
-  /** Misalignment accumulation on a post whose generator is off-trend. */
-  misalignment_per_off_trend_post: number;
-  /** Misalignment decay on an aligned post. */
-  misalignment_decay_per_aligned_post: number;
   /** Weight on fatigue magnitude in the retention composition formula. [0,1]. */
   fatigue_weight: number;
   /** Weight on neglect magnitude. [0,1]. */
   neglect_weight: number;
-  /** Weight on misalignment magnitude. [0,1]. */
-  misalignment_weight: number;
   /** Tie-breaker ordering for dominant-pressure display. First wins on tie. */
-  composition_priority: [PressureId, PressureId, PressureId];
-  /**
-   * Threshold on raw algorithm modifier above (or equal to) which a post is
-   * considered "aligned" (favored by the current state) — per arch spec
-   * §Event-driven §Algorithm Misalignment. state_modifiers[G] ≥ threshold.
-   */
-  alignment_threshold: number;
+  composition_priority: [PressureId, PressureId];
 }
 
 export interface ViralBurstConfig {
@@ -409,10 +358,6 @@ export interface ViralBurstConfig {
   baseProbabilityMid: number;
   /** Per-tick fire probability late-game (~15–20 min between virals). */
   baseProbabilityLate: number;
-  /** If top generator's effective algorithm modifier exceeds this, p_viral is boosted. */
-  algorithmBoostThreshold: number;
-  /** Multiplier applied to p_viral when the algorithm boost threshold is met. */
-  algorithmBoostMultiplier: number;
   /** Minimum viral burst duration in ms. */
   durationMsMin: number;
   /** Maximum viral burst duration in ms. */
@@ -426,13 +371,6 @@ export interface ViralBurstConfig {
 export interface StaticData {
   generators: Record<GeneratorId, GeneratorDef>;
   platforms: Record<PlatformId, PlatformDef>;
-  algorithmStates: Record<AlgorithmStateId, AlgorithmStateDef>;
-  algorithmSchedule: {
-    /** Base time between Algorithm shifts, in ms. */
-    baseIntervalMs: number;
-    /** ± fuzz range added to baseIntervalMs, in ms. */
-    varianceMs: number;
-  };
   cloutUpgrades: Record<UpgradeId, CloutUpgradeDef>;
   /**
    * Static definitions for Creator Kit items. Balance values (max_level,

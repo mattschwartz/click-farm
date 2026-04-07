@@ -18,10 +18,10 @@ import { canAffordEngagement, spendEngagement } from '../model/index.ts';
 /**
  * Engagement cost to buy the next unit of a generator.
  *
- *   cost = ceil(base_buy_cost × buy_cost_multiplier^currentCount)
+ *   cost = base_buy_cost × buy_cost_multiplier^currentCount
  *
  * Standard clicker scaling: each additional unit costs slightly more than the
- * last. The ceil keeps costs whole numbers for clean UI display.
+ * last. Full precision — no rounding.
  *
  * TODO(game-designer): provisional formula and base values — tune during balance pass.
  */
@@ -36,26 +36,17 @@ export function generatorBuyCost(
     );
   }
   const def = staticData.generators[generatorId];
-  return Math.ceil(
-    def.base_buy_cost * Math.pow(def.buy_cost_multiplier, currentCount),
+  return (
+    def.base_buy_cost * Math.pow(def.buy_cost_multiplier, currentCount)
   );
 }
 
 /**
  * Engagement cost to upgrade a generator from its current level to level+1.
  *
- *   cost = ceil(base_upgrade_cost × levelMultiplier(currentLevel + 1))
- *
- * Cost tracks reward 1:1 via the level-multiplier curve (2^(level²/5)), so a
- * tier's base seed value is what scales the whole ladder. This was the
- * originally-accepted formula; it was temporarily replaced with 4^(L-1) and
- * is restored here per proposals/accepted/generator-level-growth-curves.md.
- *
- * Duplicates the `levelMultiplier` formula from game-loop to avoid a
- * circular import. If this ever drifts, the canonical source is
- * `game-loop/index.ts::levelMultiplier`.
- *
- * TODO(game-designer): base seed values are provisional — tune in task #88.
+ * Uses a hand-tuned lookup table (upgrade_costs on GeneratorDef) instead of
+ * a formula. Each generator has 9 entries (L1→L2 through L9→L10).
+ * Roughly ~3× per level within a tier, ~10× between tiers.
  */
 export function generatorUpgradeCost(
   generatorId: GeneratorId,
@@ -68,19 +59,21 @@ export function generatorUpgradeCost(
     );
   }
   const def = staticData.generators[generatorId];
-  const targetLevel = currentLevel + 1;
-  // Mirror of levelMultiplier's clamp for belt-and-braces safety.
-  const clamped = Math.min(20, Math.max(1, targetLevel));
-  const multiplier = Math.pow(2, (clamped * clamped) / 5);
-  return Math.ceil(def.base_upgrade_cost * multiplier);
+  const index = currentLevel - 1; // L1→L2 is index 0
+  if (index >= def.upgrade_costs.length) {
+    throw new Error(
+      `generatorUpgradeCost: no cost defined for level ${currentLevel}→${currentLevel + 1} on '${generatorId}'`,
+    );
+  }
+  return def.upgrade_costs[index];
 }
 
 /**
  * Engagement cost to buy the next autoclicker for a generator.
  *
- *   cost = ceil(base_autoclicker_cost × buy_cost_multiplier^currentAutoclickerCount)
+ *   cost = base_autoclicker_cost × autoclicker_cost_multiplier^currentAutoclickerCount
  *
- * Same exponential escalation as BUY. Only meaningful for manual_clickable
+ * Steeper escalation than BUY. Only meaningful for manual_clickable
  * generators (passive-only generators have base_autoclicker_cost = 0).
  */
 export function autoclickerBuyCost(
@@ -94,8 +87,8 @@ export function autoclickerBuyCost(
     );
   }
   const def = staticData.generators[generatorId];
-  return Math.ceil(
-    def.base_autoclicker_cost * Math.pow(def.buy_cost_multiplier, currentAutoclickerCount),
+  return (
+    def.base_autoclicker_cost * Math.pow(def.autoclicker_cost_multiplier, currentAutoclickerCount)
   );
 }
 

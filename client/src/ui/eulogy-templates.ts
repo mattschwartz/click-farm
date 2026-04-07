@@ -8,24 +8,22 @@
 //
 // IMPORTANT — data-driven with run-state substitution, but the content
 // itself is game-designer territory (spec §9.3). This file ships an initial
-// placeholder set of 4 stanzas that the game-designer will expand later.
+// placeholder set of 3 stanzas that the game-designer will expand later.
 //
 // Data sources the spec calls for:
 //   1. top platform by followers
 //   2. top generator by lifetime engagement
-//   3. longest-held Algorithm state during run
-//   4. total engagement earned
+//   3. total engagement earned
 //
 // Current game state tracks (1) directly. It does NOT track:
 //   - per-generator lifetime engagement
-//   - algorithm-state-duration history
 //   - cumulative engagement earned (only current balance)
 //
 // The initial stanzas below work within these constraints. Expanding run-
 // state tracking is a separate architecture question for follow-up.
 
 import type { GameState, PlatformId } from '../types.ts';
-import { PLATFORM_DISPLAY, ALGORITHM_MOOD } from './display.ts';
+import { PLATFORM_DISPLAY } from './display.ts';
 import { fmtCompactInt } from './format.ts';
 
 // ---------------------------------------------------------------------------
@@ -43,35 +41,26 @@ export function unlockedPlatformsList(state: GameState): string {
   return `${unlocked.slice(0, -1).join(', ')}, and ${unlocked[unlocked.length - 1]}`;
 }
 
-/** Name of the current algorithm state (placeholder for "longest-held"). */
-export function currentAlgorithmStateName(state: GameState): string {
-  const id = state.algorithm.current_state_id;
-  return ALGORITHM_MOOD[id]?.name ?? 'an unknown state';
-}
-
 // ---------------------------------------------------------------------------
 // Stanza generation
 // ---------------------------------------------------------------------------
 
 /**
- * Build the 4 eulogy stanzas for the given game state. Returns an array of
+ * Build the 3 eulogy stanzas for the given game state. Returns an array of
  * strings ready for sequential display in Phase 2.
  *
  * TODO(game-designer): expand to ~20 templates with variety, per spec §9.3.
  * TODO(architect): add run-state tracking for per-generator lifetime
- *   engagement and algorithm-state duration so stanzas 3–4 can use the
- *   richer data described in the spec.
+ *   engagement so stanzas can use richer data described in the spec.
  */
 export function buildEulogyStanzas(state: GameState): string[] {
   const followers = fmtCompactInt(state.player.total_followers);
   const platforms = unlockedPlatformsList(state);
   const engagement = fmtCompactInt(state.player.engagement);
-  const algoState = currentAlgorithmStateName(state);
 
   return [
     `You had ${followers} followers on ${platforms}.`,
     'They will not remember you.',
     `You made ${engagement} engagement. A legacy.`,
-    `The Algorithm favored you in ${algoState}. Brief but meaningful.`,
   ];
 }

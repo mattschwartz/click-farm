@@ -37,7 +37,6 @@ function stateWithGenerator(
         autoclicker_count: autoclickerCount,
       },
     },
-    algorithm: { ...base.algorithm, shift_time: T0 + 10_000_000 },
     player: { ...base.player, engagement: 10_000 },
   };
 }
@@ -125,10 +124,10 @@ describe('autoclickerBuyCost wiring', () => {
     expect(cost5).toBeGreaterThan(cost1);
   });
 
-  it('cost is always a whole number (ceiled)', () => {
+  it('cost is always positive', () => {
     for (let i = 0; i < 10; i++) {
       const cost = autoclickerBuyCost('chirps', i, STATIC_DATA);
-      expect(cost).toBe(Math.ceil(cost));
+      expect(cost).toBeGreaterThan(0);
     }
   });
 });
