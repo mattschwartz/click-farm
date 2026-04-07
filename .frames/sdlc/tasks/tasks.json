@@ -1,5 +1,5 @@
 {
-  "next_id": 159,
+  "next_id": 164,
   "tasks": [
     {
       "id": 1,
@@ -6368,7 +6368,7 @@
       "id": 158,
       "role": "game-designer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Review auto-buy sweep proposal — resolve open questions on order, cancel, scope, and budget cap",
       "requester": "ux-designer",
@@ -6389,7 +6389,208 @@
         "Passive-only generator inclusion confirmed"
       ],
       "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 159,
+      "role": "architect",
+      "state": "plan",
+      "status": "complete",
+      "date_assigned": "2026-04-06",
+      "title": "Decompose auto-buy sweep proposal into implementation tasks",
+      "requester": "game-designer",
+      "complexity": "haiku",
+      "overview": "The auto-buy sweep proposal has been accepted (proposals/accepted/20260406-auto-buy-sweep.md). It needs to be decomposed into concrete, assignable engineer tasks. The proposal covers: button placement at top of generator column, cheapest-first purchase ordering, 80ms sweep cadence, two-sound audio design, cancel mechanism, preview count on button label, re-evaluation after each purchase, and keyboard shortcut (B key). Task #157 was filed early with a rough scope — it should be superseded or refined by the decomposition.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-auto-buy-sweep.md",
+          "purpose": "The accepted proposal to decompose"
+        },
+        {
+          "ref": ".frames/sdlc/tasks/tasks.json",
+          "purpose": "Task #157 exists as an early rough filing — supersede or refine it"
+        }
+      ],
+      "acceptance_criteria": [
+        "Task #157 either updated to match the accepted proposal or superseded by new tasks",
+        "Each task is scoped to one role and one state (build)",
+        "Tasks cover: engine logic (sweep algorithm, re-evaluation), UI (button, states, preview count), audio (start/end sounds), keyboard shortcut",
+        "Dependencies between tasks are explicit via blocked_on"
+      ],
+      "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-06"
+    },
+    {
+      "id": 160,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Add sweep-start and sweep-end audio assets + sfx exports",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Add two new audio assets (ascending chime for sweep start; resolving lower tone for sweep end) and export two new functions from sfx.ts: playSweepStart() and playSweepEnd(). These are called from the UI layer — not the driver. The sweep deliberately suppresses per-purchase sounds (the driver calls model functions directly, bypassing the useGame.ts action wrappers where playPurchase lives). Only these two bookend sounds play per sweep.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/sfx.ts",
+          "purpose": "Add playSweepStart / playSweepEnd alongside existing playClick / playPurchase"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-auto-buy-sweep.md",
+          "purpose": "§4 sound design — ascending chime on start, resolving tone on end; silence during sweep body"
+        }
+      ],
+      "acceptance_criteria": [
+        "Two new audio asset files added to client/src/assets/ (sweep-start and sweep-end sounds)",
+        "playSweepStart() exported from sfx.ts — plays ascending chime, volume/pitch consistent with existing SFX conventions",
+        "playSweepEnd() exported from sfx.ts — plays resolving lower tone, volume/pitch consistent with existing SFX conventions",
+        "Both functions respect the masterMuted flag (same pattern as playClick / playPurchase)",
+        "Both audio assets are prefetched on import and decoded eagerly (same lazy-AudioContext pattern as existing assets)",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
       "blocked_on": []
+    },
+    {
+      "id": 161,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Implement sweep engine — driver sweep algorithm and interface",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Add startSweep(), cancelSweep(), getSweepState(), and onSweepEnd() to the GameDriver interface and implement them in createDriver(). See .frames/sdlc/architecture/auto-buy-sweep.md for the full spec.\n\nKey contract points:\n- Sweep state is driver-internal (not in GameState, not persisted)\n- getSweepState() returns { active: boolean; previewCount: number } — previewCount is the count of currently affordable purchases across all tracks\n- startSweep() builds the affordable list cheapest-first, fires first purchase immediately, then sequences at 80ms intervals via setTimeout\n- After each purchase: recompute the affordable list from fresh state; if empty, end sweep and fire onSweepEnd listeners\n- cancelSweep() clears the pending timeout, sets active=false, fires onSweepEnd\n- Internal purchases call buyGenerator / upgradeGenerator / buyAutoclicker directly (same as public driver actions) — state subscribers are notified synchronously after each, giving the UI all its visual feedback\n- Manual-clickable generators: BUY, LVL UP, HIRE tracks all included. Passive-only generators: LVL UP only.\n- The driver does NOT call any sfx functions — sound is the UI's responsibility",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/auto-buy-sweep.md",
+          "purpose": "Full architecture spec — data model, algorithm, interface contract, coupling analysis"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "GameDriver interface and createDriver() — extend both"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "generatorBuyCost, autoclickerBuyCost, generatorUpgradeCost, buyGenerator, upgradeGenerator, buyAutoclicker — used by sweep"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "canAffordEngagement — affordability check per purchase candidate"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-auto-buy-sweep.md",
+          "purpose": "Accepted design — cheapest-first order, 80ms cadence, all tracks in scope, re-evaluation spec"
+        }
+      ],
+      "acceptance_criteria": [
+        "SweepState type exported from driver/index.ts: { active: boolean; previewCount: number }",
+        "startSweep(), cancelSweep(), getSweepState(), onSweepEnd() added to GameDriver interface",
+        "startSweep() is a no-op when sweep is already active",
+        "cancelSweep() is a no-op when no sweep is active",
+        "Sweep fires purchases cheapest-first (ascending cost sort), 80ms between each",
+        "After each purchase, the affordable list is recomputed from current state — escalated costs and newly-affordable items are reflected",
+        "Sweep ends naturally when the recomputed list is empty; onSweepEnd fires",
+        "cancelSweep() ends the sweep immediately; onSweepEnd fires",
+        "Manual-clickable generators include BUY, LVL UP, and HIRE tracks in the sweep; passive-only generators include LVL UP only",
+        "State subscribers are notified after each individual purchase (not batched) — visual feedback (badge increments, rate updates) fires per purchase",
+        "Driver does not call any sfx functions",
+        "getSweepState().previewCount is accurate when called at any time (not only during an active sweep — returns live count of affordable purchases)",
+        "Unit tests cover: startSweep no-op when active, cancelSweep no-op when inactive, cheapest-first ordering, sweep terminates when funds exhausted, re-evaluation picks up newly affordable items, onSweepEnd fires on both natural end and cancel",
+        "Full typecheck passes; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 162,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Implement BUY ALL button — UI, visual states, and sweep sounds",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Add the BUY ALL button at the top of GeneratorList. The button reads driver.getSweepState() to render its label and visual state, calls driver.startSweep() / driver.cancelSweep() on tap, and plays playSweepStart() / playSweepEnd() for the two bookend sounds.\n\nVisual states (per accepted proposal §7):\n- Idle, purchases available: gold tint bg, gold border, 'BUY ALL (N)' label in --accent-gold, tappable\n- Idle, nothing affordable (previewCount === 0): transparent bg, --border-subtle border, 'BUY ALL (0)' in --text-receded, disabled (no pointer)\n- Sweeping: gold tint bg, gold border, 'STOP' label, pulsing opacity 0.8→1.0 on a 400ms sine cycle, tappable (cancels)\n\nButton spec (per proposal §1): full-width bar at top of generator column above first category divider, height 36px, border-radius 6px, 12px Space Grotesk 700 uppercase, bg rgba(var(--glow-halo-rgb), 0.12), border 1px solid rgba(var(--glow-halo-rgb), 0.25), text --accent-gold (#A0730E).\n\nPreview count: 'BUY ALL (N)' where N = driver.getSweepState().previewCount. Updates live as state changes. When N === 0, button is disabled.\n\nSounds: call playSweepStart() immediately after driver.startSweep() is invoked. Register onSweepEnd listener and call playSweepEnd() when it fires. Clean up the listener on unmount.\n\nReduce-motion: pulse animation is suppressed under prefers-reduced-motion.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/auto-buy-sweep.md",
+          "purpose": "Driver interface contract — startSweep, cancelSweep, getSweepState, onSweepEnd"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-auto-buy-sweep.md",
+          "purpose": "Full UX spec — button placement, typography, visual states, pulse, preview count, cancel"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "Insert BUY ALL button above first category divider"
+        },
+        {
+          "ref": "client/src/ui/sfx.ts",
+          "purpose": "Call playSweepStart() and playSweepEnd() — added by E3"
+        }
+      ],
+      "acceptance_criteria": [
+        "BUY ALL button renders at the top of GeneratorList, above the first category divider, full-width, matching all visual spec values (36px, 6px radius, 12px Space Grotesk 700, gold tint bg, gold border)",
+        "Label reads 'BUY ALL (N)' with live preview count when idle and affordable; 'STOP' when sweep is active",
+        "Button is disabled (no pointer, transparent bg, receded text) when previewCount === 0 and no sweep is active",
+        "Tapping BUY ALL calls driver.startSweep() and playSweepStart()",
+        "Tapping STOP calls driver.cancelSweep()",
+        "Sweep-end sound (playSweepEnd) fires via onSweepEnd listener on both natural completion and cancellation",
+        "onSweepEnd listener is cleaned up on component unmount",
+        "Pulse animation (opacity 0.8→1.0, 400ms sine) plays on the button during sweep; suppressed under prefers-reduced-motion",
+        "Preview count updates in real time as engagement changes between purchases",
+        "Component or integration tests cover: idle/available state, idle/empty state, sweeping state label, disabled state, playSweepStart called on tap, playSweepEnd called on completion",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        161,
+        160
+      ]
+    },
+    {
+      "id": 163,
+      "alias": "E4",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-06",
+      "title": "Keyboard shortcut: B key triggers and cancels auto-buy sweep",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Wire the B key to the auto-buy sweep. When B is pressed and no modal is open: if sweep is not active, call driver.startSweep(); if sweep is active, call driver.cancelSweep(). The UI should also call playSweepStart() on startSweep and the onSweepEnd handler will cover playSweepEnd (already wired by E2). The 'no modal open' guard should follow the same pattern used by other keyboard shortcuts in the codebase. Document the shortcut in the settings/controls area.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/architecture/auto-buy-sweep.md",
+          "purpose": "Driver interface — startSweep / cancelSweep / getSweepState"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Top-level component — likely location for the keydown handler"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-auto-buy-sweep.md",
+          "purpose": "§9 keyboard shortcut spec — B key, same key cancels, documented in settings"
+        }
+      ],
+      "acceptance_criteria": [
+        "Pressing B when no modal is open and sweep is inactive calls driver.startSweep() (and playSweepStart())",
+        "Pressing B when no modal is open and sweep is active calls driver.cancelSweep()",
+        "B key does nothing when a modal is open",
+        "Shortcut is documented in the settings/controls area of the UI",
+        "Unit or integration test covers: B triggers sweep when inactive, B cancels sweep when active, B is ignored when modal is open",
+        "npm run build succeeds; full test suite passes"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        161
+      ]
     }
   ]
 }
