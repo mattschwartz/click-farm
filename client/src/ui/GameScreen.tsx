@@ -138,6 +138,8 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     rebrand,
     sweepActive,
     sweepPreviewCount,
+    lastSweepPurchase,
+    sweepPurchaseSeq,
     startSweep,
     cancelSweep,
     pauseLoop,
@@ -398,6 +400,8 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               viralGeneratorId={viralActive?.source_generator_id ?? null}
               sweepActive={sweepActive}
               sweepPreviewCount={sweepPreviewCount}
+              lastSweepPurchase={lastSweepPurchase}
+              sweepPurchaseSeq={sweepPurchaseSeq}
               onStartSweep={startSweep}
               onCancelSweep={cancelSweep}
             />

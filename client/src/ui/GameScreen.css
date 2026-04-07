@@ -870,6 +870,21 @@ html[data-reduce-motion="true"] .buy-all-btn-sweeping {
   animation: none;
 }
 
+/* --- Sweep-hit scale pop — 64ms ease-out on each sweep purchase --- */
+.sweep-hit {
+  animation: sweep-hit-pop 64ms ease-out;
+}
+@keyframes sweep-hit-pop {
+  from { transform: scale(1.12); }
+  to   { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sweep-hit { animation: none; }
+}
+html[data-reduce-motion="true"] .sweep-hit {
+  animation: none;
+}
+
 .category-divider {
   font-size: 11px;
   font-weight: 500;

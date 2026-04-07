@@ -3,9 +3,9 @@
 // The driver is framework-agnostic; this hook is the only place React meets
 // the game loop.
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { GameState, GeneratorId, KitItemId, UpgradeId } from '../types.ts';
-import { createDriver, type ActionError, type SaveError } from '../driver/index.ts';
+import { createDriver, type ActionError, type SaveError, type SweepPurchaseEvent } from '../driver/index.ts';
 import type { OfflineResult } from '../offline/index.ts';
 import type { RebrandResult } from '../prestige/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -65,6 +65,10 @@ export interface UseGameResult {
   startSweep: () => void;
   /** Cancel an in-progress sweep immediately. */
   cancelSweep: () => void;
+  /** Last sweep purchase event — changes on each individual purchase for animation triggers. */
+  lastSweepPurchase: SweepPurchaseEvent | null;
+  /** Monotonic counter — increments on each sweep purchase for re-trigger detection. */
+  sweepPurchaseSeq: number;
 }
 
 /**
@@ -88,6 +92,9 @@ export function useGame(): UseGameResult {
   const [lastActionError, setLastActionError] = useState<ActionError | null>(null);
   const [saveError, setSaveError] = useState<SaveError | null>(null);
   const [sweepActive, setSweepActive] = useState(false);
+  const [lastSweepPurchase, setLastSweepPurchase] = useState<SweepPurchaseEvent | null>(null);
+  const sweepSeqRef = useRef(0);
+  const [sweepPurchaseSeq, setSweepPurchaseSeq] = useState(0);
 
   // Subscribe to action errors from the driver. The listener overwrites the
   // last-error slot; consumers that need queueing can layer their own buffer.
@@ -104,18 +111,22 @@ export function useGame(): UseGameResult {
     return unsub;
   }, [driver]);
 
-  // Sweep end — reset active flag.
+  // Sweep end — reset active flag and clear last purchase event.
   useEffect(() => {
     const unsub = driver.onSweepEnd(() => {
       setSweepActive(false);
+      setLastSweepPurchase(null);
     });
     return unsub;
   }, [driver]);
 
-  // Per-purchase sound during sweep.
+  // Per-purchase sound + event during sweep.
   useEffect(() => {
-    const unsub = driver.onSweepPurchase(() => {
+    const unsub = driver.onSweepPurchase((e) => {
       playPurchase();
+      setLastSweepPurchase(e);
+      sweepSeqRef.current += 1;
+      setSweepPurchaseSeq(sweepSeqRef.current);
     });
     return unsub;
   }, [driver]);
@@ -227,5 +238,5 @@ export function useGame(): UseGameResult {
     [driver],
   );
 
-  return { state, offlineResult, lastActionError, saveError, sweepActive, sweepPreviewCount, ...actions };
+  return { state, offlineResult, lastActionError, saveError, sweepActive, sweepPreviewCount, lastSweepPurchase, sweepPurchaseSeq, ...actions };
 }

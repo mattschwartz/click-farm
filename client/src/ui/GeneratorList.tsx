@@ -14,6 +14,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { GameState, GeneratorId, StaticData } from '../types.ts';
+import type { SweepItemType, SweepPurchaseEvent } from '../driver/index.ts';
 import {
   autoclickerBuyCost,
   generatorBuyCost,
@@ -46,6 +47,10 @@ interface Props {
   onStartSweep: () => void;
   /** Cancel a running sweep. */
   onCancelSweep: () => void;
+  /** Last sweep purchase event — triggers scale-pop on the matching button. */
+  lastSweepPurchase: SweepPurchaseEvent | null;
+  /** Monotonic counter — increments on each sweep purchase for re-trigger detection. */
+  sweepPurchaseSeq: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -122,7 +127,7 @@ export function shouldApplyManyReady(readyCount: number): boolean {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutoclicker, viralGeneratorId, sweepActive, sweepPreviewCount, onStartSweep, onCancelSweep }: Props) {
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutoclicker, viralGeneratorId, sweepActive, sweepPreviewCount, onStartSweep, onCancelSweep, lastSweepPurchase, sweepPurchaseSeq }: Props) {
   // Build rows grouped by category in stable order.
   // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
   // excluded from the main list — they render in the Clout Shop modal instead.
@@ -176,6 +181,8 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutocl
                 onUpgrade={onUpgrade}
                 onBuyAutoclicker={onBuyAutoclicker}
                 viralHalo={viralGeneratorId === id}
+                sweepHitType={lastSweepPurchase?.generatorId === id ? lastSweepPurchase.type : null}
+                sweepHitSeq={sweepPurchaseSeq}
               />
             ))}
           </div>
@@ -196,6 +203,10 @@ interface RowProps {
   onBuyAutoclicker: (verbId: GeneratorId) => void;
   /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
   viralHalo?: boolean;
+  /** Which button (if any) was just hit by a sweep purchase on this row. */
+  sweepHitType: SweepItemType | null;
+  /** Monotonic counter — increments on every sweep purchase for re-trigger detection. */
+  sweepHitSeq: number;
 }
 
 function GeneratorRow({
@@ -206,6 +217,8 @@ function GeneratorRow({
   onUpgrade,
   onBuyAutoclicker,
   viralHalo,
+  sweepHitType,
+  sweepHitSeq,
 }: RowProps) {
   const g = state.generators[id];
   const def = staticData.generators[id];
@@ -216,6 +229,19 @@ function GeneratorRow({
   const isDiscovered = g.owned || thresholdMet;
 
   const style = { '--gen-color': display.color } as React.CSSProperties;
+
+  // Sweep-hit animation — fires when a sweep purchase targets this row's
+  // buy / upgrade / autoclicker button. Toggles a class for 64ms.
+  const [sweepHitBtn, setSweepHitBtn] = useState<SweepItemType | null>(null);
+  const prevSweepSeq = useRef(0);
+  useEffect(() => {
+    if (sweepHitType && sweepHitSeq !== prevSweepSeq.current) {
+      prevSweepSeq.current = sweepHitSeq;
+      setSweepHitBtn(sweepHitType);
+      const t = window.setTimeout(() => setSweepHitBtn(null), 64);
+      return () => window.clearTimeout(t);
+    }
+  }, [sweepHitType, sweepHitSeq]);
 
   // Row ref — used to read bounding rect for drawer anchor. Declared here
   // (before any early returns) so hook order stays stable across the
@@ -351,6 +377,7 @@ function GeneratorRow({
           canBuy={canBuy}
           count={g.count}
           onBuy={() => onBuy(id)}
+          sweepHit={sweepHitBtn === 'buy'}
         />
         {/* SPEED — fires upgrade directly (task #150).
             Two affordance states:
@@ -363,6 +390,7 @@ function GeneratorRow({
           canAfford={state.player.engagement >= upgradeCost}
           level={g.level}
           onUpgrade={() => onUpgrade(id)}
+          sweepHit={sweepHitBtn === 'upgrade'}
           title={
             lvlState === 'maxed'
                 ? `${display.name} is at max level (L${g.level})`
@@ -387,6 +415,7 @@ function GeneratorRow({
             verbColor={display.color}
             onBuy={() => onBuyAutoclicker(id)}
             generatorName={display.name}
+            sweepHit={sweepHitBtn === 'autoclicker'}
           />
         )}
       </div>
@@ -405,6 +434,7 @@ interface AutoPillProps {
   verbColor: string;
   onBuy: () => void;
   generatorName: string;
+  sweepHit?: boolean;
 }
 
 /** Parse hex to "R, G, B" string for rgba() compositing. */
@@ -423,6 +453,7 @@ interface SpeedButtonProps {
   canAfford: boolean;
   level: number;
   onUpgrade: () => void;
+  sweepHit?: boolean;
   title: string;
   ariaLabel: string;
   costLabel: React.ReactNode;
@@ -435,6 +466,7 @@ function SpeedButton({
   canAfford,
   level,
   onUpgrade,
+  sweepHit,
   title,
   ariaLabel,
   costLabel,
@@ -457,7 +489,7 @@ function SpeedButton({
 
   return (
     <button
-      className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${maxedArrival ? ' lvl-maxed-arrival' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}`}
+      className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${maxedArrival ? ' lvl-maxed-arrival' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${sweepHit ? ' sweep-hit' : ''}`}
       onClick={handleClick}
       disabled={lvlState === 'maxed'}
       style={{ '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties}
@@ -483,7 +515,7 @@ function SpeedButton({
 
 // ---------------------------------------------------------------------------
 
-function AutoPill({ costLabel, costText, canBuy, autoclickerCount, verbColor, onBuy, generatorName }: AutoPillProps) {
+function AutoPill({ costLabel, costText, canBuy, autoclickerCount, verbColor, onBuy, generatorName, sweepHit }: AutoPillProps) {
   const [glowing, setGlowing] = useState(false);
   const [shaking, setShaking] = useState(false);
   const rgb = hexToRgbPill(verbColor);
@@ -501,7 +533,7 @@ function AutoPill({ costLabel, costText, canBuy, autoclickerCount, verbColor, on
 
   return (
     <button
-      className={`purchase-pill purchase-pill-auto${canBuy ? ' purchase-pill-affordable' : ' purchase-pill-unaffordable'}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}`}
+      className={`purchase-pill purchase-pill-auto${canBuy ? ' purchase-pill-affordable' : ' purchase-pill-unaffordable'}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}${sweepHit ? ' sweep-hit' : ''}`}
       style={canBuy ? {
         '--pill-color': verbColor,
         '--pill-color-rgb': rgb,
@@ -569,9 +601,10 @@ interface CompactBuyButtonProps {
   canBuy: boolean;
   count: number;
   onBuy: () => void;
+  sweepHit?: boolean;
 }
 
-function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy }: CompactBuyButtonProps) {
+function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit }: CompactBuyButtonProps) {
   const [shaking, setShaking] = useState(false);
   const [glowing, setGlowing] = useState(false);
 
@@ -588,7 +621,7 @@ function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy }: Compact
 
   return (
     <button
-      className={`row-btn${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${!canBuy ? ' row-btn-disabled' : ''}`}
+      className={`row-btn${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${!canBuy ? ' row-btn-disabled' : ''}${sweepHit ? ' sweep-hit' : ''}`}
       onClick={handleClick}
       aria-disabled={!canBuy}
       title={`Buy 1 unit for ${costText} engagement`}
