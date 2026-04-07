@@ -1,5 +1,5 @@
 {
-  "next_id": 167,
+  "next_id": 168,
   "tasks": [
     {
       "id": 1,
@@ -6702,6 +6702,92 @@
         {
           "question": "Should post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) remain Clout-purchased or move to a different system?",
           "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 167,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-07",
+      "title": "Add i18n infrastructure with react-i18next and extract all strings",
+      "requester": "architect",
+      "complexity": "opus",
+      "overview": "Install react-i18next and i18next. Extract all ~180 hardcoded user-facing strings into JSON locale files. Set up the translation infrastructure so the app renders strings from locale bundles instead of inline English. European LTR languages only — no RTL layout concerns.\n\nThe codebase has zero i18n support today. All strings are hardcoded across 8 key files. The extraction is mechanical but touches every UI component.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/display.ts",
+          "purpose": "Largest string concentration (~60 strings). Generator names, platform names, taglines, category labels. Extract into game namespace."
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "~25 strings: POWER, SPEED, HIRE, RUSH BUY button labels, tooltips, unlock thresholds with interpolation."
+        },
+        {
+          "ref": "client/src/ui/SettingsModal.tsx",
+          "purpose": "~30 strings: section headers, toggle labels, descriptions, transient feedback messages."
+        },
+        {
+          "ref": "client/src/ui/CloutShopModal.tsx",
+          "purpose": "~15 strings: upgrade display metadata (names, descriptions, categories), shop labels."
+        },
+        {
+          "ref": "client/src/ui/RebrandCeremonyModal.tsx",
+          "purpose": "~20 strings across 4 ceremony phases. Includes interpolated narrative text."
+        },
+        {
+          "ref": "client/src/ui/CreatorKitPanel.tsx",
+          "purpose": "~10 strings: kit item names, flavor text, header, badge annotation."
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "~12 strings: save error messages, prestige button labels, aria-labels."
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "Game title, run badge, engagement tooltip, viral summary."
+        },
+        {
+          "ref": "client/src/ui/OfflineGainsModal.tsx",
+          "purpose": "Welcome-back text, duration, per-platform labels, dismiss button."
+        },
+        {
+          "ref": "client/src/ui/PlatformPanel.tsx",
+          "purpose": "Platform card labels, unlock teasers, affinity chip tooltips."
+        },
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "Ghost verb unlock text, live verb button labels."
+        },
+        {
+          "ref": "client/src/ui/eulogy-templates.ts",
+          "purpose": "Prestige narrative stanzas with interpolation from game state."
+        },
+        {
+          "ref": ".frames/sdlc/architecture/creator-kit.md",
+          "purpose": "Stacking order convention — referenced for context on how display.ts maps to game entities."
+        }
+      ],
+      "acceptance_criteria": [
+        "react-i18next and i18next are installed and configured in the Vite + React app",
+        "An i18next instance is initialized with English as the default language and fallback",
+        "All ~180 user-facing strings are extracted from the 8 key files into structured JSON locale files under a locales/ directory (e.g., client/src/locales/en/)",
+        "Locale files are organized by namespace: game.json (entity names, taglines), ui.json (buttons, labels, headers, settings), narrative.json (eulogy templates, ceremony text, offline gains)",
+        "All React components use useTranslation() hook and t() calls instead of hardcoded strings",
+        "Interpolated strings use i18next interpolation syntax (e.g., t('unlock_at', { threshold }) renders 'Unlocks at {{threshold}} followers')",
+        "Plural-sensitive strings use ICU plural rules where applicable (e.g., follower/followers, rebrand/rebrands)",
+        "A language switcher exists in SettingsModal (dropdown or toggle) that switches the active locale at runtime — persisted to localStorage",
+        "Locale bundles are lazy-loaded per language via Vite dynamic imports — only the active locale is bundled at build time",
+        "TypeScript declaration merging or equivalent is set up so t() keys are type-checked against the English base locale",
+        "All existing tests still pass after extraction",
+        "No user-facing English strings remain hardcoded in JSX/TSX files (display.ts constants are replaced with t() calls at the consumption site)"
+      ],
+      "open_questions": [
+        {
+          "question": "Should number formatting (fmtCompact, fmtDuration) be locale-aware in this pass, or deferred? Recommend deferring — it's a separate concern from string extraction.",
+          "owner": "architect"
         }
       ],
       "blocked_on": []
