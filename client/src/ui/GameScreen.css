@@ -2128,14 +2128,16 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* ~80% opacity — main screen dims to ~20% per spec §4.1. */
-  background: rgba(var(--palette-black-rgb),0.82);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   animation: fade-in 300ms ease-out;
 }
 
 .ceremony-modal {
-  background: var(--surface-overlay);
-  border: 1px solid var(--border-default);
+  background: transparent;
+  border: none;
+  box-shadow: none;
   border-radius: 12px;
   padding: 36px 40px 32px;
   width: 520px;
@@ -2298,7 +2300,7 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
   width: 560px;
   padding: 60px 48px 36px;
   text-align: center;
-  background: var(--surface-overlay);
+  background: transparent;
   /* Desaturation via custom property (0.0 → 0.4) */
   filter: saturate(calc(1 - var(--eulogy-desat, 0)));
   transition: filter 600ms ease-out;
@@ -3176,13 +3178,16 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(var(--palette-black-rgb),0.30);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   animation: fade-in 200ms ease-out;
 }
 
 .settings-modal {
-  background: var(--surface-overlay);
-  border: 1px solid var(--border-default);
+  background: transparent;
+  border: none;
+  box-shadow: none;
   border-radius: 12px;
   width: 520px;
   max-width: calc(100vw - 40px);
