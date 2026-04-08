@@ -577,7 +577,7 @@ function SpeedButton({
 
   return (
     <button
-      className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${maxedArrival ? ' lvl-maxed-arrival' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${sweepHit ? ' sweep-hit' : ''}`}
+      className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${lvlState === 'ready' ? ' gold-breathe' : ''}${maxedArrival ? ' lvl-maxed-arrival' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${sweepHit ? ' sweep-hit' : ''}`}
       onClick={handleClick}
       disabled={lvlState === 'maxed'}
       style={{ '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties}
@@ -760,15 +760,9 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
   const superTierClass = gearLevel >= 2 ? ' super-tier-3' : gearLevel >= 1 ? ' super-tier-2' : ' super-tier-1';
   const stateClass = superMaxed
     ? ' purchase-pill-maxed purchase-pill-super-maxed'
-    : superActive
-      ? canBuy
-        ? ` purchase-pill-affordable purchase-pill-super${superTierClass}${holding ? ' purchase-pill-super-holding' : ''}`
-        : ` purchase-pill-unaffordable purchase-pill-super${superTierClass}`
-      : isMaxed
-        ? ' purchase-pill-maxed'
-        : canBuy
-          ? ' purchase-pill-affordable'
-          : ' purchase-pill-unaffordable';
+    : canBuy
+      ? ` purchase-pill-affordable purchase-pill-super${superTierClass}${holding ? ' purchase-pill-super-holding' : ''}`
+      : ` purchase-pill-unaffordable purchase-pill-super${superTierClass}`;
 
   // SUPER label: level 0 (buying first) = "SUPER", level 1 (buying second) = "SUPER II", level 2 (buying third) = "SUPER III"
   const superTierLabel = gearLevel === 0 ? 'SUPER' : gearLevel === 1 ? 'SUPER II' : 'SUPER III';
@@ -810,6 +804,36 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
         } as React.CSSProperties
       : undefined;
 
+  // --- Non-SUPER: render with identical markup + classes as SPEED button ---
+  if (!isSuperPhase) {
+    const hireLvlState = isMaxed ? 'maxed' : canBuy ? 'ready' : 'armed';
+    return (
+      <button
+        className={`row-btn row-btn-upgrade row-btn-lvl-${hireLvlState}${hireLvlState === 'ready' ? ' gold-breathe' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${sweepHit ? ' sweep-hit' : ''}`}
+        onClick={handleClick}
+        disabled={isMaxed}
+        aria-label={ariaLabel}
+        title={title}
+      >
+        <span className="label">
+          {hireLvlState === 'ready' && (
+            <span className="lvl-chevron" aria-hidden>▲</span>
+          )}
+          {hireLvlState === 'maxed' && (
+            <span className="lvl-crown" aria-hidden>♛</span>
+          )}
+          <span className="pill-label-full">{labelText}</span>
+          <span className="pill-label-abbr">A</span>
+        </span>
+        {hireLvlState === 'armed' && (
+          <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
+        )}
+        <span className="row-btn-cost">{isMaxed ? 'MAX' : costLabel}</span>
+      </button>
+    );
+  }
+
+  // --- SUPER phase: purchase-pill markup with flame wreath ---
   return (
     <button
       className={`purchase-pill purchase-pill-auto${stateClass}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}${bursting ? ' super-burst' : ''}${sweepHit ? ' sweep-hit' : ''}`}
@@ -823,7 +847,7 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
       onTouchStart={handleTouchStart}
       onTouchEnd={dismissPopover}
       onTouchCancel={dismissPopover}
-      disabled={superMaxed || (!isSuperPhase && isMaxed)}
+      disabled={superMaxed}
       aria-label={ariaLabel}
       title={title}
     >
@@ -837,21 +861,15 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
       )}
       <span className="pill-label">
         {superMaxed && <span className="pill-crown" aria-hidden>♛</span>}
-        {!isSuperPhase && isMaxed && <span className="pill-crown" aria-hidden>♛</span>}
         <span className="pill-label-full">{labelText}</span>
         <span className="pill-label-abbr">{labelAbbr}</span>
       </span>
-      <span className="pill-cost">{superMaxed ? 'MAX' : isMaxed ? 'MAX' : costLabel}</span>
+      <span className="pill-cost">{superMaxed ? 'MAX' : costLabel}</span>
       {/* Cost popover — SUPER shows gear name + cost + multiplier. */}
-      {(holding || costPopover) && isSuperPhase && !isMaxed && (
+      {(holding || costPopover) && !isMaxed && (
         <span className="pill-cost-popover pill-cost-popover-super" aria-hidden="true">
           <span className="popover-gear-name">{gearName}</span>
           <span className="popover-gear-detail">{costText} eng {gearMultiplier ? `\u2192 \u00D7${gearMultiplier}` : ''}</span>
-        </span>
-      )}
-      {costPopover && !isSuperPhase && (
-        <span className="pill-cost-popover" aria-hidden="true">
-          {isMaxed ? 'MAX' : costLabel}
         </span>
       )}
     </button>

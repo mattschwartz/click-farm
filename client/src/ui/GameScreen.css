@@ -1445,7 +1445,7 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   font-family: inherit;
   font-size: 12px;
   padding: 5px 0;
-  width: 72px;
+  width: 80px;
   text-align: center;
   border-radius: 4px;
   border: 1px solid var(--border-default);
@@ -2857,44 +2857,33 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   display: none;
 }
 
-/* Ready — gold border, gold cost numeral, breathing halo. */
-.row-btn-upgrade.row-btn-lvl-ready {
+/* ---------------------------------------------------------------------------
+ * .gold-breathe — shared gold border + breathing halo treatment.
+ * Used by both SPEED (row-btn-lvl-ready) and HIRE (purchase-pill-affordable).
+ * --------------------------------------------------------------------------- */
+.gold-breathe,
+.purchase-pill.gold-breathe {
   border: 1px solid var(--accent-gold);
   background: rgba(var(--glow-halo-rgb), 0.14);
-  color: var(--accent-gold);
+  color: var(--text-primary);
   font-weight: 600;
-  animation: lvl-ready-breathe 2400ms ease-in-out infinite;
-  /* Negative delay starts each row mid-cycle so rows breathe out of phase.
-     --breathe-delay is emitted inline per-row by GeneratorList (already
-     negative — see badge-owned usage). */
+  animation: gold-breathe-anim 2400ms ease-in-out infinite;
   animation-delay: var(--breathe-delay, 0ms);
 }
-.row-btn-upgrade.row-btn-lvl-ready .label {
-  color: var(--text-primary);
-}
-.row-btn-upgrade.row-btn-lvl-ready .lvl-chevron {
-  display: inline-block;
-  font-size: 8px;
-  margin-right: 3px;
-  color: var(--accent-gold);
-}
 
-/* Hover on ready — locks at peak glow, breathing pauses (prevents the hovered
-   row from seeming to dim mid-hover). */
-.row-btn-upgrade.row-btn-lvl-ready:hover:not(:disabled) {
+.gold-breathe:hover:not(:disabled),
+.purchase-pill.gold-breathe:hover:not(:disabled) {
   background: rgba(var(--glow-halo-rgb), 0.22);
   box-shadow: 0 0 12px 2px rgba(var(--glow-halo-rgb), 0.55);
   animation-play-state: paused;
 }
 
-/* Suppress breathing while the drawer is already open — the player is
-   looking at the thing being teased, keep the gold border only. */
-.row-btn-upgrade.row-btn-lvl-ready.active {
+.gold-breathe.active {
   animation: none;
   box-shadow: none;
 }
 
-@keyframes lvl-ready-breathe {
+@keyframes gold-breathe-anim {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(var(--glow-halo-rgb), 0);
     border-color: var(--accent-gold);
@@ -2905,13 +2894,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   }
 }
 
-/* Many-ready de-escalation — when ≥4 rows are ready, slow the cadence and
-   soften the peak so the list doesn't become a disco. Border stays full
-   strength gold; the trust signal must not weaken. */
-.generator-list.many-ready .row-btn-upgrade.row-btn-lvl-ready {
-  animation-duration: 3200ms;
-}
-@keyframes lvl-ready-breathe-soft {
+@keyframes gold-breathe-soft {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(var(--glow-halo-rgb), 0);
     border-color: var(--accent-gold);
@@ -2921,17 +2904,33 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
     border-color: var(--accent-gold-bright);
   }
 }
-.generator-list.many-ready .row-btn-upgrade.row-btn-lvl-ready {
-  animation-name: lvl-ready-breathe-soft;
+
+/* Many-ready de-escalation — slow cadence + soften peak when >=4 rows ready. */
+.generator-list.many-ready .gold-breathe {
+  animation-duration: 3200ms;
+  animation-name: gold-breathe-soft;
 }
 
-/* Reduce Motion — hold at the peak glow value so the "energized" read
-   persists without motion. Static color and glyph signals stay in place. */
 @media (prefers-reduced-motion: reduce) {
-  .row-btn-upgrade.row-btn-lvl-ready {
+  .gold-breathe {
     animation: none;
     box-shadow: 0 0 8px 1px rgba(var(--glow-halo-rgb), 0.35);
   }
+}
+html[data-reduce-motion="true"] .gold-breathe {
+  animation: none;
+  box-shadow: 0 0 8px 1px rgba(var(--glow-halo-rgb), 0.35);
+}
+
+/* --- gold-breathe child text: label is primary (black), chevron is gold --- */
+.gold-breathe .label {
+  color: var(--text-primary);
+}
+.gold-breathe .lvl-chevron {
+  display: inline-block;
+  font-size: 8px;
+  margin-right: 3px;
+  color: var(--accent-gold);
 }
 
 /* ==========================================================================
@@ -3868,10 +3867,7 @@ html[data-reduce-motion="true"] .viral-particles-overlay {
 }
 
 
-html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
-  animation: none;
-  box-shadow: 0 0 8px 1px rgba(var(--glow-halo-rgb),0.35);
-}
+/* reduce-motion for row-btn-lvl-ready handled by .gold-breathe */
 
 /* ---------------------------------------------------------------------------
  * AUTO purchase pill — generator-purchase-pills.md §2–3
@@ -3884,7 +3880,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   height: 28px;
   border-radius: 4px;
   padding: 0 4px;
-  font-size: 11px;
+  font-size: 10px;
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
   text-transform: uppercase;
@@ -3927,74 +3923,11 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
 
 .purchase-pill-auto .pill-cost {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 700;
   opacity: 0.75;
+  margin-top: 1px;
 }
 
-.purchase-pill-auto.purchase-pill-affordable {
-  position: relative;
-  border-color: transparent;
-  background: rgba(var(--pill-color-rgb), 0.15);
-  color: var(--text-primary);
-  z-index: 0;
-  overflow: visible;
-  box-shadow:
-    0 0 6px 1px rgba(255, 140, 40, 0.35),
-    0 0 16px 2px rgba(255, 80, 20, 0.15);
-}
-
-.purchase-pill-auto.purchase-pill-affordable::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 6px;  /* pill radius (4px) + border inset (2px) */
-  background: conic-gradient(
-    from var(--flame-angle, 0deg),
-    #ff4500 0deg,
-    #ff8c00 60deg,
-    #ffd700 120deg,
-    #ff4500 180deg,
-    #ff8c00 240deg,
-    #ffd700 300deg,
-    #ff4500 360deg
-  );
-  z-index: -1;
-  animation: flame-chase 1.2s linear infinite;
-}
-
-/* Inner mask — punches out the center so only the border ring shows */
-.purchase-pill-auto.purchase-pill-affordable::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: 3px;
-  background: var(--surface-panel, #FFFFFF);
-  z-index: -1;
-}
-
-@keyframes flame-chase {
-  from { --flame-angle: 0deg; }
-  to   { --flame-angle: 360deg; }
-}
-
-/* Register the custom property so the conic-gradient can animate */
-@property --flame-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-
-/* Reduced motion — static glow, no chase */
-@media (prefers-reduced-motion: reduce) {
-  .purchase-pill-auto.purchase-pill-affordable::before {
-    animation: none;
-    background: rgba(255, 140, 40, 0.5);
-  }
-}
-html[data-reduce-motion="true"] .purchase-pill-auto.purchase-pill-affordable::before {
-  animation: none;
-  background: rgba(255, 140, 40, 0.5);
-}
 
 /* Maxed — platinum plaque treatment, matches maxed SPEED/LVL button */
 .purchase-pill-maxed {
@@ -4116,14 +4049,59 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
  * two-tap confirmation, and platinum maxed state.
  * --------------------------------------------------------------------------- */
 
-/* Affordable SUPER — verb-tinted with elevated visual weight */
+/* Register the custom property so the conic-gradient can animate */
+@property --flame-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes flame-chase {
+  from { --flame-angle: 0deg; }
+  to   { --flame-angle: 360deg; }
+}
+
+/* Affordable SUPER — flame wreath border with warm glow. */
 .purchase-pill-super.purchase-pill-affordable {
-  border: 2px solid rgba(255, 140, 40, 0.50);
+  border-color: transparent;
   background: rgba(255, 140, 40, 0.18);
-  box-shadow: 0 0 8px rgba(255, 140, 40, 0.30);
+  box-shadow:
+    0 0 6px 1px rgba(255, 140, 40, 0.35),
+    0 0 16px 2px rgba(255, 80, 20, 0.15);
   color: var(--text-primary);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  z-index: 0;
+}
+
+/* Rotating conic-gradient flame border */
+.purchase-pill-super.purchase-pill-affordable::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 6px;
+  background: conic-gradient(
+    from var(--flame-angle, 0deg),
+    #ff4500 0deg,
+    #ff8c00 60deg,
+    #ffd700 120deg,
+    #ff4500 180deg,
+    #ff8c00 240deg,
+    #ffd700 300deg,
+    #ff4500 360deg
+  );
+  z-index: -1;
+  animation: flame-chase 1.2s linear infinite;
+}
+
+/* Inner mask — punches out the center so only the border ring shows */
+.purchase-pill-super.purchase-pill-affordable::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 3px;
+  background: var(--surface-panel, #FFFFFF);
+  z-index: -1;
 }
 
 .purchase-pill-super.purchase-pill-affordable .pill-label {
@@ -4137,13 +4115,15 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
   z-index: 1;
 }
 
-/* Hold-to-buy fire bar — fills from bottom, escalating color + glow */
+/* Hold-to-buy fire bar — fills from bottom, escalating color + glow.
+   border-radius clips corners since parent is overflow:visible for flame. */
 .super-hold-fire {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   height: calc(var(--hold-progress, 0) * 100%);
+  border-radius: 0 0 4px 4px;
   background: linear-gradient(
     to top,
     rgba(var(--pill-color-rgb), 0.9),
@@ -4212,8 +4192,16 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
 
 @media (prefers-reduced-motion: reduce) {
   .super-tier-3.purchase-pill-affordable { animation: none; }
+  .purchase-pill-super.purchase-pill-affordable::before {
+    animation: none;
+    background: rgba(255, 140, 40, 0.5);
+  }
 }
 html[data-reduce-motion="true"] .super-tier-3.purchase-pill-affordable { animation: none; }
+html[data-reduce-motion="true"] .purchase-pill-super.purchase-pill-affordable::before {
+  animation: none;
+  background: rgba(255, 140, 40, 0.5);
+}
 
 /* Unaffordable SUPER — keeps SUPER label */
 .purchase-pill-super.purchase-pill-unaffordable .pill-label {
