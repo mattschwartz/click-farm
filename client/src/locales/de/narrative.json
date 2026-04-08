@@ -1,0 +1,68 @@
+{
+  "ceremony": {
+    "phase1": {
+      "headline": "Du bist dabei, ein Rebrand zu machen.",
+      "currentFollowers": "Aktuelle Follower",
+      "cloutEarned": "Clout verdient",
+      "newCloutBalance": "Neuer Clout-Stand",
+      "whatResets": "Was zur\u00fcckgesetzt wird",
+      "whatPersists": "Was bleibt",
+      "cancel": "Abbrechen",
+      "continue": "Weiter",
+      "cancelAria": "Rebrand abbrechen",
+      "dialogAria": "Rebrand \u2014 Schwellenwert-\u00dcbersicht"
+    },
+    "phase2": {
+      "dialogAria": "Rebrand \u2014 Nachruf",
+      "continue": "Weiter",
+      "skip": "\u00dcberspringen",
+      "skipAria": {
+        "continue": "Weiter",
+        "skip": "Nachruf \u00fcberspringen"
+      }
+    },
+    "phase3": {
+      "headline": "Werde jemand Neues.",
+      "rebrand": "Rebrand",
+      "dialogAria": "Rebrand \u2014 Best\u00e4tigung"
+    },
+    "phase4": {
+      "dialogAria": "Rebranding l\u00e4uft",
+      "srAnnounce": "Rebranding. Run {{runNumber}} beginnt.",
+      "engagement": "Engagement",
+      "followers": "Follower"
+    },
+    "resetItems": {
+      "engagement": "Engagement",
+      "generatorsOwned": "Erworbene Generatoren",
+      "generatorsOwnedValue": "{{count}} Typen",
+      "platformsUnlocked": "Freigeschaltete Plattformen",
+      "platformsUnlockedValue": "{{count}} Plattformen",
+      "followerCounts": "Followerzahlen",
+      "followerCountsValue": "alle"
+    },
+    "persistItems": {
+      "clout": "Clout",
+      "cloutUpgrades": "Clout-Upgrades",
+      "cloutUpgradesValue": "{{count}} erhalten",
+      "lifetimeFollowers": "Follower insgesamt",
+      "lifetimeEngagement": "Engagement insgesamt",
+      "rebrandCount": "Anzahl Rebrands",
+      "rebrandCountValue": "\u2192 {{count}}"
+    }
+  },
+  "eulogy": {
+    "hadFollowers": "Du hattest {{followers}} Follower auf {{platforms}}.",
+    "willNotRemember": "Sie werden dich nicht erinnern.",
+    "madEngagement": "Du hast {{engagement}} Engagement erzeugt. Ein Verm\u00e4chtnis.",
+    "noPlatforms": "keiner Plattform",
+    "and": "und"
+  },
+  "offline": {
+    "welcomeBack": "Wieder da.",
+    "awayFor": "Du warst {{duration}} weg.",
+    "engagementEarned": "Engagement verdient",
+    "platformFollowers": "{{name}}-Follower",
+    "dismiss": "L\u00e4uft."
+  }
+}

@@ -1,0 +1,181 @@
+{
+  "gameName": {
+    "desktop": "Click Farm",
+    "touch": "Tap Farm"
+  },
+  "topBar": {
+    "engagement": "Engagement",
+    "followers": "Follower",
+    "viral": "VIRAL +{{magnitude}}"
+  },
+  "runBadge": {
+    "one": "Rebrand +{{count}}",
+    "other": "Rebrands +{{count}}"
+  },
+  "saveError": {
+    "loadCorrupt": "Dein Spielstand konnte nicht gelesen werden \u2014 Neustart.",
+    "saveQuota": "Browserspeicher voll \u2014 Fortschritt nur im Arbeitsspeicher.",
+    "saveFailed": "Speichern fehlgeschlagen \u2014 Fortschritt nur im Arbeitsspeicher."
+  },
+  "prestige": {
+    "upgrades": "Upgrades",
+    "cloutLabel": "{{clout}} Clout",
+    "rebrand": "Rebrand",
+    "rebrandTo": "Rebrand \u2192 +{{clout}} Clout",
+    "earnFollowersFirst": "Erst Follower sammeln",
+    "earnFollowers": "Follower sammeln",
+    "rebrandUpgradesAria": "Rebrand-Upgrades \u2014 {{clout}} Clout",
+    "rebrandAria": "Rebrand \u2014 {{clout}} Clout verdienen",
+    "rebrandLockedAria": "Rebrand gesperrt \u2014 erst Follower sammeln"
+  },
+  "toolbar": {
+    "openSettings": "Einstellungen \u00f6ffnen",
+    "settings": "Einstellungen",
+    "github": "GitHub",
+    "previousTrack": "Vorheriger Track",
+    "nextTrack": "N\u00e4chster Track",
+    "pause": "Pause",
+    "play": "Abspielen",
+    "alpha": "ALPHA"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "closeAria": "Einstellungen schlie\u00dfen",
+    "tabs": {
+      "audio": "Audio",
+      "display": "Anzeige",
+      "data": "Daten"
+    },
+    "audio": {
+      "sectionTitle": "AUDIO",
+      "sound": "Ton",
+      "musicInBackground": "Hintergrundmusik",
+      "musicInBackgroundDesc": "Musik weiterspielen, wenn der Tab verborgen oder die App minimiert ist.",
+      "music": "Musik",
+      "sfx": "SFX",
+      "musicCredit": "Musik von",
+      "musicCreditAuthor": "DJARTMUSIC"
+    },
+    "controls": {
+      "sectionTitle": "STEUERUNG",
+      "escDesc": "Einstellungen \u00f6ffnen",
+      "bDesc": "Gedr\u00fcckt halten f\u00fcr automatischen Upgrade-Kauf"
+    },
+    "display": {
+      "sectionTitle": "LEISTUNG",
+      "enableMotion": "Animationen",
+      "enableMotionDesc": "Fl\u00fcssige Z\u00e4hleranimation. Deaktiviert Pulsieren, Leuchten, Schwebenummern und alle dekorativen Effekte.",
+      "floatingNumbers": "Schwebende Zahlen",
+      "floatingNumbersDesc": "Popup-Zahlen von Autoclickern anzeigen. Bei Deaktivierung wird stattdessen die Rate angezeigt. Verbessert die Leistung erheblich."
+    },
+    "donate": "An Save the Children spenden",
+    "data": {
+      "sectionTitle": "SPIELSTAND VERWALTEN",
+      "autoSaveDesc": "Dein Fortschritt wird automatisch gespeichert.",
+      "exportSave": "Spielstand exportieren",
+      "importSave": "Spielstand importieren",
+      "resetGame": "Spiel zur\u00fccksetzen",
+      "resetConfirmTitle": "Spiel zur\u00fccksetzen?",
+      "resetConfirmBody": "Das l\u00f6scht deinen Spielstand. Clout, Upgrades, Rebrands \u2014 alles.",
+      "cancel": "Abbrechen",
+      "yesReset": "Ja, zur\u00fccksetzen",
+      "noSaveToExport": "Noch kein Spielstand zum Exportieren.",
+      "exported": "Exportiert.",
+      "importFailed": "Import fehlgeschlagen.",
+      "imported": "Importiert.",
+      "importFailedDetail": "Import fehlgeschlagen: {{error}}"
+    },
+    "pause": {
+      "resume": "Spiel fortsetzen",
+      "pause": "Spiel pausieren"
+    },
+    "language": {
+      "sectionTitle": "SPRACHE",
+      "label": "Sprache"
+    }
+  },
+  "generators": {
+    "unlocksAt": "Freischaltung bei {{threshold}} Followern gesamt",
+    "unlocksAtFollowers": "Freischaltung bei {{threshold}} Followern",
+    "buy": "{{name}} kaufen",
+    "cost": "Kosten: {{cost}} Engagement",
+    "buyUnit": "1 Einheit kaufen f\u00fcr {{cost}} Engagement",
+    "speed": "SPEED",
+    "speedPlus": "SPEED +{{level}}",
+    "power": "POWER",
+    "powerPlus": "POWER +{{count}}",
+    "hire": "HIRE",
+    "hirePlus": "HIRE +{{count}}",
+    "max": "MAX",
+    "superLabel": "SUPER",
+    "superII": "SUPER II",
+    "superIII": "SUPER III",
+    "rushBuy": "RUSH BUY",
+    "rushBuyHoldAria": "Gedr\u00fcckt halten f\u00fcr Schnellkauf aller bezahlbaren Upgrades",
+    "rushBuyReleaseAria": "Kaufe \u2014 loslassen zum Stoppen",
+    "rushBuyHoldTitle": "Gedr\u00fcckt halten f\u00fcr Schnellkauf",
+    "rushBuyReleaseTitle": "Loslassen zum Stoppen",
+    "upgradeTitle": {
+      "maxed": "{{name}} ist auf Maximalstufe (L{{level}})",
+      "armed": "{{name}} upgraden (L{{level}} \u2192 L{{nextLevel}} kostet {{cost}}) \u2014 {{deficit}} Engagement fehlen",
+      "ready": "{{name}} upgraden (L{{level}} \u2192 L{{nextLevel}} kostet {{cost}}) \u2014 bereit"
+    },
+    "upgradeAria": "{{name}} upgraden",
+    "verbAria": "{{name}}, {{yield}} Engagement pro Tap, Abklingzeit {{cooldown}}ms",
+    "verbAriaWithAuto": "{{name}}, {{yield}} Engagement pro Tap, Abklingzeit {{cooldown}}ms, {{count}} Autoclicker",
+    "ready": "READY",
+    "ghostAt": "bei {{threshold}} Followern",
+    "autoclickerAria": {
+      "maxed": "{{name}} Autoclicker auf Maximum bei {{count}}",
+      "affordable": "Autoclicker {{name}}, {{count}} Autoclicker, bezahlbar, kostet {{cost}} Engagement",
+      "unaffordable": "Autoclicker {{name}}, {{count}} Autoclicker, nicht bezahlbar, kostet {{cost}} Engagement"
+    },
+    "autoclickerTitle": {
+      "maxed": "{{name}} \u2014 Autoclicker auf Maximum ({{count}})",
+      "buy": "Autoclicker kaufen f\u00fcr {{cost}} Engagement"
+    },
+    "superAria": {
+      "maxed": "{{name}} Ausr\u00fcstung auf Maximum, {{gearName}} Stufe 3 von 3.",
+      "affordable": "Super-Upgrade {{name}}, {{gearName}}, bezahlbar, kostet {{cost}} Engagement{{multiplierSuffix}}. 3 Sekunden gedr\u00fcckt halten zum Kaufen.",
+      "unaffordable": "Super-Upgrade {{name}}, {{gearName}}, nicht bezahlbar, kostet {{cost}} Engagement."
+    },
+    "superTitle": {
+      "maxed": "{{name}} \u2014 {{gearName}} auf Maximum",
+      "buy": "{{gearName}} \u2014 gedr\u00fcckt halten zum Kaufen ({{cost}} Eng)"
+    }
+  },
+  "platforms": {
+    "followers": "Follower",
+    "unlocksAt": "Freischaltung bei {{threshold}} Followern gesamt"
+  },
+  "shop": {
+    "title": "Rebrand-Upgrades",
+    "closeAria": "Rebrand-Upgrades schlie\u00dfen",
+    "cloutBalance": "Clout: {{clout}}",
+    "emptyHint": "Verdiene Clout durch Rebranding. Dein erster Rebrand steht bevor.",
+    "allMaxed": "Du hast das System gemeistert. Rebrand, um die B\u00fchne neu zu starten.",
+    "categories": {
+      "ENGAGEMENT": "ENGAGEMENT",
+      "UNLOCKS": "FREISCHALTUNGEN"
+    },
+    "level": "Lv {{current}}/{{max}}",
+    "owned": "erhalten",
+    "locked": "gesperrt",
+    "purchaseAria": {
+      "owned": "{{name}} \u2014 erhalten",
+      "maxLevel": "{{name}} \u2014 Maximalstufe",
+      "insufficient": "{{name}} kaufen ({{cost}} Clout ben\u00f6tigt)",
+      "affordable": "{{name}} kaufen f\u00fcr {{cost}} Clout"
+    }
+  },
+  "postZone": {
+    "ariaLabel": "Inhalt posten",
+    "button": "Posten",
+    "perClick": "Pro Klick: +{{value}}"
+  },
+  "rotate": {
+    "heading": "Ins Querformat drehen",
+    "subtext": "Dieses Spiel spielt sich am besten im Querformat",
+    "title": "Tap Farm"
+  }
+}
