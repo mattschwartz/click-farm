@@ -6715,7 +6715,7 @@
       "id": 167,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Add i18n infrastructure with react-i18next and extract all strings",
       "requester": "architect",
@@ -6795,7 +6795,8 @@
           "owner": "architect"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 168,
@@ -6830,9 +6831,7 @@
         "The language switcher from task #167 can switch to Spanish and the full UI renders in Spanish without missing keys"
       ],
       "open_questions": [],
-      "blocked_on": [
-        167
-      ]
+      "blocked_on": []
     },
     {
       "id": 169,
