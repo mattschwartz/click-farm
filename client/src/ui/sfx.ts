@@ -23,7 +23,7 @@ import clickSfx from '../assets/click.wav';
 import purchaseSfx from '../assets/purchase.mp3';
 import sweepStartSfx from '../assets/sweep-start.wav';
 import sweepEndSfx from '../assets/sweep-end.wav';
-import wooshPopSfx from '../assets/woosh-pop.wav';
+import superPurchaseSfx from '../assets/super-purchase.mp3';
 import ost01 from '../assets/djart-ost/djartmusic-8-bit-console-from-my-childhood-301286.mp3';
 import ost02 from '../assets/djart-ost/djartmusic-best-game-console-301284.mp3';
 import ost03 from '../assets/djart-ost/djartmusic-fun-with-my-8-bit-game-301278.mp3';
@@ -53,7 +53,7 @@ prefetch(clickSfx);
 prefetch(purchaseSfx);
 prefetch(sweepStartSfx);
 prefetch(sweepEndSfx);
-prefetch(wooshPopSfx);
+prefetch(superPurchaseSfx);
 
 // ---------------------------------------------------------------------------
 // Lazy AudioContext + eager decode
@@ -105,12 +105,33 @@ async function decodeBuffer(url: string, audioCtx: AudioContext): Promise<AudioB
 // ---------------------------------------------------------------------------
 // Volume state — driven by settings via setSfxVolume / setMusicVolume.
 // Declared early because music functions reference these.
+//
+// Initialise from persisted settings (if any) so that the onVisibility
+// handler — which fires synchronously on tab-in, before React mounts —
+// sees the player's saved volume instead of the hardcoded defaults. Without
+// this, a player with musicVolume=0 hears music start on tab-in because the
+// module default (0.3) hasn't been overwritten yet by the useSettings effect.
 // ---------------------------------------------------------------------------
 
-let masterMuted = false;
-let sfxVol = 0.5;   // 0–1
-let musicVol = 0.3;  // 0–1
-let musicInBackground = false;
+const _initSettings = (() => {
+  try {
+    const raw = typeof localStorage !== 'undefined'
+      ? localStorage.getItem('click_farm_settings')
+      : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.settings ?? null;
+  } catch { return null; }
+})();
+
+let masterMuted = _initSettings ? _initSettings.sound === false : false;
+let sfxVol = _initSettings && typeof _initSettings.sfxVolume === 'number'
+  ? Math.max(0, Math.min(1, _initSettings.sfxVolume / 100))
+  : 0.5;
+let musicVol = _initSettings && typeof _initSettings.musicVolume === 'number'
+  ? Math.max(0, Math.min(1, _initSettings.musicVolume / 100))
+  : 0.3;
+let musicInBackground = _initSettings ? _initSettings.musicInBackground === true : false;
 
 // ---------------------------------------------------------------------------
 // Background music — HTML Audio element routed through a Web Audio GainNode.
@@ -479,8 +500,8 @@ export function playSweepEnd(): void {
   play(sweepEndSfx, sfxVol * 0.6, [0.98, 1.02]);
 }
 
-/** Play the building whoosh -> pop sound (750ms). */
-export function playWooshPop(): void {
+/** Play the wow sound on SUPER gear purchase. */
+export function playWow(): void {
   if (masterMuted) return;
-  play(wooshPopSfx, sfxVol * 0.7, [0.96, 1.04]);
+  play(superPurchaseSfx, sfxVol * 0.9, [0.95, 1.05]);
 }

@@ -912,31 +912,30 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
 }
 
 .generator-column .generator-list {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-height: 0;
 }
 
 /* --- Generator list (UX §6) --------------------------------------------- */
 
-/* Glass clipboard — single frosted panel for the entire generator list.
- * Mood vignettes bleed through the translucent surface (task #128). */
+/* Recessed tray — the generator list sits slightly sunken into the page
+ * background, reinforcing the visual separation from the actions and
+ * platform columns without competing with their raised card surfaces. */
 .generator-list {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.02);
+  backdrop-filter: none;
 
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 16px;
-  box-shadow:
-    0 2px 8px -2px rgba(0, 0, 0, 0.08),
-    0 8px 24px -4px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.03);
   padding: 16px;
   overflow-y: auto;
 }
 
 @supports not (backdrop-filter: blur(1px)) {
   .generator-list {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #E8E4DF;
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.08);
   }
 }
 
@@ -1445,7 +1444,7 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   font-family: inherit;
   font-size: 12px;
   padding: 5px 0;
-  width: 72px;
+  width: 80px;
   text-align: center;
   border-radius: 4px;
   border: 1px solid var(--border-default);
@@ -1461,7 +1460,18 @@ html[data-reduce-motion="true"] .sweep-cost-float {
 .row-btn:hover:not(:disabled) {
   background: var(--surface-hover);
   border-color: var(--border-emphasis);
+  animation: btn-hover-pulse 800ms ease-in-out infinite;
 }
+
+@keyframes btn-hover-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row-btn:hover:not(:disabled) { animation: none; }
+}
+html[data-reduce-motion="true"] .row-btn:hover:not(:disabled) { animation: none; }
 
 .row-btn:disabled {
   color: var(--text-receded);
@@ -2701,22 +2711,55 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
    one-shot via .lvl-maxed-arrival (see §4.2). */
 .row-btn-upgrade.row-btn-lvl-maxed {
   cursor: default;
-  border: 1px solid var(--accent-platinum-deep);
+  border: 1px solid transparent;
   background: linear-gradient(
     to bottom,
     rgba(var(--palette-platinum-rgb), 0.22) 0%,
     rgba(var(--palette-platinum-rgb), 0.10) 100%
   );
   box-shadow:
-    inset 0 1px 0 0 rgba(var(--palette-white-rgb), 0.55),   /* top-edge highlight on tint */
-    inset 0 0 0 1px rgba(var(--palette-near-black-rgb), 0.10); /* inset depth */
+    inset 0 1px 0 0 rgba(var(--palette-white-rgb), 0.55),
+    inset 0 0 0 1px rgba(var(--palette-near-black-rgb), 0.10);
   color: var(--accent-platinum);
   font-weight: 600;
   letter-spacing: 0.08em;
-  /* Clip the shine sweep (::before) to the plaque's rounded edges.
-     Outer box-shadow halos (arrival) are not affected by overflow. */
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+}
+
+/* White border chase — conic gradient masked to border ring only */
+.row-btn-upgrade.row-btn-lvl-maxed::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 5px;
+  background: conic-gradient(
+    from var(--flame-angle, 0deg),
+    rgba(255,255,255,0.15) 0deg,
+    rgba(255,255,255,0.85) 60deg,
+    rgba(var(--palette-platinum-rgb),0.40) 120deg,
+    rgba(255,255,255,0.15) 180deg,
+    rgba(255,255,255,0.85) 240deg,
+    rgba(var(--palette-platinum-rgb),0.40) 300deg,
+    rgba(255,255,255,0.15) 360deg
+  );
+  padding: 1px;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+  animation: platinum-chase 3s linear infinite;
+}
+
+@keyframes platinum-chase {
+  from { --flame-angle: 0deg; }
+  to   { --flame-angle: 360deg; }
 }
 
 /* Shine sweep — a narrow diagonal highlight that crosses the plaque
@@ -2764,6 +2807,7 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 /* No hover affordance — the button is not actionable at max. Override
    :hover to match the non-hover appearance (no scale, no glow). */
 .row-btn-upgrade.row-btn-lvl-maxed:hover {
+  animation: none;
   background: linear-gradient(
     to bottom,
     rgba(var(--palette-platinum-rgb), 0.22) 0%,
@@ -2824,9 +2868,12 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
   }
 }
 
-/* Reduce Motion — both the arrival celebration AND the shine sweep
-   are removed. Static platinum-plaque visual still communicates state. */
+/* Reduce Motion — arrival celebration, shine sweep, and border chase
+   are all removed. Static platinum-plaque visual still communicates state. */
 @media (prefers-reduced-motion: reduce) {
+  .row-btn-upgrade.row-btn-lvl-maxed {
+    border-color: var(--accent-platinum-deep);
+  }
   .row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
     animation: none;
   }
@@ -2834,6 +2881,13 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
     animation: none;
     background: none;
   }
+  .row-btn-upgrade.row-btn-lvl-maxed::after {
+    animation: none;
+    background: rgba(var(--palette-platinum-rgb), 0.40);
+  }
+}
+html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed {
+  border-color: var(--accent-platinum-deep);
 }
 html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
   animation: none;
@@ -2841,6 +2895,10 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arr
 html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   animation: none;
   background: none;
+}
+html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::after {
+  animation: none;
+  background: rgba(var(--palette-platinum-rgb), 0.40);
 }
 
 /* Armed — stronger border than dormant, amber deficit glyph, no motion. */
@@ -2857,44 +2915,33 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   display: none;
 }
 
-/* Ready — gold border, gold cost numeral, breathing halo. */
-.row-btn-upgrade.row-btn-lvl-ready {
+/* ---------------------------------------------------------------------------
+ * .gold-breathe — shared gold border + breathing halo treatment.
+ * Used by both SPEED (row-btn-lvl-ready) and HIRE (purchase-pill-affordable).
+ * --------------------------------------------------------------------------- */
+.gold-breathe,
+.purchase-pill.gold-breathe {
   border: 1px solid var(--accent-gold);
   background: rgba(var(--glow-halo-rgb), 0.14);
-  color: var(--accent-gold);
+  color: var(--text-primary);
   font-weight: 600;
-  animation: lvl-ready-breathe 2400ms ease-in-out infinite;
-  /* Negative delay starts each row mid-cycle so rows breathe out of phase.
-     --breathe-delay is emitted inline per-row by GeneratorList (already
-     negative — see badge-owned usage). */
+  animation: gold-breathe-anim 2400ms ease-in-out infinite;
   animation-delay: var(--breathe-delay, 0ms);
 }
-.row-btn-upgrade.row-btn-lvl-ready .label {
-  color: var(--text-primary);
-}
-.row-btn-upgrade.row-btn-lvl-ready .lvl-chevron {
-  display: inline-block;
-  font-size: 8px;
-  margin-right: 3px;
-  color: var(--accent-gold);
-}
 
-/* Hover on ready — locks at peak glow, breathing pauses (prevents the hovered
-   row from seeming to dim mid-hover). */
-.row-btn-upgrade.row-btn-lvl-ready:hover:not(:disabled) {
+.gold-breathe:hover:not(:disabled),
+.purchase-pill.gold-breathe:hover:not(:disabled) {
   background: rgba(var(--glow-halo-rgb), 0.22);
   box-shadow: 0 0 12px 2px rgba(var(--glow-halo-rgb), 0.55);
-  animation-play-state: paused;
+  animation: btn-hover-pulse 800ms ease-in-out infinite;
 }
 
-/* Suppress breathing while the drawer is already open — the player is
-   looking at the thing being teased, keep the gold border only. */
-.row-btn-upgrade.row-btn-lvl-ready.active {
+.gold-breathe.active {
   animation: none;
   box-shadow: none;
 }
 
-@keyframes lvl-ready-breathe {
+@keyframes gold-breathe-anim {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(var(--glow-halo-rgb), 0);
     border-color: var(--accent-gold);
@@ -2905,13 +2952,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
   }
 }
 
-/* Many-ready de-escalation — when ≥4 rows are ready, slow the cadence and
-   soften the peak so the list doesn't become a disco. Border stays full
-   strength gold; the trust signal must not weaken. */
-.generator-list.many-ready .row-btn-upgrade.row-btn-lvl-ready {
-  animation-duration: 3200ms;
-}
-@keyframes lvl-ready-breathe-soft {
+@keyframes gold-breathe-soft {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(var(--glow-halo-rgb), 0);
     border-color: var(--accent-gold);
@@ -2921,17 +2962,33 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
     border-color: var(--accent-gold-bright);
   }
 }
-.generator-list.many-ready .row-btn-upgrade.row-btn-lvl-ready {
-  animation-name: lvl-ready-breathe-soft;
+
+/* Many-ready de-escalation — slow cadence + soften peak when >=4 rows ready. */
+.generator-list.many-ready .gold-breathe {
+  animation-duration: 3200ms;
+  animation-name: gold-breathe-soft;
 }
 
-/* Reduce Motion — hold at the peak glow value so the "energized" read
-   persists without motion. Static color and glyph signals stay in place. */
 @media (prefers-reduced-motion: reduce) {
-  .row-btn-upgrade.row-btn-lvl-ready {
+  .gold-breathe {
     animation: none;
     box-shadow: 0 0 8px 1px rgba(var(--glow-halo-rgb), 0.35);
   }
+}
+html[data-reduce-motion="true"] .gold-breathe {
+  animation: none;
+  box-shadow: 0 0 8px 1px rgba(var(--glow-halo-rgb), 0.35);
+}
+
+/* --- gold-breathe child text: label is primary (black), chevron is gold --- */
+.gold-breathe .label {
+  color: var(--text-primary);
+}
+.gold-breathe .lvl-chevron {
+  display: inline-block;
+  font-size: 8px;
+  margin-right: 3px;
+  color: var(--accent-gold);
 }
 
 /* ==========================================================================
@@ -3868,10 +3925,7 @@ html[data-reduce-motion="true"] .viral-particles-overlay {
 }
 
 
-html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
-  animation: none;
-  box-shadow: 0 0 8px 1px rgba(var(--glow-halo-rgb),0.35);
-}
+/* reduce-motion for row-btn-lvl-ready handled by .gold-breathe */
 
 /* ---------------------------------------------------------------------------
  * AUTO purchase pill — generator-purchase-pills.md §2–3
@@ -3884,7 +3938,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   height: 28px;
   border-radius: 4px;
   padding: 0 4px;
-  font-size: 11px;
+  font-size: 10px;
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
   text-transform: uppercase;
@@ -3927,74 +3981,11 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
 
 .purchase-pill-auto .pill-cost {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 700;
   opacity: 0.75;
+  margin-top: 1px;
 }
 
-.purchase-pill-auto.purchase-pill-affordable {
-  position: relative;
-  border-color: transparent;
-  background: rgba(var(--pill-color-rgb), 0.15);
-  color: var(--text-primary);
-  z-index: 0;
-  overflow: visible;
-  box-shadow:
-    0 0 6px 1px rgba(255, 140, 40, 0.35),
-    0 0 16px 2px rgba(255, 80, 20, 0.15);
-}
-
-.purchase-pill-auto.purchase-pill-affordable::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 6px;  /* pill radius (4px) + border inset (2px) */
-  background: conic-gradient(
-    from var(--flame-angle, 0deg),
-    #ff4500 0deg,
-    #ff8c00 60deg,
-    #ffd700 120deg,
-    #ff4500 180deg,
-    #ff8c00 240deg,
-    #ffd700 300deg,
-    #ff4500 360deg
-  );
-  z-index: -1;
-  animation: flame-chase 1.2s linear infinite;
-}
-
-/* Inner mask — punches out the center so only the border ring shows */
-.purchase-pill-auto.purchase-pill-affordable::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: 3px;
-  background: var(--surface-panel, #FFFFFF);
-  z-index: -1;
-}
-
-@keyframes flame-chase {
-  from { --flame-angle: 0deg; }
-  to   { --flame-angle: 360deg; }
-}
-
-/* Register the custom property so the conic-gradient can animate */
-@property --flame-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-
-/* Reduced motion — static glow, no chase */
-@media (prefers-reduced-motion: reduce) {
-  .purchase-pill-auto.purchase-pill-affordable::before {
-    animation: none;
-    background: rgba(255, 140, 40, 0.5);
-  }
-}
-html[data-reduce-motion="true"] .purchase-pill-auto.purchase-pill-affordable::before {
-  animation: none;
-  background: rgba(255, 140, 40, 0.5);
-}
 
 /* Maxed — platinum plaque treatment, matches maxed SPEED/LVL button */
 .purchase-pill-maxed {
@@ -4116,14 +4107,54 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
  * two-tap confirmation, and platinum maxed state.
  * --------------------------------------------------------------------------- */
 
-/* Affordable SUPER — verb-tinted with elevated visual weight */
+/* Register the custom property so the conic-gradient can animate */
+@property --flame-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes flame-chase {
+  from { --flame-angle: 0deg; }
+  to   { --flame-angle: 360deg; }
+}
+
+/* Affordable SUPER — flame wreath border with warm glow. */
 .purchase-pill-super.purchase-pill-affordable {
-  border: 2px solid rgba(255, 140, 40, 0.50);
+  border-color: transparent;
   background: rgba(255, 140, 40, 0.18);
-  box-shadow: 0 0 8px rgba(255, 140, 40, 0.30);
+  box-shadow:
+    0 0 6px 1px rgba(255, 140, 40, 0.35),
+    0 0 16px 2px rgba(255, 80, 20, 0.15);
   color: var(--text-primary);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  z-index: 0;
+}
+
+/* Rotating conic-gradient flame fill — covers entire button */
+.purchase-pill-super.purchase-pill-affordable::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background: conic-gradient(
+    from var(--flame-angle, 0deg),
+    #ff4500 0deg,
+    #ff8c00 60deg,
+    #ffd700 120deg,
+    #ff4500 180deg,
+    #ff8c00 240deg,
+    #ffd700 300deg,
+    #ff4500 360deg
+  );
+  opacity: 0.35;
+  z-index: -1;
+  animation: flame-chase 1.2s linear infinite;
+}
+
+.purchase-pill-super.purchase-pill-affordable:hover:not(:disabled) {
+  animation: btn-hover-pulse 800ms ease-in-out infinite;
 }
 
 .purchase-pill-super.purchase-pill-affordable .pill-label {
@@ -4137,13 +4168,15 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
   z-index: 1;
 }
 
-/* Hold-to-buy fire bar — fills from bottom, escalating color + glow */
+/* Hold-to-buy fire bar — fills from bottom, escalating color + glow.
+   border-radius clips corners since parent is overflow:visible for flame. */
 .super-hold-fire {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   height: calc(var(--hold-progress, 0) * 100%);
+  border-radius: 0 0 4px 4px;
   background: linear-gradient(
     to top,
     rgba(var(--pill-color-rgb), 0.9),
@@ -4181,6 +4214,46 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
   55%  { transform: scale(0); opacity: 0; }
   56%  { transform: scale(0.8); opacity: 0.5; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+/* ---------------------------------------------------------------------------
+ * SUPER tier escalation — increasingly urgent per gear level.
+ * Tier 1 (SUPER): warm orange (default above).
+ * Tier 2 (SUPER II): hot magenta-pink, stronger glow.
+ * Tier 3 (SUPER III): crimson-gold, intense glow + animated pulse.
+ * --------------------------------------------------------------------------- */
+
+/* Tier 2 — SUPER II */
+.super-tier-2.purchase-pill-affordable {
+  border-color: rgba(230, 60, 160, 0.60);
+  background: rgba(230, 60, 160, 0.20);
+  box-shadow: 0 0 12px rgba(230, 60, 160, 0.40);
+}
+
+/* Tier 3 — SUPER III */
+.super-tier-3.purchase-pill-affordable {
+  border-color: rgba(220, 40, 40, 0.70);
+  background: linear-gradient(135deg, rgba(220, 40, 40, 0.25), rgba(255, 180, 30, 0.25));
+  box-shadow: 0 0 16px rgba(255, 80, 30, 0.50), 0 0 32px rgba(255, 180, 30, 0.20);
+  animation: super-tier-3-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes super-tier-3-pulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(255, 80, 30, 0.50), 0 0 32px rgba(255, 180, 30, 0.20); }
+  50%      { box-shadow: 0 0 22px rgba(255, 80, 30, 0.65), 0 0 40px rgba(255, 180, 30, 0.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .super-tier-3.purchase-pill-affordable { animation: none; }
+  .purchase-pill-super.purchase-pill-affordable::before {
+    animation: none;
+    background: rgba(255, 140, 40, 0.5);
+  }
+}
+html[data-reduce-motion="true"] .super-tier-3.purchase-pill-affordable { animation: none; }
+html[data-reduce-motion="true"] .purchase-pill-super.purchase-pill-affordable::before {
+  animation: none;
+  background: rgba(255, 140, 40, 0.5);
 }
 
 /* Unaffordable SUPER — keeps SUPER label */

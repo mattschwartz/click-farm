@@ -120,6 +120,8 @@ interface FloatItem {
   isAutoclick?: boolean;
   /** For batched autoclicker floats (>8), the army size suffix. */
   batchCount?: number;
+  /** For manual taps, the number of HIREs (autoclickers) on this verb. */
+  hireCount?: number;
 }
 
 const FLOAT_TTL_MS = 2700; // slightly longer than the 2600ms CSS animation
@@ -267,11 +269,12 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
       y = ((e.clientY - rect.top + Math.sin(angle) * radius) / rect.height) * 100;
     }
 
-    setFloats((prev) => [...prev, { id, value: perTap, x, y }]);
+    const hires = genState.autoclicker_count;
+    setFloats((prev) => [...prev, { id, value: perTap, x, y, hireCount: hires > 1 ? hires : undefined }]);
     window.setTimeout(() => {
       setFloats((prev) => prev.filter((f) => f.id !== id));
     }, FLOAT_TTL_MS);
-  }, [onClick, verbId, perTap, cdMs, state.player.last_manual_click_at]);
+  }, [onClick, verbId, perTap, cdMs, state.player.last_manual_click_at, genState.autoclicker_count]);
 
   const fillHeight = atFloor ? 100 : progress * 100;
 
@@ -313,7 +316,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
               {display.name.toUpperCase()}
               {/* Autoclicker badge — shows army size (§4.2). Hidden when 0.
                   Pulses on each autoclicker burst (§4.4). */}
-              {autoCountForBadge > 0 && (
+              {autoCountForBadge > 1 && (
                 <span className={`verb-auto-badge${badgePulsing ? ' verb-auto-badge-pulse' : ''}`}>
                   {' '}×{autoCountForBadge}
                 </span>
@@ -359,7 +362,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
               opacity: autoOpacity,
             }}
           >
-            +{fmtCompact(f.value)}{f.batchCount ? <span className="float-multiplier"> ×{f.batchCount}</span> : ''}
+            +{fmtCompact(f.value)}{f.batchCount ? <span className="float-multiplier"> ×{f.batchCount}</span> : ''}{f.hireCount ? <span className="float-multiplier"> ×{f.hireCount}</span> : ''}
           </span>
         );
       })}

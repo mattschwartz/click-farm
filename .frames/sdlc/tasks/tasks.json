@@ -1,5 +1,5 @@
 {
-  "next_id": 197,
+  "next_id": 209,
   "tasks": [
     {
       "id": 1,
@@ -8057,6 +8057,501 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-07"
+    },
+    {
+      "id": 197,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Balance pass: 1.75x count_exponent and 1.3 buy_cost_multiplier across all generators",
+      "requester": "game-designer",
+      "complexity": "haiku",
+      "overview": "All generators need their POWER (count) upgrades to scale 1.75x better (count_exponent *= 1.75) and cost more aggressively (buy_cost_multiplier raised to 1.3 across the board). This applies to all 11 generators. Chirps already had custom values (exponent 1.5, cost mult 1.215) — these also get the treatment (exponent → 2.625, cost mult → 1.3). Livestreams was already bumped to 1.3 exponent — becomes 2.275.",
+      "related_items": [
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "All generator defs live here — count_exponent and buy_cost_multiplier fields on each GeneratorDef"
+        }
+      ],
+      "acceptance_criteria": [
+        "Every generator's count_exponent is multiplied by 1.75",
+        "Every generator's buy_cost_multiplier is set to 1.3",
+        "All tests pass after the change"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 198,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Tune clout formula constant k for log10-based prestige curve",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The Decimal.js engagement migration (accepted proposal 20260408) replaced the clout formula from floor(sqrt(total_followers) / 10) to floor(log10(total_followers) * k) with a provisional k=3. The constant k needs a proper tuning pass to ensure the prestige economy feels right across the full progression curve. Design intent: 1,000 clout is a deeply invested player, 100,000 clout buys the entire shop. The tuning pass should model clout accumulation across 15-20+ rebrands with compounding follower growth, verify the shop economy works at each stage, and produce a final value for k (or a piecewise formula if a single constant doesn't work).",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260408-decimal-js-engagement-migration.md",
+          "purpose": "Source of the log10 formula and provisional k=3"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "Current clout formula implementation"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Clout upgrade costs — the shop economy k must balance against"
+        }
+      ],
+      "acceptance_criteria": [
+        "Model clout accumulation across 15-20 rebrands with realistic follower growth per run",
+        "Verify 1,000 cumulative clout requires significant investment (not reachable in first few rebrands)",
+        "Verify the clout shop economy works — early upgrades affordable after 2-3 rebrands, full shop buyout requires deep commitment",
+        "Produce a final value for k (or a piecewise/curve formula if needed) with rationale",
+        "Document the tuning decision as an update to the Decimal.js migration proposal or a standalone mini-proposal"
+      ],
+      "open_questions": [
+        {
+          "question": "Should k be a single constant or should the formula use a piecewise curve (e.g., higher k at low follower counts to make early rebrands feel rewarding, flattening at high counts)?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
+    },
+    {
+      "id": 199,
+      "alias": "E1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Install decimal.js and add foundation types + test matchers",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Install decimal.js as a runtime dependency, configure Decimal.set() in main.tsx, update types.ts to change engagement-related fields from number to Decimal, and create the custom Vitest matcher file. This is the foundation task — every other task depends on the type changes landing here. The codebase will not compile after this task until downstream tasks are completed, so this task should be verified by checking that types.ts, main.tsx, and the test matcher file are correct in isolation (not that the full build passes).",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260408-decimal-js-engagement-migration.md",
+          "purpose": "Source proposal — §1 (dependency), §2 (type changes), §18 (test matchers)"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "8 fields across 4 interfaces change: Player.engagement, Player.lifetime_engagement, Player.total_followers, Player.lifetime_followers, PlatformState.followers, SnapshotState.total_engagement_rate, SnapshotState.total_follower_rate, SnapshotState.platform_rates, ActiveViralEvent.magnitude, ActiveViralEvent.bonus_rate_per_ms"
+        },
+        {
+          "ref": "client/src/main.tsx",
+          "purpose": "Add Decimal.set() config — precision: 40, rounding: ROUND_FLOOR, toExpNeg: -40, toExpPos: 40"
+        },
+        {
+          "ref": "client/package.json",
+          "purpose": "Add decimal.js to dependencies"
+        }
+      ],
+      "acceptance_criteria": [
+        "decimal.js is in client/package.json dependencies and node_modules",
+        "Decimal.set() is called in main.tsx with precision: 40, rounding: ROUND_FLOOR, toExpNeg: -40, toExpPos: 40",
+        "types.ts imports Decimal and re-exports the type; all 10 fields listed in the proposal §2 table are changed from number to Decimal",
+        "Fields that stay number are unchanged: clout, rebrand_count, level, count, autoclicker_count, all timestamps, retention, content_fatigue, neglect",
+        "client/src/test/decimal-matchers.ts exists with toEqualDecimal matcher per proposal §18",
+        "The matcher file is importable and the matcher works in a standalone test"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 200,
+      "alias": "E2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Migrate model layer to Decimal (clamp, earn, spend, factories, sync)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Rewrite the core model functions in model/index.ts to use Decimal. This is the second foundation layer — every game system calls these functions. Includes: clampEngagement (remove MAX_SAFE_INTEGER ceiling), earnEngagement, spendEngagement, canAffordEngagement, earnFollowers, syncTotalFollowers (fix the 0 + Decimal coercion bug), and all factory functions (createPlayer, createPlatformState, createInitialGameState) to init Decimal(0). Update model/index.test.ts with Decimal assertions.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260408-decimal-js-engagement-migration.md",
+          "purpose": "§3 — full specification of every function change"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "Lines 57-74 (createPlayer), 98-111 (createPlatformState), 165-196 (clamp/earn/spend/canAfford), 240-273 (earnFollowers, syncTotalFollowers)"
+        },
+        {
+          "ref": "client/src/model/index.test.ts",
+          "purpose": "Update all engagement assertions to use Decimal matchers"
+        }
+      ],
+      "acceptance_criteria": [
+        "clampEngagement accepts Decimal, returns Decimal, has NO upper ceiling (only guards NaN and negative)",
+        "earnEngagement, spendEngagement, canAffordEngagement accept Decimal amounts and use .plus()/.minus()/.lt()/.gte()",
+        "earnFollowers accepts Decimal amount; uses .plus() for followers and lifetime_followers",
+        "syncTotalFollowers uses new Decimal(0) accumulator and .plus() — no native + operator on Decimal",
+        "createPlayer initializes engagement, total_followers, lifetime_followers, lifetime_engagement as new Decimal(0)",
+        "createPlatformState initializes followers as new Decimal(0)",
+        "All model/index.test.ts tests updated and passing"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        199
+      ]
+    },
+    {
+      "id": 201,
+      "alias": "E3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Migrate game loop to Decimal (rates, tick, viral, postClick, snapshot)",
+      "requester": "architect",
+      "complexity": "opus",
+      "overview": "Rewrite game-loop/index.ts — the highest-density file with ~30 arithmetic operations. computeGeneratorEffectiveRate returns Decimal (multiplication chain with .times(), Decimal.pow() for fractional exponents). computeAllGeneratorEffectiveRates returns Record<GeneratorId, Decimal>. tick() accumulates engagement with Decimal accumulator. evaluateViralTrigger: fix rateEntries type to [GeneratorId, Decimal][], replace > with .gt() for top-rate comparison, fix reduce accumulator coercion bug, compute magnitude/bonus_rate_per_ms as Decimal. verbYieldPerTap/verbYieldPerAutoTap return Decimal. postClick uses Decimal earned. computeSnapshot returns SnapshotState with Decimal rates. Update game-loop/index.test.ts.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260408-decimal-js-engagement-migration.md",
+          "purpose": "§4 — full specification with code examples for every function"
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "Lines 55-59 (levelMultiplier stays number), 72-93 (cloutBonus stays number), 117-157 (rate computation), 190-254 (viral trigger — 3 missed sites in original proposal, now covered), 278-409 (tick), 423-462 (snapshot), 492-575 (verbYield, postClick)"
+        },
+        {
+          "ref": "client/src/game-loop/index.test.ts",
+          "purpose": "Seed states with Decimal, rate assertions"
+        }
+      ],
+      "acceptance_criteria": [
+        "computeGeneratorEffectiveRate returns Decimal; uses .times() chain and Decimal.pow() for count_exponent",
+        "computeAllGeneratorEffectiveRates returns Partial<Record<GeneratorId, Decimal>>",
+        "tick() uses Decimal(0) accumulator for engagementEarned; .div(1000) for per-ms conversion; .plus()/.times() throughout",
+        "evaluateViralTrigger: rateEntries typed [GeneratorId, Decimal][], top-rate comparison uses .gt(), reduce uses Decimal(0) accumulator + .plus(), magnitude and bonus_rate_per_ms are Decimal",
+        "verbYieldPerTap returns Decimal with .times() chain and Decimal.pow()",
+        "postClick uses Decimal for earned amount; clampEngagement on .plus() result",
+        "computeSnapshot returns SnapshotState with Decimal rates",
+        "All game-loop/index.test.ts tests updated and passing",
+        "levelMultiplier and cloutBonus still return number (converted to Decimal at call sites)"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        200
+      ]
+    },
+    {
+      "id": 202,
+      "alias": "E4",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Migrate generator operations to Decimal (costs, unlocks, purchases)",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Rewrite generator/index.ts. Cost functions return Decimal: generatorBuyCost (new Decimal(base).times(Decimal(multiplier).pow(count))), generatorUpgradeCost (new Decimal(lookup)), autoclickerBuyCost (same pattern). checkGeneratorUnlocks and canUnlockGenerator: totalFollowers param stays number, callers convert via .toNumber() at call site since thresholds are small integers. unlockGenerator: wrap def.base_buy_cost in new Decimal() for spendEngagement. buyGenerator, upgradeGenerator, buyAutoclicker pass Decimal costs to spendEngagement. Update generator/index.test.ts.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260408-decimal-js-engagement-migration.md",
+          "purpose": "§5 — full specification"
+        },
+        {
+          "ref": "client/src/generator/index.ts",
+          "purpose": "Lines 40 (buyCost), 68 (upgradeCost), 91 (autoclickerCost), 118-139 (checkUnlocks), 145-155 (canUnlock), 169-216 (unlockGenerator), 231-375 (buy/upgrade/buyAutoclicker)"
+        },
+        {
+          "ref": "client/src/generator/index.test.ts",
+          "purpose": "Cost assertions become Decimal comparisons"
+        }
+      ],
+      "acceptance_criteria": [
+        "generatorBuyCost, generatorUpgradeCost, autoclickerBuyCost all return Decimal",
+        "checkGeneratorUnlocks takes totalFollowers: number (callers convert Decimal via .toNumber())",
+        "canUnlockGenerator comparison uses .toNumber() or .gte() consistently",
+        "unlockGenerator wraps def.base_buy_cost in new Decimal() for spendEngagement",
+        "buyGenerator, upgradeGenerator, buyAutoclicker pass Decimal costs to spendEngagement",
+        "All generator/index.test.ts tests updated and passing"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        200
+      ]
+    },
+    {
+      "id": 203,
+      "alias": "E5",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Migrate verb-gear, platform, offline, and prestige to Decimal",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Migrate four supporting system files. verb-gear/index.ts: verbGearCost returns Decimal; canPurchaseVerbGear uses Decimal comparison; purchaseVerbGear wraps cost. platform/index.ts: checkPlatformUnlocks takes totalFollowers: number (callers convert via .toNumber()); computeFollowerDistribution accepts Decimal rates, all 6 arithmetic sites use Decimal methods, return type FollowerDistribution has Decimal fields. offline/index.ts: update OfflineResult interface (engagementGained, followersGained, totalFollowersGained → Decimal); rewrite calculateOffline with Decimal accumulation; update emptyResult helper. prestige/index.ts: executeRebrand sets Decimal(0) for engagement, total_followers, per-platform followers; replace clout formula with log10-based version per §9. Update all four test files.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260408-decimal-js-engagement-migration.md",
+          "purpose": "§6 (verb-gear), §7 (offline), §8 (platform), §9 (prestige)"
+        },
+        {
+          "ref": "client/src/verb-gear/index.ts",
+          "purpose": "verbGearCost, canPurchaseVerbGear, purchaseVerbGear"
+        },
+        {
+          "ref": "client/src/platform/index.ts",
+          "purpose": "Lines 44-63 (checkPlatformUnlocks), 119-152 (computeFollowerDistribution — 6 arithmetic sites)"
+        },
+        {
+          "ref": "client/src/offline/index.ts",
+          "purpose": "Lines 38-47 (OfflineResult interface), 53+ (emptyResult), 100-155 (calculateOffline)"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "Lines 114-200 (executeRebrand — 3 Decimal(0) reset sites), clout formula replacement"
+        },
+        {
+          "ref": "client/src/verb-gear/index.test.ts",
+          "purpose": "Gear cost assertions"
+        },
+        {
+          "ref": "client/src/offline/index.test.ts",
+          "purpose": "engagementGained assertions"
+        },
+        {
+          "ref": "client/src/prestige/index.test.ts",
+          "purpose": "Engagement reset and clout assertions"
+        }
+      ],
+      "acceptance_criteria": [
+        "verbGearCost returns Decimal; canPurchaseVerbGear uses .gte(); purchaseVerbGear wraps cost in Decimal",
+        "checkPlatformUnlocks takes number; callers convert Decimal via .toNumber()",
+        "computeFollowerDistribution accepts Decimal rates; all 6 internal arithmetic sites use Decimal methods; return type has Decimal fields",
+        "OfflineResult interface has Decimal fields for engagementGained, followersGained, totalFollowersGained; emptyResult returns Decimal(0)",
+        "calculateOffline uses Decimal accumulation throughout",
+        "executeRebrand: engagement, total_followers, and per-platform followers all reset to new Decimal(0)",
+        "Clout formula replaced with log10-based version: Math.floor(totalFollowers.log(10).times(k).toNumber()) with provisional k=3",
+        "All four test files updated and passing"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        200
+      ]
+    },
+    {
+      "id": 204,
+      "alias": "E6",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Migrate save/load layer — serialization, migration v15→v16",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Add Decimal↔string serialization boundary in save/index.ts. On save: convert Decimal fields to string via .toString(). On load: convert string fields back to Decimal via new Decimal(). Bump CURRENT_VERSION from 15 to 16. Write v15→v16 migration that converts existing number engagement fields to string representation. Old saves with number values get new Decimal(existingValue).toString(). Verify the existing v5→v6 clamping migration still works (Decimal can parse '9007199254740991'). Update save/index.test.ts with migration tests and round-trip verification.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260408-decimal-js-engagement-migration.md",
+          "purpose": "§10 — serialization spec with code examples"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Current version 15; 15 existing migrations; serialization at lines 31-47"
+        }
+      ],
+      "acceptance_criteria": [
+        "CURRENT_VERSION is 16",
+        "Save serializes all Decimal fields to string via .toString()",
+        "Load deserializes string fields back to Decimal via new Decimal()",
+        "v15→v16 migration converts existing number engagement/follower fields to string",
+        "v15→v16 migration handles edge cases: NaN → '0', Infinity → preserved MAX_SAFE string, negative → '0'",
+        "Round-trip test: save → load produces identical game state",
+        "Existing v5→v6 migration chain still works end-to-end",
+        "All save/index.test.ts tests updated and passing"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        200
+      ]
+    },
+    {
+      "id": 205,
+      "alias": "E7",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Migrate driver to Decimal (sweep costs, viral payload, sort)",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Update driver/index.ts: change SweepItem.cost and SweepPurchaseEvent.cost from number to Decimal. Fix sweep sort comparator: b.cost.minus(a.cost).toNumber(). Convert ViralBurstPayload.magnitude at driver boundary via .toNumber() (display-only). Verify buildAffordableList works with Decimal costs from upstream. Update driver/index.test.ts.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260408-decimal-js-engagement-migration.md",
+          "purpose": "§15 — driver changes"
+        },
+        {
+          "ref": "client/src/driver/index.ts",
+          "purpose": "Lines 106-117 (SweepPurchaseEvent, SweepItem types), ~382 (viral payload), ~473 (sort comparator)"
+        }
+      ],
+      "acceptance_criteria": [
+        "SweepItem.cost and SweepPurchaseEvent.cost are Decimal",
+        "Sweep sort comparator uses .minus().toNumber()",
+        "ViralBurstPayload.magnitude converted to number at driver boundary via .toNumber()",
+        "buildAffordableList works with Decimal costs from generatorBuyCost etc.",
+        "driver/index.test.ts updated and passing"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": 206,
+      "alias": "E8",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Migrate display pipeline — formatters, interpolation, tier extensions",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Update format.ts: all 6 exported functions accept Decimal | number; convert to number internally via .toNumber() (safe because tier division compresses to float range). Add overflow branch using Decimal.toExponential(2) for Decimal inputs beyond tier table. Add 10 new tiers (Ud through Vg, 1e36-1e63) to TIERS table with standard -illion abbreviations as placeholders. Add corresponding entries to TIER_COLOR_VAR. Shift overflow cutoff from 1e36 to 1e66. Use 0 decimals for 3-char suffixes per UX review (OQ3 resolution). Update useInterpolatedValue.ts: interpolateValue and useInterpolatedValue accept Decimal | number, return number. Add explicit code comment at .toNumber() call site explaining why precision loss is safe (per UX review comment #4). Update TieredNumber.tsx props. Add placeholder tier colors to theme/tokens.css. Update format.test.ts and useInterpolatedValue.test.ts.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260408-decimal-js-engagement-migration.md",
+          "purpose": "§11 (format), §12 (interpolation), §17 (tier extension)"
+        },
+        {
+          "ref": "client/src/ui/format.ts",
+          "purpose": "TIERS table (lines 11-23), TIER_COLOR_VAR (39-51), all 6 formatter functions"
+        },
+        {
+          "ref": "client/src/ui/useInterpolatedValue.ts",
+          "purpose": "interpolateValue (33-42), useInterpolatedValue hook (55-100)"
+        },
+        {
+          "ref": "client/src/ui/TieredNumber.tsx",
+          "purpose": "Props.value type change"
+        },
+        {
+          "ref": "client/src/theme/tokens.css",
+          "purpose": "Add --tier-ud through --tier-vg variables"
+        }
+      ],
+      "acceptance_criteria": [
+        "All 6 format functions accept Decimal | number; internally convert via .toNumber()",
+        "Overflow branch for Decimal inputs uses Decimal.toExponential(2)",
+        "TIERS table has 10 new entries: Ud (1e36), Dd (1e39), Td (1e42), Qad (1e45), Qid (1e48), Sxd (1e51), Spd (1e54), Ocd (1e57), Nod (1e60), Vg (1e63)",
+        "3-char suffixes (Qad, Qid, Sxd, Spd, Ocd, Nod) use 0 decimals to stay within 7-char cap",
+        "Overflow cutoff moved from 1e36 to 1e66",
+        "TIER_COLOR_VAR has entries for all new suffixes",
+        "theme/tokens.css has --tier-ud through --tier-vg placeholder color variables",
+        "interpolateValue and useInterpolatedValue accept Decimal | number, return number",
+        "Code comment at .toNumber() call site in useInterpolatedValue explaining safety rationale",
+        "TieredNumber.tsx Props.value accepts Decimal | number",
+        "format.test.ts has tests for Decimal inputs and all new tiers",
+        "useInterpolatedValue.test.ts verifies Decimal inputs produce valid number outputs"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        199
+      ]
+    },
+    {
+      "id": 207,
+      "alias": "E9",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Migrate UI components to Decimal type flow",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Mechanical type-flow updates across 10 UI component files. The display pipeline (E8) handles formatting transparently — this task covers the remaining changes: inline arithmetic, comparisons, and prop types. TopBar.tsx: update Props interface (engagement, engagementRate, summaryBadge.magnitude → Decimal); rate delta uses .minus()/.abs().gt(). GameScreen.tsx: rate summation loop uses Decimal(0) accumulator + .plus(); viral bonus uses .times(1000) + .plus(); summaryBadge state type. GeneratorList.tsx: 6 inline engagement >= cost → .gte(). DebugApp.tsx: >= → .gte(), === 0 → .isZero(), > 0 → .gt(0). OfflineGainsModal.tsx: progress multiplication via .times(). Remaining files (ActionsColumn, PlatformPanel, RebrandCeremonyModal, PostZone, eulogy-templates): type-flow only, formatters handle Decimal transparently. Update integration.test.ts.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260408-decimal-js-engagement-migration.md",
+          "purpose": "§13 — full table of every UI component change with line numbers"
+        },
+        {
+          "ref": "client/src/ui/TopBar.tsx",
+          "purpose": "Props interface lines 24-31; rate delta lines 85-86"
+        },
+        {
+          "ref": "client/src/ui/GameScreen.tsx",
+          "purpose": "Rate summation lines 196-203; viral bonus lines 247-250"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "6 comparison sites at lines 162, 376, 396, 399 + 2 more"
+        },
+        {
+          "ref": "client/src/ui/DebugApp.tsx",
+          "purpose": "Lines 192-195 (comparisons), 240/245/249 (zero-checks)"
+        },
+        {
+          "ref": "client/src/integration.test.ts",
+          "purpose": "Currency conservation test uses Decimal subtraction"
+        }
+      ],
+      "acceptance_criteria": [
+        "TopBar.tsx Props interface updated; rate delta comparison uses Decimal methods",
+        "GameScreen.tsx rate summation uses Decimal(0) accumulator + .plus(); viral bonus uses .times()/.plus()",
+        "GeneratorList.tsx: all 6 inline engagement >= cost comparisons replaced with .gte()",
+        "DebugApp.tsx: === 0 replaced with .isZero(); > 0 replaced with .gt(0); >= replaced with .gte()",
+        "OfflineGainsModal.tsx: progress multiplication uses .times()",
+        "All other UI files compile with Decimal types flowing through",
+        "integration.test.ts updated and passing",
+        "npm run build completes with zero type errors",
+        "npm run test passes — all tests green"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        201,
+        202,
+        203,
+        204,
+        205,
+        206
+      ]
+    },
+    {
+      "id": 208,
+      "alias": "GD1",
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Tune clout formula constant k for log10-based prestige economy",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "The Decimal migration replaces the clout formula floor(sqrt(totalFollowers)/10) with floor(log10(totalFollowers) * k). The constant k=3 is provisional. This task is to determine the correct value of k that preserves the prestige economy: 1,000 clout is a deeply invested player, 100,000 should buy out the entire clout shop. Consider the full prestige loop: how many rebrands does a player do, what follower magnitude at each rebrand, how much cumulative clout, does the shop economy still work. The engineer will update the constant after this design pass.",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260408-decimal-js-engagement-migration.md",
+          "purpose": "§9 — clout formula spec with provisional k=3 and spot-check table"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "CLOUT_UPGRADE_DEFS (lines 347-391) — current shop costs"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "Current clout formula and rebrand logic"
+        }
+      ],
+      "acceptance_criteria": [
+        "Written decision on the value of k with supporting math showing clout output at key follower milestones (1e4, 1e10, 1e20, 1e40, 1e60)",
+        "Verification that cumulative clout across a typical prestige progression fits the clout shop economy",
+        "If k=3 is confirmed, a statement that k=3 is accepted — no further changes needed",
+        "If k needs to change, the new value and rationale documented for the engineer to update"
+      ],
+      "open_questions": [],
+      "blocked_on": []
     }
   ]
 }
