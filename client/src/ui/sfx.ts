@@ -105,12 +105,33 @@ async function decodeBuffer(url: string, audioCtx: AudioContext): Promise<AudioB
 // ---------------------------------------------------------------------------
 // Volume state — driven by settings via setSfxVolume / setMusicVolume.
 // Declared early because music functions reference these.
+//
+// Initialise from persisted settings (if any) so that the onVisibility
+// handler — which fires synchronously on tab-in, before React mounts —
+// sees the player's saved volume instead of the hardcoded defaults. Without
+// this, a player with musicVolume=0 hears music start on tab-in because the
+// module default (0.3) hasn't been overwritten yet by the useSettings effect.
 // ---------------------------------------------------------------------------
 
-let masterMuted = false;
-let sfxVol = 0.5;   // 0–1
-let musicVol = 0.3;  // 0–1
-let musicInBackground = false;
+const _initSettings = (() => {
+  try {
+    const raw = typeof localStorage !== 'undefined'
+      ? localStorage.getItem('click_farm_settings')
+      : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.settings ?? null;
+  } catch { return null; }
+})();
+
+let masterMuted = _initSettings ? _initSettings.sound === false : false;
+let sfxVol = _initSettings && typeof _initSettings.sfxVolume === 'number'
+  ? Math.max(0, Math.min(1, _initSettings.sfxVolume / 100))
+  : 0.5;
+let musicVol = _initSettings && typeof _initSettings.musicVolume === 'number'
+  ? Math.max(0, Math.min(1, _initSettings.musicVolume / 100))
+  : 0.3;
+let musicInBackground = _initSettings ? _initSettings.musicInBackground === true : false;
 
 // ---------------------------------------------------------------------------
 // Background music — HTML Audio element routed through a Web Audio GainNode.
