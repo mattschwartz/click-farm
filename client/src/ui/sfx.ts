@@ -23,7 +23,7 @@ import clickSfx from '../assets/click.wav';
 import purchaseSfx from '../assets/purchase.mp3';
 import sweepStartSfx from '../assets/sweep-start.wav';
 import sweepEndSfx from '../assets/sweep-end.wav';
-import wowSfx from '../assets/wow.mp3';
+import superPurchaseSfx from '../assets/super-purchase.mp3';
 import ost01 from '../assets/djart-ost/djartmusic-8-bit-console-from-my-childhood-301286.mp3';
 import ost02 from '../assets/djart-ost/djartmusic-best-game-console-301284.mp3';
 import ost03 from '../assets/djart-ost/djartmusic-fun-with-my-8-bit-game-301278.mp3';
@@ -53,7 +53,7 @@ prefetch(clickSfx);
 prefetch(purchaseSfx);
 prefetch(sweepStartSfx);
 prefetch(sweepEndSfx);
-prefetch(wowSfx);
+prefetch(superPurchaseSfx);
 
 // ---------------------------------------------------------------------------
 // Lazy AudioContext + eager decode
@@ -483,5 +483,5 @@ export function playSweepEnd(): void {
 /** Play the wow sound on SUPER gear purchase. */
 export function playWow(): void {
   if (masterMuted) return;
-  play(wowSfx, sfxVol * 0.9, [0.95, 1.05]);
+  play(superPurchaseSfx, sfxVol * 0.9, [0.95, 1.05]);
 }

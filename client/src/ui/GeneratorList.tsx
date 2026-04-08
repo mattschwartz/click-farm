@@ -655,7 +655,7 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
       holdingRef.current = false;
       setHoldProgress(0);
       setBursting(true);
-      playWow();
+      window.setTimeout(() => playWow(), 10);
       onBuyRef.current();
       // Expand 1.25x → shrink to 0 → reappear (single 500ms animation).
       window.setTimeout(() => setBursting(false), 500);
