@@ -29,7 +29,7 @@
   --palette-border-subtle: #F0ECE7;
 
   /* Functional accent palette — ux/accent-palette-light-mode.md */
-  --palette-gold: #A0730E;          /* ready-to-buy (~5.0:1 on white) */
+  --palette-gold: #A0730E;          /* ready-to-purchase (~5.0:1 on white) */
   --palette-green: #2F7A3A;         /* boost / success (~5.2:1) */
   --palette-amber: #C45A10;         /* armed / penalty (~4.6:1) */
   --palette-red: #B71C1C;           /* danger / loss (~6.7:1) */
@@ -96,7 +96,7 @@
   --glow-halo-rgb: 255, 214, 107;
 
   /* RGB channel exports — for rgba() compositing at varying opacity in
-   * keyframes and multi-stop gradients (Lvl↑ maxed plaque, bevels, etc.). */
+   * keyframes and multi-stop gradients (Speed maxed plaque, bevels, etc.). */
   --palette-platinum-rgb: 92, 106, 134;      /* matches #5C6A86 */
   --palette-near-black-rgb: 26, 26, 26;      /* matches #1A1A1A */
   --palette-white-rgb: 255, 255, 255;        /* matches #FFFFFF */

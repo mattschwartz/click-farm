@@ -169,7 +169,7 @@
 
   justify-content: center;
 
-  /* Platinum plaque material — matches maxed LVL button */
+  /* Platinum plaque material — matches maxed SPEED button */
   border: none;
   background: linear-gradient(
     to bottom,
@@ -184,7 +184,7 @@
   animation: run-badge-fade-in 400ms ease-out;
 }
 
-/* Shine sweep — synced with maxed LVL plaques */
+/* Shine sweep — synced with maxed SPEED plaques */
 .run-badge::before {
   content: '';
   position: absolute;
@@ -204,7 +204,7 @@
   background-position: 150% 0;
   background-repeat: no-repeat;
   pointer-events: none;
-  animation: lvl-maxed-shine 7000ms linear infinite;
+  animation: speed-maxed-shine 7000ms linear infinite;
 }
 
 .run-badge-crown {
@@ -1270,7 +1270,7 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   text-align: right;
 }
 
-/* Count numeral pulse on additional buy (§6.4) — 250ms scale + color flash. */
+/* Count numeral pulse on additional power (§6.4) — 250ms scale + color flash. */
 .generator-count.count-pulse {
   animation: count-pulse 400ms ease-out;
 }
@@ -1300,7 +1300,7 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   padding: 12px 0;
 }
 
-/* Unowned row layout — badge + info + full buy button (§4.2). */
+/* Unowned row layout — badge + info + unlock button (§4.2). */
 .generator-row.generator-row-unowned {
   grid-template-columns: 1fr auto;
 }
@@ -1311,8 +1311,8 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   gap: 4px;
 }
 
-/* Full buy button — first-purchase affordance (§4.2). */
-.buy-btn {
+/* Unlock button — first-purchase affordance (§4.2). */
+.unlock-btn {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1331,47 +1331,47 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   transition: background 120ms ease-out, border-color 120ms ease-out;
 }
 
-.buy-btn:hover:not(.buy-btn-disabled) {
+.unlock-btn:hover:not(.unlock-btn-disabled) {
   background: var(--surface-hover);
   border-color: var(--border-emphasis);
 }
 
-.buy-btn-disabled {
+.unlock-btn-disabled {
   cursor: not-allowed;
 }
 
-.buy-btn-label {
+.unlock-btn-label {
   font-size: 16px;
   font-weight: 500;
   color: var(--text-primary);
 }
 
-.buy-btn-disabled .buy-btn-label {
+.unlock-btn-disabled .unlock-btn-label {
   color: var(--text-receded);
 }
 
-.buy-btn-cost {
+.unlock-btn-cost {
   font-size: 12px;
   color: var(--text-secondary);
 }
 
-.buy-btn-cost.buy-btn-cost-amber {
+.unlock-btn-cost.unlock-btn-cost-amber {
   color: var(--accent-amber);
 }
 
-/* Border glow on successful buy press (§4.2). */
-.buy-btn.buy-btn-glow {
-  animation: buy-btn-glow 200ms ease-out;
+/* Border glow on successful unlock press (§4.2). */
+.unlock-btn.unlock-btn-glow {
+  animation: unlock-btn-glow 200ms ease-out;
 }
 
-@keyframes buy-btn-glow {
+@keyframes unlock-btn-glow {
   0%   { border-color: var(--border-default); }
   40%  { border-color: var(--gen-color); box-shadow: 0 0 8px 2px rgba(var(--palette-near-black-rgb),0.08); }
   100% { border-color: var(--border-default); box-shadow: none; }
 }
 
 /* Shake on insufficient engagement (§4.2). */
-.buy-btn.buy-btn-shake {
+.unlock-btn.unlock-btn-shake {
   animation: btn-shake 200ms ease-out;
 }
 
@@ -1388,12 +1388,12 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   100% { transform: translateX(0); }
 }
 
-/* Compact buy button glow on owned rows. */
-.row-btn.row-btn-buy-glow {
-  animation: row-buy-glow 200ms ease-out;
+/* Compact button tap glow on owned rows. */
+.row-btn.row-btn-tap-glow {
+  animation: row-tap-glow 200ms ease-out;
 }
 
-@keyframes row-buy-glow {
+@keyframes row-tap-glow {
   0%   { border-color: var(--border-default); }
   40%  { border-color: var(--gen-color); }
   100% { border-color: var(--border-default); }
@@ -1468,7 +1468,7 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   border-color: var(--border-emphasis);
 }
 
-.row-btn.row-btn-lvl-ready:hover:not(:disabled),
+.row-btn.row-btn-speed-ready:hover:not(:disabled),
 .row-btn:not(.row-btn-upgrade):not(.row-btn-disabled):hover:not(:disabled) {
   animation: btn-hover-pulse 800ms ease-in-out infinite;
 }
@@ -2701,13 +2701,13 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 
 /*
  * Backdrop — transparent full-screen overlay that catches outside-tap to
- * Upgrade affordance button — distinct visual from Buy. */
+ * Upgrade affordance button — distinct visual from Power. */
 .row-btn-upgrade.active {
   background: var(--surface-pressed);
   border-color: var(--border-strong);
 }
 
-/* --- Lvl ↑ button three-state affordance (task #69) ---------------------- *
+/* --- Speed button three-state affordance (task #69) ---------------------- *
  * Proposal: proposals/accepted/lvl-up-button-affordance-states.md
  * Three mutually-exclusive states so players can tell at a glance whether
  * tapping opens a drawer with a purchasable upgrade:
@@ -2716,10 +2716,10 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 
 /* Maxed — cap reached. Platinum plaque, inset, unpressable-looking.
    Spec: ux/generator-max-level-state.md §3.2. --accent-gold is reserved
-   for the ready-to-buy signal on this same button, so maxed MUST use a
+   for the ready-to-purchase signal on this same button, so maxed MUST use a
    distinct, cooler token. No animation here — arrival celebration is
-   one-shot via .lvl-maxed-arrival (see §4.2). */
-.row-btn-upgrade.row-btn-lvl-maxed {
+   one-shot via .speed-maxed-arrival (see §4.2). */
+.row-btn-upgrade.row-btn-speed-maxed {
   cursor: default;
   border: 1px solid transparent;
   background: linear-gradient(
@@ -2738,7 +2738,7 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 }
 
 /* White border chase — conic gradient masked to border ring only */
-.row-btn-upgrade.row-btn-lvl-maxed::after {
+.row-btn-upgrade.row-btn-speed-maxed::after {
   content: '';
   position: absolute;
   inset: -1px;
@@ -2777,7 +2777,7 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
    cycle, then sweeps across in ~420ms. All maxed plaques shine in
    sync (per user directive). Overrides the spec's original "no
    persistent motion" rule — see §7 decision log override (2026-04-05). */
-.row-btn-upgrade.row-btn-lvl-maxed::before {
+.row-btn-upgrade.row-btn-speed-maxed::before {
   content: '';
   position: absolute;
   top: 0;
@@ -2796,16 +2796,16 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
   background-position: 150% 0;
   background-repeat: no-repeat;
   pointer-events: none;
-  animation: lvl-maxed-shine 7000ms linear infinite;
+  animation: speed-maxed-shine 7000ms linear infinite;
   /* All plaques shine in sync per user directive — no per-row stagger. */
 }
-.row-btn-upgrade.row-btn-lvl-maxed .label {
+.row-btn-upgrade.row-btn-speed-maxed .label {
   color: var(--accent-platinum);
 }
 
 /* Crown glyph replaces the ↑ chevron at max. Inline in the .label span
-   before "LVL" text. Mirrors the .lvl-chevron pattern used for ready. */
-.row-btn-upgrade.row-btn-lvl-maxed .lvl-crown {
+   before "SPEED" text. Mirrors the .speed-chevron pattern used for ready. */
+.row-btn-upgrade.row-btn-speed-maxed .speed-crown {
   display: inline-block;
   font-size: 10px;
   margin-right: 3px;
@@ -2816,7 +2816,7 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 
 /* No hover affordance — the button is not actionable at max. Override
    :hover to match the non-hover appearance (no scale, no glow). */
-.row-btn-upgrade.row-btn-lvl-maxed:hover {
+.row-btn-upgrade.row-btn-speed-maxed:hover {
   animation: none;
   background: linear-gradient(
     to bottom,
@@ -2831,11 +2831,11 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 /* Arrival celebration — one-shot, fires on live ready→maxed transition.
    600ms: scale 1→1.08→0.98→1, platinum halo pops and retracts. Cleared
    by the React timer; never persists. Mount guard lives in GeneratorRow. */
-.row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
-  animation: lvl-maxed-arrival 600ms ease-out;
+.row-btn-upgrade.row-btn-speed-maxed.speed-maxed-arrival {
+  animation: speed-maxed-arrival 600ms ease-out;
 }
 
-@keyframes lvl-maxed-arrival {
+@keyframes speed-maxed-arrival {
   0% {
     transform: scale(1);
     box-shadow:
@@ -2869,7 +2869,7 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 /* Shine sweep — waits off-screen (background-position 150%) for 94%
    of the cycle, then slides to -150% across ~420ms. At the 7s
    cadence, the visible sweep is ~6% of total time. */
-@keyframes lvl-maxed-shine {
+@keyframes speed-maxed-shine {
   0%, 94% {
     background-position: 150% 0;
   }
@@ -2881,53 +2881,53 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 /* Reduce Motion — arrival celebration, shine sweep, and border chase
    are all removed. Static platinum-plaque visual still communicates state. */
 @media (prefers-reduced-motion: reduce) {
-  .row-btn-upgrade.row-btn-lvl-maxed {
+  .row-btn-upgrade.row-btn-speed-maxed {
     border-color: var(--accent-platinum-deep);
   }
-  .row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
+  .row-btn-upgrade.row-btn-speed-maxed.speed-maxed-arrival {
     animation: none;
   }
-  .row-btn-upgrade.row-btn-lvl-maxed::before {
+  .row-btn-upgrade.row-btn-speed-maxed::before {
     animation: none;
     background: none;
   }
-  .row-btn-upgrade.row-btn-lvl-maxed::after {
+  .row-btn-upgrade.row-btn-speed-maxed::after {
     animation: none;
     background: rgba(var(--palette-platinum-rgb), 0.40);
   }
 }
-html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed {
+html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-speed-maxed {
   border-color: var(--accent-platinum-deep);
 }
-html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed.lvl-maxed-arrival {
+html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-speed-maxed.speed-maxed-arrival {
   animation: none;
 }
-html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
+html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-speed-maxed::before {
   animation: none;
   background: none;
 }
-html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::after {
+html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-speed-maxed::after {
   animation: none;
   background: rgba(var(--palette-platinum-rgb), 0.40);
 }
 
 /* Armed — stronger border than dormant, amber deficit glyph, no motion. */
-.row-btn-upgrade.row-btn-lvl-armed {
+.row-btn-upgrade.row-btn-speed-armed {
   background: transparent;
   color: #9B9B9B;
   border-color: rgba(240, 236, 231, 0.60);
   cursor: not-allowed;
 }
-.row-btn-upgrade.row-btn-lvl-armed .label {
+.row-btn-upgrade.row-btn-speed-armed .label {
   color: #9B9B9B;
 }
-.row-btn-upgrade.row-btn-lvl-armed .lvl-deficit-glyph {
+.row-btn-upgrade.row-btn-speed-armed .speed-deficit-glyph {
   display: none;
 }
 
 /* ---------------------------------------------------------------------------
  * .gold-breathe — shared gold border + breathing halo treatment.
- * Used by both SPEED (row-btn-lvl-ready) and HIRE (purchase-pill-affordable).
+ * Used by both SPEED (row-btn-speed-ready) and HIRE (purchase-pill-affordable).
  * --------------------------------------------------------------------------- */
 .gold-breathe,
 .purchase-pill.gold-breathe {
@@ -2994,7 +2994,7 @@ html[data-reduce-motion="true"] .gold-breathe {
 .gold-breathe .label {
   color: var(--text-primary);
 }
-.gold-breathe .lvl-chevron {
+.gold-breathe .speed-chevron {
   display: inline-block;
   font-size: 8px;
   margin-right: 3px;
@@ -3971,7 +3971,7 @@ html[data-reduce-motion="true"] .viral-particles-overlay {
 }
 
 
-/* reduce-motion for row-btn-lvl-ready handled by .gold-breathe */
+/* reduce-motion for row-btn-speed-ready handled by .gold-breathe */
 
 /* ---------------------------------------------------------------------------
  * AUTO purchase pill — generator-purchase-pills.md §2–3
@@ -4034,7 +4034,7 @@ html[data-reduce-motion="true"] .viral-particles-overlay {
 }
 
 
-/* Maxed — platinum plaque treatment, matches maxed SPEED/LVL button */
+/* Maxed — platinum plaque treatment, matches maxed SPEED button */
 .purchase-pill-maxed {
   cursor: default;
   border: 1px solid var(--accent-platinum-deep);
@@ -4094,7 +4094,7 @@ html[data-reduce-motion="true"] .viral-particles-overlay {
   background-position: 150% 0;
   background-repeat: no-repeat;
   pointer-events: none;
-  animation: lvl-maxed-shine 7000ms linear infinite;
+  animation: speed-maxed-shine 7000ms linear infinite;
 }
 
 .purchase-pill-maxed:active {
