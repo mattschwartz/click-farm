@@ -541,8 +541,12 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
             if (typeof window !== 'undefined') window.location.reload();
           }}
           onImportApplied={() => {
-            // Same rationale as reset — force a reload so the driver
-            // picks up the imported save.
+            // Snapshot the imported save, kill the driver (sets dead=true
+            // so cleanup saveNow() is a no-op + clears storage), then
+            // restore the import before reloading.
+            const imported = localStorage.getItem('click_farm_save');
+            resetGame();
+            if (imported) localStorage.setItem('click_farm_save', imported);
             if (typeof window !== 'undefined') window.location.reload();
           }}
           isPaused={isPaused}
