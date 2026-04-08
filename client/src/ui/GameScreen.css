@@ -2437,6 +2437,9 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
   cursor: pointer;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   position: relative;
   overflow: hidden;
   z-index: 0;
@@ -2499,6 +2502,7 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 .commit-btn-label {
   position: relative;
   z-index: 2;
+  user-select: none;
 }
 
 /* Fire fill bar — rises from bottom during hold, color escalates warm→white-hot */
@@ -2539,8 +2543,14 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
   100% { translate: 0; }
 }
 
+/* Burst-out — scale up + fade out fast when hold completes */
 .commit-btn-pressing {
-  transform: scale(0.96);
+  animation: commit-burst-out 300ms ease-out forwards;
+}
+
+@keyframes commit-burst-out {
+  0%   { transform: scale(1); opacity: 1; }
+  100% { transform: scale(50); opacity: 0; }
 }
 
 /* --- Phase 4: Dissolution → Rebirth --------------------------------------- */
@@ -2555,6 +2565,13 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
   justify-content: center;
   min-height: 260px;
   transition: opacity 600ms ease-in-out, filter 600ms ease-in-out;
+  animation: dissolution-pop-in 350ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes dissolution-pop-in {
+  0%   { opacity: 0; transform: scale(0.6); }
+  60%  { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 .ceremony-stage-dissolving {

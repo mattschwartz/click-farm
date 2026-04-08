@@ -466,7 +466,8 @@ function Phase3Commit({ onCommit }: { onCommit: () => void }) {
       if (p >= 1) {
         setCommitted(true);
         setHolding(false);
-        onCommit();
+        // Let the burst-out animation play (300ms) before advancing
+        window.setTimeout(() => onCommit(), 300);
         return;
       }
       rafRef.current = requestAnimationFrame(step);
