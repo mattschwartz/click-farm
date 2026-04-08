@@ -1,0 +1,10 @@
+#!/bin/bash
+echo "Running build check..."
+cd "$(git rev-parse --show-toplevel)/client" || exit 1
+npm run build --silent 2>&1
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Build failed. Commit aborted."
+  exit 1
+fi
+echo "✅ Build passed."

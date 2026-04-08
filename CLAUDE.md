@@ -31,4 +31,10 @@ If the user types `#list` you MUST list every SOP by name. Example output:
 • address-pr-comments
 • run-work
 • commit-changes
-``
+```
+
+# How to Build this project
+
+```sh
+cd client/ && npm run build
+```

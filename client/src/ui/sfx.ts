@@ -19,7 +19,7 @@
 // with inconsistent guards cause phantom playback.
 
 import silentSfx from '../assets/silent.wav';
-import clickSfx from '../assets/tap.mp3';
+import clickSfx from '../assets/click.wav';
 import purchaseSfx from '../assets/purchase.mp3';
 import sweepStartSfx from '../assets/sweep-start.wav';
 import sweepEndSfx from '../assets/sweep-end.wav';
@@ -250,7 +250,7 @@ function ensureSilentLoop(): void {
 
 if (typeof window !== 'undefined') {
   // Kill listeners/elements from previous HMR module instances.
-  const prev = (window as Record<string, unknown>).__sfxCleanup as
+  const prev = (window as unknown as Record<string, unknown>).__sfxCleanup as
     | (() => void)
     | undefined;
   if (prev) prev();
@@ -320,7 +320,7 @@ if (typeof window !== 'undefined') {
     firstGestureFired = false;
   };
 
-  (window as Record<string, unknown>).__sfxCleanup = cleanup;
+  (window as unknown as Record<string, unknown>).__sfxCleanup = cleanup;
 
   if (import.meta.hot) {
     import.meta.hot.dispose(cleanup);
