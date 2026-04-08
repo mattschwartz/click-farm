@@ -1,0 +1,181 @@
+{
+  "gameName": {
+    "desktop": "Click Farm",
+    "touch": "Tap Farm"
+  },
+  "topBar": {
+    "engagement": "Engagement",
+    "followers": "seguidores",
+    "viral": "VIRAL +{{magnitude}}"
+  },
+  "runBadge": {
+    "one": "Rebrand +{{count}}",
+    "other": "Rebrands +{{count}}"
+  },
+  "saveError": {
+    "loadCorrupt": "No se pudo leer tu partida guardada \u2014 empezando de cero.",
+    "saveQuota": "El almacenamiento del navegador est\u00e1 lleno \u2014 el progreso solo est\u00e1 en memoria.",
+    "saveFailed": "Error al guardar \u2014 el progreso solo est\u00e1 en memoria."
+  },
+  "prestige": {
+    "upgrades": "Mejoras",
+    "cloutLabel": "{{clout}} Clout",
+    "rebrand": "Rebrand",
+    "rebrandTo": "Rebrand \u2192 +{{clout}} Clout",
+    "earnFollowersFirst": "Consigue seguidores primero",
+    "earnFollowers": "consigue seguidores",
+    "rebrandUpgradesAria": "Mejoras de Rebrand \u2014 {{clout}} Clout",
+    "rebrandAria": "Rebrand \u2014 gana {{clout}} Clout",
+    "rebrandLockedAria": "Rebrand bloqueado \u2014 consigue seguidores primero"
+  },
+  "toolbar": {
+    "openSettings": "Abrir Ajustes",
+    "settings": "Ajustes",
+    "github": "GitHub",
+    "previousTrack": "Pista anterior",
+    "nextTrack": "Pista siguiente",
+    "pause": "Pausa",
+    "play": "Reproducir",
+    "alpha": "ALPHA"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "closeAria": "Cerrar Ajustes",
+    "tabs": {
+      "audio": "Audio",
+      "display": "Pantalla",
+      "data": "Datos"
+    },
+    "audio": {
+      "sectionTitle": "AUDIO",
+      "sound": "Sonido",
+      "musicInBackground": "M\u00fasica en segundo plano",
+      "musicInBackgroundDesc": "Mantener la m\u00fasica cuando la pesta\u00f1a est\u00e1 oculta o la app minimizada.",
+      "music": "M\u00fasica",
+      "sfx": "SFX",
+      "musicCredit": "M\u00fasica de",
+      "musicCreditAuthor": "DJARTMUSIC"
+    },
+    "controls": {
+      "sectionTitle": "CONTROLES",
+      "escDesc": "Abrir Ajustes",
+      "bDesc": "Mant\u00e9n pulsado para comprar mejoras autom\u00e1ticamente"
+    },
+    "display": {
+      "sectionTitle": "RENDIMIENTO",
+      "enableMotion": "Activar Animaciones",
+      "enableMotionDesc": "Animaci\u00f3n suave de contadores. Desactiva pulsos, brillos, n\u00fameros flotantes y todos los efectos decorativos.",
+      "floatingNumbers": "N\u00fameros Flotantes",
+      "floatingNumbersDesc": "Muestra n\u00fameros emergentes de los autoclickers. Si se desactiva, se muestra la tasa en su lugar. Mejora significativamente el rendimiento."
+    },
+    "donate": "Donar a Save the Children",
+    "data": {
+      "sectionTitle": "GESTIONAR PARTIDA",
+      "autoSaveDesc": "Tu progreso se guarda autom\u00e1ticamente.",
+      "exportSave": "Exportar Partida",
+      "importSave": "Importar Partida",
+      "resetGame": "Reiniciar Juego",
+      "resetConfirmTitle": "\u00bfReiniciar Juego?",
+      "resetConfirmBody": "Esto borra tu partida. Clout, mejoras, rebrands \u2014 todo.",
+      "cancel": "Cancelar",
+      "yesReset": "S\u00ed, reiniciar",
+      "noSaveToExport": "No hay partida que exportar a\u00fan.",
+      "exported": "Exportado.",
+      "importFailed": "Error al importar.",
+      "imported": "Importado.",
+      "importFailedDetail": "Error al importar: {{error}}"
+    },
+    "pause": {
+      "resume": "Reanudar Juego",
+      "pause": "Pausar Juego"
+    },
+    "language": {
+      "sectionTitle": "IDIOMA",
+      "label": "Idioma"
+    }
+  },
+  "generators": {
+    "unlocksAt": "Se desbloquea con {{threshold}} seguidores totales",
+    "unlocksAtFollowers": "Se desbloquea con {{threshold}} seguidores",
+    "buy": "Comprar {{name}}",
+    "cost": "coste: {{cost}} engagement",
+    "buyUnit": "Comprar 1 unidad por {{cost}} engagement",
+    "speed": "VELOCIDAD",
+    "speedPlus": "VELOCIDAD +{{level}}",
+    "power": "POTENCIA",
+    "powerPlus": "POTENCIA +{{count}}",
+    "hire": "CONTRATAR",
+    "hirePlus": "CONTRATAR +{{count}}",
+    "max": "M\u00c1X",
+    "superLabel": "S\u00daPER",
+    "superII": "S\u00daPER II",
+    "superIII": "S\u00daPER III",
+    "rushBuy": "COMPRA R\u00c1PIDA",
+    "rushBuyHoldAria": "Mant\u00e9n pulsado para comprar todas las mejoras asequibles",
+    "rushBuyReleaseAria": "Comprando \u2014 suelta para parar",
+    "rushBuyHoldTitle": "Mant\u00e9n para compra r\u00e1pida",
+    "rushBuyReleaseTitle": "Suelta para parar",
+    "upgradeTitle": {
+      "maxed": "{{name}} est\u00e1 al nivel m\u00e1ximo (N{{level}})",
+      "armed": "Mejorar {{name}} (N{{level}} \u2192 N{{nextLevel}} cuesta {{cost}}) \u2014 faltan {{deficit}} de engagement",
+      "ready": "Mejorar {{name}} (N{{level}} \u2192 N{{nextLevel}} cuesta {{cost}}) \u2014 listo"
+    },
+    "upgradeAria": "Mejorar {{name}}",
+    "verbAria": "{{name}}, {{yield}} engagement por toque, enfriamiento {{cooldown}}ms",
+    "verbAriaWithAuto": "{{name}}, {{yield}} engagement por toque, enfriamiento {{cooldown}}ms, {{count}} autoclickers",
+    "ready": "LISTO",
+    "ghostAt": "con {{threshold}} seguidores",
+    "autoclickerAria": {
+      "maxed": "Autoclickers de {{name}} al m\u00e1ximo en {{count}}",
+      "affordable": "Autoclicker {{name}}, {{count}} autoclickers, asequible, cuesta {{cost}} engagement",
+      "unaffordable": "Autoclicker {{name}}, {{count}} autoclickers, no asequible, cuesta {{cost}} engagement"
+    },
+    "autoclickerTitle": {
+      "maxed": "{{name}} \u2014 autoclickers al m\u00e1ximo ({{count}})",
+      "buy": "Comprar autoclicker por {{cost}} engagement"
+    },
+    "superAria": {
+      "maxed": "Equipo de {{name}} al m\u00e1ximo, {{gearName}} nivel 3 de 3.",
+      "affordable": "S\u00faper mejora {{name}}, {{gearName}}, asequible, cuesta {{cost}} engagement{{multiplierSuffix}}. Mant\u00e9n 3 segundos para comprar.",
+      "unaffordable": "S\u00faper mejora {{name}}, {{gearName}}, no asequible, cuesta {{cost}} engagement."
+    },
+    "superTitle": {
+      "maxed": "{{name}} \u2014 {{gearName}} al m\u00e1ximo",
+      "buy": "{{gearName}} \u2014 mant\u00e9n para comprar ({{cost}} eng)"
+    }
+  },
+  "platforms": {
+    "followers": "seguidores",
+    "unlocksAt": "Se desbloquea con {{threshold}} seguidores totales"
+  },
+  "shop": {
+    "title": "Mejoras de Rebrand",
+    "closeAria": "Cerrar Mejoras de Rebrand",
+    "cloutBalance": "Clout: {{clout}}",
+    "emptyHint": "Gana Clout haciendo rebrand. Tu primer rebrand est\u00e1 por llegar.",
+    "allMaxed": "Has dominado el sistema. Haz rebrand para reiniciar el escenario.",
+    "categories": {
+      "ENGAGEMENT": "ENGAGEMENT",
+      "UNLOCKS": "DESBLOQUEOS"
+    },
+    "level": "Nv {{current}}/{{max}}",
+    "owned": "obtenido",
+    "locked": "bloqueado",
+    "purchaseAria": {
+      "owned": "{{name}} \u2014 obtenido",
+      "maxLevel": "{{name}} \u2014 nivel m\u00e1ximo",
+      "insufficient": "Comprar {{name}} (necesitas {{cost}} Clout)",
+      "affordable": "Comprar {{name}} por {{cost}} Clout"
+    }
+  },
+  "postZone": {
+    "ariaLabel": "Publicar contenido",
+    "button": "Publicar",
+    "perClick": "Por clic: +{{value}}"
+  },
+  "rotate": {
+    "heading": "Gira a horizontal",
+    "subtext": "Este juego se juega mejor en horizontal",
+    "title": "Tap Farm"
+  }
+}

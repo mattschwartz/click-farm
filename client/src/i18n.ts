@@ -25,6 +25,7 @@ function getSavedLanguage(): string {
 /** Available languages — add entries here when new locales are created. */
 export const SUPPORTED_LANGUAGES: Record<string, string> = {
   en: 'English',
+  es: 'Espa\u00f1ol',
 };
 
 /**
@@ -47,15 +48,14 @@ const localeLoaders: Record<string, () => Promise<{
   ui: Record<string, unknown>;
   narrative: Record<string, unknown>;
 }>> = {
-  // Add new languages here, e.g.:
-  // fr: async () => {
-  //   const [game, ui, narrative] = await Promise.all([
-  //     import('./locales/fr/game.json'),
-  //     import('./locales/fr/ui.json'),
-  //     import('./locales/fr/narrative.json'),
-  //   ]);
-  //   return { game: game.default ?? game, ui: ui.default ?? ui, narrative: narrative.default ?? narrative };
-  // },
+  es: async () => {
+    const [game, ui, narrative] = await Promise.all([
+      import('./locales/es/game.json'),
+      import('./locales/es/ui.json'),
+      import('./locales/es/narrative.json'),
+    ]);
+    return { game: game.default ?? game, ui: ui.default ?? ui, narrative: narrative.default ?? narrative };
+  },
 };
 
 /** Load a locale's three namespace bundles. English returns the eagerly-loaded
