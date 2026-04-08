@@ -349,24 +349,13 @@ Only mobile-specific motion is listed. All other motion carries from desktop spe
 
 ## 13. Landscape / Rotation Handling
 
-Portrait is the only supported orientation at launch.
+When the device rotates to landscape orientation, the player switches to the landscape phone layout defined in `proposals/accepted/20260407-landscape-phone-layout.md`.
 
-**On rotation to landscape:** display a fullscreen prompt:
-```
-┌──────────────────┐
-│                  │
-│    [↻ icon]      │
-│                  │
-│  Rotate to       │
-│  portrait.       │
-│                  │
-└──────────────────┘
-```
-
-- No "continue in landscape" option at launch
-- Game continues ticking in the background — rotation back to portrait returns the player to normal state
-- Modal/drawer state is preserved across rotation
-- Post-launch: revisit if usage data shows meaningful landscape demand
+**State preservation across orientation changes:**
+- React's component tree does not remount when the browser switches CSS media queries. All game state (engagement counter, generators, followers, upgrade availability) is held in React state and survives layout transitions.
+- Modal state, bottom-sheet state, and active sweep state are preserved across rotation.
+- Scroll position may reset when containers change dimensions — this is acceptable. The player returns to the top of the generator list on rotation, a reasonable behavior on mobile UX patterns.
+- The player returns to the normal game screen immediately upon re-entering portrait orientation.
 
 ---
 
