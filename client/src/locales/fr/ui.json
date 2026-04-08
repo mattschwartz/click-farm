@@ -57,7 +57,8 @@
     "controls": {
       "sectionTitle": "COMMANDES",
       "escDesc": "Ouvrir les Param\u00e8tres",
-      "bDesc": "Maintenir pour acheter les am\u00e9liorations automatiquement"
+      "bDesc": "Maintenir pour acheter les am\u00e9liorations automatiquement",
+      "verbDesc": "Activer le verbe (Chirps, Selfies, …)"
     },
     "display": {
       "sectionTitle": "PERFORMANCE",

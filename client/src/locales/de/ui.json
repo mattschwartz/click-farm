@@ -57,7 +57,8 @@
     "controls": {
       "sectionTitle": "STEUERUNG",
       "escDesc": "Einstellungen \u00f6ffnen",
-      "bDesc": "Gedr\u00fcckt halten f\u00fcr automatischen Upgrade-Kauf"
+      "bDesc": "Gedr\u00fcckt halten f\u00fcr automatischen Upgrade-Kauf",
+      "verbDesc": "Verb antippen (Chirps, Selfies, …)"
     },
     "display": {
       "sectionTitle": "LEISTUNG",

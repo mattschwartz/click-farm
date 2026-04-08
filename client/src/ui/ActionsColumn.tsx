@@ -132,6 +132,19 @@ const FLOAT_TTL_MS = 2700; // slightly longer than the 2600ms CSS animation
 // LiveVerbButton
 // ---------------------------------------------------------------------------
 
+// Shared map of verb button DOM refs — keyboard handler uses these to
+// trigger a visual depress on keypress.
+const verbBtnRefs = new Map<GeneratorId, HTMLButtonElement>();
+
+/** Briefly wiggle a verb button to signal "on cooldown". */
+function wiggleVerb(el: HTMLButtonElement | null | undefined) {
+  if (!el) return;
+  el.classList.remove('live-verb-nope'); // reset if already animating
+  void el.offsetWidth; // force reflow to restart animation
+  el.classList.add('live-verb-nope');
+  el.addEventListener('animationend', () => el.classList.remove('live-verb-nope'), { once: true });
+}
+
 interface LiveVerbButtonProps {
   verbId: GeneratorId;
   state: GameState;
@@ -146,7 +159,7 @@ interface LiveVerbButtonProps {
 const AUTO_FLOAT_DENSITY_CAP = 8;
 
 /** Maximum visible floats per verb button. Oldest evicted when cap is hit. */
-const MAX_VISIBLE_FLOATS = 4;
+const MAX_VISIBLE_FLOATS = 2;
 
 /** Push a float. When capped, evicts the oldest to stay at MAX_VISIBLE_FLOATS. */
 function pushFloat(prev: FloatItem[], item: FloatItem, capped: boolean): FloatItem[] {
@@ -186,6 +199,12 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
   const nextId = useRef(0);
 
   const btnRef = useRef<HTMLButtonElement>(null);
+  // Register in shared map for keyboard depress.
+  const setRef = useCallback((el: HTMLButtonElement | null) => {
+    (btnRef as React.MutableRefObject<HTMLButtonElement | null>).current = el;
+    if (el) verbBtnRefs.set(verbId, el);
+    else verbBtnRefs.delete(verbId);
+  }, [verbId]);
 
   // Badge pulse — fires on each autoclicker burst (§4.4).
   const [badgePulsing, setBadgePulsing] = useState(false);
@@ -302,7 +321,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
     <div className="verb-btn-wrap">
       <span className="verb-badge">+{fmtCompact(perTap)}</span>
       <button
-        ref={btnRef}
+        ref={setRef}
         className={`live-verb-btn${isSpotlight ? ' live-verb-spotlight' : ''}${isReady || atFloor ? ' live-verb-ready' : ' live-verb-cooldown'}`}
         style={{
           '--verb-color': color,
@@ -471,6 +490,41 @@ export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats =
     }
     return null; // full ladder
   }, [state.generators]);
+
+  // Keyboard shortcuts: 1–5 trigger the corresponding verb tap.
+  // Local tap timestamps prevent double-fires from key repeat outrunning state updates.
+  const kbLastTap = useRef<Record<string, number>>({});
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.repeat) return;
+      const idx = parseInt(e.key, 10) - 1;
+      if (idx < 0 || idx > 4) return;
+      const verb = LADDER_VERBS[idx];
+      if (verb && state.generators[verb].owned) {
+        const gen = state.generators[verb];
+        const def = staticData.generators[verb];
+        const cdMs = verbCooldownMs(gen.level, def.base_event_rate);
+        const now = Date.now();
+        const lastState = state.player.last_manual_click_at[verb] ?? 0;
+        const lastLocal = kbLastTap.current[verb] ?? 0;
+        const lastTap = Math.max(lastState, lastLocal);
+        if (now - lastTap < cdMs) {
+          wiggleVerb(verbBtnRefs.get(verb));
+          return;
+        }
+        kbLastTap.current[verb] = now;
+        playClick();
+        onClickVerb(verb);
+        const el = verbBtnRefs.get(verb);
+        if (el) {
+          el.classList.add('live-verb-kb-press');
+          window.setTimeout(() => el.classList.remove('live-verb-kb-press'), 120);
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [state.generators, state.player.last_manual_click_at, staticData.generators, onClickVerb]);
 
   // Spotlight disabled — cooldown-sorted ordering makes position-based
   // spotlight meaningless. All verbs render in the scroll region.

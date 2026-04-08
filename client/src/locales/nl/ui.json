@@ -57,7 +57,8 @@
     "controls": {
       "sectionTitle": "BEDIENING",
       "escDesc": "Instellingen openen",
-      "bDesc": "Ingedrukt houden voor automatisch upgrades kopen"
+      "bDesc": "Ingedrukt houden voor automatisch upgrades kopen",
+      "verbDesc": "Werkwoord activeren (Chirps, Selfies, …)"
     },
     "display": {
       "sectionTitle": "PRESTATIES",

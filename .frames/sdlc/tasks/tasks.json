@@ -1,5 +1,5 @@
 {
-  "next_id": 209,
+  "next_id": 210,
   "tasks": [
     {
       "id": 1,
@@ -3155,7 +3155,7 @@
       "id": 94,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Rebrand cadence intent: felt pacing across the prestige ladder",
       "requester": "game-designer",
@@ -3183,7 +3183,8 @@
         "A 'felt stakes' statement that balance tuners (game-designer on task #88 and beyond) can test against"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 95,
@@ -6838,7 +6839,7 @@
       "id": 169,
       "role": "game-designer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Review Spanish locale files for tone, satire, and player feel",
       "requester": "architect",
@@ -6870,7 +6871,8 @@
         "A brief summary of what was changed and why, noted in the task completion"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 170,
@@ -8090,7 +8092,7 @@
       "id": 198,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Tune clout formula constant k for log10-based prestige curve",
       "requester": "game-designer",
@@ -8123,7 +8125,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 199,
@@ -8515,7 +8518,7 @@
       "alias": "GD1",
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Tune clout formula constant k for log10-based prestige economy",
       "requester": "architect",
@@ -8542,6 +8545,47 @@
         "If k needs to change, the new value and rationale documented for the engineer to update"
       ],
       "open_questions": [],
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
+    },
+    {
+      "id": 209,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Add gamepad controller support via Gamepad API",
+      "requester": "engineer",
+      "complexity": "opus",
+      "overview": "Add browser Gamepad API integration so the game is playable with a controller. Requires a rAF polling loop for button states, a configurable button mapping layer (face buttons/d-pad to verbs, triggers for menus/scroll), and wiring into existing onClickVerb, settings, and modal handlers. Should respect cooldown gating and provide the same visual feedback (depress, wiggle) as keyboard shortcuts.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "Keyboard shortcut implementation to mirror for gamepad"
+        },
+        {
+          "ref": "client/src/ui/SettingsModal.tsx",
+          "purpose": "Controls section needs gamepad bindings display"
+        }
+      ],
+      "acceptance_criteria": [
+        "Game is playable end-to-end with a standard gamepad (e.g. Xbox, PlayStation controller)",
+        "Face buttons or d-pad mapped to verb taps with cooldown gating",
+        "At least one button mapped to open/close settings",
+        "Visual feedback (depress, cooldown wiggle) matches keyboard behavior",
+        "Gamepad controls listed in Settings > Controls section",
+        "No interference with existing keyboard/pointer input"
+      ],
+      "open_questions": [
+        {
+          "question": "What button mapping feels most natural? Should it be configurable?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Should gamepad support extend to modals (rebrand ceremony, clout shop)?",
+          "owner": "game-designer"
+        }
+      ],
       "blocked_on": []
     }
   ]

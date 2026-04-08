@@ -57,7 +57,8 @@
     "controls": {
       "sectionTitle": "CONTROLES",
       "escDesc": "Abrir Ajustes",
-      "bDesc": "Mant\u00e9n pulsado para comprar mejoras autom\u00e1ticamente"
+      "bDesc": "Mant\u00e9n pulsado para comprar mejoras autom\u00e1ticamente",
+      "verbDesc": "Activar verbo (Chirps, Selfies, …)"
     },
     "display": {
       "sectionTitle": "RENDIMIENTO",

@@ -57,7 +57,8 @@
     "controls": {
       "sectionTitle": "CONTROLS",
       "escDesc": "Open Settings",
-      "bDesc": "Hold to auto-purchase upgrades"
+      "bDesc": "Hold to auto-purchase upgrades",
+      "verbDesc": "Tap verb (Chirps, Selfies, …)"
     },
     "display": {
       "sectionTitle": "PERFORMANCE",

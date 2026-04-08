@@ -78,15 +78,15 @@ interface Props {
  * See proposals/accepted/lvl-up-button-affordance-states.md and
  * proposals/accepted/generator-level-growth-curves.md.
  */
-export type LvlBtnState = 'armed' | 'ready' | 'maxed';
+export type SpeedBtnState = 'armed' | 'ready' | 'maxed';
 
-export function classifyLvlBtnState(
+export function classifySpeedBtnState(
   _count: number,
   level: number,
   maxLevel: number,
   engagement: Decimal,
   upgradeCost: Decimal,
-): LvlBtnState {
+): SpeedBtnState {
   if (level >= maxLevel) return 'maxed';
   if (engagement.gte(upgradeCost)) return 'ready';
   return 'armed';
@@ -108,8 +108,8 @@ export const MANY_READY_THRESHOLD = 4;
  * See ux/generator-max-level-state.md §4.1. Task #101.
  */
 export function shouldFireMaxedArrival(
-  current: LvlBtnState,
-  prev: LvlBtnState | null,
+  current: SpeedBtnState,
+  prev: SpeedBtnState | null,
 ): boolean {
   if (current !== 'maxed') return false;
   if (prev === null) return false;       // mount guard
@@ -118,7 +118,7 @@ export function shouldFireMaxedArrival(
 }
 
 /** Duration of the arrival celebration, in ms (matches CSS keyframes). */
-export const LVL_MAXED_ARRIVAL_MS = 600;
+export const SPEED_MAXED_ARRIVAL_MS = 600;
 
 /**
  * Returns true when the generator-list should de-escalate ready-state
@@ -328,11 +328,11 @@ function GeneratorRow({
     ? -Math.round((generatorIndex / BREATHE_TOTAL) * BREATHE_CYCLE_MS)
     : 0;
 
-  // Lvl ↑ affordance state computed UNCONDITIONALLY so the hooks below can
-  // depend on it without skipping on unowned/locked renders. classifyLvlBtnState
-  // returns 'dormant' when count===0, which is correct for pre-owned rows.
+  // Speed affordance state computed UNCONDITIONALLY so the hooks below can
+  // depend on it without skipping on unowned/locked renders, including rows
+  // that are currently unowned or locked.
   const upgradeCostUnconditional = g.level >= def.max_level ? new Decimal(Infinity) : generatorUpgradeCost(id, g.level, staticData);
-  const lvlStateUnconditional = classifyLvlBtnState(
+  const speedStateUnconditional = classifySpeedBtnState(
     g.count,
     g.level,
     def.max_level,
@@ -340,26 +340,26 @@ function GeneratorRow({
     upgradeCostUnconditional,
   );
 
-  // Maxed arrival celebration — one-shot (600ms) on the live ready→maxed
-  // transition within a session. Mount guard: prevLvlState is null on the
+  // Speed maxed arrival celebration — one-shot (600ms) on the live ready→maxed
+  // transition within a session. Mount guard: prevSpeedState is null on the
   // first render, so generators loaded from save already at max do NOT fire.
   // Spec: ux/generator-max-level-state.md §4.
   //
   // IMPORTANT: these hooks MUST be declared before any early returns below,
   // so hook order stays stable across locked→discovered and unowned→owned
   // transitions. Rules of Hooks.
-  const prevLvlState = useRef<LvlBtnState | null>(null);
+  const prevSpeedState = useRef<SpeedBtnState | null>(null);
   const [maxedArrival, setMaxedArrival] = useState(false);
   useEffect(() => {
-    const prev = prevLvlState.current;
-    if (shouldFireMaxedArrival(lvlStateUnconditional, prev)) {
+    const prev = prevSpeedState.current;
+    if (shouldFireMaxedArrival(speedStateUnconditional, prev)) {
       setMaxedArrival(true);
-      const t = window.setTimeout(() => setMaxedArrival(false), LVL_MAXED_ARRIVAL_MS);
-      prevLvlState.current = lvlStateUnconditional;
+      const t = window.setTimeout(() => setMaxedArrival(false), SPEED_MAXED_ARRIVAL_MS);
+      prevSpeedState.current = speedStateUnconditional;
       return () => window.clearTimeout(t);
     }
-    prevLvlState.current = lvlStateUnconditional;
-  }, [lvlStateUnconditional]);
+    prevSpeedState.current = speedStateUnconditional;
+  }, [speedStateUnconditional]);
 
   if (!isDiscovered) {
     return (
@@ -402,13 +402,13 @@ function GeneratorRow({
   const autoCost = def.manual_clickable ? autoclickerBuyCost(id, g.autoclicker_count, staticData) : new Decimal(0);
   const canBuyAuto = def.manual_clickable && state.player.engagement.gte(autoCost);
 
-  // Lvl ↑ button affordance state — spec tracks distinct visuals
+  // Speed button affordance state — spec tracks distinct visuals
   // (dormant / armed / ready / maxed) so players can tell at a glance
   // whether tapping the button opens a drawer they can act on.
   // Tasks #69 (three states) + #89 (MAX cap). Computed above early returns
   // so hook order stays stable.
-  const lvlState = lvlStateUnconditional;
-  const lvlDeficit = Decimal.max(0, upgradeCost.minus(state.player.engagement));
+  const speedState = speedStateUnconditional;
+  const speedDeficit = Decimal.max(0, upgradeCost.minus(state.player.engagement));
 
   return (
     <div
@@ -420,7 +420,7 @@ function GeneratorRow({
         {t(display.name)}
       </div>
       <div className="row-actions" onClick={(e) => e.stopPropagation()}>
-        <CompactBuyButton
+        <PowerButton
           costLabel={<TieredNumber value={buyCost} />}
           costText={fmtCompact(buyCost)}
           canBuy={canBuy}
@@ -433,7 +433,7 @@ function GeneratorRow({
               armed   (can't afford): greyed out
               ready   (affordable): gold breathing halo */}
         <SpeedButton
-          lvlState={lvlState}
+          speedState={speedState}
           maxedArrival={maxedArrival}
           breatheDelayMs={breatheDelayMs}
           canAfford={state.player.engagement.gte(upgradeCost)}
@@ -441,14 +441,14 @@ function GeneratorRow({
           onUpgrade={() => { onUpgrade(id); spawnCostFloat('upgrade', upgradeCost.toNumber()); }}
           sweepHit={sweepHitBtn === 'upgrade'}
           title={
-            lvlState === 'maxed'
+            speedState === 'maxed'
                 ? t('generators.upgradeTitle.maxed', { name: t(display.name), level: g.level })
-                : lvlState === 'armed'
-                  ? t('generators.upgradeTitle.armed', { name: t(display.name), level: g.level, nextLevel: g.level + 1, cost: fmtCompact(upgradeCost), deficit: fmtCompact(lvlDeficit) })
+                : speedState === 'armed'
+                  ? t('generators.upgradeTitle.armed', { name: t(display.name), level: g.level, nextLevel: g.level + 1, cost: fmtCompact(upgradeCost), deficit: fmtCompact(speedDeficit) })
                   : t('generators.upgradeTitle.ready', { name: t(display.name), level: g.level, nextLevel: g.level + 1, cost: fmtCompact(upgradeCost) })
           }
           ariaLabel={t('generators.upgradeAria', { name: t(display.name) })}
-          costLabel={lvlState === 'maxed' ? t('generators.max') : <TieredNumber value={upgradeCost} />}
+          costLabel={speedState === 'maxed' ? t('generators.max') : <TieredNumber value={upgradeCost} />}
         />
         {/* AUTO pill — per generator-purchase-pills.md §2–3.
             Only rendered for manual-clickable generators. Pill shape: 44px
@@ -539,7 +539,7 @@ function hexToRgbPill(hex: string): string {
 // Speed button — fires upgrade directly (task #150).
 
 interface SpeedButtonProps {
-  lvlState: LvlBtnState;
+  speedState: SpeedBtnState;
   maxedArrival: boolean;
   breatheDelayMs: number;
   canAfford: boolean;
@@ -552,7 +552,7 @@ interface SpeedButtonProps {
 }
 
 function SpeedButton({
-  lvlState,
+  speedState,
   maxedArrival,
   breatheDelayMs,
   canAfford,
@@ -569,7 +569,7 @@ function SpeedButton({
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (lvlState === 'maxed') return;
+    if (speedState === 'maxed') return;
     if (!canAfford) {
       setShaking(true);
       window.setTimeout(() => setShaking(false), 200);
@@ -582,26 +582,26 @@ function SpeedButton({
 
   return (
     <button
-      className={`row-btn row-btn-upgrade row-btn-lvl-${lvlState}${lvlState === 'ready' ? ' gold-breathe' : ''}${maxedArrival ? ' lvl-maxed-arrival' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${sweepHit ? ' sweep-hit' : ''}`}
+      className={`row-btn row-btn-upgrade row-btn-speed-${speedState}${speedState === 'ready' ? ' gold-breathe' : ''}${maxedArrival ? ' speed-maxed-arrival' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-tap-glow' : ''}${sweepHit ? ' sweep-hit' : ''}`}
       onClick={handleClick}
-      disabled={lvlState === 'maxed'}
+      disabled={speedState === 'maxed'}
       style={{ '--breathe-delay': `${breatheDelayMs}ms` } as React.CSSProperties}
       title={title}
       aria-label={ariaLabel}
     >
       <span className="label">
-        {lvlState === 'ready' && (
-          <span className="lvl-chevron" aria-hidden>▲</span>
+        {speedState === 'ready' && (
+          <span className="speed-chevron" aria-hidden>▲</span>
         )}
-        {lvlState === 'maxed' && (
-          <span className="lvl-crown" aria-hidden>♛</span>
+        {speedState === 'maxed' && (
+          <span className="speed-crown" aria-hidden>♛</span>
         )}
         {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
         <span className="pill-label-full">{level > 1 ? t('generators.speedPlus', { level }) : t('generators.speed')}</span>
-        <span className="pill-label-abbr">L</span>
+        <span className="pill-label-abbr">S</span>
       </span>
-      {lvlState === 'armed' && (
-        <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
+      {speedState === 'armed' && (
+        <span className="speed-deficit-glyph" aria-hidden>⊖</span>
       )}
       <span className="row-btn-cost">{costLabel}</span>
     </button>
@@ -812,27 +812,27 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
 
   // --- Non-SUPER: render with identical markup + classes as SPEED button ---
   if (!isSuperPhase) {
-    const hireLvlState = isMaxed ? 'maxed' : canBuy ? 'ready' : 'armed';
+    const hireSpeedState = isMaxed ? 'maxed' : canBuy ? 'ready' : 'armed';
     return (
       <button
-        className={`row-btn row-btn-upgrade row-btn-lvl-${hireLvlState}${hireLvlState === 'ready' ? ' gold-breathe' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${sweepHit ? ' sweep-hit' : ''}`}
+        className={`row-btn row-btn-upgrade row-btn-speed-${hireSpeedState}${hireSpeedState === 'ready' ? ' gold-breathe' : ''}${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-tap-glow' : ''}${sweepHit ? ' sweep-hit' : ''}`}
         onClick={handleClick}
         disabled={isMaxed}
         aria-label={ariaLabel}
         title={title}
       >
         <span className="label">
-          {hireLvlState === 'ready' && (
-            <span className="lvl-chevron" aria-hidden>▲</span>
+          {hireSpeedState === 'ready' && (
+            <span className="speed-chevron" aria-hidden>▲</span>
           )}
-          {hireLvlState === 'maxed' && (
-            <span className="lvl-crown" aria-hidden>♛</span>
+          {hireSpeedState === 'maxed' && (
+            <span className="speed-crown" aria-hidden>♛</span>
           )}
           <span className="pill-label-full">{labelText}</span>
           <span className="pill-label-abbr">A</span>
         </span>
-        {hireLvlState === 'armed' && (
-          <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
+        {hireSpeedState === 'armed' && (
+          <span className="speed-deficit-glyph" aria-hidden>⊖</span>
         )}
         <span className="row-btn-cost">{isMaxed ? t('generators.max') : costLabel}</span>
       </button>
@@ -843,13 +843,13 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
   if (superMaxed) {
     return (
       <button
-        className={`row-btn row-btn-upgrade row-btn-lvl-maxed${sweepHit ? ' sweep-hit' : ''}`}
+        className={`row-btn row-btn-upgrade row-btn-speed-maxed${sweepHit ? ' sweep-hit' : ''}`}
         disabled
         aria-label={ariaLabel}
         title={title}
       >
         <span className="label">
-          <span className="lvl-crown" aria-hidden>♛</span>
+          <span className="speed-crown" aria-hidden>♛</span>
           <span className="pill-label-full">{t('generators.superIII')}</span>
           <span className="pill-label-abbr">SIII</span>
         </span>
@@ -928,13 +928,13 @@ function BuyButton({ label, costLabel, canBuy, onBuy }: BuyButtonProps) {
 
   return (
     <button
-      className={`buy-btn${!canBuy ? ' buy-btn-disabled' : ''}${shaking ? ' buy-btn-shake' : ''}${glowing ? ' buy-btn-glow' : ''}`}
+      className={`unlock-btn${!canBuy ? ' unlock-btn-disabled' : ''}${shaking ? ' unlock-btn-shake' : ''}${glowing ? ' unlock-btn-glow' : ''}`}
       onClick={handleClick}
       aria-disabled={!canBuy}
       // Not using `disabled` so we can intercept click for shake feedback.
     >
-      <span className="buy-btn-label">{label}</span>
-      <span className={`buy-btn-cost${!canBuy ? ' buy-btn-cost-amber' : ''}`}>
+      <span className="unlock-btn-label">{label}</span>
+      <span className={`unlock-btn-cost${!canBuy ? ' unlock-btn-cost-amber' : ''}`}>
         {costLabel}
       </span>
     </button>
@@ -942,9 +942,9 @@ function BuyButton({ label, costLabel, canBuy, onBuy }: BuyButtonProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Compact buy button — for owned rows (additional purchase, §6.4).
+// Power button — for owned rows (additional purchase, §6.4).
 
-interface CompactBuyButtonProps {
+interface PowerButtonProps {
   costLabel: React.ReactNode;
   costText: string;
   canBuy: boolean;
@@ -953,7 +953,7 @@ interface CompactBuyButtonProps {
   sweepHit?: boolean;
 }
 
-function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit }: CompactBuyButtonProps) {
+function PowerButton({ costLabel, costText, canBuy, count, onBuy, sweepHit }: PowerButtonProps) {
   const { t } = useTranslation('ui');
   const [shaking, setShaking] = useState(false);
   const [glowing, setGlowing] = useState(false);
@@ -971,7 +971,7 @@ function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit 
 
   return (
     <button
-      className={`row-btn${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${!canBuy ? ' row-btn-disabled' : ''}${sweepHit ? ' sweep-hit' : ''}`}
+      className={`row-btn${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-tap-glow' : ''}${!canBuy ? ' row-btn-disabled' : ''}${sweepHit ? ' sweep-hit' : ''}`}
       onClick={handleClick}
       aria-disabled={!canBuy}
       title={t('generators.buyUnit', { cost: costText })}
@@ -979,7 +979,7 @@ function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit 
       <span className="label">
         {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
         <span className="pill-label-full">POWER{count > 0 ? ` +${count}` : ''}</span>
-        <span className="pill-label-abbr">B</span>
+        <span className="pill-label-abbr">P</span>
       </span>
       <span className="row-btn-cost">{costLabel}</span>
     </button>
