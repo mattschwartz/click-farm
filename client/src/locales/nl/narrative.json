@@ -1,0 +1,68 @@
+{
+  "ceremony": {
+    "phase1": {
+      "headline": "Je staat op het punt te rebranden.",
+      "currentFollowers": "Huidige volgers",
+      "cloutEarned": "Clout verdiend",
+      "newCloutBalance": "Nieuw Clout-saldo",
+      "whatResets": "Wat gereset wordt",
+      "whatPersists": "Wat bewaard blijft",
+      "cancel": "Annuleren",
+      "continue": "Doorgaan",
+      "cancelAria": "Rebrand annuleren",
+      "dialogAria": "Rebrand \u2014 Drempeloverzicht"
+    },
+    "phase2": {
+      "dialogAria": "Rebrand \u2014 Afscheid",
+      "continue": "Doorgaan",
+      "skip": "Overslaan",
+      "skipAria": {
+        "continue": "Doorgaan",
+        "skip": "Afscheid overslaan"
+      }
+    },
+    "phase3": {
+      "headline": "Word iemand anders.",
+      "rebrand": "Rebrand",
+      "dialogAria": "Rebrand \u2014 Bevestiging"
+    },
+    "phase4": {
+      "dialogAria": "Bezig met rebranden",
+      "srAnnounce": "Bezig met rebranden. Run {{runNumber}} begint.",
+      "engagement": "engagement",
+      "followers": "volgers"
+    },
+    "resetItems": {
+      "engagement": "Engagement",
+      "generatorsOwned": "Verkregen generators",
+      "generatorsOwnedValue": "{{count}} types",
+      "platformsUnlocked": "Ontgrendelde platforms",
+      "platformsUnlockedValue": "{{count}} platforms",
+      "followerCounts": "Volgersaantallen",
+      "followerCountsValue": "alle"
+    },
+    "persistItems": {
+      "clout": "Clout",
+      "cloutUpgrades": "Clout-upgrades",
+      "cloutUpgradesValue": "{{count}} verkregen",
+      "lifetimeFollowers": "Totaal volgers ooit",
+      "lifetimeEngagement": "Totaal engagement ooit",
+      "rebrandCount": "Aantal rebrands",
+      "rebrandCountValue": "\u2192 {{count}}"
+    }
+  },
+  "eulogy": {
+    "hadFollowers": "Je had {{followers}} volgers op {{platforms}}.",
+    "willNotRemember": "Ze zullen je niet herinneren.",
+    "madEngagement": "Je genereerde {{engagement}} engagement. Een nalatenschap.",
+    "noPlatforms": "geen platforms",
+    "and": "en"
+  },
+  "offline": {
+    "welcomeBack": "Welkom terug.",
+    "awayFor": "Je was {{duration}} weg.",
+    "engagementEarned": "Engagement verdiend",
+    "platformFollowers": "{{name}}-volgers",
+    "dismiss": "Top."
+  }
+}
