@@ -1462,6 +1462,10 @@ html[data-reduce-motion="true"] .sweep-cost-float {
 .row-btn:hover:not(:disabled) {
   background: var(--surface-hover);
   border-color: var(--border-emphasis);
+}
+
+.row-btn.row-btn-lvl-ready:hover:not(:disabled),
+.row-btn:not(.row-btn-upgrade):not(.row-btn-disabled):hover:not(:disabled) {
   animation: btn-hover-pulse 800ms ease-in-out infinite;
 }
 
