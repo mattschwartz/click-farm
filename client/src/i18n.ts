@@ -26,6 +26,7 @@ function getSavedLanguage(): string {
 export const SUPPORTED_LANGUAGES: Record<string, string> = {
   en: 'English',
   es: 'Espa\u00f1ol',
+  ru: '\u0420\u0443\u0441\u0441\u043a\u0438\u0439',
 };
 
 /**
@@ -53,6 +54,14 @@ const localeLoaders: Record<string, () => Promise<{
       import('./locales/es/game.json'),
       import('./locales/es/ui.json'),
       import('./locales/es/narrative.json'),
+    ]);
+    return { game: game.default ?? game, ui: ui.default ?? ui, narrative: narrative.default ?? narrative };
+  },
+  ru: async () => {
+    const [game, ui, narrative] = await Promise.all([
+      import('./locales/ru/game.json'),
+      import('./locales/ru/ui.json'),
+      import('./locales/ru/narrative.json'),
     ]);
     return { game: game.default ?? game, ui: ui.default ?? ui, narrative: narrative.default ?? narrative };
   },
