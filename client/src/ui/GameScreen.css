@@ -2427,21 +2427,116 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 .commit-btn {
   font-family: inherit;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   width: 280px;
   height: 80px;
   border-radius: 10px;
-  background: rgba(var(--glow-halo-rgb),0.14);
-  border: 1px solid rgba(var(--glow-halo-rgb),0.45);
-  color: var(--accent-gold);
+  background: rgba(255, 140, 40, 0.18);
+  border: 2px solid transparent;
+  color: #fff;
   cursor: pointer;
-  letter-spacing: 0.02em;
-  transition: background 120ms, border-color 120ms, transform 80ms;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+  box-shadow:
+    0 0 8px 2px rgba(255, 140, 40, 0.4),
+    0 0 24px 4px rgba(255, 80, 20, 0.2),
+    0 0 48px 8px rgba(255, 60, 10, 0.1);
+  transition: box-shadow 120ms, transform 80ms;
+}
+
+/* Rotating conic-gradient flame fill — matches SUPER pill style */
+.commit-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: conic-gradient(
+    from var(--flame-angle, 0deg),
+    #ff4500 0deg,
+    #ff8c00 60deg,
+    #ffd700 120deg,
+    #ff4500 180deg,
+    #ff8c00 240deg,
+    #ffd700 300deg,
+    #ff4500 360deg
+  );
+  opacity: 0.4;
+  z-index: -1;
+  animation: flame-chase 1.2s linear infinite;
+}
+
+/* Inner text glow — warm amber halo behind the label */
+.commit-btn::after {
+  content: '';
+  position: absolute;
+  inset: 20%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255, 180, 60, 0.3), transparent 70%);
+  z-index: -1;
+  animation: commit-glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes commit-glow-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.15); }
+}
+
+.commit-btn:not(:hover) {
+  animation: btn-hover-pulse 800ms ease-in-out infinite;
 }
 
 .commit-btn:hover {
-  background: rgba(var(--glow-halo-rgb),0.22);
-  border-color: rgba(var(--glow-halo-rgb),0.62);
+  box-shadow:
+    0 0 12px 4px rgba(255, 140, 40, 0.55),
+    0 0 32px 8px rgba(255, 80, 20, 0.3),
+    0 0 64px 12px rgba(255, 60, 10, 0.15);
+}
+
+/* Button label — sits above the fire fill */
+.commit-btn-label {
+  position: relative;
+  z-index: 2;
+}
+
+/* Fire fill bar — rises from bottom during hold, color escalates warm→white-hot */
+.commit-hold-fire {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-radius: 0 0 10px 10px;
+  background: linear-gradient(
+    to top,
+    rgba(255, 60, 0, 0.9),
+    rgba(255, 140, 40, 0.85) 40%,
+    rgba(255, 210, 60, 0.75) 75%,
+    rgba(255, 255, 200, 0.6)
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Hold-to-rebrand — escalating shake + intensifying glow */
+.commit-btn-holding {
+  animation: commit-hold-shake 60ms linear infinite;
+  box-shadow:
+    0 0 12px 4px rgba(255, 100, 20, calc(0.4 + var(--commit-hold-progress, 0) * 0.4)),
+    0 0 32px 8px rgba(255, 60, 10, calc(0.2 + var(--commit-hold-progress, 0) * 0.3)),
+    0 0 64px 16px rgba(255, 40, 0, calc(0.1 + var(--commit-hold-progress, 0) * 0.25));
+  border-color: rgba(255, 100, 20, calc(0.5 + var(--commit-hold-progress, 0) * 0.5));
+}
+
+/* Shake amplitude escalates via calc — horizontal only, starts subtle, ends violent */
+@keyframes commit-hold-shake {
+  0%   { translate: 0; }
+  25%  { translate: calc(var(--commit-hold-progress, 0) * -5px); }
+  50%  { translate: calc(var(--commit-hold-progress, 0) * 5px); }
+  75%  { translate: calc(var(--commit-hold-progress, 0) * -3px); }
+  100% { translate: 0; }
 }
 
 .commit-btn-pressing {
@@ -4155,6 +4250,12 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
  * --------------------------------------------------------------------------- */
 
 /* Register the custom property so the conic-gradient can animate */
+@property --commit-hold-progress {
+  syntax: "<number>";
+  initial-value: 0;
+  inherits: true;
+}
+
 @property --flame-angle {
   syntax: "<angle>";
   initial-value: 0deg;
@@ -4278,6 +4379,18 @@ html[data-reduce-motion="true"] .purchase-pill-super.purchase-pill-affordable::b
   animation: none;
   background: rgba(255, 140, 40, 0.5);
 }
+
+/* Rebrand commit button — reduced motion: kill flame spin + glow pulse + shake */
+@media (prefers-reduced-motion: reduce) {
+  .commit-btn::before  { animation: none; background: rgba(255, 140, 40, 0.5); }
+  .commit-btn::after   { animation: none; }
+  .commit-btn:hover    { animation: none; }
+  .commit-btn-holding  { animation: none; }
+}
+html[data-reduce-motion="true"] .commit-btn::before  { animation: none; background: rgba(255, 140, 40, 0.5); }
+html[data-reduce-motion="true"] .commit-btn::after   { animation: none; }
+html[data-reduce-motion="true"] .commit-btn:hover    { animation: none; }
+html[data-reduce-motion="true"] .commit-btn-holding  { animation: none; }
 
 /* Unaffordable SUPER — keeps SUPER label */
 .purchase-pill-super.purchase-pill-unaffordable .pill-label {

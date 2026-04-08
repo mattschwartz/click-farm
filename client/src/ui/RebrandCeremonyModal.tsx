@@ -440,22 +440,57 @@ function Phase2Eulogy({
 // Phase 3 — Commit (spec §4.4)
 // ---------------------------------------------------------------------------
 
+const COMMIT_HOLD_MS = 3000;
+
 function Phase3Commit({ onCommit }: { onCommit: () => void }) {
   const { t } = useTranslation();
   const btnRef = useRef<HTMLButtonElement>(null);
-  const [pressing, setPressing] = useState(false);
+  const [holding, setHolding] = useState(false);
+  const [progress, setProgress] = useState(0); // 0–1
+  const [committed, setCommitted] = useState(false);
+  const rafRef = useRef(0);
+  const startRef = useRef(0);
 
   useEffect(() => {
     btnRef.current?.focus();
   }, []);
 
-  function handleClick() {
-    setPressing(true);
-    // Button scales 0.96 for 80ms per spec §4.4, then advances.
-    window.setTimeout(() => {
-      onCommit();
-    }, 80);
+  // rAF loop drives progress while holding
+  useEffect(() => {
+    if (!holding) return;
+    startRef.current = performance.now();
+    const step = () => {
+      const elapsed = performance.now() - startRef.current;
+      const p = Math.min(1, elapsed / COMMIT_HOLD_MS);
+      setProgress(p);
+      if (p >= 1) {
+        setCommitted(true);
+        setHolding(false);
+        onCommit();
+        return;
+      }
+      rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [holding, onCommit]);
+
+  function handlePointerDown() {
+    if (committed) return;
+    setHolding(true);
+    setProgress(0);
   }
+
+  function handlePointerUp() {
+    if (!holding) return;
+    cancelAnimationFrame(rafRef.current);
+    setHolding(false);
+    setProgress(0);
+  }
+
+  const btnStyle = holding
+    ? { '--commit-hold-progress': progress } as React.CSSProperties
+    : undefined;
 
   return (
     <div
@@ -467,10 +502,18 @@ function Phase3Commit({ onCommit }: { onCommit: () => void }) {
       <p className="commit-headline">{t('narrative:ceremony.phase3.headline')}</p>
       <button
         ref={btnRef}
-        className={`commit-btn${pressing ? ' commit-btn-pressing' : ''}`}
-        onClick={handleClick}
+        className={`commit-btn${holding ? ' commit-btn-holding' : ''}${committed ? ' commit-btn-pressing' : ''}`}
+        style={btnStyle}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
       >
-        {t('narrative:ceremony.phase3.rebrand')}
+        <span className="commit-btn-label">{t('narrative:ceremony.phase3.rebrand')}</span>
+        <div
+          className="commit-hold-fire"
+          style={{ height: `${progress * 100}%` }}
+          aria-hidden="true"
+        />
       </button>
     </div>
   );
