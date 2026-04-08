@@ -307,7 +307,7 @@ export function migrateV4toV5(data: SaveData): SaveData {
         ...oldState.player,
         creator_kit:
           oldState.player.creator_kit ?? ({} as Record<string, number>),
-      },
+      } as GameState['player'],
     },
   };
 }
