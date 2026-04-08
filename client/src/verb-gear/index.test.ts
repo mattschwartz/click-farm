@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
+import '../test/decimal-matchers.ts';
 import {
   verbGearMultiplier,
   verbGearCost,
@@ -40,7 +42,7 @@ function seedState(overrides?: {
     },
     player: {
       ...base.player,
-      engagement: overrides?.engagement ?? 0,
+      engagement: new Decimal(overrides?.engagement ?? 0),
       verb_gear: (overrides?.verb_gear ?? {}) as Record<VerbGearId, number>,
     },
   };
@@ -153,15 +155,15 @@ describe('verbGearMultiplier', () => {
 
 describe('verbGearCost', () => {
   it('returns L1 cost at level 0', () => {
-    expect(verbGearCost(0, 'chirps', STATIC_DATA)).toBe(2e9);
+    expect(verbGearCost(0, 'chirps', STATIC_DATA)).toEqualDecimal(2e9);
   });
 
   it('returns L2 cost at level 1', () => {
-    expect(verbGearCost(1, 'chirps', STATIC_DATA)).toBe(2e12);
+    expect(verbGearCost(1, 'chirps', STATIC_DATA)).toEqualDecimal(2e12);
   });
 
   it('returns L3 cost at level 2', () => {
-    expect(verbGearCost(2, 'chirps', STATIC_DATA)).toBe(2e15);
+    expect(verbGearCost(2, 'chirps', STATIC_DATA)).toEqualDecimal(2e15);
   });
 
   it('returns null at max level', () => {
@@ -175,11 +177,11 @@ describe('verbGearCost', () => {
   });
 
   it('costs are different per verb', () => {
-    expect(verbGearCost(0, 'chirps', STATIC_DATA)).toBe(2e9);
-    expect(verbGearCost(0, 'selfies', STATIC_DATA)).toBe(20e9);
-    expect(verbGearCost(0, 'livestreams', STATIC_DATA)).toBe(200e9);
-    expect(verbGearCost(0, 'podcasts', STATIC_DATA)).toBe(2e12);
-    expect(verbGearCost(0, 'viral_stunts', STATIC_DATA)).toBe(20e12);
+    expect(verbGearCost(0, 'chirps', STATIC_DATA)).toEqualDecimal(2e9);
+    expect(verbGearCost(0, 'selfies', STATIC_DATA)).toEqualDecimal(20e9);
+    expect(verbGearCost(0, 'livestreams', STATIC_DATA)).toEqualDecimal(200e9);
+    expect(verbGearCost(0, 'podcasts', STATIC_DATA)).toEqualDecimal(2e12);
+    expect(verbGearCost(0, 'viral_stunts', STATIC_DATA)).toEqualDecimal(20e12);
   });
 });
 
@@ -218,7 +220,7 @@ describe('purchaseVerbGear', () => {
     const state = seedState({ engagement: 2e9, autoclicker_count: 12 });
     const next = purchaseVerbGear(state, 'chirps', STATIC_DATA);
     expect(next.player.verb_gear.chirps).toBe(1);
-    expect(next.player.engagement).toBe(0);
+    expect(next.player.engagement).toEqualDecimal(0);
   });
 
   it('increments from level 1 to level 2', () => {
@@ -229,7 +231,7 @@ describe('purchaseVerbGear', () => {
     });
     const next = purchaseVerbGear(state, 'chirps', STATIC_DATA);
     expect(next.player.verb_gear.chirps).toBe(2);
-    expect(next.player.engagement).toBe(0);
+    expect(next.player.engagement).toEqualDecimal(0);
   });
 
   it('throws when autoclicker_count < 12', () => {

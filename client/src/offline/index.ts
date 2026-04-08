@@ -13,6 +13,7 @@
 //     window — crossing a threshold mid-offline does not retroactively
 //     redirect follower distribution for that window.
 
+import Decimal from 'decimal.js';
 import type {
   GameState,
   GeneratorId,
@@ -37,11 +38,11 @@ import { syncTotalFollowers, clampEngagement } from '../model/index.ts';
 
 export interface OfflineResult {
   /** Total engagement gained. >= 0. */
-  engagementGained: number;
+  engagementGained: Decimal;
   /** Followers gained per platform. All values >= 0. */
-  followersGained: Record<PlatformId, number>;
+  followersGained: Record<PlatformId, Decimal>;
   /** Sum of followersGained across all platforms. >= 0. */
-  totalFollowersGained: number;
+  totalFollowersGained: Decimal;
   /** Elapsed milliseconds between closeTime and openTime. */
   durationMs: number;
 }
@@ -54,13 +55,14 @@ function emptyResult(
   platforms: Record<PlatformId, PlatformState>,
   durationMs: number,
 ): OfflineResult {
+  const ZERO = new Decimal(0);
   const followersGained = Object.fromEntries(
-    (Object.keys(platforms) as PlatformId[]).map((id) => [id, 0]),
-  ) as Record<PlatformId, number>;
+    (Object.keys(platforms) as PlatformId[]).map((id) => [id, ZERO]),
+  ) as Record<PlatformId, Decimal>;
   return {
-    engagementGained: 0,
+    engagementGained: ZERO,
     followersGained,
-    totalFollowersGained: 0,
+    totalFollowersGained: ZERO,
     durationMs,
   };
 }
@@ -92,22 +94,25 @@ export function calculateOffline(
     };
   }
 
+  const ZERO = new Decimal(0);
   const platformIds = Object.keys(state.platforms) as PlatformId[];
 
   // Compute rates from current state (rates are constant — no algorithm segments).
   const ratesPerSec = computeAllGeneratorEffectiveRates(state, staticData);
 
   // Engagement = sum(rates_per_sec) * seconds
-  const durationSec = durationMs / 1000;
-  let engagementGained = 0;
+  const durationSecD = new Decimal(durationMs).div(1000);
+  let engagementGained = ZERO;
   for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
-    engagementGained += (ratesPerSec[id] ?? 0) * durationSec;
+    engagementGained = engagementGained.plus(
+      (ratesPerSec[id] ?? ZERO).times(durationSecD),
+    );
   }
 
-  // Follower distribution is computed from per-ms rates.
-  const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
+  // Follower distribution is computed from per-ms Decimal rates.
+  const ratesPerMs: Partial<Record<GeneratorId, Decimal>> = {};
   for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
-    ratesPerMs[id] = (ratesPerSec[id] ?? 0) / 1000;
+    ratesPerMs[id] = (ratesPerSec[id] ?? ZERO).div(1000);
   }
   const distribution = computeFollowerDistribution(
     ratesPerMs,
@@ -119,50 +124,50 @@ export function calculateOffline(
   // offline window. See architecture/audience-mood.md §Integration —
   // Offline. No pressure advance while offline.
   const followersGained = Object.fromEntries(
-    platformIds.map((id) => [id, 0]),
-  ) as Record<PlatformId, number>;
+    platformIds.map((id) => [id, ZERO]),
+  ) as Record<PlatformId, Decimal>;
   for (const id of platformIds) {
     const retention = state.platforms[id].retention;
-    followersGained[id] =
-      distribution.perPlatformRate[id] *
-      retention *
-      durationMs;
+    followersGained[id] = distribution.perPlatformRate[id]
+      .times(retention)
+      .times(durationMs);
   }
 
   // Apply gains to state.
   const totalFollowersGained = platformIds.reduce(
-    (sum, id) => sum + followersGained[id],
-    0,
+    (sum: Decimal, id) => sum.plus(followersGained[id]),
+    ZERO,
   );
 
   const newPlatforms: Record<PlatformId, PlatformState> = { ...state.platforms };
   for (const id of platformIds) {
-    if (followersGained[id] > 0) {
+    if (followersGained[id].gt(0)) {
       newPlatforms[id] = {
         ...state.platforms[id],
-        followers: state.platforms[id].followers + followersGained[id],
+        followers: state.platforms[id].followers.plus(followersGained[id]),
       };
     }
   }
 
   let newPlayer = {
     ...state.player,
-    engagement: clampEngagement(state.player.engagement + engagementGained),
-    lifetime_engagement: clampEngagement(state.player.lifetime_engagement + engagementGained),
-    lifetime_followers: state.player.lifetime_followers + totalFollowersGained,
+    engagement: clampEngagement(state.player.engagement.plus(engagementGained)),
+    lifetime_engagement: clampEngagement(state.player.lifetime_engagement.plus(engagementGained)),
+    lifetime_followers: state.player.lifetime_followers.plus(totalFollowersGained),
   };
   // syncTotalFollowers recomputes total_followers from platforms.
   newPlayer = syncTotalFollowers(newPlayer, newPlatforms);
 
   // Run unlock checks using the post-offline totals.
+  // checkPlatformUnlocks and checkGeneratorUnlocks take number — convert via .toNumber().
   const postUnlockPlatforms = checkPlatformUnlocks(
     newPlatforms,
-    newPlayer.total_followers,
+    newPlayer.total_followers.toNumber(),
     staticData,
   );
   const postUnlockGenerators = checkGeneratorUnlocks(
     state.generators,
-    newPlayer.total_followers,
+    newPlayer.total_followers.toNumber(),
     staticData,
   );
 

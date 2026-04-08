@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import Decimal from 'decimal.js';
+import '../test/decimal-matchers.ts';
 import { createDriver, type ActionError, type SaveError } from './index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import { generatorBuyCost, generatorUpgradeCost } from '../generator/index.ts';
@@ -86,8 +88,8 @@ describe('driver — lifecycle & actions', () => {
       clearInterval: s.clearInterval,
     });
     const state = driver.getState();
-    expect(state.player.engagement).toBe(0);
-    expect(state.player.total_followers).toBe(0);
+    expect(state.player.engagement).toEqualDecimal(0);
+    expect(state.player.total_followers).toEqualDecimal(0);
     expect(state.platforms.chirper.unlocked).toBe(true);
   });
 
@@ -105,7 +107,7 @@ describe('driver — lifecycle & actions', () => {
     const before = driver.getState().player.engagement;
     s.advance(500); // advance past cooldown
     driver.click('chirps');
-    expect(driver.getState().player.engagement).toBeGreaterThan(before);
+    expect(driver.getState().player.engagement.gt(before)).toBe(true);
     expect(callCount).toBe(1);
   });
 
@@ -201,7 +203,7 @@ describe('driver — tick loop', () => {
     // chirps cooldown at level=1 = max(50, 1000/(1×0.5)) = 2000ms
     for (let i = 0; i < 5; i++) { s.advance(2100); driver.click('chirps'); }
     const after = driver.getState().player.engagement;
-    expect(after).toBeGreaterThan(before);
+    expect(after.gt(before)).toBe(true);
 
     driver.stop();
   });
@@ -248,7 +250,7 @@ describe('driver — persistence', () => {
     // but the snapshot itself is non-null and well-formed.
     const snap = driver.getState().player.last_close_state;
     expect(snap).not.toBeNull();
-    expect(snap!.total_engagement_rate).toBeGreaterThanOrEqual(0);
+    expect(snap!.total_engagement_rate.gte(0)).toBe(true);
   });
 
   it('loads persisted state on a subsequent driver creation', () => {
@@ -269,7 +271,7 @@ describe('driver — persistence', () => {
       setInterval: s.setInterval,
       clearInterval: s.clearInterval,
     });
-    expect(driverB.getState().player.engagement).toBe(savedEngagement);
+    expect(driverB.getState().player.engagement.eq(savedEngagement)).toBe(true);
   });
 
   it('exposes null offline result when no save exists', () => {
@@ -328,12 +330,12 @@ describe('driver — persistence', () => {
     const result = driverB.getOfflineResult();
     expect(result).not.toBeNull();
     expect(result!.durationMs).toBe(10 * 60 * 1000);
-    expect(result!.engagementGained).toBeGreaterThan(0);
-    expect(result!.totalFollowersGained).toBeGreaterThan(0);
+    expect(result!.engagementGained.gt(0)).toBe(true);
+    expect(result!.totalFollowersGained.gt(0)).toBe(true);
     // State reflects the offline application.
-    expect(driverB.getState().player.engagement).toBeGreaterThan(
+    expect(driverB.getState().player.engagement.gt(
       driverA.getState().player.engagement,
-    );
+    )).toBe(true);
     expect(driverB.getState().player.last_close_time).toBe(t);
   });
 
@@ -437,8 +439,8 @@ describe('driver — persistence', () => {
     expect(result.cloutEarned).toBeGreaterThanOrEqual(0);
     expect(driver.getState().player.clout).toBe(beforeClout + result.cloutEarned);
     expect(driver.getState().player.rebrand_count).toBe(beforeRebrandCount + 1);
-    expect(driver.getState().player.engagement).toBe(0);
-    expect(driver.getState().player.total_followers).toBe(0);
+    expect(driver.getState().player.engagement).toEqualDecimal(0);
+    expect(driver.getState().player.total_followers).toEqualDecimal(0);
     // Chirps stays owned post-rebrand (threshold=0). Selfies is now
     // threshold=100 and manual_clickable, so it resets to unowned.
     expect(driver.getState().generators.chirps.owned).toBe(true);
@@ -549,7 +551,7 @@ describe('driver — onSaveError', () => {
     expect(received[0].kind).toBe('load_corrupt');
     expect(received[0].details).toMatch(/JSON|unexpected/i);
     // Driver still produced a playable initial state.
-    expect(driver.getState().player.engagement).toBe(0);
+    expect(driver.getState().player.engagement).toEqualDecimal(0);
     errorSpy.mockRestore();
   });
 
@@ -705,7 +707,7 @@ function makeFakeOneShots(): FakeOneShots {
 /** Build a driver with high engagement for sweep tests.
  *  chirps is owned by default (unlock_threshold=0).
  *  Injects high engagement via localStorage so sweep has items to buy. */
-function makeSweeperDriver(engagementAmount: number = 1_000_000) {
+function makeSweeperDriver(engagementAmount: Decimal | number = 1_000_000) {
   const timeouts = makeFakeOneShots();
 
   // Create a throw-away driver to get initial serialised state, then patch it.
@@ -720,7 +722,7 @@ function makeSweeperDriver(engagementAmount: number = 1_000_000) {
   tempDriver.saveNow();
 
   const raw = JSON.parse(localStorage.getItem('click_farm_save')!);
-  raw.state.player.engagement = engagementAmount;
+  raw.state.player.engagement = String(engagementAmount);
   localStorage.setItem('click_farm_save', JSON.stringify(raw));
 
   const driver = createDriver({
@@ -765,7 +767,7 @@ describe('driver — sweep engine', () => {
 
     // Call again — should not fire another purchase
     driver.startSweep();
-    expect(driver.getState().player.engagement).toBe(engagementAfterFirst);
+    expect(driver.getState().player.engagement.eq(engagementAfterFirst)).toBe(true);
 
     timeouts.flush(); // clean up
   });
@@ -790,9 +792,9 @@ describe('driver — sweep engine', () => {
 
     // First purchase fires synchronously — should be an upgrade
     const engAfterFirst = driver.getState().player.engagement;
-    expect(engAfterFirst).toBeLessThan(engBefore);
+    expect(engAfterFirst.lt(engBefore)).toBe(true);
     // The engagement spent should match the cheapest upgrade cost
-    expect(engBefore - engAfterFirst).toBeCloseTo(upgradeCost, 5);
+    expect(engBefore.minus(engAfterFirst).toNumber()).toBeCloseTo(upgradeCost.toNumber(), 5);
 
     timeouts.flush(); // clean up remaining
   });

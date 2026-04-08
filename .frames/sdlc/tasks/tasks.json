@@ -8127,7 +8127,7 @@
       "alias": "E1",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Install decimal.js and add foundation types + test matchers",
       "requester": "architect",
@@ -8160,14 +8160,15 @@
         "The matcher file is importable and the matcher works in a standalone test"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 200,
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Migrate model layer to Decimal (clamp, earn, spend, factories, sync)",
       "requester": "architect",
@@ -8197,16 +8198,15 @@
         "All model/index.test.ts tests updated and passing"
       ],
       "open_questions": [],
-      "blocked_on": [
-        199
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 201,
       "alias": "E3",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Migrate game loop to Decimal (rates, tick, viral, postClick, snapshot)",
       "requester": "architect",
@@ -8238,16 +8238,15 @@
         "levelMultiplier and cloutBonus still return number (converted to Decimal at call sites)"
       ],
       "open_questions": [],
-      "blocked_on": [
-        200
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 202,
       "alias": "E4",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Migrate generator operations to Decimal (costs, unlocks, purchases)",
       "requester": "architect",
@@ -8276,16 +8275,15 @@
         "All generator/index.test.ts tests updated and passing"
       ],
       "open_questions": [],
-      "blocked_on": [
-        200
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 203,
       "alias": "E5",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Migrate verb-gear, platform, offline, and prestige to Decimal",
       "requester": "architect",
@@ -8336,16 +8334,15 @@
         "All four test files updated and passing"
       ],
       "open_questions": [],
-      "blocked_on": [
-        200
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 204,
       "alias": "E6",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Migrate save/load layer — serialization, migration v15→v16",
       "requester": "architect",
@@ -8372,16 +8369,15 @@
         "All save/index.test.ts tests updated and passing"
       ],
       "open_questions": [],
-      "blocked_on": [
-        200
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 205,
       "alias": "E7",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Migrate driver to Decimal (sweep costs, viral payload, sort)",
       "requester": "architect",
@@ -8405,17 +8401,15 @@
         "driver/index.test.ts updated and passing"
       ],
       "open_questions": [],
-      "blocked_on": [
-        201,
-        202
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 206,
       "alias": "E8",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Migrate display pipeline — formatters, interpolation, tier extensions",
       "requester": "architect",
@@ -8458,16 +8452,15 @@
         "useInterpolatedValue.test.ts verifies Decimal inputs produce valid number outputs"
       ],
       "open_questions": [],
-      "blocked_on": [
-        199
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 207,
       "alias": "E9",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Migrate UI components to Decimal type flow",
       "requester": "architect",
@@ -8511,14 +8504,8 @@
         "npm run test passes — all tests green"
       ],
       "open_questions": [],
-      "blocked_on": [
-        201,
-        202,
-        203,
-        204,
-        205,
-        206
-      ]
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 208,

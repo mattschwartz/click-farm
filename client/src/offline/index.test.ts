@@ -2,6 +2,8 @@
 // Verifies single-pass gain accumulation for the offline window.
 
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
+import '../test/decimal-matchers.ts';
 import { calculateOffline } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -60,8 +62,8 @@ describe('calculateOffline — basic contract', () => {
   it('returns empty result when openTime ≤ closeTime', () => {
     const state = makeState();
     const { result, newState } = calculateOffline(state, T0, T0, STATIC_DATA);
-    expect(result.engagementGained).toBe(0);
-    expect(result.totalFollowersGained).toBe(0);
+    expect(result.engagementGained).toEqualDecimal(0);
+    expect(result.totalFollowersGained).toEqualDecimal(0);
     expect(result.durationMs).toBe(0);
     expect(newState).toBe(state);
   });
@@ -69,23 +71,21 @@ describe('calculateOffline — basic contract', () => {
   it('returns empty result for negative elapsed (clock skew)', () => {
     const state = makeState();
     const { result, newState } = calculateOffline(state, T0, T0 - 1000, STATIC_DATA);
-    expect(result.engagementGained).toBe(0);
+    expect(result.engagementGained).toEqualDecimal(0);
     expect(newState).toBe(state);
   });
 
   it('produces zero gains when no generators are producing', () => {
     const s0 = createInitialGameState(STATIC_DATA, T0);
-    // No generators owned — chirper is unlocked but nothing produces.
     const { result, newState } = calculateOffline(
       s0,
       T0,
       T0 + 60_000,
       STATIC_DATA,
     );
-    expect(result.engagementGained).toBe(0);
-    expect(result.totalFollowersGained).toBe(0);
-    expect(newState.player.engagement).toBe(s0.player.engagement);
-    // Duration recorded.
+    expect(result.engagementGained).toEqualDecimal(0);
+    expect(result.totalFollowersGained).toEqualDecimal(0);
+    expect(newState.player.engagement).toEqualDecimal(s0.player.engagement);
     expect(result.durationMs).toBe(60_000);
   });
 });
@@ -105,17 +105,16 @@ describe('calculateOffline — single-pass accumulation', () => {
       STATIC_DATA,
     );
 
-    expect(result.engagementGained).toBeGreaterThan(0);
-    expect(Number.isFinite(result.engagementGained)).toBe(true);
+    expect(result.engagementGained.gt(0)).toBe(true);
+    expect(result.engagementGained.isFinite()).toBe(true);
   });
 
   it('scales linearly with duration', () => {
     const state = makeState({ selfiesCount: 10 });
     const half = calculateOffline(state, T0, T0 + 30_000, STATIC_DATA).result;
     const full = calculateOffline(state, T0, T0 + 60_000, STATIC_DATA).result;
-    // Full should be ~2× half (same rate throughout).
-    expect(full.engagementGained).toBeCloseTo(half.engagementGained * 2, 6);
-    expect(full.totalFollowersGained).toBeCloseTo(half.totalFollowersGained * 2, 6);
+    expect(full.engagementGained.toNumber()).toBeCloseTo(half.engagementGained.times(2).toNumber(), 6);
+    expect(full.totalFollowersGained.toNumber()).toBeCloseTo(half.totalFollowersGained.times(2).toNumber(), 6);
   });
 
   it('distributes followers to unlocked platforms only', () => {
@@ -126,14 +125,10 @@ describe('calculateOffline — single-pass accumulation', () => {
       T0 + 60_000,
       STATIC_DATA,
     );
-    // chirper and picshift unlocked; skroll locked.
-    expect(result.followersGained.chirper).toBeGreaterThan(0);
-    expect(result.followersGained.picshift).toBeGreaterThan(0);
-    expect(result.followersGained.skroll).toBe(0);
-    // selfies: chirper affinity 0.8, picshift 2.0 → picshift > chirper.
-    expect(result.followersGained.picshift).toBeGreaterThan(
-      result.followersGained.chirper,
-    );
+    expect(result.followersGained.chirper.gt(0)).toBe(true);
+    expect(result.followersGained.picshift.gt(0)).toBe(true);
+    expect(result.followersGained.skroll).toEqualDecimal(0);
+    expect(result.followersGained.picshift.gt(result.followersGained.chirper)).toBe(true);
   });
 });
 
@@ -150,8 +145,8 @@ describe('calculateOffline — state application', () => {
       T0 + 60_000,
       STATIC_DATA,
     );
-    expect(newState.player.engagement).toBeCloseTo(
-      state.player.engagement + result.engagementGained,
+    expect(newState.player.engagement.toNumber()).toBeCloseTo(
+      state.player.engagement.plus(result.engagementGained).toNumber(),
       6,
     );
   });
@@ -164,12 +159,12 @@ describe('calculateOffline — state application', () => {
       T0 + 60_000,
       STATIC_DATA,
     );
-    expect(newState.platforms.chirper.followers).toBeCloseTo(
-      state.platforms.chirper.followers + result.followersGained.chirper,
+    expect(newState.platforms.chirper.followers.toNumber()).toBeCloseTo(
+      state.platforms.chirper.followers.plus(result.followersGained.chirper).toNumber(),
       6,
     );
-    expect(newState.platforms.picshift.followers).toBeCloseTo(
-      state.platforms.picshift.followers + result.followersGained.picshift,
+    expect(newState.platforms.picshift.followers.toNumber()).toBeCloseTo(
+      state.platforms.picshift.followers.plus(result.followersGained.picshift).toNumber(),
       6,
     );
   });
@@ -182,12 +177,11 @@ describe('calculateOffline — state application', () => {
       T0 + 60_000,
       STATIC_DATA,
     );
-    const sum =
-      newState.platforms.chirper.followers +
-      newState.platforms.picshift.followers +
-      newState.platforms.skroll.followers +
-      newState.platforms.podpod.followers;
-    expect(newState.player.total_followers).toBeCloseTo(sum, 6);
+    const sum = newState.platforms.chirper.followers
+      .plus(newState.platforms.picshift.followers)
+      .plus(newState.platforms.skroll.followers)
+      .plus(newState.platforms.podpod.followers);
+    expect(newState.player.total_followers.toNumber()).toBeCloseTo(sum.toNumber(), 6);
   });
 
   it('lifetime_followers increases by total follower gain', () => {
@@ -198,8 +192,8 @@ describe('calculateOffline — state application', () => {
       T0 + 60_000,
       STATIC_DATA,
     );
-    expect(newState.player.lifetime_followers).toBeCloseTo(
-      state.player.lifetime_followers + result.totalFollowersGained,
+    expect(newState.player.lifetime_followers.toNumber()).toBeCloseTo(
+      state.player.lifetime_followers.plus(result.totalFollowersGained).toNumber(),
       6,
     );
   });
@@ -229,16 +223,15 @@ describe('calculateOffline — state application', () => {
 
 describe('calculateOffline — unlocks', () => {
   it('unlocks picshift platform if total_followers crosses 100 during offline', () => {
-    // Bootstrap with enough selfies + long window to cross 100 followers.
     const state = makeState({ selfiesCount: 100, selfiesLevel: 3 });
     expect(state.platforms.picshift.unlocked).toBe(false);
     const { newState } = calculateOffline(
       state,
       T0,
-      T0 + 60 * 60_000, // 1 hour
+      T0 + 60 * 60_000,
       STATIC_DATA,
     );
-    expect(newState.player.total_followers).toBeGreaterThan(100);
+    expect(newState.player.total_followers.toNumber()).toBeGreaterThan(100);
     expect(newState.platforms.picshift.unlocked).toBe(true);
   });
 
@@ -251,7 +244,7 @@ describe('calculateOffline — unlocks', () => {
       T0 + 60 * 60_000,
       STATIC_DATA,
     );
-    if (newState.player.total_followers >= 50) {
+    if (newState.player.total_followers.toNumber() >= 50) {
       expect(newState.generators.memes.owned).toBe(true);
     }
   });
@@ -272,8 +265,8 @@ describe('calculateOffline — robustness', () => {
       STATIC_DATA,
     );
     expect(result.durationMs).toBe(sevenDaysMs);
-    expect(Number.isFinite(result.engagementGained)).toBe(true);
-    expect(Number.isFinite(result.totalFollowersGained)).toBe(true);
+    expect(result.engagementGained.isFinite()).toBe(true);
+    expect(result.totalFollowersGained.isFinite()).toBe(true);
   });
 
   it('is deterministic — same inputs produce identical result', () => {
@@ -281,16 +274,16 @@ describe('calculateOffline — robustness', () => {
       makeState({ selfiesCount: 10, memesCount: 5 });
     const a = calculateOffline(mk(), T0, T0 + 60 * 60_000, STATIC_DATA);
     const b = calculateOffline(mk(), T0, T0 + 60 * 60_000, STATIC_DATA);
-    expect(a.result.engagementGained).toBe(b.result.engagementGained);
-    expect(a.result.totalFollowersGained).toBe(b.result.totalFollowersGained);
+    expect(a.result.engagementGained.eq(b.result.engagementGained)).toBe(true);
+    expect(a.result.totalFollowersGained.eq(b.result.totalFollowersGained)).toBe(true);
   });
 
-  it('clamps engagement to MAX_SAFE_INTEGER (task #89)', () => {
+  it('allows engagement beyond MAX_SAFE_INTEGER — no ceiling', () => {
     const state: GameState = {
       ...makeState({ selfiesCount: 1_000_000, selfiesLevel: 10 }),
       player: {
         ...makeState().player,
-        engagement: Number.MAX_SAFE_INTEGER - 1,
+        engagement: new Decimal(Number.MAX_SAFE_INTEGER).minus(1),
       },
     };
     const { newState } = calculateOffline(
@@ -299,7 +292,8 @@ describe('calculateOffline — robustness', () => {
       T0 + 60 * 60 * 1000,
       STATIC_DATA,
     );
-    expect(newState.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
+    // No clamp — Decimal allows values beyond MAX_SAFE_INTEGER
+    expect(newState.player.engagement.gt(Number.MAX_SAFE_INTEGER)).toBe(true);
   });
 });
 
@@ -334,9 +328,9 @@ describe('calculateOffline — Audience Mood retention', () => {
     const { result: rHalf } = calculateOffline(
       sHalf, T0, T0 + 10 * 60 * 1000, STATIC_DATA,
     );
-    expect(rFull.followersGained.chirper).toBeGreaterThan(0);
-    expect(rHalf.followersGained.chirper).toBeCloseTo(
-      rFull.followersGained.chirper * 0.5,
+    expect(rFull.followersGained.chirper.gt(0)).toBe(true);
+    expect(rHalf.followersGained.chirper.toNumber()).toBeCloseTo(
+      rFull.followersGained.chirper.times(0.5).toNumber(),
       6,
     );
   });

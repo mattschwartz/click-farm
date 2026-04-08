@@ -1,6 +1,9 @@
 // All game entity types for Click Farm.
 // Field specifications come from .frames/sdlc/architecture/core-systems.md.
 
+import Decimal from 'decimal.js';
+export type { Decimal };
+
 // ---------------------------------------------------------------------------
 // ID types
 // 7 base generators per the accepted design proposal and the architecture
@@ -81,11 +84,11 @@ export interface VerbGearDef {
 
 export interface SnapshotState {
   /** Aggregate engagement/sec at time of close. ≥ 0. */
-  total_engagement_rate: number;
+  total_engagement_rate: Decimal;
   /** Aggregate followers/sec at time of close. ≥ 0. */
-  total_follower_rate: number;
+  total_follower_rate: Decimal;
   /** Per-platform follower earn rate at close. */
-  platform_rates: Record<PlatformId, number>;
+  platform_rates: Record<PlatformId, Decimal>;
 }
 
 // ---------------------------------------------------------------------------
@@ -96,15 +99,15 @@ export interface Player {
   /** UUID, generated on first launch. Immutable. */
   id: string;
   /** Workhorse currency. ≥ 0. */
-  engagement: number;
+  engagement: Decimal;
   /** Prestige currency. ≥ 0. Integer. */
   clout: number;
   /** DERIVED — never write directly, use syncTotalFollowers(). Sum of all platform follower counts. ≥ 0. */
-  total_followers: number;
+  total_followers: Decimal;
   /** Total followers ever earned across all runs. Never resets. ≥ 0. */
-  lifetime_followers: number;
+  lifetime_followers: Decimal;
   /** Total engagement ever earned across all runs. Never resets. ≥ 0. */
-  lifetime_engagement: number;
+  lifetime_engagement: Decimal;
   /** True after the player's first manual click in this run. Resets on rebrand. */
   has_started_run: boolean;
   /** Number of completed rebrands. ≥ 0. */
@@ -158,7 +161,7 @@ export interface PlatformState {
   /** Whether the player has access to this platform. */
   unlocked: boolean;
   /** Platform-specific follower count. ≥ 0. Independent of other platforms. */
-  followers: number;
+  followers: Decimal;
   // -------------------------------------------------------------------------
   // Audience Mood — retention multiplier + pressure accumulators.
   // See architecture/audience-mood.md §Data Model.
@@ -202,9 +205,9 @@ export interface ActiveViralEvent {
   /** Total duration of the event (ms). 5000–10000. */
   duration_ms: number;
   /** Total bonus engagement the event produces above normal production. */
-  magnitude: number;
+  magnitude: Decimal;
   /** Precomputed: magnitude / duration_ms. Applied per ms in tick. */
-  bonus_rate_per_ms: number;
+  bonus_rate_per_ms: Decimal;
 }
 
 /** Payload fired to UI subscribers at the moment of trigger. Internal fields stripped. */

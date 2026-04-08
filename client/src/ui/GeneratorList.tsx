@@ -12,6 +12,7 @@
 // - §6.3: First-purchase transition: badge fill + sparkle + breathing begins.
 // - §6.4: Count numeral pulses on additional purchases.
 
+import Decimal from 'decimal.js';
 import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState } from 'react';
 import type { GameState, GeneratorId, StaticData, VerbGearId } from '../types.ts';
@@ -82,11 +83,11 @@ export function classifyLvlBtnState(
   _count: number,
   level: number,
   maxLevel: number,
-  engagement: number,
-  upgradeCost: number,
+  engagement: Decimal,
+  upgradeCost: Decimal,
 ): LvlBtnState {
   if (level >= maxLevel) return 'maxed';
-  if (engagement >= upgradeCost) return 'ready';
+  if (engagement.gte(upgradeCost)) return 'ready';
   return 'armed';
 }
 
@@ -159,7 +160,7 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutocl
       const def = staticData.generators[id];
       if (g.level >= def.max_level) continue;
       const cost = generatorUpgradeCost(id, g.level, staticData);
-      if (state.player.engagement >= cost) readyCount += 1;
+      if (state.player.engagement.gte(cost)) readyCount += 1;
     }
   }
   const manyReady = shouldApplyManyReady(readyCount);
@@ -216,7 +217,7 @@ interface RowProps {
   /** Which button (if any) was just hit by a sweep purchase on this row. */
   sweepHitType: SweepItemType | null;
   /** Cost of the sweep purchase (for the float label). */
-  sweepHitCost: number;
+  sweepHitCost: Decimal | number;
   /** Monotonic counter — increments on every sweep purchase for re-trigger detection. */
   sweepHitSeq: number;
 }
@@ -239,7 +240,7 @@ function GeneratorRow({
   const display = GENERATOR_DISPLAY[id];
   const threshold = staticData.unlockThresholds.generators[id] ?? 0;
 
-  const thresholdMet = state.player.total_followers >= threshold;
+  const thresholdMet = state.player.total_followers.gte(threshold);
   const isDiscovered = g.owned || thresholdMet;
 
   const style = { '--gen-color': display.color } as React.CSSProperties;
@@ -289,7 +290,7 @@ function GeneratorRow({
       prevSweepSeq.current = sweepHitSeq;
       setSweepHitBtn(sweepHitType);
       const t = window.setTimeout(() => setSweepHitBtn(null), 64);
-      spawnCostFloat(sweepHitType, sweepHitCost);
+      spawnCostFloat(sweepHitType, typeof sweepHitCost === 'number' ? sweepHitCost : sweepHitCost.toNumber());
       return () => { window.clearTimeout(t); };
     }
   }, [sweepHitType, sweepHitCost, sweepHitSeq]);
@@ -328,7 +329,7 @@ function GeneratorRow({
   // Lvl ↑ affordance state computed UNCONDITIONALLY so the hooks below can
   // depend on it without skipping on unowned/locked renders. classifyLvlBtnState
   // returns 'dormant' when count===0, which is correct for pre-owned rows.
-  const upgradeCostUnconditional = g.level >= def.max_level ? Infinity : generatorUpgradeCost(id, g.level, staticData);
+  const upgradeCostUnconditional = g.level >= def.max_level ? new Decimal(Infinity) : generatorUpgradeCost(id, g.level, staticData);
   const lvlStateUnconditional = classifyLvlBtnState(
     g.count,
     g.level,
@@ -373,7 +374,7 @@ function GeneratorRow({
     // Manual-clickable gens route through unlock; passive gens through buy.
     const def = staticData.generators[id];
     const buyCost = def.manual_clickable ? def.base_buy_cost : generatorBuyCost(id, 0, staticData);
-    const canBuy = state.player.engagement >= buyCost;
+    const canBuy = state.player.engagement.gte(buyCost);
     const handleBuy = () => onBuy(id);
     const label = `Buy ${display.name}`;
     return (
@@ -393,10 +394,10 @@ function GeneratorRow({
 
   const buyCost = generatorBuyCost(id, g.count, staticData);
   const upgradeCost = upgradeCostUnconditional;
-  const canBuy = state.player.engagement >= buyCost;
+  const canBuy = state.player.engagement.gte(buyCost);
   // Autoclicker cost — only relevant for manual-clickable generators.
-  const autoCost = def.manual_clickable ? autoclickerBuyCost(id, g.autoclicker_count, staticData) : 0;
-  const canBuyAuto = def.manual_clickable && state.player.engagement >= autoCost;
+  const autoCost = def.manual_clickable ? autoclickerBuyCost(id, g.autoclicker_count, staticData) : new Decimal(0);
+  const canBuyAuto = def.manual_clickable && state.player.engagement.gte(autoCost);
 
   // Lvl ↑ button affordance state — spec tracks distinct visuals
   // (dormant / armed / ready / maxed) so players can tell at a glance
@@ -404,7 +405,7 @@ function GeneratorRow({
   // Tasks #69 (three states) + #89 (MAX cap). Computed above early returns
   // so hook order stays stable.
   const lvlState = lvlStateUnconditional;
-  const lvlDeficit = Math.max(0, upgradeCost - state.player.engagement);
+  const lvlDeficit = Decimal.max(0, upgradeCost.minus(state.player.engagement));
 
   return (
     <div
@@ -421,7 +422,7 @@ function GeneratorRow({
           costText={fmtCompact(buyCost)}
           canBuy={canBuy}
           count={g.count}
-          onBuy={() => { onBuy(id); spawnCostFloat('buy', buyCost); }}
+          onBuy={() => { onBuy(id); spawnCostFloat('buy', buyCost.toNumber()); }}
           sweepHit={sweepHitBtn === 'buy'}
         />
         {/* SPEED — fires upgrade directly (task #150).
@@ -432,9 +433,9 @@ function GeneratorRow({
           lvlState={lvlState}
           maxedArrival={maxedArrival}
           breatheDelayMs={breatheDelayMs}
-          canAfford={state.player.engagement >= upgradeCost}
+          canAfford={state.player.engagement.gte(upgradeCost)}
           level={g.level}
-          onUpgrade={() => { onUpgrade(id); spawnCostFloat('upgrade', upgradeCost); }}
+          onUpgrade={() => { onUpgrade(id); spawnCostFloat('upgrade', upgradeCost.toNumber()); }}
           sweepHit={sweepHitBtn === 'upgrade'}
           title={
             lvlState === 'maxed'
@@ -474,8 +475,8 @@ function GeneratorRow({
               autoclickerCount={g.autoclicker_count}
               verbColor={display.color}
               onBuy={isSuperPhase
-                ? () => { onBuyVerbGear(gearId); spawnCostFloat('autoclicker', gearCost ?? 0); }
-                : () => { onBuyAutoclicker(id); spawnCostFloat('autoclicker', autoCost); }
+                ? () => { onBuyVerbGear(gearId); spawnCostFloat('autoclicker', (gearCost ?? new Decimal(0)).toNumber()); }
+                : () => { onBuyAutoclicker(id); spawnCostFloat('autoclicker', autoCost.toNumber()); }
               }
               generatorName={display.name}
               sweepHit={sweepHitBtn === 'autoclicker'}

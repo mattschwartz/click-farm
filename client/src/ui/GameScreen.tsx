@@ -60,6 +60,7 @@ export function getBKeyAction(
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useGame } from './useGame.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
+import Decimal from 'decimal.js';
 import {
   computeAllGeneratorEffectiveRates,
 } from '../game-loop/index.ts';
@@ -195,11 +196,11 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
   // Render-time derived values --------------------------------------------
   const engagementRate = useMemo(() => {
     const rates = computeAllGeneratorEffectiveRates(state, STATIC_DATA);
-    let total = 0;
+    let total = new Decimal(0);
     for (const id of Object.keys(rates) as GeneratorId[]) {
-      total += rates[id] ?? 0;
+      total = total.plus(rates[id] ?? 0);
     }
-    return total;
+    return total.toNumber();
   }, [state]);
 
   // Per-verb yield preview is now computed per-button inside ActionsColumn.
@@ -227,7 +228,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     prevViralRef.current = curr;
     if (prev !== null && curr === null) {
       // Burst just ended — show the summary badge.
-      setSummaryBadge({ magnitude: prev.magnitude, fading: false });
+      setSummaryBadge({ magnitude: prev.magnitude.toNumber(), fading: false });
       const t1 = window.setTimeout(
         () => setSummaryBadge((b) => (b ? { ...b, fading: true } : null)),
         1500,
@@ -245,7 +246,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
   // full rate and extrapolates at 60fps, producing the counter acceleration
   // described in UX §9.3.
   const viralBonusRatePerSec = viralActive
-    ? viralActive.bonus_rate_per_ms * 1000
+    ? viralActive.bonus_rate_per_ms.times(1000).toNumber()
     : 0;
   const effectiveEngagementRate = engagementRate + viralBonusRatePerSec;
 
@@ -371,9 +372,9 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     <>
       <main className={`game-screen${viralPhase === 'peak' ? ' viral-zoom-pulse' : ''}`}>
         <TopBar
-          engagement={state.player.engagement}
+          engagement={state.player.engagement.toNumber()}
           engagementRate={effectiveEngagementRate}
-          totalFollowers={state.player.total_followers}
+          totalFollowers={state.player.total_followers.toNumber()}
           viralGold={viralPhase !== null}
           summaryBadge={summaryBadge}
           rebrandCount={state.player.rebrand_count}

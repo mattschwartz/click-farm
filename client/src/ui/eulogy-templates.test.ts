@@ -1,6 +1,7 @@
 // Tests for eulogy-templates helpers (task #65).
 
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
 import {
   unlockedPlatformsList,
   buildEulogyStanzas,
@@ -59,7 +60,7 @@ describe('buildEulogyStanzas', () => {
     const base = createInitialGameState(STATIC_DATA, 0);
     const state = {
       ...base,
-      player: { ...base.player, total_followers: 1234 },
+      player: { ...base.player, total_followers: new Decimal(1234) },
     };
     const stanzas = buildEulogyStanzas(state);
     // fmtCompactInt(1234) formats with thousands separator or compact notation

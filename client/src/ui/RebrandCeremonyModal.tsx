@@ -190,8 +190,8 @@ export function RebrandCeremonyModal({
   const handleCommit = useCallback(() => {
     // Snapshot BEFORE calling onConfirm — once rebrand fires, state is fresh.
     setSnapshot({
-      engagement: state.player.engagement,
-      followers: state.player.total_followers,
+      engagement: state.player.engagement.toNumber(),
+      followers: state.player.total_followers.toNumber(),
       rebrandCountBefore: state.player.rebrand_count,
     });
     onConfirm();

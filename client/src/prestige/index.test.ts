@@ -1,6 +1,8 @@
 // Prestige tests — rebrand mechanics and clout-upgrade purchase.
 
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
+import '../test/decimal-matchers.ts';
 import {
   cloutForRebrand,
   calculateRebrand,
@@ -16,15 +18,24 @@ import type { GameState, StaticData, CloutUpgradeDef, UpgradeId } from '../types
 
 const T0 = 1_000_000;
 
-function seedState(overrides?: Partial<GameState['player']>): GameState {
+function seedState(overrides?: Omit<Partial<GameState['player']>, 'total_followers' | 'lifetime_followers' | 'lifetime_engagement' | 'engagement'> & {
+  total_followers?: number;
+  lifetime_followers?: number;
+  lifetime_engagement?: number;
+  engagement?: number;
+}): GameState {
   const s = createInitialGameState(STATIC_DATA, T0);
-  return {
-    ...s,
-    player: {
-      ...s.player,
-      ...overrides,
-    },
+  // Separate Decimal fields from the rest to avoid type conflicts
+  const { total_followers, lifetime_followers, lifetime_engagement, engagement, ...rest } = overrides ?? {};
+  const player: GameState['player'] = {
+    ...s.player,
+    ...rest,
+    ...(total_followers !== undefined ? { total_followers: new Decimal(total_followers) } : {}),
+    ...(lifetime_followers !== undefined ? { lifetime_followers: new Decimal(lifetime_followers) } : {}),
+    ...(lifetime_engagement !== undefined ? { lifetime_engagement: new Decimal(lifetime_engagement) } : {}),
+    ...(engagement !== undefined ? { engagement: new Decimal(engagement) } : {}),
   };
+  return { ...s, player };
 }
 
 // ---------------------------------------------------------------------------
@@ -33,35 +44,40 @@ function seedState(overrides?: Partial<GameState['player']>): GameState {
 
 describe('cloutForRebrand', () => {
   it('returns 0 for 0 followers', () => {
-    expect(cloutForRebrand(0)).toBe(0);
+    expect(cloutForRebrand(new Decimal(0))).toBe(0);
   });
 
-  it('returns 0 for followers < 100 (floor(sqrt/10) < 1)', () => {
-    expect(cloutForRebrand(99)).toBe(0);
-    expect(cloutForRebrand(100)).toBe(1);
+  it('returns 0 for followers ≤ 0', () => {
+    expect(cloutForRebrand(new Decimal(-1))).toBe(0);
+    expect(cloutForRebrand(new Decimal(0))).toBe(0);
   });
 
-  it('matches spec milestone: 10,000 followers → 10 Clout', () => {
-    expect(cloutForRebrand(10_000)).toBe(10);
+  it('returns floor(log10(f) * 3) for known values', () => {
+    // log10(10) = 1 → 1 * 3 = 3
+    expect(cloutForRebrand(new Decimal(10))).toBe(3);
+    // log10(100) = 2 → 2 * 3 = 6
+    expect(cloutForRebrand(new Decimal(100))).toBe(6);
+    // log10(1000) = 3 → 3 * 3 = 9
+    expect(cloutForRebrand(new Decimal(1000))).toBe(9);
+    // log10(10_000) = 4 → 4 * 3 = 12
+    expect(cloutForRebrand(new Decimal(10_000))).toBe(12);
   });
 
   it('returns integer values', () => {
     for (const n of [1, 50, 500, 5_000, 50_000, 500_000, 5_000_000]) {
-      expect(Number.isInteger(cloutForRebrand(n))).toBe(true);
+      expect(Number.isInteger(cloutForRebrand(new Decimal(n)))).toBe(true);
     }
   });
 
-  it('guards against negative and non-finite inputs', () => {
-    expect(cloutForRebrand(-1)).toBe(0);
-    expect(cloutForRebrand(NaN)).toBe(0);
-    expect(cloutForRebrand(Infinity)).toBe(0);
+  it('guards against negative and NaN inputs', () => {
+    expect(cloutForRebrand(new Decimal(-1))).toBe(0);
+    expect(cloutForRebrand(new Decimal(NaN))).toBe(0);
   });
 
-  it('scales with sqrt — 4× followers ≈ 2× Clout', () => {
-    const base = cloutForRebrand(40_000); // sqrt=200 → 20
-    const quad = cloutForRebrand(160_000); // sqrt=400 → 40
-    expect(base).toBe(20);
-    expect(quad).toBe(40);
+  it('scales logarithmically — 10× followers adds 3 Clout', () => {
+    const base = cloutForRebrand(new Decimal(10_000));  // log10=4 → 12
+    const tenX = cloutForRebrand(new Decimal(100_000)); // log10=5 → 15
+    expect(tenX - base).toBe(3);
   });
 });
 
@@ -75,7 +91,8 @@ describe('calculateRebrand', () => {
       total_followers: 10_000,
       lifetime_followers: 50_000, // higher, but shouldn't count
     });
-    expect(calculateRebrand(state).cloutEarned).toBe(10);
+    // log10(10_000) = 4 → 4 * 3 = 12
+    expect(calculateRebrand(state).cloutEarned).toBe(12);
   });
 
   it('is deterministic — same state in, same result out', () => {
@@ -110,9 +127,9 @@ describe('applyRebrand — reset completeness', () => {
       },
       platforms: {
         ...base.platforms,
-        chirper: { ...base.platforms.chirper, unlocked: true, followers: 20_000 },
-        picshift: { ...base.platforms.picshift, unlocked: true, followers: 18_000 },
-        skroll: { ...base.platforms.skroll, unlocked: true, followers: 2_000 },
+        chirper: { ...base.platforms.chirper, unlocked: true, followers: new Decimal(20_000) },
+        picshift: { ...base.platforms.picshift, unlocked: true, followers: new Decimal(18_000) },
+        skroll: { ...base.platforms.skroll, unlocked: true, followers: new Decimal(2_000) },
       },
     };
   }
@@ -121,17 +138,17 @@ describe('applyRebrand — reset completeness', () => {
     const state = setupMidRun();
     const result = calculateRebrand(state);
     const next = applyRebrand(state, result, STATIC_DATA, T0 + 1000);
-    expect(next.player.engagement).toBe(0);
+    expect(next.player.engagement).toEqualDecimal(0);
   });
 
   it('wipes total_followers and per-platform followers to 0', () => {
     const state = setupMidRun();
     const result = calculateRebrand(state);
     const next = applyRebrand(state, result, STATIC_DATA, T0 + 1000);
-    expect(next.player.total_followers).toBe(0);
-    expect(next.platforms.chirper.followers).toBe(0);
-    expect(next.platforms.picshift.followers).toBe(0);
-    expect(next.platforms.skroll.followers).toBe(0);
+    expect(next.player.total_followers).toEqualDecimal(0);
+    expect(next.platforms.chirper.followers).toEqualDecimal(0);
+    expect(next.platforms.picshift.followers).toEqualDecimal(0);
+    expect(next.platforms.skroll.followers).toEqualDecimal(0);
   });
 
   it('resets generators: count=0, level=1, and owned only for threshold=0 (mirrors fresh start)', () => {
@@ -165,8 +182,8 @@ describe('applyRebrand — reset completeness', () => {
           source_platform_id: 'chirper' as const,
           start_time: T0,
           duration_ms: 5000,
-          magnitude: 10,
-          bonus_rate_per_ms: 1,
+          magnitude: new Decimal(10),
+          bonus_rate_per_ms: new Decimal(1),
         },
       },
     };
@@ -181,9 +198,9 @@ describe('applyRebrand — reset completeness', () => {
 describe('applyRebrand — preservation of meta', () => {
   it('adds earned Clout to existing Clout', () => {
     const state = seedState({ total_followers: 40_000, clout: 7 });
-    const result = calculateRebrand(state); // 20 clout
+    const result = calculateRebrand(state); // log10(40000)*3 = 4.602*3 = floor(13.806) = 13
     const next = applyRebrand(state, result, STATIC_DATA, T0 + 1000);
-    expect(next.player.clout).toBe(27);
+    expect(next.player.clout).toBe(7 + 13);
   });
 
   it('preserves lifetime_followers (compounds across runs)', () => {
@@ -192,7 +209,7 @@ describe('applyRebrand — preservation of meta', () => {
       lifetime_followers: 100_000,
     });
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
-    expect(next.player.lifetime_followers).toBe(100_000);
+    expect(next.player.lifetime_followers).toEqualDecimal(100_000);
   });
 
   it('preserves clout_upgrades across rebrand', () => {
@@ -385,34 +402,34 @@ describe('cloutUpgradeCost + purchaseCloutUpgrade', () => {
 
 describe('end-to-end rebrand flow', () => {
   it('earn → rebrand → Clout available → buy upgrade → rebrand again', () => {
-    // Run 1: generate 10_000 followers, rebrand for 10 Clout.
+    // Run 1: generate 10_000 followers, rebrand. log10(10000)*3 = 12 Clout.
     const run1 = seedState({ total_followers: 10_000, lifetime_followers: 10_000 });
     const r1 = calculateRebrand(run1);
     const afterR1 = applyRebrand(run1, r1, STATIC_DATA, T0 + 1000);
-    expect(afterR1.player.clout).toBe(10);
+    expect(afterR1.player.clout).toBe(12);
 
     // Buy engagement_boost level 1 (cost 1 in current static data).
     const upgraded = purchaseCloutUpgrade(afterR1, 'engagement_boost', STATIC_DATA);
     expect(upgraded.player.clout_upgrades.engagement_boost).toBe(1);
 
-    // Run 2: generate 40_000 followers, rebrand for 20 Clout.
+    // Run 2: generate 40_000 followers, rebrand. log10(40000)*3 = floor(13.806) = 13 Clout.
     const run2: GameState = {
       ...upgraded,
       player: {
         ...upgraded.player,
-        total_followers: 40_000,
-        lifetime_followers: 10_000 + 40_000,
+        total_followers: new Decimal(40_000),
+        lifetime_followers: new Decimal(10_000 + 40_000),
       },
       platforms: {
         ...upgraded.platforms,
-        chirper: { ...upgraded.platforms.chirper, followers: 40_000 },
+        chirper: { ...upgraded.platforms.chirper, followers: new Decimal(40_000) },
       },
     };
     const r2 = calculateRebrand(run2);
-    expect(r2.cloutEarned).toBe(20);
+    expect(r2.cloutEarned).toBe(13);
     const afterR2 = applyRebrand(run2, r2, STATIC_DATA, T0 + 2000);
     // Previous clout balance (after purchase) + newly earned.
-    expect(afterR2.player.clout).toBe(upgraded.player.clout + 20);
+    expect(afterR2.player.clout).toBe(upgraded.player.clout + 13);
     expect(afterR2.player.rebrand_count).toBe(upgraded.player.rebrand_count + 1);
     expect(afterR2.player.clout_upgrades.engagement_boost).toBe(1);
   });

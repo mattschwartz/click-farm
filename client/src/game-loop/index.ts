@@ -12,6 +12,7 @@
 //
 // All functions are pure. State in → new state out. No mutation.
 
+import Decimal from 'decimal.js';
 import type {
   ActiveViralEvent,
   GameState,
@@ -118,22 +119,18 @@ export function computeGeneratorEffectiveRate(
   generator: GeneratorState,
   state: GameState,
   staticData: StaticData,
-): number {
-  if (!generator.owned || generator.autoclicker_count <= 0) return 0;
+): Decimal {
+  if (!generator.owned || generator.autoclicker_count <= 0) return new Decimal(0);
   const def = staticData.generators[generator.id];
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
-  // Gear multiplier folds in AFTER Clout per architecture/verb-gear.md
-  // §Stacking Order (§3 clout -> §4 gear).
   const gear = verbGearMultiplier(generator.id, state.player.verb_gear, staticData);
-  return (
-    generator.autoclicker_count *
-    generator.level *
-    def.base_event_rate *
-    def.base_event_yield *
-    Math.pow(1 + generator.count, def.count_exponent) *
-    clout *
-    gear
-  );
+  return new Decimal(generator.autoclicker_count)
+    .times(generator.level)
+    .times(def.base_event_rate)
+    .times(def.base_event_yield)
+    .times(Decimal.pow(1 + generator.count, def.count_exponent))
+    .times(clout)
+    .times(gear);
 }
 
 /**
@@ -143,15 +140,15 @@ export function computeGeneratorEffectiveRate(
 export function computeAllGeneratorEffectiveRates(
   state: GameState,
   staticData: StaticData,
-): Partial<Record<GeneratorId, number>> {
-  const rates: Partial<Record<GeneratorId, number>> = {};
+): Partial<Record<GeneratorId, Decimal>> {
+  const rates: Partial<Record<GeneratorId, Decimal>> = {};
   for (const id of Object.keys(state.generators) as GeneratorId[]) {
     const rate = computeGeneratorEffectiveRate(
       state.generators[id],
       state,
       staticData,
     );
-    if (rate > 0) rates[id] = rate;
+    if (rate.gt(0)) rates[id] = rate;
   }
   return rates;
 }
@@ -191,7 +188,7 @@ export function evaluateViralTrigger(
 
   // Require at least one generator producing — no viral from empty content farm
   const rates = computeAllGeneratorEffectiveRates(state, staticData);
-  const rateEntries = Object.entries(rates) as [GeneratorId, number][];
+  const rateEntries = Object.entries(rates) as [GeneratorId, Decimal][];
   if (rateEntries.length === 0) return null;
 
   // Determine phase-based p_viral
@@ -211,9 +208,9 @@ export function evaluateViralTrigger(
 
   // Find top generator for source selection
   let topGenId: GeneratorId = rateEntries[0][0];
-  let topRate = rateEntries[0][1];
+  let topRate: Decimal = rateEntries[0][1];
   for (const [id, rate] of rateEntries) {
-    if (rate > topRate) {
+    if (rate.gt(topRate)) {
       topRate = rate;
       topGenId = id;
     }
@@ -238,8 +235,9 @@ export function evaluateViralTrigger(
 
   // Compute magnitude — amortized rate boost over the event window
   // total_engagement_rate_per_ms = sum of all generator rates (per-sec) / 1000
-  const totalRatePerMs =
-    rateEntries.reduce((sum, [, r]) => sum + r, 0) / 1000;
+  const totalRatePerMs = rateEntries
+    .reduce((sum: Decimal, [, r]) => sum.plus(r), new Decimal(0))
+    .div(1000);
   const duration_ms = Math.floor(
     config.durationMsMin +
       random() * (config.durationMsMax - config.durationMsMin),
@@ -249,8 +247,8 @@ export function evaluateViralTrigger(
     random() * (config.magnitudeBoostMax - config.magnitudeBoostMin);
   // During the viral: effective rate = normal_rate × boostFactor
   // Bonus = normal_rate × (boostFactor - 1) per ms
-  const bonus_rate_per_ms = totalRatePerMs * (boostFactor - 1);
-  const magnitude = bonus_rate_per_ms * duration_ms;
+  const bonus_rate_per_ms = totalRatePerMs.times(boostFactor - 1);
+  const magnitude = bonus_rate_per_ms.times(duration_ms);
 
   return {
     source_generator_id: topGenId,
@@ -290,20 +288,20 @@ export function tick(
   // 1. Compute per-generator effective rates (per second).
   const ratesPerSec = computeAllGeneratorEffectiveRates(state, staticData);
 
-  // 2. Convert to per-ms rates; sum total engagement earned in deltaMs.
-  const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
-  let engagementEarned = 0;
+  // 2. Convert to per-ms Decimal rates; sum total engagement earned in deltaMs.
+  const ratesPerMs: Partial<Record<GeneratorId, Decimal>> = {};
+  let engagementEarned = new Decimal(0);
   for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
-    const perMs = (ratesPerSec[id] ?? 0) / 1000;
+    const perMs = (ratesPerSec[id] ?? new Decimal(0)).div(1000);
     ratesPerMs[id] = perMs;
-    engagementEarned += perMs * deltaMs;
+    engagementEarned = engagementEarned.plus(perMs.times(deltaMs));
   }
 
   // 3. Add engagement to player.
   let player: Player = {
     ...state.player,
-    engagement: clampEngagement(state.player.engagement + engagementEarned),
-    lifetime_engagement: clampEngagement(state.player.lifetime_engagement + engagementEarned),
+    engagement: clampEngagement(state.player.engagement.plus(engagementEarned)),
+    lifetime_engagement: clampEngagement(state.player.lifetime_engagement.plus(engagementEarned)),
   };
 
   // 3a. Audience Mood pressure update (architect resolution 2026-04-05).
@@ -331,16 +329,17 @@ export function tick(
   //    AFTER content-affinity distribution (platform-scoped, step 6 in the
   //    stacking-order chain declared in audience-mood/index.ts module header).
   let platforms = platformsWithMood;
-  if (distribution.totalRate > 0) {
+  if (distribution.totalRate.gt(0)) {
     const next: Record<PlatformId, PlatformState> = { ...platformsWithMood };
     for (const id of Object.keys(platformsWithMood) as PlatformId[]) {
       const retention = platformsWithMood[id].retention;
-      const gained =
-        distribution.perPlatformRate[id] * retention * deltaMs;
-      if (gained > 0) {
+      const gained = distribution.perPlatformRate[id]
+        .times(retention)
+        .times(deltaMs);
+      if (gained.gt(0)) {
         next[id] = {
           ...platformsWithMood[id],
-          followers: platformsWithMood[id].followers + gained,
+          followers: platformsWithMood[id].followers.plus(gained),
         };
       }
     }
@@ -355,21 +354,21 @@ export function tick(
   //    runs (Σ_t Σ_p vs Σ_p Σ_t under non-associative float add).
   const oldTotal = player.total_followers;
   player = syncTotalFollowers(player, platforms);
-  if (player.total_followers > oldTotal) {
+  if (player.total_followers.gt(oldTotal)) {
     player = {
       ...player,
       lifetime_followers:
-        player.lifetime_followers + (player.total_followers - oldTotal),
+        player.lifetime_followers.plus(player.total_followers.minus(oldTotal)),
     };
   }
 
   // 7. Check platform unlocks using the freshly-synced total.
-  platforms = checkPlatformUnlocks(platforms, player.total_followers, staticData);
+  platforms = checkPlatformUnlocks(platforms, player.total_followers.toNumber(), staticData);
 
   // 8. Check generator unlocks using the freshly-synced total.
   const generators = checkGeneratorUnlocks(
     state.generators,
-    player.total_followers,
+    player.total_followers.toNumber(),
     staticData,
   );
 
@@ -388,7 +387,7 @@ export function tick(
       // 10b. Viral still running — apply bonus engagement on top of normal production.
       player = {
         ...player,
-        engagement: clampEngagement(player.engagement + viralBurst.active.bonus_rate_per_ms * deltaMs),
+        engagement: clampEngagement(player.engagement.plus(viralBurst.active.bonus_rate_per_ms.times(deltaMs))),
       };
     }
   } else {
@@ -424,16 +423,17 @@ export function computeSnapshot(
   state: GameState,
   staticData: StaticData,
 ): SnapshotState {
+  const ZERO = new Decimal(0);
   const ratesPerSec = computeAllGeneratorEffectiveRates(state, staticData);
-  let total_engagement_rate = 0;
+  let total_engagement_rate = ZERO;
   for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
-    total_engagement_rate += ratesPerSec[id] ?? 0;
+    total_engagement_rate = total_engagement_rate.plus(ratesPerSec[id] ?? ZERO);
   }
 
   // Convert to per-ms, compute distribution, scale back to per-sec.
-  const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
+  const ratesPerMs: Partial<Record<GeneratorId, Decimal>> = {};
   for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
-    ratesPerMs[id] = (ratesPerSec[id] ?? 0) / 1000;
+    ratesPerMs[id] = (ratesPerSec[id] ?? ZERO).div(1000);
   }
   const distribution = computeFollowerDistribution(
     ratesPerMs,
@@ -449,15 +449,15 @@ export function computeSnapshot(
   const platform_rates = Object.fromEntries(
     (Object.keys(state.platforms) as PlatformId[]).map((id) => [
       id,
-      distribution.perPlatformRate[id] *
-        state.platforms[id].retention *
-        1000,
+      distribution.perPlatformRate[id]
+        .times(state.platforms[id].retention)
+        .times(1000),
     ]),
-  ) as Record<PlatformId, number>;
+  ) as Record<PlatformId, Decimal>;
 
-  let total_follower_rate = 0;
+  let total_follower_rate = ZERO;
   for (const id of Object.keys(state.platforms) as PlatformId[]) {
-    total_follower_rate += platform_rates[id];
+    total_follower_rate = total_follower_rate.plus(platform_rates[id]);
   }
 
   return {
@@ -493,11 +493,15 @@ export function verbYieldPerTap(
   generator: GeneratorState,
   state: GameState,
   staticData: StaticData,
-): number {
+): Decimal {
   const def = staticData.generators[generator.id];
   const clout = cloutBonus(state.player.clout_upgrades, staticData);
   const gear = verbGearMultiplier(generator.id, state.player.verb_gear, staticData);
-  return def.base_event_yield * Math.pow(1 + generator.count, def.count_exponent) * (1 + generator.autoclicker_count) * clout * gear;
+  return new Decimal(def.base_event_yield)
+    .times(Decimal.pow(1 + generator.count, def.count_exponent))
+    .times(1 + generator.autoclicker_count)
+    .times(clout)
+    .times(gear);
 }
 
 /**
@@ -509,7 +513,7 @@ export function verbYieldPerAutoTap(
   generator: GeneratorState,
   state: GameState,
   staticData: StaticData,
-): number {
+): Decimal {
   return verbYieldPerTap(generator, state, staticData);
 }
 
@@ -563,8 +567,8 @@ export function postClick(
     ...state,
     player: {
       ...state.player,
-      engagement: clampEngagement(state.player.engagement + earned),
-      lifetime_engagement: clampEngagement(state.player.lifetime_engagement + earned),
+      engagement: clampEngagement(state.player.engagement.plus(earned)),
+      lifetime_engagement: clampEngagement(state.player.lifetime_engagement.plus(earned)),
       has_started_run: true,
       last_manual_click_at: {
         ...state.player.last_manual_click_at,

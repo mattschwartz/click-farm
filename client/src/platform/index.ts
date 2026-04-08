@@ -3,6 +3,7 @@
 // follower distribution formula (arch spec §Engagement-to-Follower Conversion).
 // All functions are pure — no mutation.
 
+import Decimal from 'decimal.js';
 import type {
   PlatformState,
   PlatformId,
@@ -82,9 +83,9 @@ export function checkPlatformUnlocks(
 
 export interface FollowerDistribution {
   /** Followers earned per ms on each platform. 0 for locked platforms. */
-  perPlatformRate: Record<PlatformId, number>;
+  perPlatformRate: Record<PlatformId, Decimal>;
   /** Total followers per ms across all platforms (= Σ perPlatformRate). */
-  totalRate: number;
+  totalRate: Decimal;
 }
 
 /**
@@ -97,59 +98,62 @@ export interface FollowerDistribution {
  * @param staticData  static config
  */
 export function computeFollowerDistribution(
-  generatorEffectiveRates: Partial<Record<GeneratorId, number>>,
+  generatorEffectiveRates: Partial<Record<GeneratorId, Decimal>>,
   platforms: Record<PlatformId, PlatformState>,
   staticData: StaticData
 ): FollowerDistribution {
+  const ZERO = new Decimal(0);
   const unlockedIds = (Object.keys(platforms) as PlatformId[]).filter(
     (id) => platforms[id].unlocked
   );
 
   // Initialise all platforms to 0 (locked platforms stay 0).
   const perPlatformRate = Object.fromEntries(
-    (Object.keys(platforms) as PlatformId[]).map((id) => [id, 0])
-  ) as Record<PlatformId, number>;
+    (Object.keys(platforms) as PlatformId[]).map((id) => [id, ZERO])
+  ) as Record<PlatformId, Decimal>;
 
   if (unlockedIds.length === 0) {
-    return { perPlatformRate, totalRate: 0 };
+    return { perPlatformRate, totalRate: ZERO };
   }
 
-  const entries = Object.entries(generatorEffectiveRates) as [GeneratorId, number][];
+  const entries = Object.entries(generatorEffectiveRates) as [GeneratorId, Decimal][];
 
   // Base follower rate: Σ_g(engagement_rate[g] × follower_conversion_rate[g])
-  let baseRate = 0;
+  let baseRate = ZERO;
   for (const [genId, engagementRate] of entries) {
-    baseRate += engagementRate * staticData.generators[genId].follower_conversion_rate;
+    baseRate = baseRate.plus(
+      engagementRate.times(staticData.generators[genId].follower_conversion_rate),
+    );
   }
 
-  if (baseRate === 0) {
-    return { perPlatformRate, totalRate: 0 };
+  if (baseRate.isZero()) {
+    return { perPlatformRate, totalRate: ZERO };
   }
 
   // Raw affinity score per unlocked platform
-  const rawScores: Partial<Record<PlatformId, number>> = {};
-  let totalRaw = 0;
+  const rawScores: Partial<Record<PlatformId, Decimal>> = {};
+  let totalRaw = ZERO;
 
   for (const platformId of unlockedIds) {
-    let score = 0;
+    let score = ZERO;
     for (const [genId, engagementRate] of entries) {
       const conv = staticData.generators[genId].follower_conversion_rate;
       const affinity = getPlatformAffinity(platformId, genId, staticData);
-      score += engagementRate * conv * affinity;
+      score = score.plus(engagementRate.times(conv).times(affinity));
     }
     rawScores[platformId] = score;
-    totalRaw += score;
+    totalRaw = totalRaw.plus(score);
   }
 
   // Distribute base rate proportionally by raw affinity score.
   // If totalRaw is 0 (all affinities are 0), split evenly.
-  let totalRate = 0;
+  let totalRate = ZERO;
   for (const platformId of unlockedIds) {
-    const share = totalRaw > 0
-      ? (rawScores[platformId] ?? 0) / totalRaw
-      : 1 / unlockedIds.length;
-    perPlatformRate[platformId] = baseRate * share;
-    totalRate += perPlatformRate[platformId];
+    const share = totalRaw.gt(0)
+      ? (rawScores[platformId] ?? ZERO).div(totalRaw)
+      : new Decimal(1).div(unlockedIds.length);
+    perPlatformRate[platformId] = baseRate.times(share);
+    totalRate = totalRate.plus(perPlatformRate[platformId]);
   }
 
   return { perPlatformRate, totalRate };

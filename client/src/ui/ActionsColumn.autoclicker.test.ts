@@ -4,6 +4,7 @@
 // purchase cost escalation, and float visual differentiation rules.
 
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
 import { floatStyle } from './ActionsColumn.tsx';
 import { verbYieldPerTap, verbCooldownMs } from '../game-loop/index.ts';
 import { autoclickerBuyCost } from '../generator/index.ts';
@@ -37,7 +38,7 @@ function stateWithGenerator(
         autoclicker_count: autoclickerCount,
       },
     },
-    player: { ...base.player, engagement: 10_000 },
+    player: { ...base.player, engagement: new Decimal(10_000) },
   };
 }
 
@@ -54,7 +55,7 @@ describe('yield display formula (verbYieldPerTap)', () => {
     const y5 = verbYieldPerTap(state5.generators.chirps, state5, STATIC_DATA);
 
     const expectedRatio = Math.pow(6, def.count_exponent) / Math.pow(1, def.count_exponent);
-    expect(y5 / y0).toBeCloseTo(expectedRatio, 3);
+    expect(y5.div(y0).toNumber()).toBeCloseTo(expectedRatio, 3);
   });
 
   it('yield does NOT change with level — only count matters', () => {
@@ -64,7 +65,7 @@ describe('yield display formula (verbYieldPerTap)', () => {
     const yieldL1 = verbYieldPerTap(stateL1.generators.chirps, stateL1, STATIC_DATA);
     const yieldL5 = verbYieldPerTap(stateL5.generators.chirps, stateL5, STATIC_DATA);
 
-    expect(yieldL1).toBe(yieldL5);
+    expect(yieldL1.eq(yieldL5)).toBe(true);
   });
 
   it('yield ratio matches count_exponent formula', () => {
@@ -75,7 +76,7 @@ describe('yield display formula (verbYieldPerTap)', () => {
     const y10 = verbYieldPerTap(state10.generators.chirps, state10, STATIC_DATA);
 
     const expectedRatio = Math.pow(11, def.count_exponent);
-    expect(y10 / y0).toBeCloseTo(expectedRatio, 3);
+    expect(y10.div(y0).toNumber()).toBeCloseTo(expectedRatio, 3);
   });
 });
 
@@ -111,22 +112,22 @@ describe('cooldown formula (verbCooldownMs)', () => {
 describe('autoclickerBuyCost wiring', () => {
   it('returns a positive cost for first autoclicker', () => {
     const cost = autoclickerBuyCost('chirps', 0, STATIC_DATA);
-    expect(cost).toBeGreaterThan(0);
-    expect(Number.isFinite(cost)).toBe(true);
+    expect(cost.toNumber()).toBeGreaterThan(0);
+    expect(Number.isFinite(cost.toNumber())).toBe(true);
   });
 
   it('cost escalates with autoclicker_count', () => {
     const cost0 = autoclickerBuyCost('chirps', 0, STATIC_DATA);
     const cost1 = autoclickerBuyCost('chirps', 1, STATIC_DATA);
     const cost5 = autoclickerBuyCost('chirps', 5, STATIC_DATA);
-    expect(cost1).toBeGreaterThan(cost0);
-    expect(cost5).toBeGreaterThan(cost1);
+    expect(cost1.gt(cost0)).toBe(true);
+    expect(cost5.gt(cost1)).toBe(true);
   });
 
   it('cost is always positive', () => {
     for (let i = 0; i < 10; i++) {
       const cost = autoclickerBuyCost('chirps', i, STATIC_DATA);
-      expect(cost).toBeGreaterThan(0);
+      expect(cost.toNumber()).toBeGreaterThan(0);
     }
   });
 });

@@ -3,6 +3,7 @@
 // upgrade actions. All functions are pure — no mutation.
 // See core-systems.md §Generator, §Game Loop Tick, and §Interface Contracts.
 
+import Decimal from 'decimal.js';
 import type {
   GameState,
   GeneratorId,
@@ -29,15 +30,15 @@ export function generatorBuyCost(
   generatorId: GeneratorId,
   currentCount: number,
   staticData: StaticData,
-): number {
+): Decimal {
   if (currentCount < 0) {
     throw new Error(
       `generatorBuyCost: currentCount must be ≥ 0, got ${currentCount}`,
     );
   }
   const def = staticData.generators[generatorId];
-  return (
-    def.base_buy_cost * Math.pow(def.buy_cost_multiplier, currentCount)
+  return new Decimal(def.base_buy_cost).times(
+    new Decimal(def.buy_cost_multiplier).pow(currentCount),
   );
 }
 
@@ -52,7 +53,7 @@ export function generatorUpgradeCost(
   generatorId: GeneratorId,
   currentLevel: number,
   staticData: StaticData,
-): number {
+): Decimal {
   if (currentLevel < 1 || !Number.isFinite(currentLevel)) {
     throw new Error(
       `generatorUpgradeCost: currentLevel must be ≥ 1 and finite, got ${currentLevel}`,
@@ -65,7 +66,7 @@ export function generatorUpgradeCost(
       `generatorUpgradeCost: no cost defined for level ${currentLevel}→${currentLevel + 1} on '${generatorId}'`,
     );
   }
-  return def.upgrade_costs[index];
+  return new Decimal(def.upgrade_costs[index]);
 }
 
 /**
@@ -80,15 +81,15 @@ export function autoclickerBuyCost(
   generatorId: GeneratorId,
   currentAutoclickerCount: number,
   staticData: StaticData,
-): number {
+): Decimal {
   if (currentAutoclickerCount < 0) {
     throw new Error(
       `autoclickerBuyCost: currentAutoclickerCount must be ≥ 0, got ${currentAutoclickerCount}`,
     );
   }
   const def = staticData.generators[generatorId];
-  return (
-    def.base_autoclicker_cost * Math.pow(def.autoclicker_cost_multiplier, currentAutoclickerCount)
+  return new Decimal(def.base_autoclicker_cost).times(
+    new Decimal(def.autoclicker_cost_multiplier).pow(currentAutoclickerCount),
   );
 }
 

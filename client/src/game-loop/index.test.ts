@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
+import '../test/decimal-matchers.ts';
 import {
   tick,
   postClick,
@@ -25,9 +27,6 @@ import { computeFollowerDistribution } from '../platform/index.ts';
 
 const T0 = 1_700_000_000_000;
 
-/**
- * Build a deterministic game state with the given generator owned + configured.
- */
 function stateWithGenerator(
   id: GeneratorId,
   count: number,
@@ -44,19 +43,16 @@ function stateWithGenerator(
         owned: true,
         count,
         level,
-        // Default: autoclicker_count mirrors count so tests that relied on
-        // count for passive production continue working after the
-        // level-driven-cooldown refactor (task #132).
         autoclicker_count: autoclicker_count ?? count,
       },
     },
   };
 }
 
-/** Sum all platform follower counts. */
+/** Sum all platform follower counts as a number (for test assertions). */
 function totalPlatformFollowers(platforms: GameState['platforms']): number {
   return (Object.keys(platforms) as PlatformId[])
-    .reduce((sum, id) => sum + platforms[id].followers, 0);
+    .reduce((sum, id) => sum + platforms[id].followers.toNumber(), 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -103,28 +99,25 @@ describe('levelMultiplier', () => {
 // engagement clamp — integration with tick / postClick (task #89 AC #5)
 // ---------------------------------------------------------------------------
 
-describe('engagement clamp — write-site integration', () => {
-  it('tick never pushes engagement above Number.MAX_SAFE_INTEGER', () => {
-    // Build a state at the ceiling with a producing generator. The tick's
-    // engagement accumulation would overflow MAX_SAFE_INTEGER but the clamp
-    // at the write site (game-loop/index.ts:379) pins it.
+describe('engagement — no ceiling (Decimal)', () => {
+  it('tick allows engagement beyond MAX_SAFE_INTEGER', () => {
     const state = stateWithGenerator('viral_stunts', 1_000_000, 10);
     const pinned: GameState = {
       ...state,
-      player: { ...state.player, engagement: Number.MAX_SAFE_INTEGER - 1 },
+      player: { ...state.player, engagement: new Decimal(Number.MAX_SAFE_INTEGER).minus(1) },
     };
     const next = tick(pinned, T0 + 1000, 1000, STATIC_DATA);
-    expect(next.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
+    expect(next.player.engagement.gt(Number.MAX_SAFE_INTEGER)).toBe(true);
   });
 
-  it('postClick never pushes engagement above Number.MAX_SAFE_INTEGER', () => {
+  it('postClick allows engagement beyond MAX_SAFE_INTEGER', () => {
     const state = stateWithGenerator('chirps', 1, 1);
     const pinned: GameState = {
       ...state,
-      player: { ...state.player, engagement: Number.MAX_SAFE_INTEGER },
+      player: { ...state.player, engagement: new Decimal(Number.MAX_SAFE_INTEGER) },
     };
     const next = postClick(pinned, STATIC_DATA, 'chirps', T0);
-    expect(next.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
+    expect(next.player.engagement.gt(Number.MAX_SAFE_INTEGER)).toBe(true);
   });
 });
 
@@ -189,7 +182,7 @@ describe('computeGeneratorEffectiveRate', () => {
       state,
       STATIC_DATA,
     );
-    expect(rate).toBe(0);
+    expect(rate).toEqualDecimal(0);
   });
 
   it('returns 0 when autoclicker_count is 0', () => {
@@ -199,15 +192,12 @@ describe('computeGeneratorEffectiveRate', () => {
       state,
       STATIC_DATA,
     );
-    expect(rate).toBe(0);
+    expect(rate).toEqualDecimal(0);
   });
 
   it('applies autoclicker_count, level, base rate, (1+count), clout, and kit', () => {
     const state = stateWithGenerator('selfies', 2, 1, 3);
-    // Formula: autoclicker_count × level × base_event_rate × base_event_yield
-    //          × (1 + count) × clout × kit
     const selfiesDef = STATIC_DATA.generators.selfies;
-    // autoclicker_count=3, level=1, base_rate=0.2, base_yield=5.0, (1+count)=(1+2)=3
     const expected = 3 * 1 * selfiesDef.base_event_rate * selfiesDef.base_event_yield
       * (1 + 2) * 1.0 * 1.0;
     const rate = computeGeneratorEffectiveRate(
@@ -215,7 +205,7 @@ describe('computeGeneratorEffectiveRate', () => {
       state,
       STATIC_DATA,
     );
-    expect(rate).toBeCloseTo(expected, 6);
+    expect(rate.toNumber()).toBeCloseTo(expected, 6);
   });
 });
 
@@ -240,7 +230,7 @@ describe('computeAllGeneratorEffectiveRates', () => {
       },
     };
     const rates = computeAllGeneratorEffectiveRates(state, STATIC_DATA);
-    expect(rates.selfies).toBeGreaterThan(0);
+    expect(rates.selfies!.gt(0)).toBe(true);
     expect(rates.memes).toBeUndefined();
   });
 });
@@ -257,35 +247,30 @@ describe('tick — engagement', () => {
       state,
       STATIC_DATA,
     );
-    // deltaMs = 1000 → 1 second → one full ratePerSec worth of engagement
     const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
-    expect(next.player.engagement).toBeCloseTo(ratePerSec, 6);
+    expect(next.player.engagement.toNumber()).toBeCloseTo(ratePerSec.toNumber(), 6);
   });
 
   it('is a no-op on engagement when no generators are owned', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
-    state.player.engagement = 42;
+    state.player.engagement = new Decimal(42);
     const next = tick(state, T0 + 500, 500, STATIC_DATA);
-    expect(next.player.engagement).toBe(42);
+    expect(next.player.engagement).toEqualDecimal(42);
   });
 
   it('scales linearly with deltaMs', () => {
     const state = stateWithGenerator('selfies', 2, 3);
     const one = tick(state, T0 + 100, 100, STATIC_DATA);
     const ten = tick(state, T0 + 1000, 1000, STATIC_DATA);
-    expect(ten.player.engagement).toBeCloseTo(one.player.engagement * 10, 6);
+    expect(ten.player.engagement.toNumber()).toBeCloseTo(one.player.engagement.times(10).toNumber(), 6);
   });
 
   it('rate scales with count (yield multiplier from BUY track)', () => {
-    // Two otherwise identical states, one with count=0 and one with count=5.
     const low = stateWithGenerator('memes', 0, 1);
     const high = stateWithGenerator('memes', 5, 1);
     const lowNext = tick(low, T0 + 1000, 1000, STATIC_DATA);
     const highNext = tick(high, T0 + 1000, 1000, STATIC_DATA);
-    // (1+5)/(1+0) = 6x more engagement from higher count
-    expect(highNext.player.engagement).toBeGreaterThan(
-      lowNext.player.engagement,
-    );
+    expect(highNext.player.engagement.gt(lowNext.player.engagement)).toBe(true);
   });
 });
 
@@ -295,16 +280,14 @@ describe('tick — engagement', () => {
 
 describe('tick — followers', () => {
   it('distributes followers to the one unlocked platform with full share', () => {
-    // Only chirper starts unlocked (threshold 0). picshift=100, skroll=15_000.
     const state = stateWithGenerator('selfies', 10, 1);
     const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
 
-    // total_followers === chirper.followers; other platforms stay at 0.
-    expect(next.platforms.chirper.followers).toBeGreaterThan(0);
-    expect(next.platforms.picshift.followers).toBe(0);
-    expect(next.platforms.skroll.followers).toBe(0);
-    expect(next.player.total_followers).toBeCloseTo(
-      next.platforms.chirper.followers,
+    expect(next.platforms.chirper.followers.gt(0)).toBe(true);
+    expect(next.platforms.picshift.followers).toEqualDecimal(0);
+    expect(next.platforms.skroll.followers).toEqualDecimal(0);
+    expect(next.player.total_followers.toNumber()).toBeCloseTo(
+      next.platforms.chirper.followers.toNumber(),
       6,
     );
   });
@@ -313,13 +296,12 @@ describe('tick — followers', () => {
     const state = stateWithGenerator('selfies', 10, 1);
     const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
     const total = totalPlatformFollowers(next.platforms);
-    expect(next.player.total_followers).toBeCloseTo(total, 6);
-    expect(next.player.lifetime_followers).toBeCloseTo(total, 6);
+    expect(next.player.total_followers.toNumber()).toBeCloseTo(total, 6);
+    expect(next.player.lifetime_followers.toNumber()).toBeCloseTo(total, 6);
   });
 
   it('distributes across multiple unlocked platforms by affinity weight', () => {
     const base = stateWithGenerator('selfies', 100, 1);
-    // Unlock picshift manually for this test
     const state: GameState = {
       ...base,
       platforms: {
@@ -328,28 +310,23 @@ describe('tick — followers', () => {
       },
     };
     const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
-    // selfies affinity: chirper=0.8, picshift=2.0 → picshift earns more
-    expect(next.platforms.picshift.followers).toBeGreaterThan(
-      next.platforms.chirper.followers,
-    );
-    expect(next.platforms.chirper.followers).toBeGreaterThan(0);
+    expect(next.platforms.picshift.followers.gt(next.platforms.chirper.followers)).toBe(true);
+    expect(next.platforms.chirper.followers.gt(0)).toBe(true);
   });
 
   it('earns zero followers when no generators are active', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
-    expect(next.player.total_followers).toBe(0);
-    expect(next.platforms.chirper.followers).toBe(0);
+    expect(next.player.total_followers).toEqualDecimal(0);
+    expect(next.platforms.chirper.followers).toEqualDecimal(0);
   });
 
   it('maintains invariant: total_followers always equals sum of platform followers', () => {
-    // This test enforces that total_followers is a purely derived field.
-    // It must always equal the sum of platform.followers, never written directly.
     const state = stateWithGenerator('selfies', 10, 2);
     const next = tick(state, T0 + 5000, 5000, STATIC_DATA);
 
     const platformSum = totalPlatformFollowers(next.platforms);
-    expect(next.player.total_followers).toBeCloseTo(platformSum, 6);
+    expect(next.player.total_followers.toNumber()).toBeCloseTo(platformSum, 6);
   });
 });
 
@@ -365,9 +342,8 @@ describe('tick — platform unlocks', () => {
 
     const next = tick(state, T0 + 1000, 1000, STATIC_DATA);
 
-    expect(next.player.total_followers).toBeGreaterThan(100);
+    expect(next.player.total_followers.toNumber()).toBeGreaterThan(100);
     expect(next.platforms.picshift.unlocked).toBe(true);
-    // skroll (threshold 15_000) may or may not be unlocked — depends on rate
   });
 
   it('does not unlock platforms below their threshold', () => {
@@ -386,9 +362,11 @@ describe('tick — platform unlocks', () => {
 describe('tick — purity & guards', () => {
   it('does not mutate the input state', () => {
     const state = stateWithGenerator('selfies', 5, 2);
-    const snapshot = JSON.parse(JSON.stringify(state));
+    const engBefore = state.player.engagement.toString();
+    const followersBefore = state.platforms.chirper.followers.toString();
     tick(state, T0 + 1000, 1000, STATIC_DATA);
-    expect(state).toEqual(snapshot);
+    expect(state.player.engagement.toString()).toBe(engBefore);
+    expect(state.platforms.chirper.followers.toString()).toBe(followersBefore);
   });
 
   it('throws on negative deltaMs', () => {
@@ -400,17 +378,11 @@ describe('tick — purity & guards', () => {
     const state = stateWithGenerator('selfies', 10, 3);
     const next = tick(state, T0 + 2000, 2000, STATIC_DATA);
 
-    // Engagement increased
-    expect(next.player.engagement).toBeGreaterThan(0);
-    // Followers increased
-    expect(next.player.total_followers).toBeGreaterThan(0);
-    // Totals consistent
+    expect(next.player.engagement.gt(0)).toBe(true);
+    expect(next.player.total_followers.gt(0)).toBe(true);
     const platformSum = totalPlatformFollowers(next.platforms);
-    expect(next.player.total_followers).toBeCloseTo(platformSum, 6);
-    // Lifetime >= total_followers (never decreases)
-    expect(next.player.lifetime_followers).toBeGreaterThanOrEqual(
-      next.player.total_followers,
-    );
+    expect(next.player.total_followers.toNumber()).toBeCloseTo(platformSum, 6);
+    expect(next.player.lifetime_followers.gte(next.player.total_followers)).toBe(true);
   });
 });
 
@@ -422,16 +394,15 @@ describe('postClick', () => {
   it('adds engagement on a chirps click', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     const next = postClick(state, STATIC_DATA, 'chirps', T0);
-    expect(next.player.engagement).toBeGreaterThan(state.player.engagement);
+    expect(next.player.engagement.gt(state.player.engagement)).toBe(true);
   });
 
   it('click engagement = base_event_yield × (1 + count) × (1 + autoclicker_count) × clout × kit', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     const def = STATIC_DATA.generators.chirps;
-    // count=0, autoclicker_count=0 → (1+0)×(1+0)=1
     const expected = def.base_event_yield * (1 + 0) * (1 + 0) * 1.0 * 1.0;
     const next = postClick(state, STATIC_DATA, 'chirps', T0);
-    expect(next.player.engagement - state.player.engagement).toBeCloseTo(expected, 10);
+    expect(next.player.engagement.minus(state.player.engagement).toNumber()).toBeCloseTo(expected, 10);
   });
 
   it('applies clout_bonus (engagement_boost) to click output', () => {
@@ -445,29 +416,27 @@ describe('postClick', () => {
     };
     const boosted = postClick(state, STATIC_DATA, 'chirps', T0);
     const baseline = postClick(base, STATIC_DATA, 'chirps', T0);
-    const boostedGain = boosted.player.engagement - state.player.engagement;
-    const baselineGain = baseline.player.engagement - base.player.engagement;
-    // engagement_boost level 2 → values[1] = 2.5
+    const boostedGain = boosted.player.engagement.minus(state.player.engagement).toNumber();
+    const baselineGain = baseline.player.engagement.minus(base.player.engagement).toNumber();
     expect(boostedGain).toBeCloseTo(baselineGain * 2.5, 10);
   });
 
   it('does not mutate the input state', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
-    const snapshot = JSON.parse(JSON.stringify(state));
+    const engBefore = state.player.engagement.toString();
     postClick(state, STATIC_DATA, 'chirps', T0);
-    expect(state).toEqual(snapshot);
+    expect(state.player.engagement.toString()).toBe(engBefore);
   });
 
   it('does not directly produce followers', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     const next = postClick(state, STATIC_DATA, 'chirps', T0);
-    expect(next.player.total_followers).toBe(0);
-    expect(next.platforms.chirper.followers).toBe(0);
+    expect(next.player.total_followers).toEqualDecimal(0);
+    expect(next.platforms.chirper.followers).toEqualDecimal(0);
   });
 
   it('dispatches by verbId — selfies produces different yield than chirps', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
-    // selfies starts unowned (threshold=100), so we must manually set owned=true
     const withSelfies: GameState = {
       ...state,
       generators: {
@@ -477,10 +446,7 @@ describe('postClick', () => {
     };
     const chirpsResult = postClick(withSelfies, STATIC_DATA, 'chirps', T0);
     const selfiesResult = postClick(withSelfies, STATIC_DATA, 'selfies', T0);
-    const chirpsGain = chirpsResult.player.engagement;
-    const selfiesGain = selfiesResult.player.engagement;
-    // chirps yield=1.0, selfies yield=5.0 → selfies earns more per tap
-    expect(selfiesGain).toBeGreaterThan(chirpsGain);
+    expect(selfiesResult.player.engagement.gt(chirpsResult.player.engagement)).toBe(true);
   });
 
   it('writes last_manual_click_at[verbId] on successful dispatch', () => {
@@ -500,8 +466,7 @@ describe('postClick', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     // First tap succeeds
     const after1 = postClick(state, STATIC_DATA, 'chirps', T0);
-    expect(after1.player.engagement).toBeGreaterThan(0);
-    // chirps base_event_rate=0.5, level=1 → cooldown=max(50,1000/(1×0.5))=2000ms
+    expect(after1.player.engagement.gt(0)).toBe(true);
     // Second tap 100ms later → rejected
     const after2 = postClick(after1, STATIC_DATA, 'chirps', T0 + 100);
     expect(after2).toBe(after1);
@@ -512,7 +477,7 @@ describe('postClick', () => {
     const after1 = postClick(state, STATIC_DATA, 'chirps', T0);
     // cooldown = max(50, 1000/(1×0.5)) = 2000ms, tap at +2001ms → accepted
     const after2 = postClick(after1, STATIC_DATA, 'chirps', T0 + 2001);
-    expect(after2.player.engagement).toBeGreaterThan(after1.player.engagement);
+    expect(after2.player.engagement.gt(after1.player.engagement)).toBe(true);
   });
 
   it('cooldown shrinks when level increases (LVL UP effect)', () => {
@@ -528,7 +493,7 @@ describe('postClick', () => {
     const after1 = postClick(withLevel, STATIC_DATA, 'chirps', T0);
     // Tap 250ms later → accepted (250 > 200ms cooldown)
     const after2 = postClick(after1, STATIC_DATA, 'chirps', T0 + 250);
-    expect(after2.player.engagement).toBeGreaterThan(after1.player.engagement);
+    expect(after2.player.engagement.gt(after1.player.engagement)).toBe(true);
   });
 });
 
@@ -572,7 +537,7 @@ describe('yield/rate split regression', () => {
     const def = STATIC_DATA.generators.selfies;
     const expected = 1 * def.base_event_rate * def.base_event_yield *
       (1 + 0) * 1.0 * 1.0;
-    expect(rate).toBeCloseTo(expected, 10);
+    expect(rate.toNumber()).toBeCloseTo(expected, 10);
   });
 });
 
@@ -584,12 +549,12 @@ describe('computeSnapshot', () => {
   it('produces zero rates for an empty initial state', () => {
     const state = createInitialGameState(STATIC_DATA, T0);
     const snap = computeSnapshot(state, STATIC_DATA);
-    expect(snap.total_engagement_rate).toBe(0);
-    expect(snap.total_follower_rate).toBe(0);
-    expect(snap.platform_rates.chirper).toBe(0);
-    expect(snap.platform_rates.picshift).toBe(0);
-    expect(snap.platform_rates.skroll).toBe(0);
-    expect(snap.platform_rates.podpod).toBe(0);
+    expect(snap.total_engagement_rate).toEqualDecimal(0);
+    expect(snap.total_follower_rate).toEqualDecimal(0);
+    expect(snap.platform_rates.chirper).toEqualDecimal(0);
+    expect(snap.platform_rates.picshift).toEqualDecimal(0);
+    expect(snap.platform_rates.skroll).toEqualDecimal(0);
+    expect(snap.platform_rates.podpod).toEqualDecimal(0);
   });
 
   it('snapshot has required fields (rates and platform_rates)', () => {
@@ -637,8 +602,8 @@ describe('computeSnapshot', () => {
     };
     const snap = computeSnapshot(stateReady, STATIC_DATA);
     const oneSec = tick(stateReady, T0 + 1000, 1000, STATIC_DATA);
-    expect(oneSec.player.engagement).toBeCloseTo(snap.total_engagement_rate, 6);
-    expect(oneSec.player.total_followers).toBeCloseTo(snap.total_follower_rate, 6);
+    expect(oneSec.player.engagement.toNumber()).toBeCloseTo(snap.total_engagement_rate.toNumber(), 6);
+    expect(oneSec.player.total_followers.toNumber()).toBeCloseTo(snap.total_follower_rate.toNumber(), 6);
   });
 
   it('platform_rates sum equals total_follower_rate', () => {
@@ -651,12 +616,11 @@ describe('computeSnapshot', () => {
       },
     };
     const snap = computeSnapshot(state, STATIC_DATA);
-    const sum =
-      snap.platform_rates.chirper
-      + snap.platform_rates.picshift
-      + snap.platform_rates.skroll
-      + snap.platform_rates.podpod;
-    expect(sum).toBeCloseTo(snap.total_follower_rate, 6);
+    const sum = snap.platform_rates.chirper
+      .plus(snap.platform_rates.picshift)
+      .plus(snap.platform_rates.skroll)
+      .plus(snap.platform_rates.podpod);
+    expect(sum.toNumber()).toBeCloseTo(snap.total_follower_rate.toNumber(), 6);
   });
 });
 
@@ -729,11 +693,11 @@ describe('evaluateViralTrigger', () => {
     expect(result!.source_generator_id).toBe('selfies');
     expect(result!.start_time).toBe(T0);
     expect(result!.duration_ms).toBe(STATIC_DATA.viralBurst.durationMsMin);
-    expect(result!.magnitude).toBeGreaterThan(0);
-    expect(result!.bonus_rate_per_ms).toBeGreaterThan(0);
+    expect(result!.magnitude.gt(0)).toBe(true);
+    expect(result!.bonus_rate_per_ms.gt(0)).toBe(true);
     // magnitude = bonus_rate_per_ms × duration_ms
-    expect(result!.magnitude).toBeCloseTo(
-      result!.bonus_rate_per_ms * result!.duration_ms,
+    expect(result!.magnitude.toNumber()).toBeCloseTo(
+      result!.bonus_rate_per_ms.times(result!.duration_ms).toNumber(),
       6,
     );
   });
@@ -776,8 +740,8 @@ describe('evaluateViralTrigger', () => {
       source_platform_id: 'chirper' as const,
       start_time: now - 500,   // started 500ms ago
       duration_ms: 10_000,     // 10s total
-      magnitude: 100,
-      bonus_rate_per_ms: 0.01, // 10 bonus engagement per 1000ms
+      magnitude: new Decimal(100),
+      bonus_rate_per_ms: new Decimal(0.01), // 10 bonus engagement per 1000ms
     };
     const stateWithViral: GameState = {
       ...state,
@@ -787,9 +751,9 @@ describe('evaluateViralTrigger', () => {
 
     // Bonus engagement applied on top of normal production
     const baseNext = tick(state, now, 100, STATIC_DATA);
-    expect(next.player.engagement).toBeGreaterThan(baseNext.player.engagement);
+    expect(next.player.engagement.gt(baseNext.player.engagement)).toBe(true);
     // Bonus rate = 0.01 × 100ms = 1.0 extra engagement
-    expect(next.player.engagement - baseNext.player.engagement).toBeCloseTo(1.0, 6);
+    expect(next.player.engagement.minus(baseNext.player.engagement).toNumber()).toBeCloseTo(1.0, 6);
     // Viral still active (not expired)
     expect(next.viralBurst.active).not.toBeNull();
   });
@@ -802,8 +766,8 @@ describe('evaluateViralTrigger', () => {
       source_platform_id: 'chirper' as const,
       start_time: T0,
       duration_ms: 5_000, // ended at T0 + 5000; now = T0 + 10001
-      magnitude: 100,
-      bonus_rate_per_ms: 0.01,
+      magnitude: new Decimal(100),
+      bonus_rate_per_ms: new Decimal(0.01),
     };
     const stateWithViral: GameState = {
       ...state,
@@ -840,7 +804,7 @@ describe('Verb gear multiplier in tick pipeline', () => {
       withGear(base, { selfies: 0 }),
       STATIC_DATA,
     );
-    expect(rateGear0).toBeCloseTo(rateBase, 6);
+    expect(rateGear0.toNumber()).toBeCloseTo(rateBase.toNumber(), 6);
   });
 
   it('gear level 1 multiplies effective rate by 1_234', () => {
@@ -851,7 +815,7 @@ describe('Verb gear multiplier in tick pipeline', () => {
       withGear(base, { selfies: 1 }),
       STATIC_DATA,
     );
-    expect(rateGear1).toBeCloseTo(rateBase * 1_234, 6);
+    expect(rateGear1.toNumber()).toBeCloseTo(rateBase.times(1_234).toNumber(), 6);
   });
 
   it('gear level 2 multiplies effective rate by 1_522_756', () => {
@@ -862,7 +826,7 @@ describe('Verb gear multiplier in tick pipeline', () => {
       withGear(base, { selfies: 2 }),
       STATIC_DATA,
     );
-    expect(rateGear2).toBeCloseTo(rateBase * 1_522_756, 6);
+    expect(rateGear2.toNumber()).toBeCloseTo(rateBase.times(1_522_756).toNumber(), 6);
   });
 
   it('gear level 3 multiplies effective rate by 1_879_080_904', () => {
@@ -873,7 +837,7 @@ describe('Verb gear multiplier in tick pipeline', () => {
       withGear(base, { selfies: 3 }),
       STATIC_DATA,
     );
-    expect(rateGear3).toBeCloseTo(rateBase * 1_879_080_904, 6);
+    expect(rateGear3.toNumber()).toBeCloseTo(rateBase.times(1_879_080_904).toNumber(), 6);
   });
 
   it('gear level 0 produces a 1.0 no-op on verbYieldPerTap', () => {
@@ -884,7 +848,7 @@ describe('Verb gear multiplier in tick pipeline', () => {
       withGear(base, { chirps: 0 }),
       STATIC_DATA,
     );
-    expect(yieldGear0).toBeCloseTo(yieldBase, 6);
+    expect(yieldGear0.toNumber()).toBeCloseTo(yieldBase.toNumber(), 6);
   });
 
   it('gear level 1 multiplies verbYieldPerTap by 1_234', () => {
@@ -895,7 +859,7 @@ describe('Verb gear multiplier in tick pipeline', () => {
       withGear(base, { chirps: 1 }),
       STATIC_DATA,
     );
-    expect(yieldGear1).toBeCloseTo(yieldBase * 1_234, 6);
+    expect(yieldGear1.toNumber()).toBeCloseTo(yieldBase.times(1_234).toNumber(), 6);
   });
 
   it('passive-only generators are unaffected by gear', () => {
@@ -906,14 +870,15 @@ describe('Verb gear multiplier in tick pipeline', () => {
       withGear(base, { chirps: 3 }),
       STATIC_DATA,
     );
-    expect(rateGeared).toBeCloseTo(rateBase, 6);
+    expect(rateGeared.toNumber()).toBeCloseTo(rateBase.toNumber(), 6);
   });
 
   it('verbYieldPerAutoTap delegates to verbYieldPerTap (no separate gear integration needed)', () => {
     const base = stateWithGenerator('chirps', 5, 1);
     const geared = withGear(base, { chirps: 2 });
-    expect(verbYieldPerAutoTap(geared.generators.chirps, geared, STATIC_DATA))
-      .toBe(verbYieldPerTap(geared.generators.chirps, geared, STATIC_DATA));
+    expect(verbYieldPerAutoTap(geared.generators.chirps, geared, STATIC_DATA).eq(
+      verbYieldPerTap(geared.generators.chirps, geared, STATIC_DATA),
+    )).toBe(true);
   });
 });
 
@@ -941,18 +906,18 @@ describe('Audience Mood retention scales follower gain linearly (AC #6)', () => 
       chirper: { ...base.platforms.chirper, unlocked: true, retention },
     };
     const ratesPerSec = computeAllGeneratorEffectiveRates(base, STATIC_DATA);
-    const ratesPerMs: Partial<Record<GeneratorId, number>> = {};
+    const ZERO = new Decimal(0);
+    const ratesPerMs: Partial<Record<GeneratorId, Decimal>> = {};
     for (const id of Object.keys(ratesPerSec) as GeneratorId[]) {
-      ratesPerMs[id] = (ratesPerSec[id] ?? 0) / 1000;
+      ratesPerMs[id] = (ratesPerSec[id] ?? ZERO).div(1000);
     }
-    // Mirror tick's inline application: perPlatformRate × retention × deltaMs.
     const deltaMs = 1000;
     const dist = computeFollowerDistribution(ratesPerMs, platforms, STATIC_DATA);
-    let total = 0;
+    let total = ZERO;
     for (const pid of Object.keys(platforms) as PlatformId[]) {
-      total += dist.perPlatformRate[pid] * platforms[pid].retention * deltaMs;
+      total = total.plus(dist.perPlatformRate[pid].times(platforms[pid].retention).times(deltaMs));
     }
-    return total;
+    return total.toNumber();
   }
 
   it('halving retention halves follower gain', () => {
@@ -994,6 +959,6 @@ describe('Audience Mood retention scales follower gain linearly (AC #6)', () => 
     };
     const e1 = tick(s1, T0 + 1000, 1000, STATIC_DATA).player.engagement;
     const e2 = tick(s2, T0 + 1000, 1000, STATIC_DATA).player.engagement;
-    expect(e1).toBeCloseTo(e2, 10);
+    expect(e1.toNumber()).toBeCloseTo(e2.toNumber(), 10);
   });
 });

@@ -10,6 +10,7 @@
 // automate-level badge, and pulse indicator.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type Decimal from 'decimal.js';
 import type { GameState, GeneratorId, StaticData } from '../types.ts';
 import {
   verbCooldownMs,
@@ -113,7 +114,7 @@ export function floatStyle(perClick: number, currentEngagement: number): { fontS
 
 interface FloatItem {
   id: number;
-  value: number;
+  value: Decimal | number;
   x: number; // % from left
   y: number; // % from top
   /** True for autoclicker-emitted floats (smaller, dimmer per §4.6). */
@@ -150,6 +151,11 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
   const perTap = verbYieldPerTap(state.generators[verbId], state, staticData);
   const perAuto = verbYieldPerAutoTap(state.generators[verbId], state, staticData);
   const ratePerSec = computeGeneratorEffectiveRate(state.generators[verbId], state, staticData);
+  // Stable number references for useEffect/useCallback dependency arrays —
+  // Decimal objects are reference-compared, so a new object every render
+  // would tear down intervals and callbacks on every tick.
+  const perAutoNum = perAuto.toNumber();
+  const perTapNum = perTap.toNumber();
   const def = staticData.generators[verbId];
   const cdMs = verbCooldownMs(state.generators[verbId].level, def.base_event_rate);
   const lastTap = state.player.last_manual_click_at[verbId] ?? 0;
@@ -244,7 +250,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
     prevAutoCount.current = autoCount;
     const interval = window.setInterval(emitBurst, burstIntervalMs);
     return () => window.clearInterval(interval);
-  }, [autoCount, burstIntervalMs, perAuto, prefersReducedMotion, showFloats, isPaused]);
+  }, [autoCount, burstIntervalMs, perAutoNum, prefersReducedMotion, showFloats, isPaused]);
 
   const handleTap = useCallback((e: React.PointerEvent | React.MouseEvent) => {
     // Only show float feedback if the cooldown gate will accept the tap.
@@ -274,7 +280,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
     window.setTimeout(() => {
       setFloats((prev) => prev.filter((f) => f.id !== id));
     }, FLOAT_TTL_MS);
-  }, [onClick, verbId, perTap, cdMs, state.player.last_manual_click_at, genState.autoclicker_count]);
+  }, [onClick, verbId, perTapNum, cdMs, state.player.last_manual_click_at, genState.autoclicker_count]);
 
   const fillHeight = atFloor ? 100 : progress * 100;
 
@@ -324,7 +330,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
             </span>
             {/* Rate indicator — shown when floats are off and autoclickers are active,
                 so the player still gets feedback that HIRE did something. */}
-            {!showFloats && ratePerSec > 0 && (
+            {!showFloats && ratePerSec.gt(0) && (
               <span className="verb-rate-indicator">+{fmtCompact(ratePerSec)}/s</span>
             )}
           </span>
@@ -347,7 +353,8 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
           Rendered outside the button to avoid overflow:hidden clipping.
           Autoclicker floats render at 80% size, 0.7 opacity (§4.6). */}
       {floats.map((f) => {
-        const fs = floatStyle(f.value, state.player.engagement);
+        const fv = typeof f.value === 'number' ? f.value : f.value.toNumber();
+        const fs = floatStyle(fv, state.player.engagement.toNumber());
         const autoScale = f.isAutoclick && !f.batchCount ? 0.8 : 1;
         const autoOpacity = f.isAutoclick ? (f.batchCount ? 0.85 : 0.7) : 1;
         return (
@@ -457,7 +464,7 @@ export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats =
   const ghostThreshold = ghostVerb
     ? staticData.unlockThresholds.generators[ghostVerb] ?? Infinity
     : Infinity;
-  const ghostAwakened = ghostVerb !== null && state.player.total_followers >= ghostThreshold;
+  const ghostAwakened = ghostVerb !== null && state.player.total_followers.gte(ghostThreshold);
   return (
     <section className="actions-column">
       <div className="actions-scroll-region">
