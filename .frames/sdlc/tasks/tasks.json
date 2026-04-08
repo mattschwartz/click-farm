@@ -5958,7 +5958,7 @@
       "id": 148,
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Plan implementation tasks for compact number tier colors",
       "requester": "engineer",
@@ -5984,13 +5984,14 @@
         "Dependencies between tasks are captured in blocked_on fields"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 149,
       "role": "ux-designer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Add pixel-art icons for sound toggle and settings button",
       "requester": "ux-designer",
@@ -6019,7 +6020,8 @@
         "Icons wired into the relevant UI components (sound toggle, settings button)"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 150,
@@ -7248,7 +7250,7 @@
       "alias": "U1",
       "role": "ux-designer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Update portrait mobile spec §13: remove 'rotate to portrait' prompt",
       "requester": "architect",
@@ -7271,7 +7273,8 @@
         "No other sections of the portrait mobile spec are modified"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 180,
