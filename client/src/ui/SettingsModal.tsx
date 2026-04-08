@@ -390,12 +390,7 @@ export function SettingsModal({
   // Map tabs to their content for mobile view
   const tabContent: Record<SettingsTab, React.ReactNode> = {
     audio: audioSection,
-    display: (
-      <>
-        {displaySection}
-        {languageSection}
-      </>
-    ),
+    display: displaySection,
     data: (
       <>
         {dataSection}
@@ -454,15 +449,16 @@ export function SettingsModal({
           role="tabpanel"
           aria-labelledby={`settings-tab-${activeTab}`}
         >
+          {languageSection}
           {tabContent[activeTab]}
         </div>
 
         {/* Desktop body — shows all sections in vertical scroll */}
         <div className="settings-body settings-body-scroll">
+          {languageSection}
           {audioSection}
           {controlsSection}
           {displaySection}
-          {languageSection}
           {donateSection}
           {dataSection}
           {pauseSection}
