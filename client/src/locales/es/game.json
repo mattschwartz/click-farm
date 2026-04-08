@@ -1,0 +1,101 @@
+{
+  "generators": {
+    "chirps": {
+      "name": "Chirps",
+      "tagline": "Publicaciones r\u00e1pidas \u2014 tu voz en 280 caracteres."
+    },
+    "selfies": {
+      "name": "Selfies",
+      "tagline": "Poco esfuerzo, poco rendimiento \u2014 todos empiezan aqu\u00ed."
+    },
+    "memes": {
+      "name": "Memes",
+      "tagline": "Alta varianza, sensible a tendencias."
+    },
+    "hot_takes": {
+      "name": "Opiniones Calientes",
+      "tagline": "Mucho engagement, riesgo de cancelaci\u00f3n."
+    },
+    "tutorials": {
+      "name": "Tutoriales",
+      "tagline": "Estable, fiable, aburrido."
+    },
+    "livestreams": {
+      "name": "Directos",
+      "tagline": "Alto rendimiento, requiere atenci\u00f3n constante."
+    },
+    "podcasts": {
+      "name": "Podcasts",
+      "tagline": "Crecimiento lento, retorno compuesto."
+    },
+    "viral_stunts": {
+      "name": "Virales",
+      "tagline": "Picos masivos, periodo de enfriamiento."
+    },
+    "ai_slop": {
+      "name": "Bazofia IA",
+      "tagline": "Contenido infinito, cero alma."
+    },
+    "deepfakes": {
+      "name": "Deepfakes",
+      "tagline": "Famosos falsos, engagement real."
+    },
+    "algorithmic_prophecy": {
+      "name": "Profec\u00eda Algor\u00edtmica",
+      "tagline": "Dile a la gente lo que ya pensaba."
+    }
+  },
+  "generatorCategories": {
+    "starter": "INICIAL",
+    "mid": "MEDIO",
+    "late": "AVANZADO"
+  },
+  "platforms": {
+    "chirper": {
+      "name": "Chirper",
+      "tagline": "Opiniones al vuelo y frases ingeniosas."
+    },
+    "picshift": {
+      "name": "Picshift",
+      "tagline": "Fotos y est\u00e9tica curada."
+    },
+    "skroll": {
+      "name": "Skroll",
+      "tagline": "V\u00eddeo corto sin fin."
+    },
+    "podpod": {
+      "name": "PodPod",
+      "tagline": "Audio largo, audiencia fiel."
+    }
+  },
+  "upgrades": {
+    "engagement_boost": {
+      "name": "Boost de Engagement",
+      "description": "Multiplica toda la producci\u00f3n de engagement."
+    },
+    "platform_headstart_picshift": {
+      "name": "Ventaja Picshift",
+      "description": "Empieza cada partida con Picshift desbloqueado."
+    },
+    "platform_headstart_skroll": {
+      "name": "Ventaja Skroll",
+      "description": "Empieza cada partida con Skroll desbloqueado."
+    },
+    "platform_headstart_podpod": {
+      "name": "Ventaja PodPod",
+      "description": "Empieza cada partida con PodPod desbloqueado."
+    },
+    "ai_slop_unlock": {
+      "name": "Bazofia IA",
+      "description": "Desbloquea Bazofia IA como generador post-prestigio."
+    },
+    "deepfakes_unlock": {
+      "name": "Deepfakes",
+      "description": "Desbloquea Deepfakes como generador post-prestigio."
+    },
+    "algorithmic_prophecy_unlock": {
+      "name": "Profec\u00eda Algor\u00edtmica",
+      "description": "Desbloquea Profec\u00eda Algor\u00edtmica como generador post-prestigio."
+    }
+  }
+}

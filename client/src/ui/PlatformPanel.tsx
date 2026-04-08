@@ -2,6 +2,7 @@
 // generators, and per-platform follower rate arrows (UX §7).
 
 import type Decimal from 'decimal.js';
+import { useTranslation } from 'react-i18next';
 import type {
   GameState,
   GeneratorId,
@@ -84,6 +85,7 @@ function PlatformCard({
   heaviestGenerator,
   viralIlluminate,
 }: CardProps) {
+  const { t } = useTranslation('ui');
   const display = PLATFORM_DISPLAY[id];
   const def = staticData.platforms[id];
   const topAffinities = topAffinityGenerators(def.content_affinity, 3);
@@ -100,10 +102,10 @@ function PlatformCard({
           <img className="platform-bg-art" src={display.image} alt="" aria-hidden="true" />
         )}
         <div className="platform-header">
-          <span className="platform-name">{display.name}</span>
+          <span className="platform-name">{t(display.name)}</span>
         </div>
         <div className="unlock-teaser">
-          Unlocks at {unlockThreshold.toLocaleString()} total followers
+          {t('platforms.unlocksAt', { threshold: unlockThreshold.toLocaleString() })}
         </div>
       </div>
     );
@@ -115,19 +117,19 @@ function PlatformCard({
         <img className="platform-bg-art" src={display.image} alt="" aria-hidden="true" />
       )}
       <div className="platform-header">
-        <span className="platform-name">{display.name}</span>
+        <span className="platform-name">{t(display.name)}</span>
       </div>
       <div className="platform-followers-row">
         <span className="platform-followers"><TieredNumber value={followers} int /></span>
       </div>
-      <div className="platform-sub-label">{display.audienceLabel ?? 'followers'}</div>
+      <div className="platform-sub-label">{t(display.audienceLabel ?? 'platforms.followers')}</div>
 
       <div className="affinity-row">
         {topAffinities.map((a) => {
           const genDisplay = GENERATOR_DISPLAY[a.id];
           const glow = heaviestGenerator === a.id;
           return (
-            <span key={a.id} className={`affinity-chip${glow ? ' glow' : ''}`} title={`${genDisplay.name} ×${a.affinity.toFixed(1)}`}>
+            <span key={a.id} className={`affinity-chip${glow ? ' glow' : ''}`} title={`${t(genDisplay.name)} ×${a.affinity.toFixed(1)}`}>
               <span>{genDisplay.icon}</span>
               <span>×{a.affinity.toFixed(1)}</span>
             </span>

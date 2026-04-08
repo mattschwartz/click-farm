@@ -1,0 +1,68 @@
+{
+  "ceremony": {
+    "phase1": {
+      "headline": "Est\u00e1s a punto de hacer rebrand.",
+      "currentFollowers": "Seguidores actuales",
+      "cloutEarned": "Clout ganado",
+      "newCloutBalance": "Nuevo saldo de Clout",
+      "whatResets": "Lo que se reinicia",
+      "whatPersists": "Lo que se conserva",
+      "cancel": "Cancelar",
+      "continue": "Continuar",
+      "cancelAria": "Cancelar rebrand",
+      "dialogAria": "Rebrand \u2014 Revisi\u00f3n de umbral"
+    },
+    "phase2": {
+      "dialogAria": "Rebrand \u2014 Elogio f\u00fanebre",
+      "continue": "Continuar",
+      "skip": "Saltar",
+      "skipAria": {
+        "continue": "Continuar",
+        "skip": "Saltar elogio"
+      }
+    },
+    "phase3": {
+      "headline": "Convi\u00e9rtete en alguien nuevo.",
+      "rebrand": "Rebrand",
+      "dialogAria": "Rebrand \u2014 Confirmar"
+    },
+    "phase4": {
+      "dialogAria": "Haciendo rebrand",
+      "srAnnounce": "Haciendo rebrand. Comienza la partida {{runNumber}}.",
+      "engagement": "engagement",
+      "followers": "seguidores"
+    },
+    "resetItems": {
+      "engagement": "Engagement",
+      "generatorsOwned": "Generadores obtenidos",
+      "generatorsOwnedValue": "{{count}} tipos",
+      "platformsUnlocked": "Plataformas desbloqueadas",
+      "platformsUnlockedValue": "{{count}} plataformas",
+      "followerCounts": "Conteo de seguidores",
+      "followerCountsValue": "todos"
+    },
+    "persistItems": {
+      "clout": "Clout",
+      "cloutUpgrades": "Mejoras de Clout",
+      "cloutUpgradesValue": "{{count}} obtenidas",
+      "lifetimeFollowers": "Seguidores totales hist\u00f3ricos",
+      "lifetimeEngagement": "Engagement total hist\u00f3rico",
+      "rebrandCount": "N\u00famero de rebrands",
+      "rebrandCountValue": "\u2192 {{count}}"
+    }
+  },
+  "eulogy": {
+    "hadFollowers": "Ten\u00edas {{followers}} seguidores en {{platforms}}.",
+    "willNotRemember": "No te recordar\u00e1n.",
+    "madEngagement": "Generaste {{engagement}} de engagement. Un legado.",
+    "noPlatforms": "ninguna plataforma",
+    "and": "y"
+  },
+  "offline": {
+    "welcomeBack": "Has vuelto.",
+    "awayFor": "Estuviste fuera {{duration}}.",
+    "engagementEarned": "Engagement ganado",
+    "platformFollowers": "Seguidores en {{name}}",
+    "dismiss": "Bien."
+  }
+}

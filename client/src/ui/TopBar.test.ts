@@ -4,7 +4,11 @@
 // are imported from TopBar.tsx so a regression in production code is caught.
 
 import { describe, it, expect } from 'vitest';
+import '../i18n.ts'; // Initialize i18n so t() resolves against English locale.
+import i18n from 'i18next';
 import { shouldShowRunBadge, formatRunBadge } from './TopBar.tsx';
+
+const t = i18n.t.bind(i18n);
 
 describe('TopBar RUN badge logic', () => {
   it('hides badge when rebrand_count === 0', () => {
@@ -22,9 +26,9 @@ describe('TopBar RUN badge logic', () => {
   });
 
   it('formats rebrand badge text correctly', () => {
-    expect(formatRunBadge(0)).toBe('Rebrands +0');
-    expect(formatRunBadge(1)).toBe('Rebrand +1');
-    expect(formatRunBadge(2)).toBe('Rebrands +2');
-    expect(formatRunBadge(10)).toBe('Rebrands +10');
+    expect(formatRunBadge(0, t)).toBe('Rebrands +0');
+    expect(formatRunBadge(1, t)).toBe('Rebrand +1');
+    expect(formatRunBadge(2, t)).toBe('Rebrands +2');
+    expect(formatRunBadge(10, t)).toBe('Rebrands +10');
   });
 });

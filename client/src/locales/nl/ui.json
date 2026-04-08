@@ -1,0 +1,181 @@
+{
+  "gameName": {
+    "desktop": "Click Farm",
+    "touch": "Tap Farm"
+  },
+  "topBar": {
+    "engagement": "Engagement",
+    "followers": "volgers",
+    "viral": "VIRAL +{{magnitude}}"
+  },
+  "runBadge_one": "Rebrand +{{count}}",
+  "runBadge_other": "Rebrands +{{count}}",
+  "saveError": {
+    "loadCorrupt": "Je opslag kon niet gelezen worden \u2014 opnieuw beginnen.",
+    "saveQuota": "Browseropslag is vol \u2014 voortgang alleen in geheugen.",
+    "saveFailed": "Opslaan mislukt \u2014 voortgang alleen in geheugen."
+  },
+  "prestige": {
+    "upgrades": "Upgrades",
+    "cloutLabel": "{{clout}} Clout",
+    "rebrand": "Rebrand",
+    "rebrandTo": "Rebrand \u2192 +{{clout}} Clout",
+    "earnFollowersFirst": "Verdien eerst volgers",
+    "earnFollowers": "verdien volgers",
+    "rebrandUpgradesAria": "Rebrand Upgrades \u2014 {{clout}} Clout",
+    "rebrandAria": "Rebrand \u2014 {{clout}} Clout verdienen",
+    "rebrandLockedAria": "Rebrand vergrendeld \u2014 verdien eerst volgers"
+  },
+  "toolbar": {
+    "openSettings": "Instellingen openen",
+    "settings": "Instellingen",
+    "github": "GitHub",
+    "previousTrack": "Vorig nummer",
+    "nextTrack": "Volgend nummer",
+    "pause": "Pauze",
+    "play": "Afspelen",
+    "alpha": "ALPHA"
+  },
+  "settings": {
+    "title": "Instellingen",
+    "closeAria": "Instellingen sluiten",
+    "tabs": {
+      "audio": "Audio",
+      "display": "Scherm",
+      "data": "Opslag"
+    },
+    "audio": {
+      "sectionTitle": "AUDIO",
+      "sound": "Geluid",
+      "musicInBackground": "Achtergrondmuziek",
+      "musicInBackgroundDesc": "Muziek laten spelen als het tabblad verborgen is of de app geminimaliseerd.",
+      "music": "Muziek",
+      "sfx": "SFX",
+      "musicCredit": "Muziek door",
+      "musicCreditAuthor": "DJARTMUSIC"
+    },
+    "controls": {
+      "sectionTitle": "BEDIENING",
+      "escDesc": "Instellingen openen",
+      "bDesc": "Ingedrukt houden voor automatisch upgrades kopen"
+    },
+    "display": {
+      "sectionTitle": "PRESTATIES",
+      "enableMotion": "Animaties",
+      "enableMotionDesc": "Vloeiende telleranimatie. Schakelt pulsen, gloed, zwevende nummers en alle decoratieve effecten uit.",
+      "floatingNumbers": "Zwevende Nummers",
+      "floatingNumbersDesc": "Toon pop-upnummers van autoclickers. Bij uitschakeling wordt het tempo getoond. Verbetert de prestaties aanzienlijk."
+    },
+    "donate": "Doneer aan Save the Children",
+    "data": {
+      "sectionTitle": "OPSLAG BEHEREN",
+      "autoSaveDesc": "Je voortgang wordt automatisch opgeslagen.",
+      "exportSave": "Opslag exporteren",
+      "importSave": "Opslag importeren",
+      "resetGame": "Spel resetten",
+      "resetConfirmTitle": "Spel resetten?",
+      "resetConfirmBody": "Dit wist je opslag. Clout, upgrades, rebrands \u2014 alles.",
+      "cancel": "Annuleren",
+      "yesReset": "Ja, resetten",
+      "noSaveToExport": "Nog geen opslag om te exporteren.",
+      "exported": "Ge\u00ebxporteerd.",
+      "importFailed": "Import mislukt.",
+      "imported": "Ge\u00efmporteerd.",
+      "importFailedDetail": "Import mislukt: {{error}}"
+    },
+    "pause": {
+      "resume": "Spel hervatten",
+      "pause": "Spel pauzeren"
+    },
+    "language": {
+      "sectionTitle": "TAAL",
+      "label": "Taal"
+    }
+  },
+  "generators": {
+    "unlocksAt": "Ontgrendelt bij {{threshold}} volgers totaal",
+    "unlocksAtFollowers": "Ontgrendelt bij {{threshold}} volgers",
+    "buy": "{{name}} kopen",
+    "cost": "kosten: {{cost}} engagement",
+    "buyUnit": "Koop 1 eenheid voor {{cost}} engagement",
+    "speed": "SPEED",
+    "speedPlus": "SPEED +{{level}}",
+    "power": "POWER",
+    "powerPlus": "POWER +{{count}}",
+    "hire": "HIRE",
+    "hirePlus": "HIRE +{{count}}",
+    "max": "MAX",
+    "superLabel": "SUPER",
+    "superII": "SUPER II",
+    "superIII": "SUPER III",
+    "rushBuy": "RUSH BUY",
+    "rushBuyHoldAria": "Ingedrukt houden voor snelkoop van alle betaalbare upgrades",
+    "rushBuyReleaseAria": "Bezig met kopen \u2014 loslaten om te stoppen",
+    "rushBuyHoldTitle": "Ingedrukt houden voor snelkoop",
+    "rushBuyReleaseTitle": "Loslaten om te stoppen",
+    "upgradeTitle": {
+      "maxed": "{{name}} is op maximaal niveau (L{{level}})",
+      "armed": "{{name}} upgraden (L{{level}} \u2192 L{{nextLevel}} kost {{cost}}) \u2014 {{deficit}} engagement tekort",
+      "ready": "{{name}} upgraden (L{{level}} \u2192 L{{nextLevel}} kost {{cost}}) \u2014 klaar"
+    },
+    "upgradeAria": "{{name}} upgraden",
+    "verbAria": "{{name}}, {{yield}} engagement per tik, cooldown {{cooldown}}ms",
+    "verbAriaWithAuto": "{{name}}, {{yield}} engagement per tik, cooldown {{cooldown}}ms, {{count}} autoclickers",
+    "ready": "READY",
+    "ghostAt": "bij {{threshold}} volgers",
+    "ghostLockedAria": "{{name}} vergrendeld bij {{threshold}} volgers",
+    "ghostUnlockingAria": "{{name}} ontgrendelt bij {{threshold}} volgers",
+    "autoclickerAria": {
+      "maxed": "{{name}} autoclickers op maximum bij {{count}}",
+      "affordable": "Autoclicker {{name}}, {{count}} autoclickers, betaalbaar, kost {{cost}} engagement",
+      "unaffordable": "Autoclicker {{name}}, {{count}} autoclickers, niet betaalbaar, kost {{cost}} engagement"
+    },
+    "autoclickerTitle": {
+      "maxed": "{{name}} \u2014 autoclickers op maximum ({{count}})",
+      "buy": "Autoclicker kopen voor {{cost}} engagement"
+    },
+    "superAria": {
+      "maxed": "{{name}} uitrusting op maximum, {{gearName}} niveau 3 van 3.",
+      "affordable": "Super-upgrade {{name}}, {{gearName}}, betaalbaar, kost {{cost}} engagement{{multiplierSuffix}}. Houd 3 seconden ingedrukt om te kopen.",
+      "unaffordable": "Super-upgrade {{name}}, {{gearName}}, niet betaalbaar, kost {{cost}} engagement."
+    },
+    "superTitle": {
+      "maxed": "{{name}} \u2014 {{gearName}} op maximum",
+      "buy": "{{gearName}} \u2014 ingedrukt houden om te kopen ({{cost}} eng)"
+    }
+  },
+  "platforms": {
+    "followers": "volgers",
+    "unlocksAt": "Ontgrendelt bij {{threshold}} volgers totaal"
+  },
+  "shop": {
+    "title": "Rebrand Upgrades",
+    "closeAria": "Rebrand Upgrades sluiten",
+    "cloutBalance": "Clout: {{clout}}",
+    "emptyHint": "Verdien Clout door te rebranden. Je eerste rebrand komt eraan.",
+    "allMaxed": "Je hebt het systeem onder de knie. Rebrand om het toneel te resetten.",
+    "categories": {
+      "ENGAGEMENT": "ENGAGEMENT",
+      "UNLOCKS": "ONTGRENDELINGEN"
+    },
+    "level": "Lv {{current}}/{{max}}",
+    "owned": "verkregen",
+    "locked": "vergrendeld",
+    "purchaseAria": {
+      "owned": "{{name}} \u2014 verkregen",
+      "maxLevel": "{{name}} \u2014 maximaal niveau",
+      "insufficient": "{{name}} kopen ({{cost}} Clout nodig)",
+      "affordable": "{{name}} kopen voor {{cost}} Clout"
+    }
+  },
+  "postZone": {
+    "ariaLabel": "Content plaatsen",
+    "button": "Post",
+    "perClick": "Per klik: +{{value}}"
+  },
+  "rotate": {
+    "heading": "Draai naar liggend",
+    "subtext": "Dit spel speelt het best in landschap",
+    "title": "Tap Farm"
+  }
+}

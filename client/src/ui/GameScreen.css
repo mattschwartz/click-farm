@@ -1449,7 +1449,8 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   font-family: inherit;
   font-size: 12px;
   padding: 5px 0;
-  width: 80px;
+  min-width: 80px;
+  width: max-content;
   text-align: center;
   border-radius: 4px;
   border: 1px solid var(--border-default);
@@ -3171,6 +3172,42 @@ html[data-reduce-motion="true"] .gold-breathe {
   line-height: 1.35;
 }
 
+/* Language icon — sits inline before the label text. */
+.settings-lang-icon {
+  margin-right: 6px;
+  font-size: 14px;
+  vertical-align: -1px;
+}
+
+/* Language select — styled to match the dark panel aesthetic. */
+.settings-lang-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--surface-panel);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 6px 28px 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 10px 6px;
+  transition: border-color 120ms ease-out;
+}
+
+.settings-lang-select:hover {
+  border-color: var(--border-emphasis);
+}
+
+.settings-lang-select:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb, 100, 149, 237), 0.25);
+}
+
 /* Switch control — 40×22 track with 18px thumb. */
 .settings-toggle {
   flex-shrink: 0;
@@ -3943,7 +3980,8 @@ html[data-reduce-motion="true"] .viral-particles-overlay {
  * --------------------------------------------------------------------------- */
 
 .purchase-pill {
-  width: 80px;
+  min-width: 80px;
+  width: max-content;
   height: 28px;
   border-radius: 4px;
   padding: 0 4px;
@@ -4465,8 +4503,8 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
    * 84px wide × 48px tall so they read as a matched set.
    * Explicit height + box-sizing on both ensures pixel-perfect match. */
   .row-btn {
-    width: 84px;
     min-width: 84px;
+    width: max-content;
     height: 48px;
     box-sizing: border-box;
     padding: 0 4px;
@@ -4486,8 +4524,8 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
    * Column layout preserved so maxed state shows crown + label / MAX
    * in the same two-line pattern as SPEED. Cost hidden in landscape. */
   .purchase-pill {
-    width: 84px;
     min-width: 84px;
+    width: max-content;
     height: 48px;
     box-sizing: border-box;
     line-height: 1.2;

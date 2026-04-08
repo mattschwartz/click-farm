@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import Decimal from 'decimal.js'
 import './index.css'
 import { install as installErrorOverlay } from './console-error-overlay.ts'
+import './i18n.ts'
 import App from './App.tsx'
 
 Decimal.set({

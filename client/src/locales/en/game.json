@@ -1,0 +1,101 @@
+{
+  "generators": {
+    "chirps": {
+      "name": "Chirps",
+      "tagline": "Quick text posts \u2014 your voice in 280 characters."
+    },
+    "selfies": {
+      "name": "Selfies",
+      "tagline": "Low effort, low yield \u2014 everyone starts here."
+    },
+    "memes": {
+      "name": "Memes",
+      "tagline": "Higher variance, trend-sensitive."
+    },
+    "hot_takes": {
+      "name": "Hot Takes",
+      "tagline": "High engagement, risk of backlash."
+    },
+    "tutorials": {
+      "name": "Tutorials",
+      "tagline": "Steady, reliable, boring."
+    },
+    "livestreams": {
+      "name": "Livestreams",
+      "tagline": "High yield, requires active attention."
+    },
+    "podcasts": {
+      "name": "Podcasts",
+      "tagline": "Slow build, compounding returns."
+    },
+    "viral_stunts": {
+      "name": "Viral Stunts",
+      "tagline": "Massive spikes, cooldown period."
+    },
+    "ai_slop": {
+      "name": "AI Slop",
+      "tagline": "Infinite content, zero soul."
+    },
+    "deepfakes": {
+      "name": "Deepfakes",
+      "tagline": "Fake celebrities, real engagement."
+    },
+    "algorithmic_prophecy": {
+      "name": "Algorithmic Prophecy",
+      "tagline": "Tell people what they already thought."
+    }
+  },
+  "generatorCategories": {
+    "starter": "STARTER",
+    "mid": "MID",
+    "late": "LATE"
+  },
+  "platforms": {
+    "chirper": {
+      "name": "Chirper",
+      "tagline": "Hot takes and one-liners."
+    },
+    "picshift": {
+      "name": "Picshift",
+      "tagline": "Photos and curated aesthetics."
+    },
+    "skroll": {
+      "name": "Skroll",
+      "tagline": "Endless short-form video."
+    },
+    "podpod": {
+      "name": "PodPod",
+      "tagline": "Long-form audio, loyal audiences."
+    }
+  },
+  "upgrades": {
+    "engagement_boost": {
+      "name": "Engagement Boost",
+      "description": "Multiplies all engagement output."
+    },
+    "platform_headstart_picshift": {
+      "name": "Picshift Head Start",
+      "description": "Start each run with Picshift already unlocked."
+    },
+    "platform_headstart_skroll": {
+      "name": "Skroll Head Start",
+      "description": "Start each run with Skroll already unlocked."
+    },
+    "platform_headstart_podpod": {
+      "name": "PodPod Head Start",
+      "description": "Start each run with PodPod already unlocked."
+    },
+    "ai_slop_unlock": {
+      "name": "AI Slop",
+      "description": "Unlock AI Slop as a post-prestige generator."
+    },
+    "deepfakes_unlock": {
+      "name": "Deepfakes",
+      "description": "Unlock Deepfakes as a post-prestige generator."
+    },
+    "algorithmic_prophecy_unlock": {
+      "name": "Algorithmic Prophecy",
+      "description": "Unlock Algorithmic Prophecy as a post-prestige generator."
+    }
+  }
+}

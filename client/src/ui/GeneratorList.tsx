@@ -15,6 +15,7 @@
 import Decimal from 'decimal.js';
 import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { GameState, GeneratorId, StaticData, VerbGearId } from '../types.ts';
 import { canPurchaseVerbGear, verbGearCost } from '../verb-gear/index.ts';
 import type { SweepItemType, SweepPurchaseEvent } from '../driver/index.ts';
@@ -235,6 +236,7 @@ function GeneratorRow({
   sweepHitCost,
   sweepHitSeq,
 }: RowProps) {
+  const { t } = useTranslation('ui');
   const g = state.generators[id];
   const def = staticData.generators[id];
   const display = GENERATOR_DISPLAY[id];
@@ -363,7 +365,7 @@ function GeneratorRow({
     return (
       <div className="generator-row locked" style={style}>
         <div className="unlock-label">
-          Unlocks at {threshold.toLocaleString()} followers
+          {t('generators.unlocksAtFollowers', { threshold: threshold.toLocaleString() })}
         </div>
       </div>
     );
@@ -376,15 +378,16 @@ function GeneratorRow({
     const buyCost = def.manual_clickable ? def.base_buy_cost : generatorBuyCost(id, 0, staticData);
     const canBuy = state.player.engagement.gte(buyCost);
     const handleBuy = () => onBuy(id);
-    const label = `Buy ${display.name}`;
+    const name = t(display.name);
+    const label = t('generators.buy', { name });
     return (
       <div className="generator-row generator-row-unowned" style={style}>
         <div className="unowned-info">
-          <div className="generator-name">{display.name}</div>
+          <div className="generator-name">{name}</div>
         </div>
         <BuyButton
           label={label}
-          costLabel={`cost: ${fmtCompact(buyCost)} engagement`}
+          costLabel={t('generators.cost', { cost: fmtCompact(buyCost) })}
           canBuy={canBuy}
           onBuy={handleBuy}
         />
@@ -414,7 +417,7 @@ function GeneratorRow({
       style={style}
     >
       <div className="generator-name">
-        {display.name}
+        {t(display.name)}
       </div>
       <div className="row-actions" onClick={(e) => e.stopPropagation()}>
         <CompactBuyButton
@@ -439,13 +442,13 @@ function GeneratorRow({
           sweepHit={sweepHitBtn === 'upgrade'}
           title={
             lvlState === 'maxed'
-                ? `${display.name} is at max level (L${g.level})`
+                ? t('generators.upgradeTitle.maxed', { name: t(display.name), level: g.level })
                 : lvlState === 'armed'
-                  ? `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ${fmtCompact(lvlDeficit)} more engagement`
-                  : `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ready`
+                  ? t('generators.upgradeTitle.armed', { name: t(display.name), level: g.level, nextLevel: g.level + 1, cost: fmtCompact(upgradeCost), deficit: fmtCompact(lvlDeficit) })
+                  : t('generators.upgradeTitle.ready', { name: t(display.name), level: g.level, nextLevel: g.level + 1, cost: fmtCompact(upgradeCost) })
           }
-          ariaLabel={`Upgrade ${display.name}`}
-          costLabel={lvlState === 'maxed' ? 'MAX' : <TieredNumber value={upgradeCost} />}
+          ariaLabel={t('generators.upgradeAria', { name: t(display.name) })}
+          costLabel={lvlState === 'maxed' ? t('generators.max') : <TieredNumber value={upgradeCost} />}
         />
         {/* AUTO pill — per generator-purchase-pills.md §2–3.
             Only rendered for manual-clickable generators. Pill shape: 44px
@@ -560,6 +563,7 @@ function SpeedButton({
   ariaLabel,
   costLabel,
 }: SpeedButtonProps) {
+  const { t } = useTranslation('ui');
   const [shaking, setShaking] = useState(false);
   const [glowing, setGlowing] = useState(false);
 
@@ -593,7 +597,7 @@ function SpeedButton({
           <span className="lvl-crown" aria-hidden>♛</span>
         )}
         {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
-        <span className="pill-label-full">SPEED{level > 1 ? ` +${level}` : ''}</span>
+        <span className="pill-label-full">{level > 1 ? t('generators.speedPlus', { level }) : t('generators.speed')}</span>
         <span className="pill-label-abbr">L</span>
       </span>
       {lvlState === 'armed' && (
@@ -610,6 +614,7 @@ function SpeedButton({
 const SUPER_HOLD_MS = 750;
 
 function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verbColor, onBuy, generatorName, sweepHit, isSuperPhase, gearName, gearMultiplier, gearLevel = 0 }: AutoPillProps) {
+  const { t } = useTranslation('ui');
   const [glowing, setGlowing] = useState(false);
   const [shaking, setShaking] = useState(false);
   const [bursting, setBursting] = useState(false);
@@ -766,13 +771,13 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
       : ` purchase-pill-unaffordable purchase-pill-super${superTierClass}`;
 
   // SUPER label: level 0 (buying first) = "SUPER", level 1 (buying second) = "SUPER II", level 2 (buying third) = "SUPER III"
-  const superTierLabel = gearLevel === 0 ? 'SUPER' : gearLevel === 1 ? 'SUPER II' : 'SUPER III';
+  const superTierLabel = gearLevel === 0 ? t('generators.superLabel') : gearLevel === 1 ? t('generators.superII') : t('generators.superIII');
   const superTierAbbr = gearLevel === 0 ? 'S' : gearLevel === 1 ? 'SII' : 'SIII';
   const labelText = superMaxed
-    ? 'MAX'
+    ? t('generators.max')
     : superActive
       ? superTierLabel
-      : `HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`;
+      : autoclickerCount > 0 ? t('generators.hirePlus', { count: autoclickerCount }) : t('generators.hire');
   const labelAbbr = superActive ? superTierAbbr : 'A';
 
   const ariaLabel = superMaxed
@@ -829,7 +834,7 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
         {hireLvlState === 'armed' && (
           <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
         )}
-        <span className="row-btn-cost">{isMaxed ? 'MAX' : costLabel}</span>
+        <span className="row-btn-cost">{isMaxed ? t('generators.max') : costLabel}</span>
       </button>
     );
   }
@@ -845,10 +850,10 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
       >
         <span className="label">
           <span className="lvl-crown" aria-hidden>♛</span>
-          <span className="pill-label-full">SUPER III</span>
+          <span className="pill-label-full">{t('generators.superIII')}</span>
           <span className="pill-label-abbr">SIII</span>
         </span>
-        <span className="row-btn-cost">MAX</span>
+        <span className="row-btn-cost">{t('generators.max')}</span>
       </button>
     );
   }
@@ -884,7 +889,7 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
         <span className="pill-label-full">{labelText}</span>
         <span className="pill-label-abbr">{labelAbbr}</span>
       </span>
-      <span className="pill-cost">{superMaxed ? 'MAX' : costLabel}</span>
+      <span className="pill-cost">{superMaxed ? t('generators.max') : costLabel}</span>
       {/* Cost popover — SUPER shows gear name + cost + multiplier. */}
       {(holding || costPopover) && !isMaxed && (
         <span className="pill-cost-popover pill-cost-popover-super" aria-hidden="true">
@@ -949,6 +954,7 @@ interface CompactBuyButtonProps {
 }
 
 function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit }: CompactBuyButtonProps) {
+  const { t } = useTranslation('ui');
   const [shaking, setShaking] = useState(false);
   const [glowing, setGlowing] = useState(false);
 
@@ -968,7 +974,7 @@ function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit 
       className={`row-btn${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${!canBuy ? ' row-btn-disabled' : ''}${sweepHit ? ' sweep-hit' : ''}`}
       onClick={handleClick}
       aria-disabled={!canBuy}
-      title={`Buy 1 unit for ${costText} engagement`}
+      title={t('generators.buyUnit', { cost: costText })}
     >
       <span className="label">
         {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
@@ -1008,6 +1014,7 @@ interface BuyAllButtonProps {
 }
 
 function BuyAllButton({ sweepActive, canAfford, onStartSweep, onCancelSweep, sweepPurchaseSeq }: BuyAllButtonProps) {
+  const { t } = useTranslation('ui');
   const disabled = buyAllDisabled(sweepActive, canAfford);
   const label = buyAllLabel(sweepActive);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -1067,8 +1074,8 @@ function BuyAllButton({ sweepActive, canAfford, onStartSweep, onCancelSweep, swe
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       disabled={disabled}
-      aria-label={sweepActive ? 'Buying — release to stop' : 'Hold to rush buy all affordable upgrades'}
-      title={sweepActive ? 'Release to stop' : 'Hold to rush buy'}
+      aria-label={sweepActive ? t('generators.rushBuyReleaseAria') : t('generators.rushBuyHoldAria')}
+      title={sweepActive ? t('generators.rushBuyReleaseTitle') : t('generators.rushBuyHoldTitle')}
     >
       {label}
     </button>

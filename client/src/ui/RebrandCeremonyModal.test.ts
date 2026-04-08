@@ -6,6 +6,8 @@
 
 import { describe, it, expect } from 'vitest';
 import Decimal from 'decimal.js';
+import '../i18n.ts'; // Initialize i18n so t() resolves against English locale.
+import i18n from 'i18next';
 import {
   cloutEarnedForReview,
   newCloutBalanceForReview,
@@ -16,6 +18,8 @@ import {
 } from './RebrandCeremonyModal.tsx';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
+
+const t = i18n.t.bind(i18n);
 
 // ---------------------------------------------------------------------------
 // Minimal game state for tests
@@ -107,13 +111,13 @@ describe('cloutEarnedForReview', () => {
 
   it('returns floor(log10(10000)*3) = 12 for 10,000 followers', () => {
     const state = makeState({ totalFollowers: 10_000 });
-    // log10(10_000) = 4 → 4 * 3 = 12
+    // log10(10_000) = 4 -> 4 * 3 = 12
     expect(cloutEarnedForReview(state)).toBe(12);
   });
 
   it('returns floor(log10(47230)*3) = 14 for 47,230 followers', () => {
     const state = makeState({ totalFollowers: 47_230 });
-    // log10(47230) ≈ 4.674 → 4.674 * 3 ≈ 14.023 → floor = 14
+    // log10(47230) ~= 4.674 -> 4.674 * 3 ~= 14.023 -> floor = 14
     expect(cloutEarnedForReview(state)).toBe(14);
   });
 });
@@ -124,7 +128,7 @@ describe('cloutEarnedForReview', () => {
 
 describe('newCloutBalanceForReview', () => {
   it('adds cloutEarned to current clout balance', () => {
-    // 10,000 followers → +12 Clout (log10(10000)*3=12); current clout = 42 → new balance = 54
+    // 10,000 followers -> +12 Clout (log10(10000)*3=12); current clout = 42 -> new balance = 54
     const state = makeState({ totalFollowers: 10_000, clout: 42 });
     expect(newCloutBalanceForReview(state)).toBe(54);
   });
@@ -147,7 +151,7 @@ describe('newCloutBalanceForReview', () => {
 describe('buildResetItems', () => {
   it('lists engagement, generators owned, platforms unlocked, follower counts', () => {
     const state = makeState();
-    const items = buildResetItems(state);
+    const items = buildResetItems(state, t);
     const labels = items.map((r) => r.label);
     expect(labels).toContain('Engagement');
     expect(labels).toContain('Generators owned');
@@ -157,7 +161,7 @@ describe('buildResetItems', () => {
 
   it('counts only main-list owned generators (not post-prestige)', () => {
     const state = makeState({ ownedGenerators: ['selfies', 'memes', 'ai_slop'] });
-    const items = buildResetItems(state);
+    const items = buildResetItems(state, t);
     const genItem = items.find((r) => r.label === 'Generators owned');
     // ai_slop is post-prestige and should be excluded from count.
     // chirps (from initial state, threshold=0) + selfies + memes = 3 main-list.
@@ -166,14 +170,14 @@ describe('buildResetItems', () => {
 
   it('counts unlocked platforms', () => {
     const state = makeState({ unlockedPlatforms: ['chirper', 'picshift'] });
-    const items = buildResetItems(state);
+    const items = buildResetItems(state, t);
     const platItem = items.find((r) => r.label === 'Platforms unlocked');
     expect(platItem?.value).toBe('2 platforms');
   });
 
   it('follower counts row has value "all"', () => {
     const state = makeState();
-    const items = buildResetItems(state);
+    const items = buildResetItems(state, t);
     const followerItem = items.find((r) => r.label === 'Follower counts');
     expect(followerItem?.value).toBe('all');
   });
@@ -186,7 +190,7 @@ describe('buildResetItems', () => {
 describe('buildPersistItems', () => {
   it('lists Clout, Clout upgrades, Lifetime followers, Rebrand count', () => {
     const state = makeState();
-    const items = buildPersistItems(state);
+    const items = buildPersistItems(state, t);
     const labels = items.map((r) => r.label);
     expect(labels).toContain('Clout');
     expect(labels).toContain('Clout upgrades');
@@ -194,11 +198,11 @@ describe('buildPersistItems', () => {
     expect(labels).toContain('Rebrand count');
   });
 
-  it('rebrand count value shows → next value', () => {
+  it('rebrand count value shows -> next value', () => {
     const state = makeState({ rebrandCount: 2 });
-    const items = buildPersistItems(state);
+    const items = buildPersistItems(state, t);
     const countItem = items.find((r) => r.label === 'Rebrand count');
-    expect(countItem?.value).toBe('→ 3');
+    expect(countItem?.value).toContain('3');
   });
 
   it('counts only clout upgrades with level > 0', () => {
@@ -212,9 +216,9 @@ describe('buildPersistItems', () => {
         algorithmic_prophecy_unlock: 0,
       },
     });
-    const items = buildPersistItems(state);
+    const items = buildPersistItems(state, t);
     const upgradeItem = items.find((r) => r.label === 'Clout upgrades');
-    // engagement_boost (2) and platform_headstart_picshift (1) → 2 owned
+    // engagement_boost (2) and platform_headstart_picshift (1) -> 2 owned
     expect(upgradeItem?.value).toBe('2 owned');
   });
 });

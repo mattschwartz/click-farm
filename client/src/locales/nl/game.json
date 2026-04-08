@@ -1,0 +1,101 @@
+{
+  "generators": {
+    "chirps": {
+      "name": "Chirps",
+      "tagline": "Snelle berichten \u2014 jouw stem in 280 tekens."
+    },
+    "selfies": {
+      "name": "Selfies",
+      "tagline": "Weinig moeite, weinig opbrengst \u2014 iedereen begint hier."
+    },
+    "memes": {
+      "name": "Memes",
+      "tagline": "Hoge spreiding, trendgevoelig."
+    },
+    "hot_takes": {
+      "name": "Hete Takes",
+      "tagline": "Veel engagement, risico op cancelstorm."
+    },
+    "tutorials": {
+      "name": "Tutorials",
+      "tagline": "Stabiel, betrouwbaar, saai."
+    },
+    "livestreams": {
+      "name": "Livestreams",
+      "tagline": "Hoge opbrengst, vereist constante aandacht."
+    },
+    "podcasts": {
+      "name": "Podcasts",
+      "tagline": "Langzame groei, rente op rente."
+    },
+    "viral_stunts": {
+      "name": "Virale Stunts",
+      "tagline": "Enorme pieken, afkoelperiode."
+    },
+    "ai_slop": {
+      "name": "AI-Brij",
+      "tagline": "Eindeloze content, nul ziel."
+    },
+    "deepfakes": {
+      "name": "Deepfakes",
+      "tagline": "Neppe beroemdheden, echt engagement."
+    },
+    "algorithmic_prophecy": {
+      "name": "Algoritmische Profetie",
+      "tagline": "Vertel mensen wat ze al dachten."
+    }
+  },
+  "generatorCategories": {
+    "starter": "START",
+    "mid": "MIDDEN",
+    "late": "LAAT"
+  },
+  "platforms": {
+    "chirper": {
+      "name": "Chirper",
+      "tagline": "Hete meningen en oneliners."
+    },
+    "picshift": {
+      "name": "Picshift",
+      "tagline": "Foto\u2019s en gecureerde esthetiek."
+    },
+    "skroll": {
+      "name": "Skroll",
+      "tagline": "Eindeloze korte video\u2019s."
+    },
+    "podpod": {
+      "name": "PodPod",
+      "tagline": "Lange audio, trouw publiek."
+    }
+  },
+  "upgrades": {
+    "engagement_boost": {
+      "name": "Engagement Boost",
+      "description": "Vermenigvuldigt alle engagement-productie."
+    },
+    "platform_headstart_picshift": {
+      "name": "Picshift-Voorsprong",
+      "description": "Begin elke run met Picshift al ontgrendeld."
+    },
+    "platform_headstart_skroll": {
+      "name": "Skroll-Voorsprong",
+      "description": "Begin elke run met Skroll al ontgrendeld."
+    },
+    "platform_headstart_podpod": {
+      "name": "PodPod-Voorsprong",
+      "description": "Begin elke run met PodPod al ontgrendeld."
+    },
+    "ai_slop_unlock": {
+      "name": "AI-Brij",
+      "description": "Ontgrendelt AI-Brij als post-prestige generator."
+    },
+    "deepfakes_unlock": {
+      "name": "Deepfakes",
+      "description": "Ontgrendelt Deepfakes als post-prestige generator."
+    },
+    "algorithmic_prophecy_unlock": {
+      "name": "Algoritmische Profetie",
+      "description": "Ontgrendelt Algoritmische Profetie als post-prestige generator."
+    }
+  }
+}

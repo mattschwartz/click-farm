@@ -1,0 +1,101 @@
+{
+  "generators": {
+    "chirps": {
+      "name": "Chirps",
+      "tagline": "Kurze Posts \u2014 deine Stimme in 280 Zeichen."
+    },
+    "selfies": {
+      "name": "Selfies",
+      "tagline": "Wenig Aufwand, wenig Ertrag \u2014 hier f\u00e4ngt jeder an."
+    },
+    "memes": {
+      "name": "Memes",
+      "tagline": "Hohe Varianz, trendabh\u00e4ngig."
+    },
+    "hot_takes": {
+      "name": "Hei\u00dfe Takes",
+      "tagline": "Viel Engagement, Shitstorm-Risiko."
+    },
+    "tutorials": {
+      "name": "Tutorials",
+      "tagline": "Stabil, zuverl\u00e4ssig, langweilig."
+    },
+    "livestreams": {
+      "name": "Livestreams",
+      "tagline": "Hoher Ertrag, erfordert Daueraufmerksamkeit."
+    },
+    "podcasts": {
+      "name": "Podcasts",
+      "tagline": "Langsames Wachstum, Zinseszins-Effekt."
+    },
+    "viral_stunts": {
+      "name": "Virale Stunts",
+      "tagline": "Massive Spitzen, Abk\u00fchlphase."
+    },
+    "ai_slop": {
+      "name": "KI-Matsch",
+      "tagline": "Unendlicher Content, null Seele."
+    },
+    "deepfakes": {
+      "name": "Deepfakes",
+      "tagline": "Gef\u00e4lschte Promis, echtes Engagement."
+    },
+    "algorithmic_prophecy": {
+      "name": "Algorithmische Prophezeiung",
+      "tagline": "Sag den Leuten, was sie eh schon dachten."
+    }
+  },
+  "generatorCategories": {
+    "starter": "EINSTIEG",
+    "mid": "MITTEL",
+    "late": "SP\u00c4T"
+  },
+  "platforms": {
+    "chirper": {
+      "name": "Chirper",
+      "tagline": "Hei\u00dfe Meinungen und Einzeiler."
+    },
+    "picshift": {
+      "name": "Picshift",
+      "tagline": "Fotos und kuratierte \u00c4sthetik."
+    },
+    "skroll": {
+      "name": "Skroll",
+      "tagline": "Endlose Kurzvideos."
+    },
+    "podpod": {
+      "name": "PodPod",
+      "tagline": "Lange Audios, treues Publikum."
+    }
+  },
+  "upgrades": {
+    "engagement_boost": {
+      "name": "Engagement-Boost",
+      "description": "Multipliziert die gesamte Engagement-Produktion."
+    },
+    "platform_headstart_picshift": {
+      "name": "Picshift-Vorsprung",
+      "description": "Starte jeden Run mit bereits freigeschaltetem Picshift."
+    },
+    "platform_headstart_skroll": {
+      "name": "Skroll-Vorsprung",
+      "description": "Starte jeden Run mit bereits freigeschaltetem Skroll."
+    },
+    "platform_headstart_podpod": {
+      "name": "PodPod-Vorsprung",
+      "description": "Starte jeden Run mit bereits freigeschaltetem PodPod."
+    },
+    "ai_slop_unlock": {
+      "name": "KI-Matsch",
+      "description": "Schaltet KI-Matsch als Post-Prestige-Generator frei."
+    },
+    "deepfakes_unlock": {
+      "name": "Deepfakes",
+      "description": "Schaltet Deepfakes als Post-Prestige-Generator frei."
+    },
+    "algorithmic_prophecy_unlock": {
+      "name": "Algorithmische Prophezeiung",
+      "description": "Schaltet Algorithmische Prophezeiung als Post-Prestige-Generator frei."
+    }
+  }
+}

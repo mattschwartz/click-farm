@@ -4,6 +4,8 @@
 // (no jsdom env) — only the pure helpers are exercised here.
 
 import { describe, it, expect } from 'vitest';
+import '../i18n.ts'; // Initialize i18n so t() resolves against English locale.
+import i18n from 'i18next';
 import {
   formatCloutBalance,
   formatLevelIndicator,
@@ -20,6 +22,8 @@ import {
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import type { UpgradeId } from '../types.ts';
+
+const t = i18n.t.bind(i18n);
 
 // ---------------------------------------------------------------------------
 // Minimal game state builder
@@ -51,15 +55,15 @@ function makeState(overrides: {
 
 describe('formatCloutBalance', () => {
   it('formats zero Clout', () => {
-    expect(formatCloutBalance(0)).toBe('Clout: 0');
+    expect(formatCloutBalance(0, t)).toBe('Clout: 0');
   });
 
   it('formats a typical Clout balance', () => {
-    expect(formatCloutBalance(42)).toBe('Clout: 42');
+    expect(formatCloutBalance(42, t)).toBe('Clout: 42');
   });
 
   it('formats large Clout balance without formatting (whole number)', () => {
-    expect(formatCloutBalance(1000)).toBe('Clout: 1000');
+    expect(formatCloutBalance(1000, t)).toBe('Clout: 1000');
   });
 });
 
@@ -87,17 +91,17 @@ describe('isOneShot', () => {
 
 describe('formatLevelIndicator', () => {
   it('formats "locked" for unpurchased one-shots', () => {
-    expect(formatLevelIndicator(0, 1, true)).toBe('locked');
+    expect(formatLevelIndicator(0, 1, true, t)).toBe('locked');
   });
 
   it('formats "owned" for purchased one-shots', () => {
-    expect(formatLevelIndicator(1, 1, true)).toBe('owned');
+    expect(formatLevelIndicator(1, 1, true, t)).toBe('owned');
   });
 
   it('formats "Lv N/M" for multi-level upgrades', () => {
-    expect(formatLevelIndicator(0, 3, false)).toBe('Lv 0/3');
-    expect(formatLevelIndicator(2, 3, false)).toBe('Lv 2/3');
-    expect(formatLevelIndicator(3, 3, false)).toBe('Lv 3/3');
+    expect(formatLevelIndicator(0, 3, false, t)).toBe('Lv 0/3');
+    expect(formatLevelIndicator(2, 3, false, t)).toBe('Lv 2/3');
+    expect(formatLevelIndicator(3, 3, false, t)).toBe('Lv 3/3');
   });
 });
 
@@ -107,16 +111,16 @@ describe('formatLevelIndicator', () => {
 
 describe('formatCostCell', () => {
   it('shows cost number when not at max', () => {
-    expect(formatCostCell(15, false, false)).toBe('15');
-    expect(formatCostCell(25, true, false)).toBe('25');
+    expect(formatCostCell(15, false, false, t)).toBe('15');
+    expect(formatCostCell(25, true, false, t)).toBe('25');
   });
 
   it('shows MAX for maxed multi-level upgrades', () => {
-    expect(formatCostCell(null, false, true)).toBe('MAX');
+    expect(formatCostCell(null, false, true, t)).toBe('MAX');
   });
 
   it('shows ✓ for owned one-shots', () => {
-    expect(formatCostCell(null, true, true)).toBe('✓');
+    expect(formatCostCell(null, true, true, t)).toBe('✓');
   });
 });
 
@@ -160,7 +164,7 @@ describe('getRowPurchaseState', () => {
 describe('buildRowData', () => {
   it('builds row data for an unpurchased multi-level upgrade', () => {
     const state = makeState({ clout: 20 });
-    const row = buildRowData(state, 'engagement_boost', STATIC_DATA);
+    const row = buildRowData(state, 'engagement_boost', STATIC_DATA, t);
     expect(row.upgradeId).toBe('engagement_boost');
     expect(row.currentLevel).toBe(0);
     expect(row.maxLevel).toBe(3);
@@ -177,7 +181,7 @@ describe('buildRowData', () => {
       clout: 0,
       ownedUpgrades: { ai_slop_unlock: 1 },
     });
-    const row = buildRowData(state, 'ai_slop_unlock', STATIC_DATA);
+    const row = buildRowData(state, 'ai_slop_unlock', STATIC_DATA, t);
     expect(row.atMax).toBe(true);
     expect(row.oneShot).toBe(true);
     expect(row.purchaseState).toBe('maxed');
@@ -189,7 +193,7 @@ describe('buildRowData', () => {
     const state = makeState({
       ownedUpgrades: { engagement_boost: 3 },
     });
-    const row = buildRowData(state, 'engagement_boost', STATIC_DATA);
+    const row = buildRowData(state, 'engagement_boost', STATIC_DATA, t);
     expect(row.atMax).toBe(true);
     expect(row.levelLabel).toBe('Lv 3/3');
     expect(row.costLabel).toBe('MAX');
@@ -197,7 +201,7 @@ describe('buildRowData', () => {
 
   it('builds row data for a locked one-shot (locked + cost)', () => {
     const state = makeState({ clout: 10 });
-    const row = buildRowData(state, 'ai_slop_unlock', STATIC_DATA);
+    const row = buildRowData(state, 'ai_slop_unlock', STATIC_DATA, t);
     expect(row.levelLabel).toBe('locked');
     expect(row.costLabel).toBe('25');
     expect(row.purchaseState).toBe('insufficient');
@@ -211,20 +215,20 @@ describe('buildRowData', () => {
 describe('buildCategorizedRows', () => {
   it('produces categories in the fixed order ENGAGEMENT → UNLOCKS', () => {
     const state = makeState();
-    const result = buildCategorizedRows(state, STATIC_DATA);
+    const result = buildCategorizedRows(state, STATIC_DATA, t);
     expect(result.map((g) => g.category)).toEqual(['ENGAGEMENT', 'UNLOCKS']);
   });
 
   it('places the engagement_boost upgrade in the ENGAGEMENT category', () => {
     const state = makeState();
-    const result = buildCategorizedRows(state, STATIC_DATA);
+    const result = buildCategorizedRows(state, STATIC_DATA, t);
     const engagement = result.find((g) => g.category === 'ENGAGEMENT')!;
     expect(engagement.rows.some((r) => r.upgradeId === 'engagement_boost')).toBe(true);
   });
 
   it('merges generator_unlock and platform_headstart into UNLOCKS', () => {
     const state = makeState();
-    const result = buildCategorizedRows(state, STATIC_DATA);
+    const result = buildCategorizedRows(state, STATIC_DATA, t);
     const unlocks = result.find((g) => g.category === 'UNLOCKS')!;
     const ids = unlocks.rows.map((r) => r.upgradeId);
     expect(ids).toContain('ai_slop_unlock');
@@ -237,7 +241,7 @@ describe('buildCategorizedRows', () => {
 
   it('sorts rows within a category by ascending cost', () => {
     const state = makeState();
-    const result = buildCategorizedRows(state, STATIC_DATA);
+    const result = buildCategorizedRows(state, STATIC_DATA, t);
     const unlocks = result.find((g) => g.category === 'UNLOCKS')!;
     // Costs: picshift=20, ai_slop=25, skroll=50, deepfakes=60, podpod=80, prophecy=100
     expect(unlocks.rows[0].upgradeId).toBe('platform_headstart_picshift');
@@ -252,7 +256,7 @@ describe('buildCategorizedRows', () => {
     const state = makeState({
       ownedUpgrades: { platform_headstart_picshift: 1 }, // maxed (cost was 20)
     });
-    const result = buildCategorizedRows(state, STATIC_DATA);
+    const result = buildCategorizedRows(state, STATIC_DATA, t);
     const unlocks = result.find((g) => g.category === 'UNLOCKS')!;
     // Instasham (cheapest) is now maxed, should move to bottom.
     expect(unlocks.rows[unlocks.rows.length - 1].upgradeId).toBe('platform_headstart_picshift');

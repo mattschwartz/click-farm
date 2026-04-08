@@ -5,21 +5,17 @@
 // so it never batches between 100ms game ticks.
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { fmtCompactInt } from './format.ts';
 import { TieredNumber } from './TieredNumber.tsx';
 import { useInterpolatedValue } from './useInterpolatedValue.ts';
 import faviconSrc from '../assets/favicon.png';
 import engagementIconSrc from '../assets/engagement-icon.png';
 
-/**
- * Detect touch-primary devices (phones, tablets) via pointer: coarse.
- * Returns "Tap Farm" on touch devices, "Click Farm" on mouse/desktop.
- */
-const GAME_NAME: string =
+/** Detect touch-primary devices. */
+const IS_TOUCH: boolean =
   typeof window !== 'undefined' &&
-  window.matchMedia('(pointer: coarse)').matches
-    ? 'Tap Farm'
-    : 'Click Farm';
+  window.matchMedia('(pointer: coarse)').matches;
 
 interface Props {
   engagement: number;
@@ -46,9 +42,12 @@ export function shouldShowRunBadge(rebrandCount: number): boolean {
 
 /**
  * Format the run badge text — displays the rebrand count.
+ * Uses i18next plural resolution: passes `count` so i18next selects
+ * the correct plural form for the active locale (e.g. Russian has
+ * one/few/many/other).
  */
-export function formatRunBadge(rebrandCount: number): string {
-  return `Rebrand${rebrandCount === 1 ? '' : 's'} +${rebrandCount}`;
+export function formatRunBadge(rebrandCount: number, t: (key: string, opts?: Record<string, unknown>) => string): string {
+  return t('runBadge', { count: rebrandCount });
 }
 
 export function TopBar({
@@ -59,6 +58,8 @@ export function TopBar({
   summaryBadge,
   rebrandCount = 0,
 }: Props) {
+  const { t } = useTranslation('ui');
+  const GAME_NAME = IS_TOUCH ? t('gameName.touch') : t('gameName.desktop');
   // Track follower decreases for a brief red flash (UX §5.2 of core spec).
   const [_decreased, setDecreased] = useState(false);
   const prevFollowers = useRef(totalFollowers);
@@ -120,7 +121,7 @@ export function TopBar({
       <div className="top-bar-title-group">
         <span className="top-bar-title">{GAME_NAME}</span>
         {badgeShown && (
-          <span className="run-badge"><span className="run-badge-crown" aria-hidden>♛</span> {formatRunBadge(rebrandCount)}</span>
+          <span className="run-badge"><span className="run-badge-crown" aria-hidden>♛</span> {formatRunBadge(rebrandCount, t)}</span>
         )}
       </div>
 
@@ -134,17 +135,17 @@ export function TopBar({
               +<TieredNumber value={engagementRate} />/s
             </span>
             <span className="engagement-followers-inline">
-              {fmtCompactInt(totalFollowers)} followers
+              {fmtCompactInt(totalFollowers)} {t('topBar.followers')}
             </span>
           </span>
           <span className="engagement-tooltip">
-            Engagement
+            {t('topBar.engagement')}
             <span className="tooltip-rate">+<TieredNumber value={engagementRate} />/s</span>
           </span>
         </div>
         {summaryBadge && (
           <div className={`viral-summary-badge${summaryBadge.fading ? ' fading' : ''}`}>
-            VIRAL +{fmtCompactInt(summaryBadge.magnitude)}
+            {t('topBar.viral', { magnitude: fmtCompactInt(summaryBadge.magnitude) })}
           </div>
         )}
       </div>
