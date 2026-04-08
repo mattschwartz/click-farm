@@ -506,7 +506,8 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
 }
 
 /* Pressed: depress 3px, shadow compresses to 1px. Fast 40ms ease-in. */
-.live-verb-btn:active {
+.live-verb-btn:active,
+.live-verb-btn.live-verb-kb-press {
   transform: translateY(3px);
   box-shadow:
     0 1px 0 0 var(--verb-color-dark),
