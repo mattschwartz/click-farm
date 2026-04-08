@@ -371,7 +371,7 @@ export function SettingsModal({
       <div className="settings-group">
         <div className="settings-toggle-row">
           <div className="settings-toggle-text">
-            <div className="settings-toggle-label">{t('settings.language.label')}</div>
+            <div className="settings-toggle-label"><span className="settings-lang-icon" aria-hidden="true">&#x1F310;</span>{t('settings.language.label')}</div>
           </div>
           <select
             className="settings-lang-select"
