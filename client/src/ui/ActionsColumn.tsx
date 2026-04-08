@@ -144,6 +144,15 @@ interface LiveVerbButtonProps {
 /** Density cap for individual autoclicker floats (§4.6). Above this, batch. */
 const AUTO_FLOAT_DENSITY_CAP = 8;
 
+/** Maximum visible floats per verb button. Oldest evicted when cap is hit. */
+const MAX_VISIBLE_FLOATS = 4;
+
+/** Push a float, evicting the oldest if at cap. */
+function pushFloat(prev: FloatItem[], item: FloatItem): FloatItem[] {
+  const next = [...prev, item];
+  return next.length > MAX_VISIBLE_FLOATS ? next.slice(next.length - MAX_VISIBLE_FLOATS) : next;
+}
+
 function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showFloats = true, isPaused = false }: LiveVerbButtonProps) {
   const genState = state.generators[verbId];
   const display = GENERATOR_DISPLAY[verbId];
@@ -217,7 +226,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
         const radius = Math.random() * 25;
         const x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
         const y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
-        setFloats((prev) => [...prev, { id, value: perAutoTap, x, y, isAutoclick: true, batchCount: autoCount }]);
+        setFloats((prev) => pushFloat(prev, { id, value: perAutoTap, x, y, isAutoclick: true, batchCount: autoCount }));
         window.setTimeout(() => {
           setFloats((prev) => prev.filter((f) => f.id !== id));
         }, FLOAT_TTL_MS);
@@ -232,7 +241,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
             const radius = Math.random() * 25;
             const x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
             const y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
-            setFloats((prev) => [...prev, { id, value: perAutoTap, x, y, isAutoclick: true }]);
+            setFloats((prev) => pushFloat(prev, { id, value: perAutoTap, x, y, isAutoclick: true }));
             window.setTimeout(() => {
               setFloats((prev) => prev.filter((f) => f.id !== id));
             }, FLOAT_TTL_MS);
@@ -276,7 +285,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
     }
 
     const hires = genState.autoclicker_count;
-    setFloats((prev) => [...prev, { id, value: perTap, x, y, hireCount: hires > 1 ? hires : undefined }]);
+    setFloats((prev) => pushFloat(prev, { id, value: perTap, x, y, hireCount: hires > 1 ? hires : undefined }));
     window.setTimeout(() => {
       setFloats((prev) => prev.filter((f) => f.id !== id));
     }, FLOAT_TTL_MS);
