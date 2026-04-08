@@ -476,17 +476,29 @@ function Phase3Commit({ onCommit }: { onCommit: () => void }) {
     return () => cancelAnimationFrame(rafRef.current);
   }, [holding, onCommit]);
 
-  function handlePointerDown() {
+  function startHold() {
     if (committed) return;
     setHolding(true);
     setProgress(0);
   }
 
-  function handlePointerUp() {
+  function cancelHold() {
     if (!holding) return;
     cancelAnimationFrame(rafRef.current);
     setHolding(false);
     setProgress(0);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key !== ' ' && e.key !== 'Enter') return;
+    e.preventDefault();
+    if (!holding) startHold();
+  }
+
+  function handleKeyUp(e: React.KeyboardEvent) {
+    if (e.key !== ' ' && e.key !== 'Enter') return;
+    e.preventDefault();
+    cancelHold();
   }
 
   const btnStyle = holding
@@ -505,9 +517,12 @@ function Phase3Commit({ onCommit }: { onCommit: () => void }) {
         ref={btnRef}
         className={`commit-btn${holding ? ' commit-btn-holding' : ''}${committed ? ' commit-btn-pressing' : ''}`}
         style={btnStyle}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
+        onPointerDown={startHold}
+        onPointerUp={cancelHold}
+        onPointerLeave={cancelHold}
+        onPointerCancel={cancelHold}
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
       >
         <span className="commit-btn-label">{t('narrative:ceremony.phase3.rebrand')}</span>
         <div
