@@ -15,7 +15,7 @@
   color: var(--text-primary);
   font-family: var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif;
   display: grid;
-  grid-template-rows: 80px 1fr;
+  grid-template-rows: 80px auto 1fr;
   max-width: 1280px;
   margin: 0 auto;
   overflow: hidden;
@@ -3879,12 +3879,15 @@ html[data-reduce-motion="true"] .gold-breathe {
 .save-error-banner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  align-self: start;
+  justify-content: center;
   gap: 12px;
-  padding: 8px 14px;
+  padding: 6px 18px;
+  margin: 8px auto;
+  max-width: 480px;
   background: rgba(var(--modal-danger-rgb),0.06);
-  border-top: 1px solid rgba(var(--modal-danger-rgb),0.22);
-  border-bottom: 1px solid rgba(var(--modal-danger-rgb),0.22);
+  border: 1px solid rgba(var(--modal-danger-rgb),0.22);
+  border-radius: 8px;
   color: var(--accent-red);
   font-size: 12px;
 }
@@ -4541,7 +4544,7 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
    *
    * height: 100dvh is preserved from the base .game-screen rule. */
   .game-screen {
-    grid-template-rows: 40px 1fr;
+    grid-template-rows: 40px auto 1fr;
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     padding-bottom: env(safe-area-inset-bottom);
@@ -4560,9 +4563,8 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     gap: 0;
     padding: 0;
     min-height: 0;
-    /* Explicit row placement — prevents save-error-banner (conditional child
-     * between top-bar and game-body) from displacing this to row 3. */
-    grid-row: 2;
+    /* Explicit row placement — banner sits in row 2 (auto), body in row 3. */
+    grid-row: 3;
   }
 
   /* Verb column — left column, spans both content rows (actions fill height). */
