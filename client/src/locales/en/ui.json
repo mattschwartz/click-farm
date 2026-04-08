@@ -8,10 +8,8 @@
     "followers": "followers",
     "viral": "VIRAL +{{magnitude}}"
   },
-  "runBadge": {
-    "one": "Rebrand +{{count}}",
-    "other": "Rebrands +{{count}}"
-  },
+  "runBadge_one": "Rebrand +{{count}}",
+  "runBadge_other": "Rebrands +{{count}}",
   "saveError": {
     "loadCorrupt": "Your save could not be read \u2014 starting a fresh run.",
     "saveQuota": "Browser storage is full \u2014 progress is in memory only.",
@@ -125,6 +123,8 @@
     "verbAriaWithAuto": "{{name}}, {{yield}} engagement per tap, cooldown {{cooldown}}ms, {{count}} autoclickers",
     "ready": "READY",
     "ghostAt": "at {{threshold}} followers",
+    "ghostLockedAria": "{{name}} locked at {{threshold}} followers",
+    "ghostUnlockingAria": "{{name}} unlocking at {{threshold}} followers",
     "autoclickerAria": {
       "maxed": "{{name}} autoclickers maxed at {{count}}",
       "affordable": "Autoclicker {{name}}, {{count}} autoclickers, affordable, costs {{cost}} engagement",

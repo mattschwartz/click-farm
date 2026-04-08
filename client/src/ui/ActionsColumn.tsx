@@ -411,7 +411,7 @@ function GhostSlot({ verbId, threshold, isAwakened }: GhostSlotProps) {
     return (
       <div
         className="ghost-slot ghost-promise"
-        aria-label={`${name} locked at ${threshold} followers`}
+        aria-label={t('generators.ghostLockedAria', { name, threshold: threshold.toLocaleString() })}
       >
         {VERB_IMAGE[verbId]
           ? <img className="ghost-icon-img" src={VERB_IMAGE[verbId]} alt="" aria-hidden="true" />
@@ -429,7 +429,7 @@ function GhostSlot({ verbId, threshold, isAwakened }: GhostSlotProps) {
   return (
     <div
       className="ghost-slot ghost-awakened"
-      aria-label={`${name} unlocking at ${threshold} followers`}
+      aria-label={t('generators.ghostUnlockingAria', { name, threshold: threshold.toLocaleString() })}
       style={{ '--verb-color': color } as React.CSSProperties}
     >
       {VERB_IMAGE[verbId]

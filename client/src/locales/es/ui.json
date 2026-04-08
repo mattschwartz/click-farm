@@ -8,10 +8,8 @@
     "followers": "seguidores",
     "viral": "VIRAL +{{magnitude}}"
   },
-  "runBadge": {
-    "one": "Rebrand +{{count}}",
-    "other": "Rebrands +{{count}}"
-  },
+  "runBadge_one": "Rebrand +{{count}}",
+  "runBadge_other": "Rebrands +{{count}}",
   "saveError": {
     "loadCorrupt": "No se pudo leer tu partida guardada \u2014 empezando de cero.",
     "saveQuota": "El almacenamiento del navegador est\u00e1 lleno \u2014 el progreso solo est\u00e1 en memoria.",
@@ -125,6 +123,8 @@
     "verbAriaWithAuto": "{{name}}, {{yield}} engagement por toque, enfriamiento {{cooldown}}ms, {{count}} autoclickers",
     "ready": "LISTO",
     "ghostAt": "con {{threshold}} seguidores",
+    "ghostLockedAria": "{{name}} bloqueado con {{threshold}} seguidores",
+    "ghostUnlockingAria": "{{name}} desbloqueando con {{threshold}} seguidores",
     "autoclickerAria": {
       "maxed": "Autoclickers de {{name}} al m\u00e1ximo en {{count}}",
       "affordable": "Autoclicker {{name}}, {{count}} autoclickers, asequible, cuesta {{cost}} engagement",

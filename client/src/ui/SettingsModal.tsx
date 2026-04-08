@@ -376,7 +376,7 @@ export function SettingsModal({
           <select
             className="settings-lang-select"
             value={i18n.language}
-            onChange={(e) => changeLanguage(e.target.value)}
+            onChange={(e) => { changeLanguage(e.target.value).catch(() => { /* locale chunk failed — stays on current language */ }); }}
           >
             {Object.entries(SUPPORTED_LANGUAGES).map(([code, label]) => (
               <option key={code} value={code}>{label}</option>

@@ -8,10 +8,8 @@
     "followers": "Follower",
     "viral": "VIRAL +{{magnitude}}"
   },
-  "runBadge": {
-    "one": "Rebrand +{{count}}",
-    "other": "Rebrands +{{count}}"
-  },
+  "runBadge_one": "Rebrand +{{count}}",
+  "runBadge_other": "Rebrands +{{count}}",
   "saveError": {
     "loadCorrupt": "Dein Spielstand konnte nicht gelesen werden \u2014 Neustart.",
     "saveQuota": "Browserspeicher voll \u2014 Fortschritt nur im Arbeitsspeicher.",
@@ -125,6 +123,8 @@
     "verbAriaWithAuto": "{{name}}, {{yield}} Engagement pro Tap, Abklingzeit {{cooldown}}ms, {{count}} Autoclicker",
     "ready": "READY",
     "ghostAt": "bei {{threshold}} Followern",
+    "ghostLockedAria": "{{name}} gesperrt bei {{threshold}} Followern",
+    "ghostUnlockingAria": "{{name}} wird freigeschaltet bei {{threshold}} Followern",
     "autoclickerAria": {
       "maxed": "{{name}} Autoclicker auf Maximum bei {{count}}",
       "affordable": "Autoclicker {{name}}, {{count}} Autoclicker, bezahlbar, kostet {{cost}} Engagement",

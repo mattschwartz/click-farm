@@ -8,10 +8,8 @@
     "followers": "abonn\u00e9s",
     "viral": "VIRAL +{{magnitude}}"
   },
-  "runBadge": {
-    "one": "Rebrand +{{count}}",
-    "other": "Rebrands +{{count}}"
-  },
+  "runBadge_one": "Rebrand +{{count}}",
+  "runBadge_other": "Rebrands +{{count}}",
   "saveError": {
     "loadCorrupt": "Impossible de lire ta sauvegarde \u2014 nouvelle partie.",
     "saveQuota": "Stockage du navigateur plein \u2014 progression en m\u00e9moire uniquement.",
@@ -125,6 +123,8 @@
     "verbAriaWithAuto": "{{name}}, {{yield}} engagement par tap, recharge {{cooldown}}ms, {{count}} autoclickers",
     "ready": "READY",
     "ghostAt": "\u00e0 {{threshold}} abonn\u00e9s",
+    "ghostLockedAria": "{{name}} verrouill\u00e9 \u00e0 {{threshold}} abonn\u00e9s",
+    "ghostUnlockingAria": "{{name}} en cours de d\u00e9blocage \u00e0 {{threshold}} abonn\u00e9s",
     "autoclickerAria": {
       "maxed": "Autoclickers {{name}} au maximum \u00e0 {{count}}",
       "affordable": "Autoclicker {{name}}, {{count}} autoclickers, abordable, co\u00fbte {{cost}} engagement",

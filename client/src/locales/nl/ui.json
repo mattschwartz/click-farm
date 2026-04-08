@@ -8,10 +8,8 @@
     "followers": "volgers",
     "viral": "VIRAL +{{magnitude}}"
   },
-  "runBadge": {
-    "one": "Rebrand +{{count}}",
-    "other": "Rebrands +{{count}}"
-  },
+  "runBadge_one": "Rebrand +{{count}}",
+  "runBadge_other": "Rebrands +{{count}}",
   "saveError": {
     "loadCorrupt": "Je opslag kon niet gelezen worden \u2014 opnieuw beginnen.",
     "saveQuota": "Browseropslag is vol \u2014 voortgang alleen in geheugen.",
@@ -125,6 +123,8 @@
     "verbAriaWithAuto": "{{name}}, {{yield}} engagement per tik, cooldown {{cooldown}}ms, {{count}} autoclickers",
     "ready": "READY",
     "ghostAt": "bij {{threshold}} volgers",
+    "ghostLockedAria": "{{name}} vergrendeld bij {{threshold}} volgers",
+    "ghostUnlockingAria": "{{name}} ontgrendelt bij {{threshold}} volgers",
     "autoclickerAria": {
       "maxed": "{{name}} autoclickers op maximum bij {{count}}",
       "affordable": "Autoclicker {{name}}, {{count}} autoclickers, betaalbaar, kost {{cost}} engagement",

@@ -42,10 +42,12 @@ export function shouldShowRunBadge(rebrandCount: number): boolean {
 
 /**
  * Format the run badge text — displays the rebrand count.
- * Uses i18n plural form: "Rebrand +1" vs "Rebrands +2".
+ * Uses i18next plural resolution: passes `count` so i18next selects
+ * the correct plural form for the active locale (e.g. Russian has
+ * one/few/many/other).
  */
 export function formatRunBadge(rebrandCount: number, t: (key: string, opts?: Record<string, unknown>) => string): string {
-  return t(rebrandCount === 1 ? 'runBadge.one' : 'runBadge.other', { count: rebrandCount });
+  return t('runBadge', { count: rebrandCount });
 }
 
 export function TopBar({

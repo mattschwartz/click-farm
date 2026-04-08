@@ -145,10 +145,16 @@ i18n
 
 // If the user previously chose a non-English language, lazy-load its bundle
 // and switch. This runs asynchronously — the first render shows English
-// (fallback) then re-renders once the bundle arrives.
+// (fallback) then re-renders once the bundle arrives. Validate against
+// SUPPORTED_LANGUAGES to guard against stale/tampered localStorage values.
 const savedLang = getSavedLanguage();
-if (savedLang !== 'en') {
-  changeLanguage(savedLang);
+if (savedLang !== 'en' && savedLang in SUPPORTED_LANGUAGES) {
+  changeLanguage(savedLang).catch(() => {
+    // Locale chunk failed to load — stay on English fallback.
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(LANG_STORAGE_KEY);
+    }
+  });
 }
 
 /**
