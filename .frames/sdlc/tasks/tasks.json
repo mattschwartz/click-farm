@@ -3743,7 +3743,7 @@
       "alias": "E2",
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Implement Audience Mood strip UI on platform cards",
       "requester": "architect",
@@ -6596,7 +6596,7 @@
       "id": 164,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Remove dead unlockGenerator / canUnlockGenerator code and GhostSlot unlock wiring",
       "requester": "game-designer",
@@ -6624,7 +6624,8 @@
         "All tests pass, build succeeds"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 165,

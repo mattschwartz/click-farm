@@ -6,7 +6,6 @@ import {
   checkGeneratorUnlocks,
   buyGenerator,
   upgradeGenerator,
-  unlockGenerator,
   buyAutoclicker,
 } from './index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -185,7 +184,7 @@ describe('checkGeneratorUnlocks', () => {
 
   it('auto-unlocks passive-only generators in the correct progressive order', () => {
     // Only passive-only (manual_clickable=false) generators auto-unlock.
-    // Manual-clickable ladder verbs require explicit unlockGenerator.
+    // Manual-clickable ladder verbs auto-unlock via checkGeneratorUnlocks.
     const passiveThresholds = [
       { id: 'memes', threshold: 50 },
       { id: 'hot_takes', threshold: 200 },
@@ -521,100 +520,14 @@ describe('tick — generator unlocks', () => {
 });
 
 // ---------------------------------------------------------------------------
-// unlockGenerator (task #120)
+// buyGenerator — unowned generator error (task #120 / task #164 cleanup)
 // ---------------------------------------------------------------------------
 
-describe('unlockGenerator', () => {
-  it('flips owned=true and deducts base_buy_cost on success', () => {
+describe('buyGenerator — unowned generator error', () => {
+  it('throws "check follower thresholds" for an unowned generator', () => {
     const base = createInitialGameState(STATIC_DATA, T0);
-    const cost = STATIC_DATA.generators.selfies.base_buy_cost;
-    const state: GameState = {
-      ...base,
-      player: {
-        ...base.player,
-        total_followers: 100, // meets selfies threshold
-        engagement: cost + 100,
-      },
-    };
-    const next = unlockGenerator(state, 'selfies', STATIC_DATA);
-    expect(next.generators.selfies.owned).toBe(true);
-    expect(next.player.engagement).toBeCloseTo(100, 6);
-  });
-
-  it('throws for passive-only generators', () => {
-    const state = createInitialGameState(STATIC_DATA, T0);
-    expect(() => unlockGenerator(state, 'memes', STATIC_DATA)).toThrow(
-      /not manual-clickable/,
-    );
-  });
-
-  it('throws when already owned', () => {
-    const base = createInitialGameState(STATIC_DATA, T0);
-    const state: GameState = {
-      ...base,
-      player: { ...base.player, total_followers: 100, engagement: 1000 },
-      generators: {
-        ...base.generators,
-        selfies: { ...base.generators.selfies, owned: true },
-      },
-    };
-    expect(() => unlockGenerator(state, 'selfies', STATIC_DATA)).toThrow(
-      /already unlocked/,
-    );
-  });
-
-  it('throws when threshold not met', () => {
-    const base = createInitialGameState(STATIC_DATA, T0);
-    const state: GameState = {
-      ...base,
-      player: { ...base.player, total_followers: 99, engagement: 1000 },
-    };
-    expect(() => unlockGenerator(state, 'selfies', STATIC_DATA)).toThrow(
-      /threshold not met/,
-    );
-  });
-
-  it('throws when player cannot afford', () => {
-    const base = createInitialGameState(STATIC_DATA, T0);
-    const state: GameState = {
-      ...base,
-      player: { ...base.player, total_followers: 100, engagement: 0 },
-    };
-    expect(() => unlockGenerator(state, 'selfies', STATIC_DATA)).toThrow(
-      /cannot afford/,
-    );
-  });
-
-  it('does not mutate the input state', () => {
-    const base = createInitialGameState(STATIC_DATA, T0);
-    const cost = STATIC_DATA.generators.selfies.base_buy_cost;
-    const state: GameState = {
-      ...base,
-      player: { ...base.player, total_followers: 100, engagement: cost },
-    };
-    const snapshot = JSON.parse(JSON.stringify(state));
-    unlockGenerator(state, 'selfies', STATIC_DATA);
-    expect(state).toEqual(snapshot);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// buyGenerator error message update for manual-clickable gens (task #120)
-// ---------------------------------------------------------------------------
-
-describe('buyGenerator — manual-clickable error message', () => {
-  it('throws "must be unlocked first" for an unowned manual-clickable gen', () => {
-    const base = createInitialGameState(STATIC_DATA, T0);
-    // selfies is manual_clickable and starts unowned (threshold=100)
+    // selfies starts unowned (threshold=100)
     expect(() => buyGenerator(base, 'selfies', STATIC_DATA)).toThrow(
-      /must be unlocked first/,
-    );
-  });
-
-  it('throws "check follower thresholds" for an unowned passive-only gen', () => {
-    const base = createInitialGameState(STATIC_DATA, T0);
-    // memes is manual_clickable=false and starts unowned
-    expect(() => buyGenerator(base, 'memes', STATIC_DATA)).toThrow(
       /check follower thresholds/,
     );
   });

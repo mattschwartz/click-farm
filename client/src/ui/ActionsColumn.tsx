@@ -377,21 +377,12 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
 interface GhostSlotProps {
   verbId: GeneratorId;
   threshold: number;
-  canAfford: boolean;
-  cost: number;
   isAwakened: boolean;
-  onUnlock: (verbId: GeneratorId) => void;
 }
 
-function GhostSlot({ verbId, threshold, canAfford, cost, isAwakened, onUnlock }: GhostSlotProps) {
+function GhostSlot({ verbId, threshold, isAwakened }: GhostSlotProps) {
   const display = GENERATOR_DISPLAY[verbId];
   const color = VERB_COLOR[verbId] ?? display.color;
-
-  const handleClick = useCallback(() => {
-    if (isAwakened && canAfford) {
-      onUnlock(verbId);
-    }
-  }, [isAwakened, canAfford, verbId, onUnlock]);
 
   if (!isAwakened) {
     // Promise state — silhouette, 0.35 opacity, not tappable.
@@ -412,12 +403,11 @@ function GhostSlot({ verbId, threshold, canAfford, cost, isAwakened, onUnlock }:
     );
   }
 
-  // Awakened state — full opacity, 80px, tappable.
+  // Awakened state — full opacity, display-only (auto-unlock handles ownership).
   return (
-    <button
-      className={`ghost-slot ghost-awakened${!canAfford ? ' ghost-disabled' : ''}`}
-      onClick={handleClick}
-      aria-label={`Unlock ${display.name} for ${cost} engagement`}
+    <div
+      className="ghost-slot ghost-awakened"
+      aria-label={`${display.name} unlocking at ${threshold} followers`}
       style={{ '--verb-color': color } as React.CSSProperties}
     >
       {VERB_IMAGE[verbId]
@@ -426,11 +416,8 @@ function GhostSlot({ verbId, threshold, canAfford, cost, isAwakened, onUnlock }:
       }
       <span className="ghost-info">
         <span className="ghost-name">{display.name.toUpperCase()}</span>
-        <span className={`ghost-cost${!canAfford ? ' ghost-cost-disabled' : ''}`}>
-          Tap to unlock — {fmtCompact(cost)} engagement
-        </span>
       </span>
-    </button>
+    </div>
   );
 }
 
@@ -492,10 +479,7 @@ export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats =
           <GhostSlot
             verbId={ghostVerb}
             threshold={ghostThreshold}
-            canAfford={false}
-            cost={0}
             isAwakened={ghostAwakened}
-            onUnlock={() => {}}
           />
         )}
       </div>
