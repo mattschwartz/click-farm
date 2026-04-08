@@ -1008,8 +1008,9 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
 .buy-all-btn-sweeping {
   /* Depress 2px */
   transform: translateY(2px);
-  /* Solid gold background, text color unchanged */
+  /* Solid gold background, contrast text */
   background: var(--accent-gold, #A0730E);
+  color: var(--surface-primary, #fff);
   border-color: rgba(255, 200, 50, 0.6);
   /* 4-layer shadow: depth slab (compressed) + ambient + inner glow + outer glow (§3) */
   box-shadow:
