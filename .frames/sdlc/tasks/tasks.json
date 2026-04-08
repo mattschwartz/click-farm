@@ -3155,7 +3155,7 @@
       "id": 94,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Rebrand cadence intent: felt pacing across the prestige ladder",
       "requester": "game-designer",
@@ -3183,7 +3183,8 @@
         "A 'felt stakes' statement that balance tuners (game-designer on task #88 and beyond) can test against"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 95,
@@ -6838,7 +6839,7 @@
       "id": 169,
       "role": "game-designer",
       "state": "review",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Review Spanish locale files for tone, satire, and player feel",
       "requester": "architect",
@@ -6870,7 +6871,8 @@
         "A brief summary of what was changed and why, noted in the task completion"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 170,
