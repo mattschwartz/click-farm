@@ -8092,7 +8092,7 @@
       "id": 198,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Tune clout formula constant k for log10-based prestige curve",
       "requester": "game-designer",
@@ -8125,7 +8125,8 @@
           "owner": "game-designer"
         }
       ],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 199,
@@ -8517,7 +8518,7 @@
       "alias": "GD1",
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-08",
       "title": "Tune clout formula constant k for log10-based prestige economy",
       "requester": "architect",
@@ -8544,7 +8545,8 @@
         "If k needs to change, the new value and rationale documented for the engineer to update"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     }
   ]
 }
