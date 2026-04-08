@@ -270,7 +270,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
     }
 
     const hires = genState.autoclicker_count;
-    setFloats((prev) => [...prev, { id, value: perTap, x, y, hireCount: hires > 0 ? hires : undefined }]);
+    setFloats((prev) => [...prev, { id, value: perTap, x, y, hireCount: hires > 1 ? hires : undefined }]);
     window.setTimeout(() => {
       setFloats((prev) => prev.filter((f) => f.id !== id));
     }, FLOAT_TTL_MS);
@@ -316,7 +316,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
               {display.name.toUpperCase()}
               {/* Autoclicker badge — shows army size (§4.2). Hidden when 0.
                   Pulses on each autoclicker burst (§4.4). */}
-              {autoCountForBadge > 0 && (
+              {autoCountForBadge > 1 && (
                 <span className={`verb-auto-badge${badgePulsing ? ' verb-auto-badge-pulse' : ''}`}>
                   {' '}×{autoCountForBadge}
                 </span>
