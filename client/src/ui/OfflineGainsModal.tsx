@@ -3,6 +3,7 @@
 // is interactive throughout so impatient players can dismiss instantly.
 
 import { useEffect, useState } from 'react';
+import Decimal from 'decimal.js';
 import type { OfflineResult } from '../offline/index.ts';
 import { fmtCompact, fmtCompactInt, fmtDuration } from './format.ts';
 import { PLATFORM_DISPLAY, PLATFORM_ORDER } from './display.ts';
@@ -46,7 +47,7 @@ export function OfflineGainsModal({ result, onDismiss }: Props) {
           </span>
         </div>
         {PLATFORM_ORDER.map((id) => {
-          const n = result.followersGained[id] ?? 0;
+          const n = result.followersGained[id] ?? new Decimal(0);
           if (n.lte(0)) return null;
           return (
             <div key={id} className="gain-row">

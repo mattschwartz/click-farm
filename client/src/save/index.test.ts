@@ -968,11 +968,11 @@ describe('migrateV15toV16', () => {
     expect(result.state.player.engagement).toBe('0');
   });
 
-  it('handles Infinity → "0"', () => {
+  it('handles Infinity → MAX_SAFE_INTEGER string', () => {
     const data = makeV15SaveData();
     (data.state.player as any).engagement = Infinity;
     const result = migrateV15toV16(data);
-    expect(result.state.player.engagement).toBe('0');
+    expect(result.state.player.engagement).toBe(String(Number.MAX_SAFE_INTEGER));
   });
 
   it('handles negative → "0"', () => {

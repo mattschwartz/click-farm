@@ -471,7 +471,7 @@ export function createDriver(options: DriverOptions): GameDriver {
       const pa = priority[a.type];
       const pb = priority[b.type];
       if (pa !== pb) return pa - pb;
-      return b.cost.minus(a.cost).toNumber();
+      return b.cost.comparedTo(a.cost);
     });
   }
 

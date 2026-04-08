@@ -786,8 +786,9 @@ export function migrateV15toV16(data: SaveData): SaveData {
 
   function safeNumToStr(v: unknown): string {
     if (typeof v === 'string') return v; // already migrated
-    if (typeof v !== 'number' || !Number.isFinite(v)) return '0';
-    if (v < 0) return '0';
+    if (typeof v !== 'number' || Number.isNaN(v)) return '0';
+    if (v === Number.POSITIVE_INFINITY) return String(Number.MAX_SAFE_INTEGER);
+    if (!Number.isFinite(v) || v < 0) return '0';
     return String(v);
   }
 

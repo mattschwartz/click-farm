@@ -163,6 +163,7 @@ export function createInitialGameState(
  */
 export function clampEngagement(value: Decimal): Decimal {
   if (value.isNaN()) return new Decimal(0);
+  if (!value.isFinite()) return new Decimal(0);
   if (value.isNegative()) return new Decimal(0);
   return value;
 }
