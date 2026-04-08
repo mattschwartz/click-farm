@@ -30,14 +30,14 @@ import { fmtCompactInt } from './format.ts';
 // ---------------------------------------------------------------------------
 
 /** Names of all unlocked platforms, joined with commas and "and". */
-export function unlockedPlatformsList(state: GameState): string {
+export function unlockedPlatformsList(state: GameState, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const unlocked = (Object.keys(state.platforms) as PlatformId[])
     .filter((id) => state.platforms[id].unlocked)
-    .map((id) => PLATFORM_DISPLAY[id].name);
-  if (unlocked.length === 0) return 'no platforms';
+    .map((id) => t(PLATFORM_DISPLAY[id].name));
+  if (unlocked.length === 0) return t('narrative:eulogy.noPlatforms');
   if (unlocked.length === 1) return unlocked[0];
-  if (unlocked.length === 2) return `${unlocked[0]} and ${unlocked[1]}`;
-  return `${unlocked.slice(0, -1).join(', ')}, and ${unlocked[unlocked.length - 1]}`;
+  if (unlocked.length === 2) return `${unlocked[0]} ${t('narrative:eulogy.and')} ${unlocked[1]}`;
+  return `${unlocked.slice(0, -1).join(', ')}, ${t('narrative:eulogy.and')} ${unlocked[unlocked.length - 1]}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -52,14 +52,14 @@ export function unlockedPlatformsList(state: GameState): string {
  * TODO(architect): add run-state tracking for per-generator lifetime
  *   engagement so stanzas can use richer data described in the spec.
  */
-export function buildEulogyStanzas(state: GameState): string[] {
+export function buildEulogyStanzas(state: GameState, t: (key: string, opts?: Record<string, unknown>) => string): string[] {
   const followers = fmtCompactInt(state.player.total_followers);
-  const platforms = unlockedPlatformsList(state);
+  const platforms = unlockedPlatformsList(state, t);
   const engagement = fmtCompactInt(state.player.lifetime_engagement);
 
   return [
-    `You had ${followers} followers on ${platforms}.`,
-    'They will not remember you.',
-    `You made ${engagement} engagement. A legacy.`,
+    t('narrative:eulogy.hadFollowers', { followers, platforms }),
+    t('narrative:eulogy.willNotRemember'),
+    t('narrative:eulogy.madEngagement', { engagement }),
   ];
 }

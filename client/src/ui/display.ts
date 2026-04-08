@@ -8,6 +8,9 @@
 // differentiators are icon + semantic color + category badge shape + stable
 // ordering with category dividers. A proper icon pass is a follow-up task
 // for ux-designer.
+//
+// String fields (name, tagline) are i18next translation keys — resolve them
+// via t() at the consumption site. Keys live in the "game" namespace.
 
 import type {
   GeneratorId,
@@ -21,7 +24,7 @@ import type {
 export type GeneratorCategory = 'starter' | 'mid' | 'late';
 
 export interface GeneratorDisplay {
-  /** Human-facing name. */
+  /** i18n key for the human-facing name (game namespace). */
   name: string;
   /** Provisional icon glyph (emoji). Will be replaced by real iconography. */
   icon: string;
@@ -29,88 +32,88 @@ export interface GeneratorDisplay {
   category: GeneratorCategory;
   /** Semantic color lane — grouped by content family per UX §6.1. */
   color: string;
-  /** One-line description shown on drawer tap (not yet implemented). */
+  /** i18n key for one-line description shown on drawer tap. */
   tagline: string;
 }
 
 export const GENERATOR_DISPLAY: Record<GeneratorId, GeneratorDisplay> = {
   chirps: {
-    name: 'Chirps',
+    name: 'game:generators.chirps.name',
     icon: '💬',
     category: 'starter',
     color: '#4d9ef0',
-    tagline: 'Quick text posts — your voice in 280 characters.',
+    tagline: 'game:generators.chirps.tagline',
   },
   selfies: {
-    name: 'Selfies',
+    name: 'game:generators.selfies.name',
     icon: '🤳',
     category: 'starter',
     color: '#f2a365',
-    tagline: 'Low effort, low yield — everyone starts here.',
+    tagline: 'game:generators.selfies.tagline',
   },
   memes: {
-    name: 'Memes',
+    name: 'game:generators.memes.name',
     icon: '😹',
     category: 'starter',
     color: '#e4789e',
-    tagline: 'Higher variance, trend-sensitive.',
+    tagline: 'game:generators.memes.tagline',
   },
   hot_takes: {
-    name: 'Hot Takes',
+    name: 'game:generators.hot_takes.name',
     icon: '🔥',
     category: 'mid',
     color: '#d96c5a',
-    tagline: 'High engagement, risk of backlash.',
+    tagline: 'game:generators.hot_takes.tagline',
   },
   tutorials: {
-    name: 'Tutorials',
+    name: 'game:generators.tutorials.name',
     icon: '📚',
     category: 'mid',
     color: '#7aa5c7',
-    tagline: 'Steady, reliable, boring.',
+    tagline: 'game:generators.tutorials.tagline',
   },
   livestreams: {
-    name: 'Livestreams',
+    name: 'game:generators.livestreams.name',
     icon: '🎥',
     category: 'late',
     color: '#9b6fc7',
-    tagline: 'High yield, requires active attention.',
+    tagline: 'game:generators.livestreams.tagline',
   },
   podcasts: {
-    name: 'Podcasts',
+    name: 'game:generators.podcasts.name',
     icon: '🎙️',
     category: 'late',
     color: '#6fb89b',
-    tagline: 'Slow build, compounding returns.',
+    tagline: 'game:generators.podcasts.tagline',
   },
   viral_stunts: {
-    name: 'Viral Stunts',
+    name: 'game:generators.viral_stunts.name',
     icon: '🎪',
     category: 'late',
     color: '#e8b84a',
-    tagline: 'Massive spikes, cooldown period.',
+    tagline: 'game:generators.viral_stunts.tagline',
   },
   // Post-prestige generators — unlocked only via Clout upgrades.
   ai_slop: {
-    name: 'AI Slop',
+    name: 'game:generators.ai_slop.name',
     icon: '🤖',
     category: 'late',
     color: '#8a8ae8',
-    tagline: 'Infinite content, zero soul.',
+    tagline: 'game:generators.ai_slop.tagline',
   },
   deepfakes: {
-    name: 'Deepfakes',
+    name: 'game:generators.deepfakes.name',
     icon: '🎭',
     category: 'late',
     color: '#c265c2',
-    tagline: 'Fake celebrities, real engagement.',
+    tagline: 'game:generators.deepfakes.tagline',
   },
   algorithmic_prophecy: {
-    name: 'Algorithmic Prophecy',
+    name: 'game:generators.algorithmic_prophecy.name',
     icon: '🔮',
     category: 'late',
     color: '#d4af37',
-    tagline: 'Tell people what they already thought.',
+    tagline: 'game:generators.algorithmic_prophecy.tagline',
   },
 };
 
@@ -136,9 +139,9 @@ export const CATEGORY_ORDER: readonly GeneratorCategory[] = [
 ];
 
 export const CATEGORY_LABEL: Record<GeneratorCategory, string> = {
-  starter: 'STARTER',
-  mid: 'MID',
-  late: 'LATE',
+  starter: 'game:generatorCategories.starter',
+  mid: 'game:generatorCategories.mid',
+  late: 'game:generatorCategories.late',
 };
 
 /**
@@ -156,13 +159,15 @@ export const POST_PRESTIGE_GENERATORS: readonly GeneratorId[] = [
 // ---------------------------------------------------------------------------
 
 export interface PlatformDisplay {
+  /** i18n key for the platform name (game namespace). */
   name: string;
   icon: string;
   accent: string;
+  /** i18n key for the tagline (game namespace). */
   tagline: string;
   /** Pixel-art asset for the platform card background. */
   image?: string;
-  /** Label shown below the follower count (default: "followers"). */
+  /** i18n key for the label shown below the follower count. */
   audienceLabel?: string;
   /** CSS gradient for the top border (overrides solid accent). */
   accentGradient?: string;
@@ -175,35 +180,35 @@ import podpodImg from '../assets/podpod.png';
 
 export const PLATFORM_DISPLAY: Record<PlatformId, PlatformDisplay> = {
   chirper: {
-    name: 'Chirper',
+    name: 'game:platforms.chirper.name',
     icon: '🐦',
     accent: '#4a9dd6',
-    tagline: 'Hot takes and one-liners.',
+    tagline: 'game:platforms.chirper.tagline',
     image: chirperImg,
   },
   picshift: {
-    name: 'Picshift',
+    name: 'game:platforms.picshift.name',
     icon: '📸',
     accent: '#d6579e',
-    tagline: 'Photos and curated aesthetics.',
+    tagline: 'game:platforms.picshift.tagline',
     image: picshiftImg,
     accentGradient: 'linear-gradient(to right, #d6579e, #f0b840)',
   },
   skroll: {
-    name: 'Skroll',
+    name: 'game:platforms.skroll.name',
     icon: '📱',
     accent: '#b84dff',
-    tagline: 'Endless short-form video.',
+    tagline: 'game:platforms.skroll.tagline',
     image: skrollImg,
   },
   // PLACEHOLDER display metadata — game-designer owns final values (task #131 OQ #2).
   podpod: {
-    name: 'PodPod',
+    name: 'game:platforms.podpod.name',
     icon: '🎧',
     accent: '#8b6fb8',
-    tagline: 'Long-form audio, loyal audiences.',
+    tagline: 'game:platforms.podpod.tagline',
     image: podpodImg,
-    audienceLabel: 'followers',
+    audienceLabel: 'ui:platforms.followers',
   },
 };
 

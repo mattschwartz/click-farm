@@ -10,6 +10,7 @@
 //   (10% lightness bump) then fades out over 150ms.
 
 import { useCallback, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { fmtCompact } from './format.ts';
 
 interface FloatItem {
@@ -31,6 +32,7 @@ const STACK_OFFSET_MAX_PX = 40;
 const CONFIRM_FLASH_MS = 150;
 
 export function PostZone({ onClick, perClick, contextLabel }: Props) {
+  const { t } = useTranslation('ui');
   const [floats, setFloats] = useState<FloatItem[]>([]);
   const nextId = useRef(0);
   const [confirmFlash, setConfirmFlash] = useState(false);
@@ -56,12 +58,12 @@ export function PostZone({ onClick, perClick, contextLabel }: Props) {
       <button
         className={`post-button${confirmFlash ? ' post-confirm-flash' : ''}`}
         onClick={handleClick}
-        aria-label="Post content"
+        aria-label={t('postZone.ariaLabel')}
       >
-        <span className="primary">Post</span>
+        <span className="primary">{t('postZone.button')}</span>
         <span className="context">{contextLabel}</span>
       </button>
-      <div className="post-rate">Per click: +{fmtCompact(perClick)}</div>
+      <div className="post-rate">{t('postZone.perClick', { value: fmtCompact(perClick) })}</div>
 
       {floats.map((f) => (
         <span

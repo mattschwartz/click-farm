@@ -10,6 +10,7 @@
 // automate-level badge, and pulse indicator.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type Decimal from 'decimal.js';
 import type { GameState, GeneratorId, StaticData } from '../types.ts';
 import {
@@ -154,6 +155,7 @@ function pushFloat(prev: FloatItem[], item: FloatItem, capped: boolean): FloatIt
 }
 
 function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showFloats = true, isPaused = false }: LiveVerbButtonProps) {
+  const { t } = useTranslation('ui');
   const genState = state.generators[verbId];
   const display = GENERATOR_DISPLAY[verbId];
   const color = VERB_COLOR[verbId] ?? display.color;
@@ -316,7 +318,9 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
           handleTap(e);
         }}
         onClick={handleTap}
-        aria-label={`${display.name}, ${fmtCompact(perTap)} engagement per tap, cooldown ${Math.round(cdMs)}ms${autoCountForBadge > 0 ? `, ${autoCountForBadge} autoclickers` : ''}`}
+        aria-label={autoCountForBadge > 0
+          ? t('generators.verbAriaWithAuto', { name: t(display.name), yield: fmtCompact(perTap), cooldown: Math.round(cdMs), count: autoCountForBadge })
+          : t('generators.verbAria', { name: t(display.name), yield: fmtCompact(perTap), cooldown: Math.round(cdMs) })}
       >
 
         {/* Background image — direct child so it positions relative to the button */}
@@ -328,7 +332,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
           {!VERB_IMAGE[verbId] && <span className="verb-icon">{display.icon}</span>}
           <span className="verb-name-group">
             <span className="verb-name">
-              {display.name.toUpperCase()}
+              {t(display.name).toUpperCase()}
               {/* Autoclicker badge — shows army size (§4.2). Hidden when 0.
                   Pulses on each autoclicker burst (§4.4). */}
               {autoCountForBadge > 1 && (
@@ -347,7 +351,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
 
 
       {(isReady || atFloor) && !state.player.has_started_run && (
-        <span className="verb-pulse">READY</span>
+        <span className="verb-pulse">{t('generators.ready')}</span>
       )}
 
       {!isReady && !atFloor && cdMs > 500 && (
@@ -397,23 +401,25 @@ interface GhostSlotProps {
 }
 
 function GhostSlot({ verbId, threshold, isAwakened }: GhostSlotProps) {
+  const { t } = useTranslation('ui');
   const display = GENERATOR_DISPLAY[verbId];
   const color = VERB_COLOR[verbId] ?? display.color;
+  const name = t(display.name);
 
   if (!isAwakened) {
     // Promise state — silhouette, 0.35 opacity, not tappable.
     return (
       <div
         className="ghost-slot ghost-promise"
-        aria-label={`${display.name} locked at ${threshold} followers`}
+        aria-label={`${name} locked at ${threshold} followers`}
       >
         {VERB_IMAGE[verbId]
           ? <img className="ghost-icon-img" src={VERB_IMAGE[verbId]} alt="" aria-hidden="true" />
           : <span className="ghost-icon" style={{ color }}>{display.icon}</span>
         }
         <span className="ghost-info">
-          <span className="ghost-name">{display.name.toUpperCase()}</span>
-          <span className="ghost-condition">at {threshold.toLocaleString()} followers</span>
+          <span className="ghost-name">{name.toUpperCase()}</span>
+          <span className="ghost-condition">{t('generators.ghostAt', { threshold: threshold.toLocaleString() })}</span>
         </span>
       </div>
     );
@@ -423,7 +429,7 @@ function GhostSlot({ verbId, threshold, isAwakened }: GhostSlotProps) {
   return (
     <div
       className="ghost-slot ghost-awakened"
-      aria-label={`${display.name} unlocking at ${threshold} followers`}
+      aria-label={`${name} unlocking at ${threshold} followers`}
       style={{ '--verb-color': color } as React.CSSProperties}
     >
       {VERB_IMAGE[verbId]
@@ -431,7 +437,7 @@ function GhostSlot({ verbId, threshold, isAwakened }: GhostSlotProps) {
         : <span className="ghost-icon">{display.icon}</span>
       }
       <span className="ghost-info">
-        <span className="ghost-name">{display.name.toUpperCase()}</span>
+        <span className="ghost-name">{name.toUpperCase()}</span>
       </span>
     </div>
   );

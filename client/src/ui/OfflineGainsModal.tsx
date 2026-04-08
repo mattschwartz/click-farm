@@ -3,6 +3,7 @@
 // is interactive throughout so impatient players can dismiss instantly.
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Decimal from 'decimal.js';
 import type { OfflineResult } from '../offline/index.ts';
 import { fmtCompact, fmtCompactInt, fmtDuration } from './format.ts';
@@ -17,6 +18,7 @@ const COUNT_UP_MS = 800;
 const FRAMES = 30;
 
 export function OfflineGainsModal({ result, onDismiss }: Props) {
+  const { t } = useTranslation();
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -37,11 +39,11 @@ export function OfflineGainsModal({ result, onDismiss }: Props) {
       }}
     >
       <div className="offline-modal" role="dialog" aria-modal="true">
-        <h2>Welcome back.</h2>
-        <div className="away">You were away for {fmtDuration(result.durationMs)}.</div>
+        <h2>{t('narrative:offline.welcomeBack')}</h2>
+        <div className="away">{t('narrative:offline.awayFor', { duration: fmtDuration(result.durationMs) })}</div>
 
         <div className="gain-row">
-          <span>Engagement earned</span>
+          <span>{t('narrative:offline.engagementEarned')}</span>
           <span className="value">
             {fmtCompact(result.engagementGained.times(progress))}
           </span>
@@ -51,14 +53,14 @@ export function OfflineGainsModal({ result, onDismiss }: Props) {
           if (n.lte(0)) return null;
           return (
             <div key={id} className="gain-row">
-              <span>{PLATFORM_DISPLAY[id].name} followers</span>
+              <span>{t('narrative:offline.platformFollowers', { name: t(PLATFORM_DISPLAY[id].name) })}</span>
               <span className="value">+{fmtCompactInt(n.times(progress))}</span>
             </div>
           );
         })}
 
         <button className="dismiss-btn" onClick={onDismiss}>
-          Nice.
+          {t('narrative:offline.dismiss')}
         </button>
       </div>
     </div>

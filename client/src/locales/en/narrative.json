@@ -1,0 +1,68 @@
+{
+  "ceremony": {
+    "phase1": {
+      "headline": "You are about to rebrand.",
+      "currentFollowers": "Current followers",
+      "cloutEarned": "Clout earned",
+      "newCloutBalance": "New Clout balance",
+      "whatResets": "What resets",
+      "whatPersists": "What persists",
+      "cancel": "Cancel",
+      "continue": "Continue",
+      "cancelAria": "Cancel rebrand",
+      "dialogAria": "Rebrand \u2014 Threshold Review"
+    },
+    "phase2": {
+      "dialogAria": "Rebrand \u2014 Eulogy",
+      "continue": "Continue",
+      "skip": "Skip",
+      "skipAria": {
+        "continue": "Continue",
+        "skip": "Skip eulogy"
+      }
+    },
+    "phase3": {
+      "headline": "Become someone new.",
+      "rebrand": "Rebrand",
+      "dialogAria": "Rebrand \u2014 Commit"
+    },
+    "phase4": {
+      "dialogAria": "Rebranding",
+      "srAnnounce": "Rebranding. Run {{runNumber}} beginning.",
+      "engagement": "engagement",
+      "followers": "followers"
+    },
+    "resetItems": {
+      "engagement": "Engagement",
+      "generatorsOwned": "Generators owned",
+      "generatorsOwnedValue": "{{count}} types",
+      "platformsUnlocked": "Platforms unlocked",
+      "platformsUnlockedValue": "{{count}} platforms",
+      "followerCounts": "Follower counts",
+      "followerCountsValue": "all"
+    },
+    "persistItems": {
+      "clout": "Clout",
+      "cloutUpgrades": "Clout upgrades",
+      "cloutUpgradesValue": "{{count}} owned",
+      "lifetimeFollowers": "Lifetime followers",
+      "lifetimeEngagement": "Lifetime engagement",
+      "rebrandCount": "Rebrand count",
+      "rebrandCountValue": "\u2192 {{count}}"
+    }
+  },
+  "eulogy": {
+    "hadFollowers": "You had {{followers}} followers on {{platforms}}.",
+    "willNotRemember": "They will not remember you.",
+    "madEngagement": "You made {{engagement}} engagement. A legacy.",
+    "noPlatforms": "no platforms",
+    "and": "and"
+  },
+  "offline": {
+    "welcomeBack": "Welcome back.",
+    "awayFor": "You were away for {{duration}}.",
+    "engagementEarned": "Engagement earned",
+    "platformFollowers": "{{name}} followers",
+    "dismiss": "Nice."
+  }
+}

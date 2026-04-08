@@ -15,6 +15,7 @@
 import Decimal from 'decimal.js';
 import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { GameState, GeneratorId, StaticData, VerbGearId } from '../types.ts';
 import { canPurchaseVerbGear, verbGearCost } from '../verb-gear/index.ts';
 import type { SweepItemType, SweepPurchaseEvent } from '../driver/index.ts';
@@ -235,6 +236,7 @@ function GeneratorRow({
   sweepHitCost,
   sweepHitSeq,
 }: RowProps) {
+  const { t } = useTranslation('ui');
   const g = state.generators[id];
   const def = staticData.generators[id];
   const display = GENERATOR_DISPLAY[id];
@@ -363,7 +365,7 @@ function GeneratorRow({
     return (
       <div className="generator-row locked" style={style}>
         <div className="unlock-label">
-          Unlocks at {threshold.toLocaleString()} followers
+          {t('generators.unlocksAtFollowers', { threshold: threshold.toLocaleString() })}
         </div>
       </div>
     );
@@ -376,15 +378,16 @@ function GeneratorRow({
     const buyCost = def.manual_clickable ? def.base_buy_cost : generatorBuyCost(id, 0, staticData);
     const canBuy = state.player.engagement.gte(buyCost);
     const handleBuy = () => onBuy(id);
-    const label = `Buy ${display.name}`;
+    const name = t(display.name);
+    const label = t('generators.buy', { name });
     return (
       <div className="generator-row generator-row-unowned" style={style}>
         <div className="unowned-info">
-          <div className="generator-name">{display.name}</div>
+          <div className="generator-name">{name}</div>
         </div>
         <BuyButton
           label={label}
-          costLabel={`cost: ${fmtCompact(buyCost)} engagement`}
+          costLabel={t('generators.cost', { cost: fmtCompact(buyCost) })}
           canBuy={canBuy}
           onBuy={handleBuy}
         />
@@ -414,7 +417,7 @@ function GeneratorRow({
       style={style}
     >
       <div className="generator-name">
-        {display.name}
+        {t(display.name)}
       </div>
       <div className="row-actions" onClick={(e) => e.stopPropagation()}>
         <CompactBuyButton
@@ -439,13 +442,13 @@ function GeneratorRow({
           sweepHit={sweepHitBtn === 'upgrade'}
           title={
             lvlState === 'maxed'
-                ? `${display.name} is at max level (L${g.level})`
+                ? t('generators.upgradeTitle.maxed', { name: t(display.name), level: g.level })
                 : lvlState === 'armed'
-                  ? `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ${fmtCompact(lvlDeficit)} more engagement`
-                  : `Upgrade ${display.name} (L${g.level} → L${g.level + 1} costs ${fmtCompact(upgradeCost)}) — ready`
+                  ? t('generators.upgradeTitle.armed', { name: t(display.name), level: g.level, nextLevel: g.level + 1, cost: fmtCompact(upgradeCost), deficit: fmtCompact(lvlDeficit) })
+                  : t('generators.upgradeTitle.ready', { name: t(display.name), level: g.level, nextLevel: g.level + 1, cost: fmtCompact(upgradeCost) })
           }
-          ariaLabel={`Upgrade ${display.name}`}
-          costLabel={lvlState === 'maxed' ? 'MAX' : <TieredNumber value={upgradeCost} />}
+          ariaLabel={t('generators.upgradeAria', { name: t(display.name) })}
+          costLabel={lvlState === 'maxed' ? t('generators.max') : <TieredNumber value={upgradeCost} />}
         />
         {/* AUTO pill — per generator-purchase-pills.md §2–3.
             Only rendered for manual-clickable generators. Pill shape: 44px
@@ -593,7 +596,7 @@ function SpeedButton({
           <span className="lvl-crown" aria-hidden>♛</span>
         )}
         {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
-        <span className="pill-label-full">SPEED{level > 1 ? ` +${level}` : ''}</span>
+        <span className="pill-label-full">{level > 1 ? `SPEED +${level}` : 'SPEED'}</span>
         <span className="pill-label-abbr">L</span>
       </span>
       {lvlState === 'armed' && (
@@ -949,6 +952,7 @@ interface CompactBuyButtonProps {
 }
 
 function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit }: CompactBuyButtonProps) {
+  const { t } = useTranslation('ui');
   const [shaking, setShaking] = useState(false);
   const [glowing, setGlowing] = useState(false);
 
@@ -968,7 +972,7 @@ function CompactBuyButton({ costLabel, costText, canBuy, count, onBuy, sweepHit 
       className={`row-btn${shaking ? ' row-btn-shake' : ''}${glowing ? ' row-btn-buy-glow' : ''}${!canBuy ? ' row-btn-disabled' : ''}${sweepHit ? ' sweep-hit' : ''}`}
       onClick={handleClick}
       aria-disabled={!canBuy}
-      title={`Buy 1 unit for ${costText} engagement`}
+      title={t('generators.buyUnit', { cost: costText })}
     >
       <span className="label">
         {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
@@ -1008,6 +1012,7 @@ interface BuyAllButtonProps {
 }
 
 function BuyAllButton({ sweepActive, canAfford, onStartSweep, onCancelSweep, sweepPurchaseSeq }: BuyAllButtonProps) {
+  const { t } = useTranslation('ui');
   const disabled = buyAllDisabled(sweepActive, canAfford);
   const label = buyAllLabel(sweepActive);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -1067,8 +1072,8 @@ function BuyAllButton({ sweepActive, canAfford, onStartSweep, onCancelSweep, swe
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       disabled={disabled}
-      aria-label={sweepActive ? 'Buying — release to stop' : 'Hold to rush buy all affordable upgrades'}
-      title={sweepActive ? 'Release to stop' : 'Hold to rush buy'}
+      aria-label={sweepActive ? t('generators.rushBuyReleaseAria') : t('generators.rushBuyHoldAria')}
+      title={sweepActive ? t('generators.rushBuyReleaseTitle') : t('generators.rushBuyHoldTitle')}
     >
       {label}
     </button>

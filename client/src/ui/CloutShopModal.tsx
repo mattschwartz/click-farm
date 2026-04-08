@@ -17,6 +17,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import type { GameState, StaticData, UpgradeId } from '../types.ts';
 import { cloutUpgradeCost } from '../prestige/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -41,45 +42,45 @@ export interface UpgradeDisplay {
 
 export const UPGRADE_DISPLAY: Record<UpgradeId, UpgradeDisplay> = {
   engagement_boost: {
-    name: 'Engagement Boost',
+    name: 'game:upgrades.engagement_boost.name',
     icon: '📈',
-    description: 'Multiplies all engagement output.',
+    description: 'game:upgrades.engagement_boost.description',
     category: 'ENGAGEMENT',
   },
   platform_headstart_picshift: {
-    name: 'Picshift Head Start',
+    name: 'game:upgrades.platform_headstart_picshift.name',
     icon: '📸',
-    description: 'Start each run with Picshift already unlocked.',
+    description: 'game:upgrades.platform_headstart_picshift.description',
     category: 'UNLOCKS',
   },
   platform_headstart_skroll: {
-    name: 'Skroll Head Start',
+    name: 'game:upgrades.platform_headstart_skroll.name',
     icon: '📱',
-    description: 'Start each run with Skroll already unlocked.',
+    description: 'game:upgrades.platform_headstart_skroll.description',
     category: 'UNLOCKS',
   },
   platform_headstart_podpod: {
-    name: 'PodPod Head Start',
+    name: 'game:upgrades.platform_headstart_podpod.name',
     icon: '🎧',
-    description: 'Start each run with PodPod already unlocked.',
+    description: 'game:upgrades.platform_headstart_podpod.description',
     category: 'UNLOCKS',
   },
   ai_slop_unlock: {
-    name: 'AI Slop',
+    name: 'game:upgrades.ai_slop_unlock.name',
     icon: '🤖',
-    description: 'Unlock AI Slop as a post-prestige generator.',
+    description: 'game:upgrades.ai_slop_unlock.description',
     category: 'UNLOCKS',
   },
   deepfakes_unlock: {
-    name: 'Deepfakes',
+    name: 'game:upgrades.deepfakes_unlock.name',
     icon: '🎭',
-    description: 'Unlock Deepfakes as a post-prestige generator.',
+    description: 'game:upgrades.deepfakes_unlock.description',
     category: 'UNLOCKS',
   },
   algorithmic_prophecy_unlock: {
-    name: 'Algorithmic Prophecy',
+    name: 'game:upgrades.algorithmic_prophecy_unlock.name',
     icon: '🧿',
-    description: 'Unlock Algorithmic Prophecy as a post-prestige generator.',
+    description: 'game:upgrades.algorithmic_prophecy_unlock.description',
     category: 'UNLOCKS',
   },
 };
@@ -88,9 +89,9 @@ export const UPGRADE_DISPLAY: Record<UpgradeId, UpgradeDisplay> = {
 // Pure helpers — exported for testing (spec §3.3, §3.4, §3.6)
 // ---------------------------------------------------------------------------
 
-/** Formatted Clout balance label for the shop header. */
-export function formatCloutBalance(clout: number): string {
-  return `Clout: ${clout}`;
+/** Formatted Clout balance label for the shop header. Uses i18n key. */
+export function formatCloutBalance(clout: number, t: (key: string, opts?: Record<string, unknown>) => string): string {
+  return t('shop.cloutBalance', { clout });
 }
 
 /** True for single-level one-shots (headstarts, generator unlocks). */
@@ -98,16 +99,17 @@ export function isOneShot(upgradeId: UpgradeId, staticData: StaticData): boolean
   return staticData.cloutUpgrades[upgradeId].max_level === 1;
 }
 
-/** Level indicator text per spec §3.3. */
+/** Level indicator text per spec §3.3. Uses i18n keys. */
 export function formatLevelIndicator(
   currentLevel: number,
   maxLevel: number,
   oneShot: boolean,
+  t: (key: string, opts?: Record<string, unknown>) => string,
 ): string {
   if (oneShot) {
-    return currentLevel >= 1 ? 'owned' : 'locked';
+    return currentLevel >= 1 ? t('shop.owned') : t('shop.locked');
   }
-  return `Lv ${currentLevel}/${maxLevel}`;
+  return t('shop.level', { current: currentLevel, max: maxLevel });
 }
 
 /** Cost cell text per spec §3.3: number, 'MAX', or '✓'. */
@@ -115,9 +117,10 @@ export function formatCostCell(
   nextCost: number | null,
   oneShot: boolean,
   atMax: boolean,
+  t: (key: string) => string,
 ): string {
   if (!atMax) return `${nextCost}`;
-  return oneShot ? '✓' : 'MAX';
+  return oneShot ? '✓' : t('generators.max');
 }
 
 export type RowPurchaseState =
@@ -155,6 +158,7 @@ export function buildRowData(
   state: GameState,
   upgradeId: UpgradeId,
   staticData: StaticData,
+  t: (key: string, opts?: Record<string, unknown>) => string,
 ): RowData {
   const display = UPGRADE_DISPLAY[upgradeId];
   const def = staticData.cloutUpgrades[upgradeId];
@@ -172,8 +176,8 @@ export function buildRowData(
     oneShot,
     atMax,
     purchaseState,
-    levelLabel: formatLevelIndicator(currentLevel, def.max_level, oneShot),
-    costLabel: formatCostCell(nextCost, oneShot, atMax),
+    levelLabel: formatLevelIndicator(currentLevel, def.max_level, oneShot, t),
+    costLabel: formatCostCell(nextCost, oneShot, atMax, t),
   };
 }
 
@@ -186,13 +190,14 @@ export function buildRowData(
 export function buildCategorizedRows(
   state: GameState,
   staticData: StaticData,
+  t: (key: string, opts?: Record<string, unknown>) => string,
 ): { category: ShopCategory; rows: RowData[] }[] {
   const allIds = Object.keys(UPGRADE_DISPLAY) as UpgradeId[];
   const rowsByCategory = new Map<ShopCategory, RowData[]>();
   for (const cat of CATEGORY_ORDER) rowsByCategory.set(cat, []);
 
   for (const id of allIds) {
-    const row = buildRowData(state, id, staticData);
+    const row = buildRowData(state, id, staticData, t);
     rowsByCategory.get(row.display.category)!.push(row);
   }
 
@@ -252,6 +257,7 @@ export interface CloutShopModalProps {
 }
 
 export function CloutShopModal({ state, onClose, onPurchase }: CloutShopModalProps) {
+  const { t } = useTranslation('ui');
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -261,7 +267,7 @@ export function CloutShopModal({ state, onClose, onPurchase }: CloutShopModalPro
   const clout = state.player.clout;
   const empty = isShopEmpty(state);
   const allMaxed = isShopAllMaxed(state, STATIC_DATA);
-  const categorized = buildCategorizedRows(state, STATIC_DATA);
+  const categorized = buildCategorizedRows(state, STATIC_DATA, t);
 
   // Animated clout display — ticks down from previous balance on purchase.
   const [displayClout, setDisplayClout] = useState(clout);
@@ -370,17 +376,17 @@ export function CloutShopModal({ state, onClose, onPurchase }: CloutShopModalPro
         className="shop-modal"
         role="dialog"
         aria-modal="true"
-        aria-label="Rebrand Upgrades"
+        aria-label={t('shop.title')}
         onKeyDown={handleKeyDown}
       >
         {/* Header */}
         <div className="shop-header">
-          <span className="shop-title">Rebrand Upgrades</span>
+          <span className="shop-title">{t('shop.title')}</span>
           <button
             ref={closeBtnRef}
             className="shop-close-btn"
             onClick={onClose}
-            aria-label="Close Rebrand Upgrades"
+            aria-label={t('shop.closeAria')}
           >
             ×
           </button>
@@ -388,13 +394,13 @@ export function CloutShopModal({ state, onClose, onPurchase }: CloutShopModalPro
 
         {/* Clout balance — P0 contrast, animates down on purchase. */}
         <div className="shop-balance" aria-live="polite">
-          {formatCloutBalance(displayClout)}
+          {formatCloutBalance(displayClout, t)}
         </div>
 
         {/* Empty-state header copy, above the categories. */}
         {empty && (
           <p className="shop-empty-hint">
-            Earn Clout by rebranding. Your first rebrand is ahead.
+            {t('shop.emptyHint')}
           </p>
         )}
 
@@ -402,7 +408,7 @@ export function CloutShopModal({ state, onClose, onPurchase }: CloutShopModalPro
         <div className="shop-categories">
           {categorized.map(({ category, rows }) => (
             <div key={category} className="shop-category">
-              <div className="shop-category-header">{category}</div>
+              <div className="shop-category-header">{t(`shop.categories.${category}`)}</div>
               <div className="shop-category-rows">
                 {rows.map((row) => (
                   <ShopRow
@@ -421,7 +427,7 @@ export function CloutShopModal({ state, onClose, onPurchase }: CloutShopModalPro
         {/* All-maxed footer. */}
         {allMaxed && (
           <p className="shop-all-maxed">
-            You&rsquo;ve mastered the system. Rebrand to reset the stage.
+            {t('shop.allMaxed')}
           </p>
         )}
       </div>
@@ -446,6 +452,7 @@ function ShopRow({
   shaking: boolean;
   onAction: () => void;
 }) {
+  const { t } = useTranslation('ui');
   const state = row.purchaseState;
   const rowClasses = [
     'shop-row',
@@ -462,20 +469,21 @@ function ShopRow({
   ].filter(Boolean).join(' ');
 
   // Tooltip content for ⬆ button context.
+  const resolvedName = t(row.display.name);
   const buttonAriaLabel = row.atMax
     ? row.oneShot
-      ? `${row.display.name} — owned`
-      : `${row.display.name} — max level`
+      ? t('shop.purchaseAria.owned', { name: resolvedName })
+      : t('shop.purchaseAria.maxLevel', { name: resolvedName })
     : state === 'insufficient'
-      ? `Purchase ${row.display.name} (need ${row.nextCost} Clout)`
-      : `Purchase ${row.display.name} for ${row.nextCost} Clout`;
+      ? t('shop.purchaseAria.insufficient', { name: resolvedName, cost: row.nextCost })
+      : t('shop.purchaseAria.affordable', { name: resolvedName, cost: row.nextCost });
 
   return (
     <div className={rowClasses}>
       <span className="shop-row-icon" aria-hidden="true">{row.display.icon}</span>
       <div className="shop-row-text">
-        <div className="shop-row-name">{row.display.name}</div>
-        <div className="shop-row-desc">{row.display.description}</div>
+        <div className="shop-row-name">{resolvedName}</div>
+        <div className="shop-row-desc">{t(row.display.description)}</div>
       </div>
       <div className="shop-row-level">{row.levelLabel}</div>
       <div className={costClasses}>{row.costLabel}</div>

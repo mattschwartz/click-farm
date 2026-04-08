@@ -10,13 +10,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import type { Settings } from '../settings/index.ts';
 import {
   clearSave,
   exportSaveJSON,
   importSaveJSON,
 } from '../save/index.ts';
-
+import { SUPPORTED_LANGUAGES, changeLanguage } from '../i18n.ts';
 
 import { formatExportFilename } from './formatExportFilename.ts';
 
@@ -26,10 +27,10 @@ import { formatExportFilename } from './formatExportFilename.ts';
 
 type SettingsTab = 'audio' | 'display' | 'data';
 
-const TAB_LABELS: Record<SettingsTab, string> = {
-  audio: 'Audio',
-  display: 'Display',
-  data: 'Saves',
+const TAB_KEYS: Record<SettingsTab, string> = {
+  audio: 'settings.tabs.audio',
+  display: 'settings.tabs.display',
+  data: 'settings.tabs.data',
 };
 
 const TAB_ORDER: SettingsTab[] = ['audio', 'display', 'data'];
@@ -79,6 +80,7 @@ export function SettingsModal({
   isPaused,
   onTogglePause,
 }: Props) {
+  const { t, i18n } = useTranslation('ui');
   const [resetStep, setResetStep] = useState<'idle' | 'confirm'>('idle');
   const [inlineStatus, setInlineStatus] = useState<InlineStatus>(null);
   const [activeTab, setActiveTab] = useState<SettingsTab>('audio');
@@ -118,7 +120,7 @@ export function SettingsModal({
   const handleExport = () => {
     const json = exportSaveJSON();
     if (json === null) {
-      flashStatus({ kind: 'error', text: 'No save to export yet.' });
+      flashStatus({ kind: 'error', text: t('settings.data.noSaveToExport') });
       return;
     }
     const blob = new Blob([json], { type: 'application/json' });
@@ -130,7 +132,7 @@ export function SettingsModal({
     anchor.click();
     document.body.removeChild(anchor);
     URL.revokeObjectURL(url);
-    flashStatus({ kind: 'success', text: 'Exported.' });
+    flashStatus({ kind: 'success', text: t('settings.data.exported') });
   };
 
   const handleImportClick = () => {
@@ -150,16 +152,16 @@ export function SettingsModal({
       if (!result.ok) {
         flashStatus({
           kind: 'error',
-          text: result.reason ?? 'Import failed.',
+          text: result.reason ?? t('settings.data.importFailed'),
         });
         return;
       }
-      flashStatus({ kind: 'success', text: 'Imported.' });
+      flashStatus({ kind: 'success', text: t('settings.data.imported') });
       onImportApplied();
     } catch (err) {
       flashStatus({
         kind: 'error',
-        text: `Import failed: ${err instanceof Error ? err.message : String(err)}`,
+        text: t('settings.data.importFailedDetail', { error: err instanceof Error ? err.message : String(err) }),
       });
     }
   };
@@ -186,41 +188,41 @@ export function SettingsModal({
 
   const audioSection = (
     <section className="settings-section" data-tab="audio">
-      <h2 className="settings-section-title">AUDIO</h2>
+      <h2 className="settings-section-title">{t('settings.audio.sectionTitle')}</h2>
       <div className="settings-group">
         <SettingsToggle
-          label="Sound"
+          label={t('settings.audio.sound')}
           checked={settings.sound}
           onChange={onSetSound}
         />
         {settings.sound && (
           <>
             <SettingsToggle
-              label="Music in Background"
-              description="Keep music playing when the tab is hidden or the app is minimized."
+              label={t('settings.audio.musicInBackground')}
+              description={t('settings.audio.musicInBackgroundDesc')}
               checked={settings.musicInBackground}
               onChange={onSetMusicInBackground}
             />
             <SettingsSlider
-              label="Music"
+              label={t('settings.audio.music')}
               value={settings.musicVolume}
               onChange={onSetMusicVolume}
             />
             <SettingsSlider
-              label="SFX"
+              label={t('settings.audio.sfx')}
               value={settings.sfxVolume}
               onChange={onSetSfxVolume}
             />
           </>
         )}
         <div className="settings-audio-credit">
-          Music by{' '}
+          {t('settings.audio.musicCredit')}{' '}
           <a
             href="https://pixabay.com/users/djartmusic-46653586/"
             target="_blank"
             rel="noopener noreferrer"
           >
-            DJARTMUSIC
+            {t('settings.audio.musicCreditAuthor')}
           </a>
         </div>
       </div>
@@ -229,16 +231,16 @@ export function SettingsModal({
 
   const controlsSection = (
     <section className="settings-section settings-section-desktop-only">
-      <h2 className="settings-section-title">CONTROLS</h2>
+      <h2 className="settings-section-title">{t('settings.controls.sectionTitle')}</h2>
       <div className="settings-group">
         <div className="settings-controls-list">
           <div className="settings-control-row">
             <span className="settings-control-key">Esc</span>
-            <span className="settings-control-desc">Open Settings</span>
+            <span className="settings-control-desc">{t('settings.controls.escDesc')}</span>
           </div>
           <div className="settings-control-row">
             <span className="settings-control-key">B</span>
-            <span className="settings-control-desc">Hold to auto-purchase upgrades</span>
+            <span className="settings-control-desc">{t('settings.controls.bDesc')}</span>
           </div>
         </div>
       </div>
@@ -247,18 +249,18 @@ export function SettingsModal({
 
   const displaySection = (
     <section className="settings-section" data-tab="display">
-      <h2 className="settings-section-title">PERFORMANCE</h2>
+      <h2 className="settings-section-title">{t('settings.display.sectionTitle')}</h2>
       <div className="settings-group">
         <SettingsToggle
           buttonRef={firstToggleRef}
-          label="Enable Motion"
-          description="Smooth counter animation. Disables pulses, glows, floating numbers, and all decorative effects."
+          label={t('settings.display.enableMotion')}
+          description={t('settings.display.enableMotionDesc')}
           checked={!settings.reduceMotion}
           onChange={(v) => onSetReduceMotion(!v)}
         />
         <SettingsToggle
-          label="Floating Numbers"
-          description="Show pop-up numbers from autoclicker taps. If this option is toggled off, the rate is shown instead. Significantly improves performance."
+          label={t('settings.display.floatingNumbers')}
+          description={t('settings.display.floatingNumbersDesc')}
           checked={settings.showVerbFloats}
           onChange={onSetShowVerbFloats}
         />
@@ -274,29 +276,29 @@ export function SettingsModal({
         rel="noopener noreferrer"
         className="settings-donate-btn"
       >
-        Donate to Save the Children
+        {t('settings.donate')}
       </a>
     </section>
   );
 
   const dataSection = (
     <section className="settings-section" data-tab="data">
-      <h2 className="settings-section-title">MANAGE SAVE FILE</h2>
+      <h2 className="settings-section-title">{t('settings.data.sectionTitle')}</h2>
       <div className="settings-group settings-save-group">
-        <p className="settings-save-desc">Your progress is saved automatically.</p>
+        <p className="settings-save-desc">{t('settings.data.autoSaveDesc')}</p>
         <button
           type="button"
           className="settings-btn"
           onClick={handleExport}
         >
-          Export Save
+          {t('settings.data.exportSave')}
         </button>
         <button
           type="button"
           className="settings-btn"
           onClick={handleImportClick}
         >
-          Import Save
+          {t('settings.data.importSave')}
         </button>
         <input
           ref={fileInputRef}
@@ -312,14 +314,13 @@ export function SettingsModal({
             className="settings-btn settings-btn-danger"
             onClick={handleResetClick}
           >
-            Reset Game
+            {t('settings.data.resetGame')}
           </button>
         ) : (
           <div className="settings-reset-confirm" role="alertdialog">
-            <p className="settings-reset-title">Reset Game?</p>
+            <p className="settings-reset-title">{t('settings.data.resetConfirmTitle')}</p>
             <p className="settings-reset-body">
-              This erases your save. Clout, upgrades, rebrand count —
-              all of it.
+              {t('settings.data.resetConfirmBody')}
             </p>
             <div className="settings-reset-actions">
               <button
@@ -327,14 +328,14 @@ export function SettingsModal({
                 className="settings-btn"
                 onClick={handleResetCancel}
               >
-                Cancel
+                {t('settings.data.cancel')}
               </button>
               <button
                 type="button"
                 className="settings-btn settings-btn-danger"
                 onClick={handleResetConfirm}
               >
-                Yes, reset
+                {t('settings.data.yesReset')}
               </button>
             </div>
           </div>
@@ -359,15 +360,42 @@ export function SettingsModal({
         className={`settings-pause-btn${isPaused ? ' settings-pause-btn-active' : ''}`}
         onClick={onTogglePause}
       >
-        {isPaused ? '▶  Resume Game' : '⏸  Pause Game'}
+        {isPaused ? `▶  ${t('settings.pause.resume')}` : `⏸  ${t('settings.pause.pause')}`}
       </button>
+    </section>
+  );
+
+  const languageSection = (
+    <section className="settings-section" data-tab="display">
+      <h2 className="settings-section-title">{t('settings.language.sectionTitle')}</h2>
+      <div className="settings-group">
+        <div className="settings-toggle-row">
+          <div className="settings-toggle-text">
+            <div className="settings-toggle-label">{t('settings.language.label')}</div>
+          </div>
+          <select
+            className="settings-lang-select"
+            value={i18n.language}
+            onChange={(e) => changeLanguage(e.target.value)}
+          >
+            {Object.entries(SUPPORTED_LANGUAGES).map(([code, label]) => (
+              <option key={code} value={code}>{label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
     </section>
   );
 
   // Map tabs to their content for mobile view
   const tabContent: Record<SettingsTab, React.ReactNode> = {
     audio: audioSection,
-    display: displaySection,
+    display: (
+      <>
+        {displaySection}
+        {languageSection}
+      </>
+    ),
     data: (
       <>
         {dataSection}
@@ -387,15 +415,15 @@ export function SettingsModal({
         className="settings-modal"
         role="dialog"
         aria-modal="true"
-        aria-label="Settings"
+        aria-label={t('settings.title')}
       >
         <div className="settings-header">
-          <span className="settings-title">Settings</span>
+          <span className="settings-title">{t('settings.title')}</span>
           <button
             ref={closeBtnRef}
             className="settings-close-btn"
             onClick={onClose}
-            aria-label="Close Settings"
+            aria-label={t('settings.closeAria')}
           >
             ×
           </button>
@@ -414,7 +442,7 @@ export function SettingsModal({
               className={`settings-tab${activeTab === tab ? ' settings-tab-active' : ''}`}
               onClick={() => setActiveTab(tab)}
             >
-              {TAB_LABELS[tab]}
+              {t(TAB_KEYS[tab])}
             </button>
           ))}
         </nav>
@@ -434,6 +462,7 @@ export function SettingsModal({
           {audioSection}
           {controlsSection}
           {displaySection}
+          {languageSection}
           {donateSection}
           {dataSection}
           {pauseSection}

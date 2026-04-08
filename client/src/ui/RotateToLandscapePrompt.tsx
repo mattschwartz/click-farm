@@ -1,6 +1,6 @@
 // Rotate-to-landscape prompt for phones in portrait mode.
 //
-// Displays a fullscreen frosted-glass overlay when viewport is ≤767px and
+// Displays a fullscreen frosted-glass overlay when viewport is <=767px and
 // orientation is portrait. The game renders behind it — verb button colors
 // bleed through the translucent surface, giving the player a taste of what's
 // there. Blocks all interaction. Game loop continues ticking.
@@ -12,10 +12,11 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import faviconSrc from '../assets/favicon-sm.png';
 
 /**
- * Detects if the current viewport matches mobile portrait (≤767px width,
+ * Detects if the current viewport matches mobile portrait (<=767px width,
  * portrait orientation).
  */
 function isPhonePortrait(): boolean {
@@ -24,6 +25,7 @@ function isPhonePortrait(): boolean {
 }
 
 export function RotateToLandscapePrompt() {
+  const { t } = useTranslation('ui');
   const [shouldShow, setShouldShow] = useState(isPhonePortrait);
 
   useEffect(() => {
@@ -55,10 +57,10 @@ export function RotateToLandscapePrompt() {
     <div
       className="rotate-to-landscape-overlay"
       role="alert"
-      aria-label="Rotate device to landscape"
+      aria-label={t('rotate.heading')}
     >
       <div className="rotate-to-landscape-content">
-        {/* Phone silhouette tilting from portrait → landscape with a
+        {/* Phone silhouette tilting from portrait -> landscape with a
             curved rotation arrow. Stroke-only for a clean, modern feel. */}
         <svg
           className="rotate-icon"
@@ -71,7 +73,7 @@ export function RotateToLandscapePrompt() {
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          {/* Phone body — portrait rectangle, tilted 45° toward landscape */}
+          {/* Phone body — portrait rectangle, tilted 45deg toward landscape */}
           <g transform="rotate(-45 32 32)">
             <rect x="20" y="8" width="24" height="48" rx="4" />
             {/* Home indicator line */}
@@ -84,16 +86,16 @@ export function RotateToLandscapePrompt() {
           </g>
         </svg>
 
-        <h1 className="rotate-text">Rotate to landscape</h1>
-        <p className="rotate-subtext">This game is best played wide</p>
+        <h1 className="rotate-text">{t('rotate.heading')}</h1>
+        <p className="rotate-subtext">{t('rotate.subtext')}</p>
 
         <img
           className="rotate-favicon"
           src={faviconSrc}
-          alt="Tap Farm"
+          alt={t('rotate.title')}
           draggable={false}
         />
-        <p className="rotate-title">Tap Farm</p>
+        <p className="rotate-title">{t('rotate.title')}</p>
       </div>
     </div>
   );

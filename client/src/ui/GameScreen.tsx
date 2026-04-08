@@ -58,6 +58,7 @@ export function getBKeyAction(
 //   - Upgrade drawer with 3-level preview (UX §6.3) — follow-up UX task.
 
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGame } from './useGame.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 import Decimal from 'decimal.js';
@@ -134,6 +135,7 @@ interface GameScreenProps {
 }
 
 export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
+  const { t } = useTranslation('ui');
   const {
     state,
     click,
@@ -384,10 +386,10 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
           <div className="save-error-banner" role="alert">
             <span className="save-error-banner-text">
               {saveError.kind === 'load_corrupt'
-                ? 'Your save could not be read — starting a fresh run.'
+                ? t('saveError.loadCorrupt')
                 : saveError.kind === 'save_quota'
-                  ? 'Browser storage is full — progress is in memory only.'
-                  : 'Save failed — progress is in memory only.'}
+                  ? t('saveError.saveQuota')
+                  : t('saveError.saveFailed')}
             </span>
             <button
               type="button"
@@ -444,11 +446,11 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
             ref={upgradesBtnRef}
             className={`prestige-btn prestige-btn-upgrades${!prestigeEligible ? ' prestige-btn-locked' : ''}`}
             onClick={handleUpgradesClick}
-            title={`${fmtCompactInt(state.player.clout)} Clout`}
-            aria-label={`Rebrand Upgrades — ${fmtCompactInt(state.player.clout)} Clout`}
+            title={t('prestige.cloutLabel', { clout: fmtCompactInt(state.player.clout) })}
+            aria-label={t('prestige.rebrandUpgradesAria', { clout: fmtCompactInt(state.player.clout) })}
           >
-            ⚙ Upgrades
-            <span className="prestige-label-touch">{fmtCompactInt(state.player.clout)} Clout</span>
+            ⚙ {t('prestige.upgrades')}
+            <span className="prestige-label-touch">{t('prestige.cloutLabel', { clout: fmtCompactInt(state.player.clout) })}</span>
           </button>
           <button
             ref={rebrandBtnRef}
@@ -457,20 +459,20 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
             disabled={!prestigeEligible}
             title={
               prestigeEligible
-                ? `Rebrand → +${fmtCompactInt(rebrandPreview)} Clout`
-                : 'Earn followers first'
+                ? t('prestige.rebrandTo', { clout: fmtCompactInt(rebrandPreview) })
+                : t('prestige.earnFollowersFirst')
             }
             aria-label={
               prestigeEligible
-                ? `Rebrand — earn ${fmtCompactInt(rebrandPreview)} Clout`
-                : 'Rebrand locked — earn followers first'
+                ? t('prestige.rebrandAria', { clout: fmtCompactInt(rebrandPreview) })
+                : t('prestige.rebrandLockedAria')
             }
           >
-            ↻ Rebrand
+            ↻ {t('prestige.rebrand')}
             <span className="prestige-label-touch">
               {prestigeEligible
                 ? `+${fmtCompactInt(rebrandPreview)} Clout`
-                : 'earn followers'}
+                : t('prestige.earnFollowers')}
             </span>
           </button>
         </div>
@@ -570,14 +572,14 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
       <div className="floating-toolbar">
         <span className="alpha-row">
           <span className="alpha-version">v{__APP_VERSION__}</span>
-          <span className="alpha-label">ALPHA</span>
+          <span className="alpha-label">{t('toolbar.alpha')}</span>
         </span>
         <button
           type="button"
           className="settings-gear-btn"
           onClick={() => setShowSettingsModal(true)}
-          aria-label="Open Settings"
-          title="Settings"
+          aria-label={t('toolbar.openSettings')}
+          title={t('toolbar.settings')}
         >
           ⚙
         </button>
@@ -586,8 +588,8 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
           target="_blank"
           rel="noopener noreferrer"
           className="settings-gear-btn github-link"
-          aria-label="GitHub"
-          title="GitHub"
+          aria-label={t('toolbar.github')}
+          title={t('toolbar.github')}
         >
           <svg viewBox="0 0 16 16" width="22" height="22" fill="currentColor">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
@@ -599,8 +601,8 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               type="button"
               className="music-player-btn"
               onClick={handlePrev}
-              aria-label="Previous track"
-              title="Previous track"
+              aria-label={t('toolbar.previousTrack')}
+              title={t('toolbar.previousTrack')}
             >
               <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
                 <path d="M3 2h2v12H3zM7 8l7-5v10z"/>
@@ -610,8 +612,8 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               type="button"
               className="music-player-btn music-player-btn-play"
               onClick={handlePlayPause}
-              aria-label={musicPlaying ? 'Pause' : 'Play'}
-              title={musicPlaying ? 'Pause' : 'Play'}
+              aria-label={musicPlaying ? t('toolbar.pause') : t('toolbar.play')}
+              title={musicPlaying ? t('toolbar.pause') : t('toolbar.play')}
             >
               {musicPlaying ? (
                 <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
@@ -627,8 +629,8 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               type="button"
               className="music-player-btn"
               onClick={handleNext}
-              aria-label="Next track"
-              title="Next track"
+              aria-label={t('toolbar.nextTrack')}
+              title={t('toolbar.nextTrack')}
             >
               <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
                 <path d="M2 3l7 5-7 5zM11 2h2v12h-2z"/>

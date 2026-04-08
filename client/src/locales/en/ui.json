@@ -1,0 +1,181 @@
+{
+  "gameName": {
+    "desktop": "Click Farm",
+    "touch": "Tap Farm"
+  },
+  "topBar": {
+    "engagement": "Engagement",
+    "followers": "followers",
+    "viral": "VIRAL +{{magnitude}}"
+  },
+  "runBadge": {
+    "one": "Rebrand +{{count}}",
+    "other": "Rebrands +{{count}}"
+  },
+  "saveError": {
+    "loadCorrupt": "Your save could not be read \u2014 starting a fresh run.",
+    "saveQuota": "Browser storage is full \u2014 progress is in memory only.",
+    "saveFailed": "Save failed \u2014 progress is in memory only."
+  },
+  "prestige": {
+    "upgrades": "Upgrades",
+    "cloutLabel": "{{clout}} Clout",
+    "rebrand": "Rebrand",
+    "rebrandTo": "Rebrand \u2192 +{{clout}} Clout",
+    "earnFollowersFirst": "Earn followers first",
+    "earnFollowers": "earn followers",
+    "rebrandUpgradesAria": "Rebrand Upgrades \u2014 {{clout}} Clout",
+    "rebrandAria": "Rebrand \u2014 earn {{clout}} Clout",
+    "rebrandLockedAria": "Rebrand locked \u2014 earn followers first"
+  },
+  "toolbar": {
+    "openSettings": "Open Settings",
+    "settings": "Settings",
+    "github": "GitHub",
+    "previousTrack": "Previous track",
+    "nextTrack": "Next track",
+    "pause": "Pause",
+    "play": "Play",
+    "alpha": "ALPHA"
+  },
+  "settings": {
+    "title": "Settings",
+    "closeAria": "Close Settings",
+    "tabs": {
+      "audio": "Audio",
+      "display": "Display",
+      "data": "Saves"
+    },
+    "audio": {
+      "sectionTitle": "AUDIO",
+      "sound": "Sound",
+      "musicInBackground": "Music in Background",
+      "musicInBackgroundDesc": "Keep music playing when the tab is hidden or the app is minimized.",
+      "music": "Music",
+      "sfx": "SFX",
+      "musicCredit": "Music by",
+      "musicCreditAuthor": "DJARTMUSIC"
+    },
+    "controls": {
+      "sectionTitle": "CONTROLS",
+      "escDesc": "Open Settings",
+      "bDesc": "Hold to auto-purchase upgrades"
+    },
+    "display": {
+      "sectionTitle": "PERFORMANCE",
+      "enableMotion": "Enable Motion",
+      "enableMotionDesc": "Smooth counter animation. Disables pulses, glows, floating numbers, and all decorative effects.",
+      "floatingNumbers": "Floating Numbers",
+      "floatingNumbersDesc": "Show pop-up numbers from autoclicker taps. If this option is toggled off, the rate is shown instead. Significantly improves performance."
+    },
+    "donate": "Donate to Save the Children",
+    "data": {
+      "sectionTitle": "MANAGE SAVE FILE",
+      "autoSaveDesc": "Your progress is saved automatically.",
+      "exportSave": "Export Save",
+      "importSave": "Import Save",
+      "resetGame": "Reset Game",
+      "resetConfirmTitle": "Reset Game?",
+      "resetConfirmBody": "This erases your save. Clout, upgrades, rebrand count \u2014 all of it.",
+      "cancel": "Cancel",
+      "yesReset": "Yes, reset",
+      "noSaveToExport": "No save to export yet.",
+      "exported": "Exported.",
+      "importFailed": "Import failed.",
+      "imported": "Imported.",
+      "importFailedDetail": "Import failed: {{error}}"
+    },
+    "pause": {
+      "resume": "Resume Game",
+      "pause": "Pause Game"
+    },
+    "language": {
+      "sectionTitle": "LANGUAGE",
+      "label": "Language"
+    }
+  },
+  "generators": {
+    "unlocksAt": "Unlocks at {{threshold}} total followers",
+    "unlocksAtFollowers": "Unlocks at {{threshold}} followers",
+    "buy": "Buy {{name}}",
+    "cost": "cost: {{cost}} engagement",
+    "buyUnit": "Buy 1 unit for {{cost}} engagement",
+    "speed": "SPEED",
+    "speedPlus": "SPEED +{{level}}",
+    "power": "POWER",
+    "powerPlus": "POWER +{{count}}",
+    "hire": "HIRE",
+    "hirePlus": "HIRE +{{count}}",
+    "max": "MAX",
+    "superLabel": "SUPER",
+    "superII": "SUPER II",
+    "superIII": "SUPER III",
+    "rushBuy": "RUSH BUY",
+    "rushBuyHoldAria": "Hold to rush buy all affordable upgrades",
+    "rushBuyReleaseAria": "Buying \u2014 release to stop",
+    "rushBuyHoldTitle": "Hold to rush buy",
+    "rushBuyReleaseTitle": "Release to stop",
+    "upgradeTitle": {
+      "maxed": "{{name}} is at max level (L{{level}})",
+      "armed": "Upgrade {{name}} (L{{level}} \u2192 L{{nextLevel}} costs {{cost}}) \u2014 {{deficit}} more engagement",
+      "ready": "Upgrade {{name}} (L{{level}} \u2192 L{{nextLevel}} costs {{cost}}) \u2014 ready"
+    },
+    "upgradeAria": "Upgrade {{name}}",
+    "verbAria": "{{name}}, {{yield}} engagement per tap, cooldown {{cooldown}}ms",
+    "verbAriaWithAuto": "{{name}}, {{yield}} engagement per tap, cooldown {{cooldown}}ms, {{count}} autoclickers",
+    "ready": "READY",
+    "ghostAt": "at {{threshold}} followers",
+    "autoclickerAria": {
+      "maxed": "{{name}} autoclickers maxed at {{count}}",
+      "affordable": "Autoclicker {{name}}, {{count}} autoclickers, affordable, costs {{cost}} engagement",
+      "unaffordable": "Autoclicker {{name}}, {{count}} autoclickers, not affordable, costs {{cost}} engagement"
+    },
+    "autoclickerTitle": {
+      "maxed": "{{name}} \u2014 max autoclickers ({{count}})",
+      "buy": "Buy autoclicker for {{cost}} engagement"
+    },
+    "superAria": {
+      "maxed": "{{name}} gear maxed, {{gearName}} level 3 of 3.",
+      "affordable": "Super upgrade {{name}}, {{gearName}}, affordable, costs {{cost}} engagement{{multiplierSuffix}}. Hold for 3 seconds to purchase.",
+      "unaffordable": "Super upgrade {{name}}, {{gearName}}, not affordable, costs {{cost}} engagement."
+    },
+    "superTitle": {
+      "maxed": "{{name}} \u2014 {{gearName}} maxed",
+      "buy": "{{gearName}} \u2014 hold to buy ({{cost}} eng)"
+    }
+  },
+  "platforms": {
+    "followers": "followers",
+    "unlocksAt": "Unlocks at {{threshold}} total followers"
+  },
+  "shop": {
+    "title": "Rebrand Upgrades",
+    "closeAria": "Close Rebrand Upgrades",
+    "cloutBalance": "Clout: {{clout}}",
+    "emptyHint": "Earn Clout by rebranding. Your first rebrand is ahead.",
+    "allMaxed": "You\u2019ve mastered the system. Rebrand to reset the stage.",
+    "categories": {
+      "ENGAGEMENT": "ENGAGEMENT",
+      "UNLOCKS": "UNLOCKS"
+    },
+    "level": "Lv {{current}}/{{max}}",
+    "owned": "owned",
+    "locked": "locked",
+    "purchaseAria": {
+      "owned": "{{name}} \u2014 owned",
+      "maxLevel": "{{name}} \u2014 max level",
+      "insufficient": "Purchase {{name}} (need {{cost}} Clout)",
+      "affordable": "Purchase {{name}} for {{cost}} Clout"
+    }
+  },
+  "postZone": {
+    "ariaLabel": "Post content",
+    "button": "Post",
+    "perClick": "Per click: +{{value}}"
+  },
+  "rotate": {
+    "heading": "Rotate to landscape",
+    "subtext": "This game is best played wide",
+    "title": "Tap Farm"
+  }
+}

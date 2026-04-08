@@ -22,6 +22,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import type { GameState, GeneratorId, PlatformId, UpgradeId } from '../types.ts';
 import { cloutForRebrand } from '../prestige/index.ts';
 import { fmtCompact, fmtCompactInt } from './format.ts';
@@ -48,7 +49,7 @@ export interface ResetItem {
 }
 
 /** Items to show in "What resets" — all values from current run state. */
-export function buildResetItems(state: GameState): ResetItem[] {
+export function buildResetItems(state: GameState, t: (key: string, opts?: Record<string, unknown>) => string): ResetItem[] {
   const ownedCount = (Object.keys(state.generators) as GeneratorId[]).filter(
     (id) => state.generators[id].owned && !POST_PRESTIGE_GENERATORS.includes(id),
   ).length;
@@ -58,10 +59,10 @@ export function buildResetItems(state: GameState): ResetItem[] {
   ).length;
 
   return [
-    { label: 'Engagement', value: fmtCompact(state.player.engagement) },
-    { label: 'Generators owned', value: `${ownedCount} types` },
-    { label: 'Platforms unlocked', value: `${unlockedPlatforms} platforms` },
-    { label: 'Follower counts', value: 'all' },
+    { label: t('narrative:ceremony.resetItems.engagement'), value: fmtCompact(state.player.engagement) },
+    { label: t('narrative:ceremony.resetItems.generatorsOwned'), value: t('narrative:ceremony.resetItems.generatorsOwnedValue', { count: ownedCount }) },
+    { label: t('narrative:ceremony.resetItems.platformsUnlocked'), value: t('narrative:ceremony.resetItems.platformsUnlockedValue', { count: unlockedPlatforms }) },
+    { label: t('narrative:ceremony.resetItems.followerCounts'), value: t('narrative:ceremony.resetItems.followerCountsValue') },
   ];
 }
 
@@ -72,17 +73,17 @@ export interface PersistItem {
 }
 
 /** Items to show in "What persists" — meta-state that survives the rebrand. */
-export function buildPersistItems(state: GameState): PersistItem[] {
+export function buildPersistItems(state: GameState, t: (key: string, opts?: Record<string, unknown>) => string): PersistItem[] {
   const ownedUpgrades = (Object.keys(state.player.clout_upgrades) as UpgradeId[]).filter(
     (id) => state.player.clout_upgrades[id] > 0,
   ).length;
 
   return [
-    { label: 'Clout', value: '' },
-    { label: 'Clout upgrades', value: `${ownedUpgrades} owned` },
-    { label: 'Lifetime followers', value: fmtCompactInt(state.player.lifetime_followers), highlight: true },
-    { label: 'Lifetime engagement', value: fmtCompactInt(state.player.lifetime_engagement), highlight: true },
-    { label: 'Rebrand count', value: `→ ${state.player.rebrand_count + 1}` },
+    { label: t('narrative:ceremony.persistItems.clout'), value: '' },
+    { label: t('narrative:ceremony.persistItems.cloutUpgrades'), value: t('narrative:ceremony.persistItems.cloutUpgradesValue', { count: ownedUpgrades }) },
+    { label: t('narrative:ceremony.persistItems.lifetimeFollowers'), value: fmtCompactInt(state.player.lifetime_followers), highlight: true },
+    { label: t('narrative:ceremony.persistItems.lifetimeEngagement'), value: fmtCompactInt(state.player.lifetime_engagement), highlight: true },
+    { label: t('narrative:ceremony.persistItems.rebrandCount'), value: t('narrative:ceremony.persistItems.rebrandCountValue', { count: state.player.rebrand_count + 1 }) },
   ];
 }
 
@@ -258,10 +259,11 @@ function Phase1Review({
   onCancel: () => void;
   onContinue: () => void;
 }) {
+  const { t } = useTranslation();
   const cloutEarned = cloutEarnedForReview(state);
   const newBalance = newCloutBalanceForReview(state);
-  const resetItems = buildResetItems(state);
-  const persistItems = buildPersistItems(state);
+  const resetItems = buildResetItems(state, t);
+  const persistItems = buildPersistItems(state, t);
 
   const cancelBtnRef = useRef<HTMLButtonElement>(null);
   const continueBtnRef = useRef<HTMLButtonElement>(null);
@@ -288,36 +290,36 @@ function Phase1Review({
       className="ceremony-modal"
       role="dialog"
       aria-modal="true"
-      aria-label="Rebrand — Threshold Review"
+      aria-label={t('narrative:ceremony.phase1.dialogAria')}
       onKeyDown={handleKeyDown}
     >
       <button
         className="ceremony-close-btn"
         onClick={onCancel}
-        aria-label="Cancel rebrand"
+        aria-label={t('narrative:ceremony.phase1.cancelAria')}
       >
         ×
       </button>
-      <p className="ceremony-headline">You are about to rebrand.</p>
+      <p className="ceremony-headline">{t('narrative:ceremony.phase1.headline')}</p>
 
       <div className="ceremony-stat-box">
         <div className="ceremony-stat-row">
-          <span className="ceremony-stat-label">Current followers</span>
+          <span className="ceremony-stat-label">{t('narrative:ceremony.phase1.currentFollowers')}</span>
           <span className="ceremony-stat-value">{fmtCompactInt(state.player.total_followers)}</span>
         </div>
         <div className="ceremony-stat-row">
-          <span className="ceremony-stat-label">Clout earned</span>
+          <span className="ceremony-stat-label">{t('narrative:ceremony.phase1.cloutEarned')}</span>
           <span className="ceremony-stat-value ceremony-stat-positive">+{cloutEarned}</span>
         </div>
         <div className="ceremony-stat-row ceremony-stat-row-final">
-          <span className="ceremony-stat-label">New Clout balance</span>
+          <span className="ceremony-stat-label">{t('narrative:ceremony.phase1.newCloutBalance')}</span>
           <span className="ceremony-stat-value">{newBalance}</span>
         </div>
       </div>
 
       <div className="ceremony-columns">
         <div className="ceremony-column">
-          <p className="ceremony-column-header">What resets</p>
+          <p className="ceremony-column-header">{t('narrative:ceremony.phase1.whatResets')}</p>
           {resetItems.map((item) => (
             <div key={item.label} className="ceremony-column-row">
               <span className="ceremony-col-bullet">▸</span>
@@ -329,7 +331,7 @@ function Phase1Review({
           ))}
         </div>
         <div className="ceremony-column">
-          <p className="ceremony-column-header">What persists</p>
+          <p className="ceremony-column-header">{t('narrative:ceremony.phase1.whatPersists')}</p>
           {persistItems.map((item) => (
             <div key={item.label} className={`ceremony-column-row${item.highlight ? ' ceremony-column-row-highlight' : ''}`}>
               <span className="ceremony-col-bullet">▸</span>
@@ -348,14 +350,14 @@ function Phase1Review({
           className="ceremony-btn ceremony-btn-cancel ceremony-btn-cancel-bottom"
           onClick={onCancel}
         >
-          Cancel
+          {t('narrative:ceremony.phase1.cancel')}
         </button>
         <button
           ref={continueBtnRef}
           className="ceremony-btn ceremony-btn-continue"
           onClick={onContinue}
         >
-          Continue
+          {t('narrative:ceremony.phase1.continue')}
         </button>
       </div>
     </div>
@@ -375,7 +377,8 @@ function Phase2Eulogy({
   reducedMotion: boolean;
   onSkip: () => void;
 }) {
-  const stanzas = useRef(buildEulogyStanzas(state)).current;
+  const { t } = useTranslation();
+  const stanzas = useRef(buildEulogyStanzas(state, t)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
   const rebrandCount = state.player.rebrand_count;
 
@@ -403,7 +406,7 @@ function Phase2Eulogy({
       className="ceremony-modal ceremony-modal-eulogy"
       role="dialog"
       aria-modal="true"
-      aria-label="Rebrand — Eulogy"
+      aria-label={t('narrative:ceremony.phase2.dialogAria')}
       style={
         {
           '--eulogy-desat': desatProgress.toFixed(2),
@@ -424,9 +427,9 @@ function Phase2Eulogy({
         <button
           className={`eulogy-skip-btn${onFinalStanza ? ' eulogy-skip-btn-continue' : ''}`}
           onClick={onSkip}
-          aria-label={onFinalStanza ? 'Continue' : 'Skip eulogy'}
+          aria-label={onFinalStanza ? t('narrative:ceremony.phase2.skipAria.continue') : t('narrative:ceremony.phase2.skipAria.skip')}
         >
-          {onFinalStanza ? 'Continue' : 'Skip'}
+          {onFinalStanza ? t('narrative:ceremony.phase2.continue') : t('narrative:ceremony.phase2.skip')}
         </button>
       )}
     </div>
@@ -438,6 +441,7 @@ function Phase2Eulogy({
 // ---------------------------------------------------------------------------
 
 function Phase3Commit({ onCommit }: { onCommit: () => void }) {
+  const { t } = useTranslation();
   const btnRef = useRef<HTMLButtonElement>(null);
   const [pressing, setPressing] = useState(false);
 
@@ -458,15 +462,15 @@ function Phase3Commit({ onCommit }: { onCommit: () => void }) {
       className="ceremony-modal ceremony-modal-commit"
       role="dialog"
       aria-modal="true"
-      aria-label="Rebrand — Commit"
+      aria-label={t('narrative:ceremony.phase3.dialogAria')}
     >
-      <p className="commit-headline">Become someone new.</p>
+      <p className="commit-headline">{t('narrative:ceremony.phase3.headline')}</p>
       <button
         ref={btnRef}
         className={`commit-btn${pressing ? ' commit-btn-pressing' : ''}`}
         onClick={handleClick}
       >
-        Rebrand
+        {t('narrative:ceremony.phase3.rebrand')}
       </button>
     </div>
   );
@@ -485,6 +489,7 @@ function Phase4Dissolution({
   reducedMotion: boolean;
   onComplete: () => void;
 }) {
+  const { t } = useTranslation();
   // Animated display values — tick from snapshot down to zero.
   const [displayEng, setDisplayEng] = useState(snapshot.engagement);
   const [displayFol, setDisplayFol] = useState(snapshot.followers);
@@ -533,21 +538,21 @@ function Phase4Dissolution({
       className={`ceremony-modal ceremony-modal-dissolution ceremony-stage-${stage}${reducedMotion ? ' ceremony-reduced-motion' : ''}`}
       role="dialog"
       aria-modal="true"
-      aria-label="Rebranding"
+      aria-label={t('narrative:ceremony.phase4.dialogAria')}
     >
       {/* aria-live announcement for screen readers */}
       <div className="sr-only" aria-live="assertive">
-        Rebranding. Run {runNumber} beginning.
+        {t('narrative:ceremony.phase4.srAnnounce', { runNumber })}
       </div>
 
       <div className="dissolution-counters" aria-hidden="true">
         <div className="dissolution-counter">
           <span className="dissolution-counter-value">{fmtCompactInt(displayEng)}</span>
-          <span className="dissolution-counter-label">engagement</span>
+          <span className="dissolution-counter-label">{t('narrative:ceremony.phase4.engagement')}</span>
         </div>
         <div className="dissolution-counter">
           <span className="dissolution-counter-value">{fmtCompactInt(displayFol)}</span>
-          <span className="dissolution-counter-label">followers</span>
+          <span className="dissolution-counter-label">{t('narrative:ceremony.phase4.followers')}</span>
         </div>
       </div>
     </div>
