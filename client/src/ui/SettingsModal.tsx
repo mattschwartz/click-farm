@@ -242,6 +242,10 @@ export function SettingsModal({
             <span className="settings-control-key">B</span>
             <span className="settings-control-desc">{t('settings.controls.bDesc')}</span>
           </div>
+          <div className="settings-control-row">
+            <span className="settings-control-key">1 – 5</span>
+            <span className="settings-control-desc">{t('settings.controls.verbDesc')}</span>
+          </div>
         </div>
       </div>
     </section>

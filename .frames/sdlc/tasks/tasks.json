@@ -1,5 +1,5 @@
 {
-  "next_id": 209,
+  "next_id": 210,
   "tasks": [
     {
       "id": 1,
@@ -8547,6 +8547,46 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-08"
+    },
+    {
+      "id": 209,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Add gamepad controller support via Gamepad API",
+      "requester": "engineer",
+      "complexity": "opus",
+      "overview": "Add browser Gamepad API integration so the game is playable with a controller. Requires a rAF polling loop for button states, a configurable button mapping layer (face buttons/d-pad to verbs, triggers for menus/scroll), and wiring into existing onClickVerb, settings, and modal handlers. Should respect cooldown gating and provide the same visual feedback (depress, wiggle) as keyboard shortcuts.",
+      "related_items": [
+        {
+          "ref": "client/src/ui/ActionsColumn.tsx",
+          "purpose": "Keyboard shortcut implementation to mirror for gamepad"
+        },
+        {
+          "ref": "client/src/ui/SettingsModal.tsx",
+          "purpose": "Controls section needs gamepad bindings display"
+        }
+      ],
+      "acceptance_criteria": [
+        "Game is playable end-to-end with a standard gamepad (e.g. Xbox, PlayStation controller)",
+        "Face buttons or d-pad mapped to verb taps with cooldown gating",
+        "At least one button mapped to open/close settings",
+        "Visual feedback (depress, cooldown wiggle) matches keyboard behavior",
+        "Gamepad controls listed in Settings > Controls section",
+        "No interference with existing keyboard/pointer input"
+      ],
+      "open_questions": [
+        {
+          "question": "What button mapping feels most natural? Should it be configurable?",
+          "owner": "game-designer"
+        },
+        {
+          "question": "Should gamepad support extend to modals (rebrand ceremony, clout shop)?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
     }
   ]
 }
