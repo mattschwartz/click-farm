@@ -135,6 +135,8 @@ const FLOAT_TTL_MS = 2700; // slightly longer than the 2600ms CSS animation
 // Shared map of verb button DOM refs — keyboard handler uses these to
 // trigger a visual depress on keypress.
 const verbBtnRefs = new Map<GeneratorId, HTMLButtonElement>();
+// Shared map of float emitters — keyboard handler calls these to show floats.
+const verbFloatEmitters = new Map<GeneratorId, () => void>();
 
 /** Briefly wiggle a verb button to signal "on cooldown". */
 function wiggleVerb(el: HTMLButtonElement | null | undefined) {
@@ -282,6 +284,32 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
     return () => window.clearInterval(interval);
   }, [autoCount, burstIntervalMs, perAutoNum, prefersReducedMotion, showFloats, isPaused]);
 
+  // Emit a float at a given position (percentage coordinates within the button).
+  const emitFloat = useCallback((x: number, y: number) => {
+    const id = nextId.current++;
+    const hires = genState.autoclicker_count;
+    setFloats((prev) => pushFloat(prev, { id, value: perTap, x, y, hireCount: hires > 1 ? hires : undefined }, !showFloats));
+    window.setTimeout(() => {
+      setFloats((prev) => prev.filter((f) => f.id !== id));
+    }, FLOAT_TTL_MS);
+  }, [perTapNum, genState.autoclicker_count, showFloats]);
+
+  // Emit a float at a random center position (for keyboard taps).
+  const emitCenterFloat = useCallback(() => {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = Math.random() * 25;
+    const rect = btnRef.current?.getBoundingClientRect();
+    const x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
+    const y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
+    emitFloat(x, y);
+  }, [emitFloat]);
+
+  // Register emitter for keyboard handler.
+  useEffect(() => {
+    verbFloatEmitters.set(verbId, emitCenterFloat);
+    return () => { verbFloatEmitters.delete(verbId); };
+  }, [verbId, emitCenterFloat]);
+
   const handleTap = useCallback((e: React.PointerEvent | React.MouseEvent) => {
     // Only show float feedback if the cooldown gate will accept the tap.
     const cdNow = Date.now();
@@ -290,10 +318,8 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
 
     playClick();
     onClick(verbId);
-    const id = nextId.current++;
 
     // Position the float near the pointer with random scatter.
-    // Keyboard-triggered clicks have clientX/Y = 0 — fall back to center.
     const rect = btnRef.current?.getBoundingClientRect();
     const isKeyboard = e.clientX === 0 && e.clientY === 0;
     const angle = Math.random() * Math.PI * 2;
@@ -304,13 +330,8 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
       x = ((e.clientX - rect.left + Math.cos(angle) * radius) / rect.width) * 100;
       y = ((e.clientY - rect.top + Math.sin(angle) * radius) / rect.height) * 100;
     }
-
-    const hires = genState.autoclicker_count;
-    setFloats((prev) => pushFloat(prev, { id, value: perTap, x, y, hireCount: hires > 1 ? hires : undefined }, !showFloats));
-    window.setTimeout(() => {
-      setFloats((prev) => prev.filter((f) => f.id !== id));
-    }, FLOAT_TTL_MS);
-  }, [onClick, verbId, perTapNum, cdMs, state.player.last_manual_click_at, genState.autoclicker_count]);
+    emitFloat(x, y);
+  }, [onClick, verbId, perTapNum, cdMs, state.player.last_manual_click_at, genState.autoclicker_count, emitFloat]);
 
   const fillHeight = atFloor ? 100 : progress * 100;
 
@@ -515,6 +536,7 @@ export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats =
         kbLastTap.current[verb] = now;
         playClick();
         onClickVerb(verb);
+        verbFloatEmitters.get(verb)?.();
         const el = verbBtnRefs.get(verb);
         if (el) {
           el.classList.add('live-verb-kb-press');
