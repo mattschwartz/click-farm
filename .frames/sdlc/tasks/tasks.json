@@ -6802,7 +6802,7 @@
       "id": 168,
       "role": "engineer",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Create Spanish (es) locale files with AI-generated translations",
       "requester": "architect",
@@ -6831,7 +6831,8 @@
         "The language switcher from task #167 can switch to Spanish and the full UI renders in Spanish without missing keys"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 169,
@@ -6869,9 +6870,7 @@
         "A brief summary of what was changed and why, noted in the task completion"
       ],
       "open_questions": [],
-      "blocked_on": [
-        168
-      ]
+      "blocked_on": []
     },
     {
       "id": 170,
