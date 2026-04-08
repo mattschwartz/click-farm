@@ -64,10 +64,10 @@ export interface RebrandResult {
 
 /**
  * Whether the player can rebrand right now.
- * Gate: viral_stunts must be unlocked (owned) before rebrand is available.
+ * Gate: mogging must be unlocked (owned) before rebrand is available.
  */
 export function canRebrand(state: GameState): boolean {
-  return state.generators.viral_stunts.owned;
+  return state.generators.mogging.owned;
 }
 
 export function calculateRebrand(state: GameState): RebrandResult {

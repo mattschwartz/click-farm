@@ -260,7 +260,7 @@ describe('migrate', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(16);
+    expect(result.version).toBe(17);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -408,7 +408,7 @@ describe('migrateV3toV4', () => {
 
   it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(16);
+    expect(result.version).toBe(17);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
     // V14→V15 strips creator_kit and adds verb_gear
@@ -459,7 +459,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version via the chain', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(16);
+    expect(result.version).toBe(17);
     // V14→V15 strips creator_kit and adds verb_gear
     expect((result.state.player as any).creator_kit).toBeUndefined();
     expect(result.state.player.verb_gear).toEqual({});
@@ -488,7 +488,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(16);
+    expect(result.version).toBe(17);
     expect((result.state.player as any).creator_kit).toBeUndefined();
     expect(result.state.player.verb_gear).toEqual({});
   });
@@ -591,7 +591,7 @@ describe('migrateV5toV6', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(16);
+    expect(result.version).toBe(17);
     // V15→V16 converts number to string; the engagement clamp from V5→V6 still applies
     expect(result.state.player.engagement).toBe(String(Number.MAX_SAFE_INTEGER));
   });
@@ -908,7 +908,7 @@ describe('migrateV14toV15', () => {
 
   it('integrates with migrate() — a v14 save reaches current version', () => {
     const result = migrate(makeV14SaveData());
-    expect(result.version).toBe(16);
+    expect(result.version).toBe(17);
     expect((result.state.player as any).creator_kit).toBeUndefined();
     expect(result.state.player.verb_gear).toEqual({});
   });

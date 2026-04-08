@@ -86,12 +86,12 @@ export const GENERATOR_DISPLAY: Record<GeneratorId, GeneratorDisplay> = {
     color: '#6fb89b',
     tagline: 'game:generators.podcasts.tagline',
   },
-  viral_stunts: {
-    name: 'game:generators.viral_stunts.name',
-    icon: '🎪',
+  mogging: {
+    name: 'game:generators.mogging.name',
+    icon: '🗿',
     category: 'late',
     color: '#e8b84a',
-    tagline: 'game:generators.viral_stunts.tagline',
+    tagline: 'game:generators.mogging.tagline',
   },
   // Post-prestige generators — unlocked only via Clout upgrades.
   ai_slop: {
@@ -126,7 +126,7 @@ export const GENERATOR_ORDER: readonly GeneratorId[] = [
   'selfies',
   'livestreams',
   'podcasts',
-  'viral_stunts',
+  'mogging',
   'ai_slop',
   'deepfakes',
   'algorithmic_prophecy',

@@ -87,9 +87,9 @@ export function buildPersistItems(state: GameState, t: (key: string, opts?: Reco
   ];
 }
 
-/** True when the player has unlocked viral_stunts and may rebrand. */
+/** True when the player has unlocked mogging and may rebrand. */
 export function isEligibleToRebrand(state: GameState): boolean {
-  return state.generators.viral_stunts.owned;
+  return state.generators.mogging.owned;
 }
 
 /**

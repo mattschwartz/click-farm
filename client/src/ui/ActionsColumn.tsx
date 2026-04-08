@@ -28,14 +28,14 @@ import chirpImg from '../assets/chirp.png';
 import selfieImg from '../assets/selfie.png';
 import livestreamImg from '../assets/livestream.png';
 import podcastImg from '../assets/podcast.png';
-import viralStuntsImg from '../assets/viral-stunts.png';
+import moggingImg from '../assets/mogging.png';
 
 const VERB_IMAGE: Partial<Record<string, string>> = {
   chirps: chirpImg,
   selfies: selfieImg,
   livestreams: livestreamImg,
   podcasts: podcastImg,
-  viral_stunts: viralStuntsImg,
+  mogging: moggingImg,
 };
 
 // ---------------------------------------------------------------------------
@@ -47,7 +47,7 @@ const VERB_COLOR: Record<string, string> = {
   selfies: '#e07040',
   livestreams: '#9a3adf',
   podcasts: '#5a6adf',
-  viral_stunts: '#df3a5a',
+  mogging: '#df3a5a',
 };
 
 /** Parse hex to "R, G, B" string for rgba() compositing. */
@@ -71,7 +71,7 @@ const LADDER_VERBS: GeneratorId[] = [
   'selfies',
   'livestreams',
   'podcasts',
-  'viral_stunts',
+  'mogging',
 ];
 
 // ---------------------------------------------------------------------------
@@ -497,7 +497,7 @@ interface ActionsColumnProps {
 
 export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats = true, isPaused = false }: ActionsColumnProps) {
   // Owned ladder verbs (live buttons) in fixed ladder order:
-  // chirps → selfies → livestreams → podcasts → viral_stunts.
+  // chirps → selfies → livestreams → podcasts → mogging.
   const liveVerbs = useMemo(() =>
     LADDER_VERBS.filter((id) => state.generators[id].owned),
     [state.generators],

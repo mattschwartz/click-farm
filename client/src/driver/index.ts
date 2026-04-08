@@ -184,7 +184,7 @@ export interface GameDriver {
    * Returns the RebrandResult so the UI can show the Clout earned.
    */
   rebrand(): RebrandResult;
-  /** Whether rebrand is currently available (viral_stunts must be unlocked). */
+  /** Whether rebrand is currently available (mogging must be unlocked). */
   canRebrand(): boolean;
   /** Spend Clout to level up a meta-upgrade. Throws when unaffordable. */
   buyCloutUpgrade(upgradeId: UpgradeId): void;
@@ -634,7 +634,7 @@ export function createDriver(options: DriverOptions): GameDriver {
 
     rebrand() {
       if (!canRebrand(state)) {
-        throw new Error('rebrand: viral_stunts must be unlocked before rebranding');
+        throw new Error('rebrand: mogging must be unlocked before rebranding');
       }
       const result = calculateRebrand(state);
       applyState(applyRebrand(state, result, staticData, now()));

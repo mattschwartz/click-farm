@@ -79,20 +79,20 @@ function makeState(overrides: {
 // ---------------------------------------------------------------------------
 
 describe('isEligibleToRebrand', () => {
-  it('returns false when viral_stunts is not owned', () => {
+  it('returns false when mogging is not owned', () => {
     const state = makeState({ totalFollowers: 100_000 });
-    // viral_stunts starts unowned in default state
-    expect(state.generators.viral_stunts.owned).toBe(false);
+    // mogging starts unowned in default state
+    expect(state.generators.mogging.owned).toBe(false);
     expect(isEligibleToRebrand(state)).toBe(false);
   });
 
-  it('returns true when viral_stunts is owned', () => {
+  it('returns true when mogging is owned', () => {
     const state = makeState({ totalFollowers: 100_000 });
     const withViral = {
       ...state,
       generators: {
         ...state.generators,
-        viral_stunts: { ...state.generators.viral_stunts, owned: true },
+        mogging: { ...state.generators.mogging, owned: true },
       },
     };
     expect(isEligibleToRebrand(withViral)).toBe(true);

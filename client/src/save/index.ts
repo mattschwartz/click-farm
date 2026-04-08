@@ -18,7 +18,7 @@ import { recomputeAllRetention } from '../audience-mood/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 16;
+const CURRENT_VERSION = 17;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -891,6 +891,54 @@ function deserializeDecimals(state: GameState): GameState {
   return { ...state, player, platforms } as GameState;
 }
 
+/**
+ * V16→V17: Rename viral_stunts → mogging.
+ *
+ * The generator was renamed from "Viral Stunts" to "Mogging". Saves written
+ * under V16 carry `viral_stunts` as a key in generators, verb_gear, and
+ * last_manual_click_at. This migration remaps the key. The verb gear item
+ * name changed from "Shameless" to "Sigma" but that's display-only (static
+ * data) and doesn't affect save state.
+ */
+export function migrateV16toV17(data: SaveData): SaveData {
+  const state = data.state as any;
+
+  // 1) Rename in generators map.
+  const generators = { ...state.generators };
+  if (generators.viral_stunts !== undefined && generators.mogging === undefined) {
+    generators.mogging = { ...generators.viral_stunts, id: 'mogging' };
+    delete generators.viral_stunts;
+  }
+
+  // 2) Rename in player.verb_gear map.
+  const verbGear = { ...state.player.verb_gear };
+  if (verbGear.viral_stunts !== undefined && verbGear.mogging === undefined) {
+    verbGear.mogging = verbGear.viral_stunts;
+    delete verbGear.viral_stunts;
+  }
+
+  // 3) Rename in player.last_manual_click_at map.
+  const clicks = { ...state.player.last_manual_click_at };
+  if (clicks.viral_stunts !== undefined && clicks.mogging === undefined) {
+    clicks.mogging = clicks.viral_stunts;
+    delete clicks.viral_stunts;
+  }
+
+  return {
+    ...data,
+    version: 17,
+    state: {
+      ...state,
+      generators,
+      player: {
+        ...state.player,
+        verb_gear: verbGear,
+        last_manual_click_at: clicks,
+      },
+    },
+  };
+}
+
 export function migrate(data: SaveData): SaveData {
   let current = data;
 
@@ -952,6 +1000,10 @@ export function migrate(data: SaveData): SaveData {
 
   if (current.version === 15) {
     current = migrateV15toV16(current);
+  }
+
+  if (current.version === 16) {
+    current = migrateV16toV17(current);
   }
 
   if (current.version !== CURRENT_VERSION) {

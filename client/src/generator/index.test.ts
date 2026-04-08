@@ -93,7 +93,7 @@ describe('generatorBuyCost', () => {
 
   it('later generators cost significantly more than earlier ones', () => {
     const selfiesCost = generatorBuyCost('selfies', 0, STATIC_DATA);
-    const viralCost = generatorBuyCost('viral_stunts', 0, STATIC_DATA);
+    const viralCost = generatorBuyCost('mogging', 0, STATIC_DATA);
     expect(viralCost.gt(selfiesCost.times(1000))).toBe(true);
   });
 });
@@ -213,7 +213,7 @@ describe('checkGeneratorUnlocks', () => {
     expect(result.selfies.owned).toBe(true);
     expect(result.livestreams.owned).toBe(true);
     expect(result.podcasts.owned).toBe(true);
-    expect(result.viral_stunts.owned).toBe(true);
+    expect(result.mogging.owned).toBe(true);
     expect(result.memes.owned).toBe(true);
     expect(result.hot_takes.owned).toBe(true);
     expect(result.tutorials.owned).toBe(true);

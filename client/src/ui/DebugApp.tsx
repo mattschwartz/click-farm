@@ -36,7 +36,7 @@ const GENERATOR_ORDER: GeneratorId[] = [
   'selfies',
   'livestreams',
   'podcasts',
-  'viral_stunts',
+  'mogging',
   'ai_slop',
   'deepfakes',
   'algorithmic_prophecy',

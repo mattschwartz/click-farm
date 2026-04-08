@@ -19,7 +19,7 @@ export type GeneratorId =
   | 'tutorials'
   | 'livestreams'
   | 'podcasts'
-  | 'viral_stunts'
+  | 'mogging'
   // 3 post-prestige generators (unlocked only via Clout `generator_unlock`
   // upgrades; no entry in unlockThresholds.generators).
   | 'ai_slop'
@@ -64,7 +64,7 @@ export type VerbGearId =
   | 'selfies'
   | 'livestreams'
   | 'podcasts'
-  | 'viral_stunts';
+  | 'mogging';
 
 export interface VerbGearDef {
   id: VerbGearId;
@@ -249,7 +249,7 @@ export interface GeneratorDef {
   base_event_rate: number;
   /**
    * Whether the player can manually tap this generator in the Actions column.
-   * true for ladder verbs (chirps, selfies, livestreams, podcasts, viral_stunts).
+   * true for ladder verbs (chirps, selfies, livestreams, podcasts, mogging).
    * false for passive-only generators (memes, hot_takes, tutorials) and
    * post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy).
    */
