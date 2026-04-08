@@ -1449,7 +1449,8 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   font-family: inherit;
   font-size: 12px;
   padding: 5px 0;
-  width: 80px;
+  min-width: 80px;
+  width: max-content;
   text-align: center;
   border-radius: 4px;
   border: 1px solid var(--border-default);
@@ -3943,7 +3944,8 @@ html[data-reduce-motion="true"] .viral-particles-overlay {
  * --------------------------------------------------------------------------- */
 
 .purchase-pill {
-  width: 80px;
+  min-width: 80px;
+  width: max-content;
   height: 28px;
   border-radius: 4px;
   padding: 0 4px;
@@ -4465,8 +4467,8 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
    * 84px wide × 48px tall so they read as a matched set.
    * Explicit height + box-sizing on both ensures pixel-perfect match. */
   .row-btn {
-    width: 84px;
     min-width: 84px;
+    width: max-content;
     height: 48px;
     box-sizing: border-box;
     padding: 0 4px;
@@ -4486,8 +4488,8 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
    * Column layout preserved so maxed state shows crown + label / MAX
    * in the same two-line pattern as SPEED. Cost hidden in landscape. */
   .purchase-pill {
-    width: 84px;
     min-width: 84px;
+    width: max-content;
     height: 48px;
     box-sizing: border-box;
     line-height: 1.2;
