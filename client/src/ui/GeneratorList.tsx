@@ -563,6 +563,7 @@ function SpeedButton({
   ariaLabel,
   costLabel,
 }: SpeedButtonProps) {
+  const { t } = useTranslation('ui');
   const [shaking, setShaking] = useState(false);
   const [glowing, setGlowing] = useState(false);
 
@@ -596,7 +597,7 @@ function SpeedButton({
           <span className="lvl-crown" aria-hidden>♛</span>
         )}
         {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
-        <span className="pill-label-full">{level > 1 ? `SPEED +${level}` : 'SPEED'}</span>
+        <span className="pill-label-full">{level > 1 ? t('generators.speedPlus', { level }) : t('generators.speed')}</span>
         <span className="pill-label-abbr">L</span>
       </span>
       {lvlState === 'armed' && (
@@ -613,6 +614,7 @@ function SpeedButton({
 const SUPER_HOLD_MS = 750;
 
 function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verbColor, onBuy, generatorName, sweepHit, isSuperPhase, gearName, gearMultiplier, gearLevel = 0 }: AutoPillProps) {
+  const { t } = useTranslation('ui');
   const [glowing, setGlowing] = useState(false);
   const [shaking, setShaking] = useState(false);
   const [bursting, setBursting] = useState(false);
@@ -769,13 +771,13 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
       : ` purchase-pill-unaffordable purchase-pill-super${superTierClass}`;
 
   // SUPER label: level 0 (buying first) = "SUPER", level 1 (buying second) = "SUPER II", level 2 (buying third) = "SUPER III"
-  const superTierLabel = gearLevel === 0 ? 'SUPER' : gearLevel === 1 ? 'SUPER II' : 'SUPER III';
+  const superTierLabel = gearLevel === 0 ? t('generators.superLabel') : gearLevel === 1 ? t('generators.superII') : t('generators.superIII');
   const superTierAbbr = gearLevel === 0 ? 'S' : gearLevel === 1 ? 'SII' : 'SIII';
   const labelText = superMaxed
-    ? 'MAX'
+    ? t('generators.max')
     : superActive
       ? superTierLabel
-      : `HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`;
+      : autoclickerCount > 0 ? t('generators.hirePlus', { count: autoclickerCount }) : t('generators.hire');
   const labelAbbr = superActive ? superTierAbbr : 'A';
 
   const ariaLabel = superMaxed
@@ -832,7 +834,7 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
         {hireLvlState === 'armed' && (
           <span className="lvl-deficit-glyph" aria-hidden>⊖</span>
         )}
-        <span className="row-btn-cost">{isMaxed ? 'MAX' : costLabel}</span>
+        <span className="row-btn-cost">{isMaxed ? t('generators.max') : costLabel}</span>
       </button>
     );
   }
@@ -848,10 +850,10 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
       >
         <span className="label">
           <span className="lvl-crown" aria-hidden>♛</span>
-          <span className="pill-label-full">SUPER III</span>
+          <span className="pill-label-full">{t('generators.superIII')}</span>
           <span className="pill-label-abbr">SIII</span>
         </span>
-        <span className="row-btn-cost">MAX</span>
+        <span className="row-btn-cost">{t('generators.max')}</span>
       </button>
     );
   }
@@ -887,7 +889,7 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
         <span className="pill-label-full">{labelText}</span>
         <span className="pill-label-abbr">{labelAbbr}</span>
       </span>
-      <span className="pill-cost">{superMaxed ? 'MAX' : costLabel}</span>
+      <span className="pill-cost">{superMaxed ? t('generators.max') : costLabel}</span>
       {/* Cost popover — SUPER shows gear name + cost + multiplier. */}
       {(holding || costPopover) && !isMaxed && (
         <span className="pill-cost-popover pill-cost-popover-super" aria-hidden="true">
