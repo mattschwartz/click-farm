@@ -146,7 +146,7 @@ interface LiveVerbButtonProps {
 const AUTO_FLOAT_DENSITY_CAP = 8;
 
 /** Maximum visible floats per verb button. Oldest evicted when cap is hit. */
-const MAX_VISIBLE_FLOATS = 4;
+const MAX_VISIBLE_FLOATS = 2;
 
 /** Push a float. When capped, evicts the oldest to stay at MAX_VISIBLE_FLOATS. */
 function pushFloat(prev: FloatItem[], item: FloatItem, capped: boolean): FloatItem[] {
