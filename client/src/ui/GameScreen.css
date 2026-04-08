@@ -5242,6 +5242,10 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     border-radius: 6px;
     font-size: 10px;
   }
+
+  .generator-column {
+    padding: 8px 8px 0;
+  }
 }
 
 /* Suppress engagement hover tooltip on touch devices — the inline rate
