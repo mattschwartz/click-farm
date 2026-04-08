@@ -24,12 +24,12 @@ import type {
   GameState,
   GeneratorId,
   GeneratorState,
-  KitItemId,
   PlatformId,
   PlatformState,
   Player,
   StaticData,
   UpgradeId,
+  VerbGearId,
   ViralBurstState,
 } from '../types.ts';
 import { spendClout } from '../model/index.ts';
@@ -164,8 +164,6 @@ export function applyRebrand(
   ) as Record<GeneratorId, GeneratorState>;
 
   // Player: preserve meta, reset run state, add earned clout, bump count.
-  // creator_kit is per-run (architecture/creator-kit.md §Rebrand) — wiped
-  // here and MUST NOT appear in any preservation list.
   const player: Player = {
     ...state.player,
     engagement: 0,
@@ -175,7 +173,9 @@ export function applyRebrand(
     clout: state.player.clout + result.cloutEarned,
     rebrand_count: state.player.rebrand_count + 1,
     run_start_time: now,
-    creator_kit: {} as Record<KitItemId, number>,
+    // verb_gear is per-run (architecture/verb-gear.md §Rebrand) — wiped
+    // here and MUST NOT appear in any preservation list.
+    verb_gear: {} as Record<VerbGearId, number>,
     // last_manual_click_at reset — per arch spec, cooldown timestamps are
     // meaningless after rebrand wipes generator count and level.
     last_manual_click_at: {} as Record<GeneratorId, number>,

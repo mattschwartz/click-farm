@@ -6,7 +6,6 @@ import type {
   GameState,
   GeneratorId,
   GeneratorState,
-  KitItemId,
   PlatformId,
   PlatformState,
   SaveData,
@@ -17,7 +16,7 @@ import { recomputeAllRetention } from '../audience-mood/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 14;
+const CURRENT_VERSION = 15;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -285,17 +284,18 @@ export function migrateV3toV4(data: SaveData): SaveData {
 }
 
 /**
- * Migrate a V4 save to V5 — Creator Kit foundation.
+ * Migrate a V4 save to V5 — Creator Kit foundation (legacy).
  *
- * Task #73: `player.creator_kit` is introduced as a per-run map of
- * KitItemId → level. Existing saves default to an empty kit. The field is
- * wiped on rebrand (see prestige/applyRebrand), so defaulting to `{}` is
- * always correct on load.
+ * Task #73: `player.creator_kit` was introduced as a per-run map of
+ * kit item id → level. The Creator Kit system has since been removed
+ * (replaced by verb gear), but this migration remains in the chain for
+ * forward-compatibility with ancient saves. The `creator_kit` field it
+ * produces is stripped by a later migration.
  */
 export function migrateV4toV5(data: SaveData): SaveData {
   const oldState = data.state as GameState & {
     player: GameState['player'] & {
-      creator_kit?: Record<KitItemId, number>;
+      creator_kit?: Record<string, number>;
     };
   };
   return {
@@ -306,7 +306,7 @@ export function migrateV4toV5(data: SaveData): SaveData {
       player: {
         ...oldState.player,
         creator_kit:
-          oldState.player.creator_kit ?? ({} as Record<KitItemId, number>),
+          oldState.player.creator_kit ?? ({} as Record<string, number>),
       },
     },
   };
@@ -698,7 +698,7 @@ export function migrateV11toV12(data: SaveData): SaveData {
       player: {
         ...cleanPlayer,
         clout_upgrades: cleanUpgrades as Record<UpgradeId, number>,
-        creator_kit: cleanKit as Record<KitItemId, number>,
+        creator_kit: cleanKit as Record<string, number>,
         last_close_state: newCloseState,
       },
     } as GameState,
@@ -738,6 +738,36 @@ export function migrateV13toV14(data: SaveData): SaveData {
       player: {
         ...state.player,
         has_started_run: (state.player as unknown as Record<string, unknown>).has_started_run as boolean ?? true,
+      },
+    },
+  };
+}
+
+/**
+ * V14→V15: Strip old Creator Kit, add verb gear.
+ *
+ * The old Creator Kit system (camera, phone, wardrobe, mogging) has been
+ * replaced by per-verb gear upgrades. This migration strips `player.creator_kit`
+ * (which may still exist from migrateV4toV5 / migrateV11toV12 in the chain)
+ * and adds `player.verb_gear = {}`.
+ *
+ * See proposals/accepted/20260407-creator-kit-verb-gear.md.
+ */
+export function migrateV14toV15(data: SaveData): SaveData {
+  const player = data.state.player as any;
+  // Strip old creator_kit (may still exist from earlier migrations)
+  delete player.creator_kit;
+  // Add verb_gear, defaulting to empty (no gear owned)
+  if (!player.verb_gear) {
+    player.verb_gear = {};
+  }
+  return {
+    ...data,
+    version: 15,
+    state: {
+      ...data.state,
+      player: {
+        ...player,
       },
     },
   };
@@ -797,6 +827,11 @@ export function migrate(data: SaveData): SaveData {
   if (current.version === 13) {
     current = migrateV13toV14(current);
   }
+
+  if (current.version === 14) {
+    current = migrateV14toV15(current);
+  }
+
 
   if (current.version !== CURRENT_VERSION) {
     throw new Error(

@@ -9,12 +9,21 @@
 //    hops between the user gesture and source.start().
 // 5. The global gesture listener also resumes suspended contexts (post-idle),
 //    so the context is always running by the time play() fires.
+//
+// Music lifecycle:
+// Music is controlled by a single function — syncMusic() — which is the ONLY
+// place bgMusic.play() or bgMusic.pause() is called (outside of explicit user
+// actions like prev/next/toggle). Every state change (volume, mute, visibility,
+// context recovery) calls syncMusic() and it decides what to do based on the
+// current state. This eliminates the class of bugs where scattered play() calls
+// with inconsistent guards cause phantom playback.
 
 import silentSfx from '../assets/silent.wav';
-import clickSfx from '../assets/click.wav';
+import clickSfx from '../assets/tap.mp3';
 import purchaseSfx from '../assets/purchase.mp3';
 import sweepStartSfx from '../assets/sweep-start.wav';
 import sweepEndSfx from '../assets/sweep-end.wav';
+import wooshPopSfx from '../assets/woosh-pop.wav';
 import ost01 from '../assets/djart-ost/djartmusic-8-bit-console-from-my-childhood-301286.mp3';
 import ost02 from '../assets/djart-ost/djartmusic-best-game-console-301284.mp3';
 import ost03 from '../assets/djart-ost/djartmusic-fun-with-my-8-bit-game-301278.mp3';
@@ -44,6 +53,7 @@ prefetch(clickSfx);
 prefetch(purchaseSfx);
 prefetch(sweepStartSfx);
 prefetch(sweepEndSfx);
+prefetch(wooshPopSfx);
 
 // ---------------------------------------------------------------------------
 // Lazy AudioContext + eager decode
@@ -61,6 +71,10 @@ function getCtx(): AudioContext | null {
   if (ctx && ctx.state === 'closed') {
     ctx = null;
     bufferCache.clear(); // buffers are tied to the context that decoded them
+    // The old MediaElementSource is permanently bound to the dead context.
+    // createMediaElementSource cannot be called twice on the same element,
+    // so we must discard the element entirely and create a fresh one.
+    destroyBgMusic();
   }
   if (!ctx) {
     ctx = new AudioContext();
@@ -89,6 +103,16 @@ async function decodeBuffer(url: string, audioCtx: AudioContext): Promise<AudioB
 }
 
 // ---------------------------------------------------------------------------
+// Volume state — driven by settings via setSfxVolume / setMusicVolume.
+// Declared early because music functions reference these.
+// ---------------------------------------------------------------------------
+
+let masterMuted = false;
+let sfxVol = 0.5;   // 0–1
+let musicVol = 0.3;  // 0–1
+let musicInBackground = false;
+
+// ---------------------------------------------------------------------------
 // Background music — HTML Audio element routed through a Web Audio GainNode.
 // Streams (no decode needed), cycles through OST_TRACKS sequentially.
 // When a track ends, the next one starts automatically.
@@ -102,8 +126,49 @@ async function decodeBuffer(url: string, audioCtx: AudioContext): Promise<AudioB
 let bgMusic: HTMLAudioElement | null = null;
 let bgMusicGain: GainNode | null = null;
 let bgMusicConnected = false; // MediaElementSource can only be created once
-let bgMusicStarted = false;
 let currentTrackIndex = Math.floor(Math.random() * OST_TRACKS.length);
+
+// Whether the user has "started" music this session. This becomes true on the
+// first gesture (if conditions allow) or when the user explicitly hits play.
+// It stays true even if music is temporarily paused by volume=0 or mute, so
+// that restoring volume/unmuting resumes automatically.
+let musicIntentActive = false;
+
+/** True when music should be audible: not muted, volume > 0, intent active. */
+function shouldMusicPlay(): boolean {
+  return !masterMuted && musicVol > 0 && musicIntentActive;
+}
+
+/**
+ * Single source of truth for music play/pause. Called after ANY state change
+ * that could affect whether music should be playing. Never call bgMusic.play()
+ * or bgMusic.pause() outside of this function (except explicit user actions
+ * in prev/next/toggle and teardown).
+ */
+function syncMusic(): void {
+  if (!bgMusic) return;
+  if (shouldMusicPlay()) {
+    // Apply current volume before playing.
+    bgMusic.volume = musicVol;
+    if (bgMusicGain) bgMusicGain.gain.value = musicVol;
+    // If the element has no src yet (first start), load the current track.
+    if (!bgMusic.src || bgMusic.src === '') {
+      bgMusic.src = OST_TRACKS[currentTrackIndex];
+    }
+    bgMusic.play().catch(() => {});
+  } else {
+    bgMusic.pause();
+  }
+}
+
+/** Tear down the bgMusic element entirely (context death, HMR cleanup). */
+function destroyBgMusic(): void {
+  bgMusic?.pause();
+  bgMusic = null;
+  bgMusicConnected = false;
+  bgMusicGain = null;
+  musicIntentActive = false;
+}
 
 /**
  * Connect the bgMusic element to the AudioContext via a GainNode.
@@ -126,34 +191,34 @@ function connectBgMusicToGain(): void {
   }
 }
 
-/** Start playing the track at currentTrackIndex. */
+/** Load and play the track at currentTrackIndex. */
 function playCurrentTrack(): void {
   if (!bgMusic) return;
+  connectBgMusicToGain();
   bgMusic.src = OST_TRACKS[currentTrackIndex];
-  // Set element volume as fallback; the GainNode is the primary control.
   bgMusic.volume = musicVol;
   if (bgMusicGain) bgMusicGain.gain.value = musicVol;
-  bgMusic.play().then(() => { bgMusicStarted = true; }).catch(() => {});
+  bgMusic.play().catch(() => {});
 }
 
-/** Create the audio element (if needed) and start playback if unmuted. */
-function ensureBgMusic(): void {
+/**
+ * Create the bgMusic element if it doesn't exist. Does NOT start playback —
+ * that's syncMusic()'s job. This is safe to call repeatedly.
+ */
+function ensureBgMusicElement(): void {
   if (typeof window === 'undefined') return;
-  if (!bgMusic) {
-    bgMusic = new Audio();
-    bgMusic.loop = false; // we handle cycling ourselves
-    bgMusic.volume = musicVol;
-    bgMusic.addEventListener('ended', () => {
-      // Advance to the next track, wrapping around.
-      currentTrackIndex = (currentTrackIndex + 1) % OST_TRACKS.length;
-      playCurrentTrack();
-    });
-  }
+  if (bgMusic) return;
+  bgMusic = new Audio();
+  bgMusic.loop = false; // we handle cycling ourselves
+  bgMusic.volume = musicVol;
+  bgMusic.addEventListener('ended', () => {
+    // Advance to the next track — but only if music should be playing.
+    if (!shouldMusicPlay()) return;
+    currentTrackIndex = (currentTrackIndex + 1) % OST_TRACKS.length;
+    playCurrentTrack();
+  });
   // Route through GainNode for iOS volume control.
   connectBgMusicToGain();
-  if (!masterMuted && !bgMusicStarted) {
-    playCurrentTrack();
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -176,17 +241,41 @@ function ensureSilentLoop(): void {
 // Global gesture listener — create context + resume on ANY user interaction.
 // This ensures the context is running before play() is called, avoiding the
 // async gap between resume() and source.start() that drops the first sound.
-// Also starts background music on first gesture.
+//
+// IMPORTANT: This listener handles AudioContext lifecycle and silent loop ONLY.
+// Music playback decisions happen in syncMusic(), not here. The only thing
+// the first gesture does for music is set musicIntentActive = true (if
+// conditions allow), then call syncMusic().
 // ---------------------------------------------------------------------------
 
 if (typeof window !== 'undefined') {
+  // Kill listeners/elements from previous HMR module instances.
+  const prev = (window as Record<string, unknown>).__sfxCleanup as
+    | (() => void)
+    | undefined;
+  if (prev) prev();
+
+  let firstGestureFired = false;
+
   const onGesture = (): void => {
     const audioCtx = getCtx();
     if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
-    ensureBgMusic();
     ensureSilentLoop();
+
+    // On the first gesture, create the music element and signal intent to
+    // play — but ONLY if music is actually audible. If music volume is 0,
+    // don't set intent; the user will activate music by raising the slider
+    // or pressing play.
+    if (!firstGestureFired) {
+      firstGestureFired = true;
+      ensureBgMusicElement();
+      if (!masterMuted && musicVol > 0) {
+        musicIntentActive = true;
+      }
+      syncMusic();
+    }
   };
   for (const evt of ['click', 'touchstart', 'keydown']) {
     window.addEventListener(evt, onGesture, { capture: true, passive: true });
@@ -195,7 +284,7 @@ if (typeof window !== 'undefined') {
   // Pause all audio when the tab is hidden (minimized, backgrounded, or
   // switched away in Safari). Resume when the tab becomes visible again.
   // If musicInBackground is enabled, music continues playing when hidden.
-  document.addEventListener('visibilitychange', () => {
+  const onVisibility = (): void => {
     if (document.hidden) {
       if (musicInBackground) {
         // Keep the AudioContext (and therefore the GainNode the music
@@ -208,12 +297,34 @@ if (typeof window !== 'undefined') {
       }
     } else {
       ctx?.resume();
+      // Re-apply gain after resume — some browsers reset GainNode values
+      // when the context is suspended/resumed.
+      if (bgMusicGain) bgMusicGain.gain.value = musicVol;
+      if (bgMusic) bgMusic.volume = musicVol;
       silentLoop?.play().catch(() => {});
-      if (!masterMuted && bgMusicStarted) {
-        bgMusic?.play().catch(() => {});
-      }
+      // Let syncMusic decide whether to resume — it checks all conditions.
+      syncMusic();
     }
-  });
+  };
+  document.addEventListener('visibilitychange', onVisibility);
+
+  // Teardown — shared between HMR dispose and the global ghost killer.
+  const cleanup = (): void => {
+    for (const evt of ['click', 'touchstart', 'keydown']) {
+      window.removeEventListener(evt, onGesture, { capture: true });
+    }
+    document.removeEventListener('visibilitychange', onVisibility);
+    destroyBgMusic();
+    silentLoop?.pause();
+    silentLoop = null;
+    firstGestureFired = false;
+  };
+
+  (window as Record<string, unknown>).__sfxCleanup = cleanup;
+
+  if (import.meta.hot) {
+    import.meta.hot.dispose(cleanup);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -267,34 +378,26 @@ function play(
 }
 
 // ---------------------------------------------------------------------------
-// Volume state — driven by settings via setSfxVolume / setMusicVolume.
+// Settings API — called by useSettings on every change.
 // ---------------------------------------------------------------------------
-
-let masterMuted = false;
-let sfxVol = 0.5;   // 0–1
-let musicVol = 0.3;  // 0–1
-let musicInBackground = false;
 
 /** Called by settings UI when master sound toggle changes. */
 export function setSoundEnabled(enabled: boolean): void {
   masterMuted = !enabled;
-  if (bgMusic) {
-    if (masterMuted) {
-      bgMusic.pause();
-    } else {
-      // Start or resume — covers both "was playing before" and "never started
-      // because sound was off on load".
-      bgMusic.play().then(() => { bgMusicStarted = true; }).catch(() => {});
-    }
-  }
+  syncMusic();
 }
 
 /** Called by settings UI when music volume slider changes (0–100). */
 export function setMusicVolume(v: number): void {
   musicVol = Math.max(0, Math.min(1, v / 100));
-  // Primary: GainNode (works on iPhone). Fallback: element.volume (desktop).
+  // Update gain immediately for smooth slider feel.
   if (bgMusicGain) bgMusicGain.gain.value = musicVol;
   if (bgMusic) bgMusic.volume = musicVol;
+  // If the user raises volume from 0, treat that as intent to play.
+  if (musicVol > 0 && !musicIntentActive && !masterMuted) {
+    musicIntentActive = true;
+  }
+  syncMusic();
 }
 
 /** Called by settings UI when SFX volume slider changes (0–100). */
@@ -308,35 +411,36 @@ export function setMusicInBackground(v: boolean): void {
 }
 
 // ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
 // Track controls — prev / play-pause / next for the music player UI.
+// These are explicit user actions, so they set musicIntentActive directly.
 // ---------------------------------------------------------------------------
 
 /** Skip to the previous track (wraps around). */
 export function prevTrack(): void {
-  ensureBgMusic();
+  ensureBgMusicElement();
+  musicIntentActive = true;
   currentTrackIndex = (currentTrackIndex - 1 + OST_TRACKS.length) % OST_TRACKS.length;
   playCurrentTrack();
 }
 
 /** Skip to the next track (wraps around). */
 export function nextTrack(): void {
-  ensureBgMusic();
+  ensureBgMusicElement();
+  musicIntentActive = true;
   currentTrackIndex = (currentTrackIndex + 1) % OST_TRACKS.length;
   playCurrentTrack();
 }
 
 /** Toggle play/pause on the current track. Returns true if now playing. */
 export function togglePlayPause(): boolean {
-  ensureBgMusic();
+  ensureBgMusicElement();
   if (!bgMusic) return false;
   if (bgMusic.paused) {
-    bgMusic.play().catch(() => {});
+    musicIntentActive = true;
+    playCurrentTrack();
     return true;
   } else {
+    musicIntentActive = false;
     bgMusic.pause();
     return false;
   }
@@ -373,4 +477,10 @@ export function playSweepStart(): void {
 export function playSweepEnd(): void {
   if (masterMuted) return;
   play(sweepEndSfx, sfxVol * 0.6, [0.98, 1.02]);
+}
+
+/** Play the building whoosh -> pop sound (750ms). */
+export function playWooshPop(): void {
+  if (masterMuted) return;
+  play(wooshPopSfx, sfxVol * 0.7, [0.96, 1.04]);
 }

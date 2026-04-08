@@ -4,11 +4,11 @@
 // .frames/sdlc/architecture/audience-mood.md for the authoritative spec.
 // Algorithm misalignment removed — proposals/accepted/20260406-remove-algorithm-weather-system.md.
 //
-// STACKING ORDER POSITION (per creator-kit.md §Stacking Order):
+// STACKING ORDER POSITION (per verb-gear.md §Stacking Order):
 //   1. Base value                               (generator / platform / event)
-//   2. Algorithm / situational modifiers        (algorithm state, trend sensitivity)
+//   2. Algorithm / situational modifiers        (currently empty — algorithm weather removed)
 //   3. Clout effects (permanent)                (cloutBonus)
-//   4. Kit effects (per-run)                    (kitEngagementBonus, kitFollowerConversionBonus)
+//   4. Verb gear (per-run)                      (verbGearMultiplier)
 //   5. Event effects                            (viral burst, …)
 //   6. Audience-Mood retention                  ← HERE (platform-scoped, post follower-distribution)
 //   7. Clamps

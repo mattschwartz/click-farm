@@ -150,7 +150,7 @@ describe('applyRebrand — reset completeness', () => {
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
     expect(next.platforms.chirper.unlocked).toBe(true);   // threshold = 0
     expect(next.platforms.picshift.unlocked).toBe(false); // threshold = 100
-    expect(next.platforms.skroll.unlocked).toBe(false);  // threshold = 500
+    expect(next.platforms.skroll.unlocked).toBe(false);  // threshold = 15_000
   });
 
   it('resets viralBurst to a clean default (prevents doTick crash on next tick)', () => {
@@ -221,13 +221,12 @@ describe('applyRebrand — preservation of meta', () => {
     expect(next.player.run_start_time).toBe(T0 + 5_000);
   });
 
-  it('wipes creator_kit — per-run purchases do NOT survive rebrand', () => {
+  it('wipes verb_gear — per-run gear does NOT survive rebrand', () => {
     const state = seedState({ total_followers: 1_000 });
-    // Simulate mid-run kit purchases.
-    (state.player.creator_kit as Record<string, number>).camera = 2;
-    (state.player.creator_kit as Record<string, number>).mogging = 1;
+    (state.player.verb_gear as Record<string, number>).chirps = 2;
+    (state.player.verb_gear as Record<string, number>).selfies = 1;
     const next = applyRebrand(state, calculateRebrand(state), STATIC_DATA, T0 + 1000);
-    expect(next.player.creator_kit).toEqual({});
+    expect(next.player.verb_gear).toEqual({});
   });
 });
 

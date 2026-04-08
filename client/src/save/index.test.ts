@@ -13,10 +13,11 @@ import {
   migrateV6toV7,
   migrateV7toV8,
   migrateV9toV10,
+  migrateV14toV15,
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
-import type { KitEffect, SaveData } from '../types.ts';
+import type { SaveData } from '../types.ts';
 
 // ---------------------------------------------------------------------------
 // localStorage mock — no jsdom dependency required
@@ -256,7 +257,7 @@ describe('migrate', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(14);
+    expect(result.version).toBe(15);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -404,23 +405,26 @@ describe('migrateV3toV4', () => {
 
   it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(14);
+    expect(result.version).toBe(15);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
-    expect(result.state.player.creator_kit).toEqual({});
+    // V14→V15 strips creator_kit and adds verb_gear
+    expect((result.state.player as any).creator_kit).toBeUndefined();
+    expect(result.state.player.verb_gear).toEqual({});
   });
 });
 
 // ---------------------------------------------------------------------------
-// migrateV4toV5 — Creator Kit foundation
+// migrateV4toV5 — Creator Kit foundation (legacy)
+// creator_kit was removed from Player (task #185). These tests verify the
+// old migration still runs for ancient saves. Access via `as any` since the
+// field no longer exists on the Player type.
 // ---------------------------------------------------------------------------
 
 describe('migrateV4toV5', () => {
   function makeV4SaveData(): SaveData {
     const base = createInitialGameState(STATIC_DATA, 0);
-    // Simulate a v4 save: strip creator_kit + use old platform names.
-    const { creator_kit: _ck, ...playerWithoutKit } = base.player as typeof base.player & { creator_kit?: unknown };
-    // V4 saves had instasham/grindset, no podpod.
+    // V4 saves had instasham/grindset, no podpod, no creator_kit.
     const oldPlatforms = {
       chirper: base.platforms.chirper,
       instasham: { ...base.platforms.picshift, id: 'instasham' },
@@ -430,7 +434,7 @@ describe('migrateV4toV5', () => {
       ...base,
       platforms: oldPlatforms,
       player: {
-        ...playerWithoutKit,
+        ...base.player,
         clout_upgrades: {
           engagement_boost: 0,
           algorithm_insight: 0,
@@ -452,22 +456,22 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version via the chain', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(14);
-    expect(result.state.player.creator_kit).toEqual({});
+    expect(result.version).toBe(15);
+    // V14→V15 strips creator_kit and adds verb_gear
+    expect((result.state.player as any).creator_kit).toBeUndefined();
+    expect(result.state.player.verb_gear).toEqual({});
   });
 
   it('defaults player.creator_kit to empty object when absent', () => {
     const result = migrateV4toV5(makeV4SaveData());
-    expect(result.state.player.creator_kit).toEqual({});
+    expect((result.state.player as any).creator_kit).toEqual({});
   });
 
   it('preserves player.creator_kit when already present', () => {
     const data = makeV4SaveData();
-    (data.state.player as unknown as { creator_kit: Record<string, number> }).creator_kit = {
-      camera: 2,
-    };
+    (data.state.player as any).creator_kit = { camera: 2 };
     const result = migrateV4toV5(data);
-    expect(result.state.player.creator_kit).toEqual({ camera: 2 });
+    expect((result.state.player as any).creator_kit).toEqual({ camera: 2 });
   });
 
   it('preserves all other player fields', () => {
@@ -481,8 +485,9 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(14);
-    expect(result.state.player.creator_kit).toEqual({});
+    expect(result.version).toBe(15);
+    expect((result.state.player as any).creator_kit).toBeUndefined();
+    expect(result.state.player.verb_gear).toEqual({});
   });
 });
 
@@ -583,7 +588,7 @@ describe('migrateV5toV6', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(14);
+    expect(result.version).toBe(15);
     expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
 });
@@ -840,35 +845,68 @@ describe('migrateV9toV10', () => {
 });
 
 // ---------------------------------------------------------------------------
-// KitEffect — type-level discriminator coverage
-//
-// This test is compile-time: if any discriminator is removed or renamed, the
-// exhaustive switch's `never` assignment breaks the build. Verifies all five
-// discriminators exist per architecture/creator-kit.md.
+// migrateV14toV15 — strip Creator Kit, add verb gear
 // ---------------------------------------------------------------------------
 
-describe('KitEffect discriminators', () => {
-  it('covers all four effect types exhaustively', () => {
-    const tagOf = (e: KitEffect): string => {
-      switch (e.type) {
-        case 'engagement_multiplier': return 'camera';
-        case 'platform_headstart_sequential': return 'phone';
-        case 'follower_conversion_multiplier': return 'wardrobe';
-        case 'viral_burst_amplifier': return 'mogging';
-        default: {
-          const _exhaustive: never = e;
-          return _exhaustive;
-        }
-      }
+describe('migrateV14toV15', () => {
+  function makeV14SaveData(): SaveData {
+    const base = createInitialGameState(STATIC_DATA, 0);
+    return {
+      version: 14,
+      state: {
+        ...base,
+        player: {
+          ...base.player,
+          // Simulate a save with old creator_kit data from earlier migrations
+          creator_kit: { camera: 2, wardrobe: 1 },
+        } as any,
+      },
+      lastCloseTime: 0,
+      lastCloseState: null,
     };
-    const samples: KitEffect[] = [
-      { type: 'engagement_multiplier', values: [1.1] },
-      { type: 'platform_headstart_sequential' },
-      { type: 'follower_conversion_multiplier', values: [1.2] },
-      { type: 'viral_burst_amplifier', values: [1.5] },
-    ];
-    expect(samples.map(tagOf)).toEqual([
-      'camera', 'phone', 'wardrobe', 'mogging',
-    ]);
+  }
+
+  it('bumps version from 14 to 15', () => {
+    const result = migrateV14toV15(makeV14SaveData());
+    expect(result.version).toBe(15);
+  });
+
+  it('strips player.creator_kit', () => {
+    const result = migrateV14toV15(makeV14SaveData());
+    expect((result.state.player as any).creator_kit).toBeUndefined();
+  });
+
+  it('adds player.verb_gear = {} when absent', () => {
+    const result = migrateV14toV15(makeV14SaveData());
+    expect(result.state.player.verb_gear).toEqual({});
+  });
+
+  it('preserves existing verb_gear if somehow already present', () => {
+    const data = makeV14SaveData();
+    (data.state.player as any).verb_gear = { chirps: 1 };
+    const result = migrateV14toV15(data);
+    expect(result.state.player.verb_gear).toEqual({ chirps: 1 });
+  });
+
+  it('handles save with no creator_kit gracefully', () => {
+    const base = createInitialGameState(STATIC_DATA, 0);
+    const data: SaveData = {
+      version: 14,
+      state: base,
+      lastCloseTime: 0,
+      lastCloseState: null,
+    };
+    const result = migrateV14toV15(data);
+    expect(result.version).toBe(15);
+    expect((result.state.player as any).creator_kit).toBeUndefined();
+    expect(result.state.player.verb_gear).toEqual({});
+  });
+
+  it('integrates with migrate() — a v14 save reaches current version', () => {
+    const result = migrate(makeV14SaveData());
+    expect(result.version).toBe(15);
+    expect((result.state.player as any).creator_kit).toBeUndefined();
+    expect(result.state.player.verb_gear).toEqual({});
   });
 });
+

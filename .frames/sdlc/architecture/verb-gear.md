@@ -4,7 +4,7 @@
 
 > **Not in scope:** Balance values (costs, multiplier magnitudes — owned by game-designer), UI placement and visual treatment of gear purchases (owned by ux-designer), old Creator Kit removal (covered in the rip-out inventory of the source proposal §6).
 
-> **Source:** `.frames/sdlc/proposals/draft/20260407-creator-kit-verb-gear.md`. This spec supersedes `architecture/creator-kit.md`, which is dead.
+> **Source:** `.frames/sdlc/proposals/accepted/20260407-creator-kit-verb-gear.md`. This spec supersedes `architecture/creator-kit.md`, which is dead.
 
 ---
 
@@ -97,10 +97,11 @@ function purchaseVerbGear(
 
 Spend Engagement to increment the named gear item's level by 1. Follows the same throw-on-invariant-violation pattern as `purchaseCloutUpgrade` and the old `purchaseKitItem`:
 
-1. Validate `verb_gear[gearId] < VerbGearDef.max_level`
-2. Validate `player.engagement >= VerbGearDef.cost[current_level]`
-3. Decrement `player.engagement` by cost
-4. Increment `verb_gear[gearId]` by 1
+1. Validate `generators[gearId].autoclicker_count >= 12` — gear purchases are gated behind a capped HIRE track (proposal §10). This is a game rule, not a UI concern — enforced at the model layer so direct calls cannot bypass it.
+2. Validate `verb_gear[gearId] < VerbGearDef.max_level`
+3. Validate `player.engagement >= VerbGearDef.cost[current_level]`
+4. Decrement `player.engagement` by cost
+5. Increment `verb_gear[gearId]` by 1
 
 No post-purchase hooks. Unlike the old Phone item, gear purchases have no side effects beyond the level increment and engagement spend.
 
@@ -198,11 +199,15 @@ verb_gear: {} as Record<VerbGearId, number>,
 
 `verb_gear` MUST NOT appear in the preservation list. Same per-run lifecycle as the old `creator_kit`.
 
-### 8. Driver — buyVerbGear
+### 8. Initial state — createPlayer
+
+`model/index.ts` `createPlayer()` (L43–73). Replace `creator_kit: {} as Record<KitItemId, number>` with `verb_gear: {} as Record<VerbGearId, number>`. Fresh players start with no gear.
+
+### 9. Driver — buyVerbGear
 
 `driver/index.ts`. Replace `buyKitItem(itemId: KitItemId)` with `buyVerbGear(gearId: VerbGearId)`. Same error-handling pattern via `runAction`.
 
-### 9. useGame hook
+### 10. useGame hook
 
 `ui/useGame.ts`. Replace `buyKitItem` binding with `buyVerbGear` binding. Same pattern.
 

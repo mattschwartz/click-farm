@@ -290,7 +290,13 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
           '--verb-color-rgb': hexToRgb(color),
           '--cd-fill': `${fillHeight}%`,
         } as React.CSSProperties}
-        onPointerDown={(e) => { e.preventDefault(); handleTap(e); }}
+        onPointerDown={(e) => {
+          e.preventDefault();
+          // Re-focus after preventDefault — otherwise the button never gains
+          // focus and keyboard activation (Enter/Space) is unreachable.
+          (e.currentTarget as HTMLButtonElement).focus();
+          handleTap(e);
+        }}
         onClick={handleTap}
         aria-label={`${display.name}, ${fmtCompact(perTap)} engagement per tap, cooldown ${Math.round(cdMs)}ms${autoCountForBadge > 0 ? `, ${autoCountForBadge} autoclickers` : ''}`}
       >

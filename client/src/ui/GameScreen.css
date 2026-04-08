@@ -238,17 +238,46 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   align-self: stretch;
 }
 
-/* Rate + followers stack — hidden on desktop, shown in landscape via media query */
+/* Rate + followers stack — always visible. Sits inside the frosted-glass
+   engagement container, right of the icon, separated by a 1px border. */
 .engagement-meta-stack {
-  display: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  border-left: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.1));
+  padding-left: 10px;
+}
+
+/* Hairline between rate and followers */
+.engagement-meta-stack::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--border-subtle, rgba(0, 0, 0, 0.06));
+  order: 1;
 }
 
 .engagement-rate-inline {
-  display: none;
+  display: inline;
+  order: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent-green, #2F7A3A);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .engagement-followers-inline {
-  display: none;
+  display: inline;
+  order: 2;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary, #6E6E6E);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 /* Engagement counter — frosted glass that hugs the number.
@@ -1455,21 +1484,6 @@ html[data-reduce-motion="true"] .sweep-cost-float {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.platform-total-followers {
-  text-align: center;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-  padding: 12px 0 8px;
-  border-top: 1px solid var(--border-default);
-}
-
-.platform-total-label {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-secondary);
 }
 
 .platform-card {
@@ -2956,217 +2970,6 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 }
 
 
-/* --- Creator Kit panel (ux/creator-kit-panel.md) ------------------------ */
-/*
- * Visual weight: deliberately quieter than generator rows. Smaller type
- * scale, 40px rows, no left-edge stripe, no row fill. See §3.3 for the
- * explicit visual comparison.
- */
-
-/* --kit-accent hoisted to theme/tokens.css (task #108). See contrast flag
- * there — ux-designer to confirm indigo on light-mode. */
-
-.kit-panel {
-  flex: 0 0 auto;
-  background: var(--surface-panel);
-  border: 1px solid var(--border-default);
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  margin-top: -1px;
-  position: relative;
-  overflow: hidden;
-}
-
-.kit-panel-peek::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--kit-accent);
-  opacity: 0.5;
-}
-
-.kit-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 12px;
-  cursor: pointer;
-  border-top: 1px solid var(--border-subtle);
-  user-select: none;
-}
-
-.kit-header:focus-visible {
-  outline: 2px solid var(--kit-accent);
-  outline-offset: -2px;
-}
-
-.kit-header-icon {
-  font-size: 14px;
-  opacity: 0.6;
-}
-
-.kit-header-label {
-  font-size: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--kit-accent);
-  opacity: 0.7;
-  flex: 1 1 auto;
-}
-
-.kit-active-count {
-  font-size: 9px;
-  font-weight: 400;
-  color: var(--text-secondary);
-  margin-right: 8px;
-}
-
-.kit-chevron {
-  font-size: 12px;
-  color: var(--kit-accent);
-  opacity: 0.7;
-  transition: transform 220ms ease-out;
-}
-
-.kit-chevron.open {
-  transform: rotate(180deg);
-}
-
-.kit-rows {
-  display: flex;
-  flex-direction: column;
-  animation: kit-rows-fade-in 140ms ease-out 80ms both;
-}
-
-@keyframes kit-rows-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.kit-row {
-  display: grid;
-  grid-template-columns: 22px 1fr 22px;
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 4px 12px;
-  border-top: 1px solid var(--border-subtle);
-}
-
-.kit-row-icon {
-  font-size: 14px;
-  opacity: 0.6;
-  text-align: center;
-}
-
-.kit-row-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.kit-row-top {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  min-width: 0;
-}
-
-.kit-row-name {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.kit-row-flavor {
-  font-size: 10px;
-  font-weight: 400;
-  font-style: italic;
-  color: var(--text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-.kit-row-bottom {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.kit-row-level {
-  font-size: 10px;
-  font-weight: 400;
-  color: var(--text-secondary);
-}
-
-.kit-row-cost {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-left: auto;
-}
-
-.kit-row-buy {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--kit-accent);
-  font-size: 12px;
-  cursor: pointer;
-  transition: opacity 120ms ease-out, background 120ms ease-out;
-}
-
-.kit-row-buy:hover:not(:disabled) {
-  background: rgba(var(--kit-accent-rgb), 0.15);
-}
-
-.kit-row-buy:focus-visible {
-  outline: 2px solid var(--kit-accent);
-  outline-offset: 1px;
-}
-
-.kit-row-unaffordable .kit-row-buy,
-.kit-row-buy:disabled {
-  opacity: 0.25;
-  cursor: default;
-}
-
-/* Top-bar peek signal (§5.2) ------------------------------------------- */
-
-.kit-peek-signal {
-  font-size: 9px;
-  font-weight: 400;
-  color: var(--kit-accent);
-  opacity: 0.65;
-  margin-top: 1px;
-  letter-spacing: 0.02em;
-  animation: kit-peek-fade-in 300ms ease-out;
-}
-
-@keyframes kit-peek-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 0.65; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .kit-chevron { transition: none; }
-  .kit-rows { animation: none; }
-  .kit-peek-signal { animation: none; }
-}
-
 /* ==========================================================================
    Settings modal (ux/settings-screen.md)
    ==========================================================================
@@ -3328,8 +3131,8 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 }
 
 .settings-toggle-on {
-  background: rgba(var(--kit-accent-rgb),0.55);
-  border-color: rgba(var(--kit-accent-rgb),0.85);
+  background: rgba(var(--accent-indigo-rgb),0.55);
+  border-color: rgba(var(--accent-indigo-rgb),0.85);
 }
 
 .settings-toggle-on .settings-toggle-thumb {
@@ -3338,7 +3141,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 }
 
 .settings-toggle:focus-visible {
-  outline: 2px solid rgba(var(--kit-accent-rgb), 0.9);
+  outline: 2px solid rgba(var(--accent-indigo-rgb), 0.9);
   outline-offset: 2px;
 }
 
@@ -3359,7 +3162,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 .settings-slider {
   flex: 1;
   height: 4px;
-  accent-color: rgba(var(--kit-accent-rgb), 0.85);
+  accent-color: rgba(var(--accent-indigo-rgb), 0.85);
   cursor: pointer;
 }
 
@@ -3615,7 +3418,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 
   .settings-tab-active {
     color: var(--text-primary);
-    border-bottom-color: rgba(var(--kit-accent-rgb), 0.85);
+    border-bottom-color: rgba(var(--accent-indigo-rgb), 0.85);
   }
 
   .settings-body-scroll {
@@ -3745,7 +3548,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 
   .settings-tab-active {
     color: var(--text-primary);
-    border-bottom-color: rgba(var(--kit-accent-rgb), 0.85);
+    border-bottom-color: rgba(var(--accent-indigo-rgb), 0.85);
   }
 
   .settings-body-scroll {
@@ -3967,7 +3770,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-maxed::before {
 }
 
 .settings-gear-btn:focus-visible {
-  outline: 2px solid rgba(var(--kit-accent-rgb), 0.9);
+  outline: 2px solid rgba(var(--accent-indigo-rgb), 0.9);
   outline-offset: 2px;
 }
 
@@ -4065,10 +3868,6 @@ html[data-reduce-motion="true"] .viral-particles-overlay {
 }
 
 
-html[data-reduce-motion="true"] .kit-chevron { transition: none; }
-html[data-reduce-motion="true"] .kit-rows { animation: none; }
-html[data-reduce-motion="true"] .kit-peek-signal { animation: none; }
-
 html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   animation: none;
   box-shadow: 0 0 8px 1px rgba(var(--glow-halo-rgb),0.35);
@@ -4111,6 +3910,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   border-color: rgba(var(--pill-color-rgb), 0.30);
 }
 
+
 /* ---------------------------------------------------------------------------
  * HIRE pill flame border — conic gradient chase with warm glow.
  * Uses a rotating conic-gradient on a ::before pseudo-element, masked to
@@ -4135,6 +3935,7 @@ html[data-reduce-motion="true"] .row-btn-upgrade.row-btn-lvl-ready {
   position: relative;
   border-color: transparent;
   background: rgba(var(--pill-color-rgb), 0.15);
+  color: var(--text-primary);
   z-index: 0;
   overflow: visible;
   box-shadow:
@@ -4306,6 +4107,119 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
   font-size: 10px;
   opacity: 0.85;
 }
+
+/* ---------------------------------------------------------------------------
+ * SUPER pill — verb-gear-super-button.md §2–§6
+ *
+ * Extends the purchase-pill system. SUPER replaces AUTO when autoclickers
+ * are at cap. Verb-colored glow, 2px border, 25% opacity background,
+ * two-tap confirmation, and platinum maxed state.
+ * --------------------------------------------------------------------------- */
+
+/* Affordable SUPER — verb-tinted with elevated visual weight */
+.purchase-pill-super.purchase-pill-affordable {
+  border: 2px solid rgba(255, 140, 40, 0.50);
+  background: rgba(255, 140, 40, 0.18);
+  box-shadow: 0 0 8px rgba(255, 140, 40, 0.30);
+  color: var(--text-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.purchase-pill-super.purchase-pill-affordable .pill-label {
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.purchase-pill-super.purchase-pill-affordable .pill-cost {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hold-to-buy fire bar — fills from bottom, escalating color + glow */
+.super-hold-fire {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--hold-progress, 0) * 100%);
+  background: linear-gradient(
+    to top,
+    rgba(var(--pill-color-rgb), 0.9),
+    rgba(255, 100, 20, 0.85) 40%,
+    rgba(255, 200, 50, 0.7) 80%,
+    rgba(255, 255, 180, 0.5)
+  );
+  pointer-events: none;
+  transition: none;
+}
+
+/* Escalating glow + shake during hold */
+.purchase-pill-super-holding.purchase-pill-affordable {
+  animation: super-hold-shake 80ms linear infinite;
+  border-color: rgba(255, 140, 40, 0.8);
+}
+
+@keyframes super-hold-shake {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(-1px) rotate(-0.5deg); }
+  50%  { transform: translateX(1px) rotate(0.5deg); }
+  75%  { transform: translateX(-1px) rotate(0.3deg); }
+  100% { transform: translateX(0); }
+}
+
+/* Purchase burst — expand 1.25x, shrink to 0, reappear greyed out.
+   Single animation, no forwards fill — element returns to normal after. */
+.super-burst {
+  animation: super-burst-pop 500ms ease-out;
+}
+
+@keyframes super-burst-pop {
+  0%   { transform: scale(1); opacity: 1; }
+  20%  { transform: scale(1.25); opacity: 1; }
+  55%  { transform: scale(0); opacity: 0; }
+  56%  { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Unaffordable SUPER — keeps SUPER label */
+.purchase-pill-super.purchase-pill-unaffordable .pill-label {
+  font-weight: 700;
+}
+
+/* SUPER maxed — platinum treatment, inherits from .purchase-pill-maxed */
+.purchase-pill-super-maxed .pill-label {
+  font-weight: 700;
+}
+
+/* SUPER cost popover — gear name + cost + multiplier */
+.pill-cost-popover-super {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.popover-gear-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.popover-gear-detail {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .purchase-pill-super-holding.purchase-pill-affordable { animation: none; }
+  .super-hold-fire { transition: height 100ms linear; }
+}
+html[data-reduce-motion="true"] .purchase-pill-super-holding.purchase-pill-affordable { animation: none; }
+html[data-reduce-motion="true"] .super-hold-fire { transition: height 100ms linear; }
 
 /* ---------------------------------------------------------------------------
  * Autoclicker badge on verb action buttons — manual-action-ladder.md §4.2
@@ -4648,24 +4562,6 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     padding-top: 3px;
   }
 
-  /* Total followers: trailing inline element after last card.
-   * Removes the desktop border-top divider and centers vertically. */
-  .platform-total-followers {
-    text-align: left;
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--text-secondary);
-    padding: 0 4px;
-    border-top: none;
-    white-space: nowrap;
-    flex-shrink: 0;
-    align-self: center;
-  }
-
-  .platform-total-label {
-    font-size: 11px;
-  }
-
   /* --- Top bar compression (task #172) ------------------------------------- */
 
   /* Strip margin (would add 8px to a 40px row), tighten gap/padding, and
@@ -4716,46 +4612,17 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     border-radius: 0;
   }
 
-  /* Show rate + followers stack in landscape — replaces the hover tooltip
-   * which has no trigger on touch devices. */
+  /* Rate + followers stack — tighter padding on mobile. */
   .engagement-meta-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 2px;
-    border-left: 1px solid var(--border-subtle);
     padding-left: 8px;
   }
 
-  .engagement-meta-stack::after {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 1px;
-    background: var(--border-subtle);
-    order: 1;
-  }
-
-  .engagement-rate-inline { order: 0; }
-  .engagement-followers-inline { order: 2; }
-
   .engagement-rate-inline {
-    display: inline;
     font-size: 12px;
-    font-weight: 500;
-    color: var(--accent-green, #2F7A3A);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
   }
 
   .engagement-followers-inline {
-    display: inline;
     font-size: 11px;
-    font-weight: 400;
-    color: var(--text-secondary);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
   }
 
   /* Engagement icon: 24px (down from 40px). */

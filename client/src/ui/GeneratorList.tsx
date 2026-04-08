@@ -14,7 +14,8 @@
 
 import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState } from 'react';
-import type { GameState, GeneratorId, StaticData } from '../types.ts';
+import type { GameState, GeneratorId, StaticData, VerbGearId } from '../types.ts';
+import { canPurchaseVerbGear, verbGearCost } from '../verb-gear/index.ts';
 import type { SweepItemType, SweepPurchaseEvent } from '../driver/index.ts';
 import {
   autoclickerBuyCost,
@@ -39,6 +40,8 @@ interface Props {
   onUpgrade: (id: GeneratorId) => void;
   /** Purchase an autoclicker for a manual-clickable verb. */
   onBuyAutoclicker: (verbId: GeneratorId) => void;
+  /** Purchase the next verb gear level for a manual-clickable verb. */
+  onBuyVerbGear: (gearId: VerbGearId) => void;
   /** When set, the matching row gets a pulsing gold halo (UX §9.2 Phase 1–2). */
   viralGeneratorId?: GeneratorId | null;
   /** Whether an auto-buy sweep is currently running. */
@@ -129,7 +132,7 @@ export function shouldApplyManyReady(readyCount: number): boolean {
 const BREATHE_CYCLE_MS = 2500;
 const BREATHE_TOTAL = GENERATOR_ORDER.length;
 
-export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutoclicker, viralGeneratorId, sweepActive, sweepCanAfford, onStartSweep, onCancelSweep, lastSweepPurchase, sweepPurchaseSeq }: Props) {
+export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutoclicker, onBuyVerbGear, viralGeneratorId, sweepActive, sweepCanAfford, onStartSweep, onCancelSweep, lastSweepPurchase, sweepPurchaseSeq }: Props) {
   // Build rows grouped by category in stable order.
   // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
   // excluded from the main list — they render in the Clout Shop modal instead.
@@ -183,6 +186,7 @@ export function GeneratorList({ state, staticData, onBuy, onUpgrade, onBuyAutocl
                 onBuy={onBuy}
                 onUpgrade={onUpgrade}
                 onBuyAutoclicker={onBuyAutoclicker}
+                onBuyVerbGear={onBuyVerbGear}
                 viralHalo={viralGeneratorId === id}
                 sweepHitType={lastSweepPurchase?.generatorId === id ? lastSweepPurchase.type : null}
                 sweepHitCost={lastSweepPurchase?.generatorId === id ? lastSweepPurchase.cost : 0}
@@ -205,6 +209,7 @@ interface RowProps {
   onBuy: (id: GeneratorId) => void;
   onUpgrade: (id: GeneratorId) => void;
   onBuyAutoclicker: (verbId: GeneratorId) => void;
+  onBuyVerbGear: (gearId: VerbGearId) => void;
   /** True while this row is the viral burst source (UX §9.2 Phase 1–2). */
   viralHalo?: boolean;
   /** Which button (if any) was just hit by a sweep purchase on this row. */
@@ -222,6 +227,7 @@ function GeneratorRow({
   onBuy,
   onUpgrade,
   onBuyAutoclicker,
+  onBuyVerbGear,
   viralHalo,
   sweepHitType,
   sweepHitCost,
@@ -444,19 +450,40 @@ function GeneratorRow({
             min-width, 28px height, 14px border-radius. Three affordance
             states: affordable (verb-tinted), unaffordable (receded grey),
             maxed (not currently capped). */}
-        {def.manual_clickable && (
-          <AutoPill
-            costLabel={<TieredNumber value={autoCost} />}
-            costText={fmtCompact(autoCost)}
-            canBuy={canBuyAuto}
-            isMaxed={g.autoclicker_count >= autoclickerCap(state.player.rebrand_count)}
-            autoclickerCount={g.autoclicker_count}
-            verbColor={display.color}
-            onBuy={() => { onBuyAutoclicker(id); spawnCostFloat('autoclicker', autoCost); }}
-            generatorName={display.name}
-            sweepHit={sweepHitBtn === 'autoclicker'}
-          />
-        )}
+        {def.manual_clickable && (() => {
+          const isSuperPhase = g.autoclicker_count >= autoclickerCap();
+          const gearId = id as VerbGearId;
+          const gearDef = staticData.verbGear[gearId];
+          const gearLevel = state.player.verb_gear[gearId] ?? 0;
+          const gearMaxed = !gearDef || gearLevel >= gearDef.max_level;
+          const gearCost = gearMaxed ? null : verbGearCost(gearLevel, gearId, staticData);
+          const canAffordGear = gearCost !== null && canPurchaseVerbGear(state, gearId, staticData);
+          return (
+            <AutoPill
+              costLabel={isSuperPhase && !gearMaxed && gearCost !== null
+                ? <TieredNumber value={gearCost} />
+                : <TieredNumber value={autoCost} />
+              }
+              costText={isSuperPhase && !gearMaxed && gearCost !== null
+                ? fmtCompact(gearCost)
+                : fmtCompact(autoCost)
+              }
+              canBuy={isSuperPhase ? canAffordGear : canBuyAuto}
+              isMaxed={isSuperPhase ? gearMaxed : false}
+              autoclickerCount={g.autoclicker_count}
+              verbColor={display.color}
+              onBuy={isSuperPhase
+                ? () => { onBuyVerbGear(gearId); spawnCostFloat('autoclicker', gearCost ?? 0); }
+                : () => { onBuyAutoclicker(id); spawnCostFloat('autoclicker', autoCost); }
+              }
+              generatorName={display.name}
+              sweepHit={sweepHitBtn === 'autoclicker'}
+              isSuperPhase={isSuperPhase}
+              gearName={gearDef?.name}
+              gearMultiplier={!gearMaxed && gearDef ? gearDef.multipliers[gearLevel] : undefined}
+            />
+          );
+        })()}
       </div>
       {/* Cost float — portalled to body to escape backdrop-filter containing block */}
       {costFloat && createPortal(
@@ -486,6 +513,12 @@ interface AutoPillProps {
   onBuy: () => void;
   generatorName: string;
   sweepHit?: boolean;
+  /** True when autoclickers are at cap and the pill should show SUPER. */
+  isSuperPhase?: boolean;
+  /** Gear item display name (e.g. "Mechanical Keyboard"). */
+  gearName?: string;
+  /** Next gear multiplier (e.g. 10, 100, 1000). */
+  gearMultiplier?: number;
 }
 
 /** Parse hex to "R, G, B" string for rgba() compositing. */
@@ -568,13 +601,73 @@ function SpeedButton({
 
 // ---------------------------------------------------------------------------
 
-function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verbColor, onBuy, generatorName, sweepHit }: AutoPillProps) {
+/** SUPER hold duration in ms. */
+const SUPER_HOLD_MS = 750;
+
+function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verbColor, onBuy, generatorName, sweepHit, isSuperPhase, gearName, gearMultiplier }: AutoPillProps) {
   const [glowing, setGlowing] = useState(false);
   const [shaking, setShaking] = useState(false);
+  const [bursting, setBursting] = useState(false);
   const rgb = hexToRgbPill(verbColor);
 
-  // Long-press (300ms) reveals cost popover in landscape — replaces hover
-  // cost ghost on touch devices. Dismisses on touch-end or after 2s.
+  // Hold-to-buy for SUPER: press and hold for 3s to confirm purchase.
+  // Progress 0..1 drives the escalating fire visual.
+  const [holdProgress, setHoldProgress] = useState(0);
+  const holdingRef = useRef(false);
+  const holdStart = useRef(0);
+  const holdRaf = useRef(0);
+  const holdTimer = useRef<number | null>(null);
+  const onBuyRef = useRef(onBuy);
+  onBuyRef.current = onBuy;
+
+  const cancelHold = () => {
+    holdingRef.current = false;
+    setHoldProgress(0);
+    if (holdRaf.current) {
+      cancelAnimationFrame(holdRaf.current);
+      holdRaf.current = 0;
+    }
+    if (holdTimer.current !== null) {
+      window.clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+  };
+
+  const tickHold = () => {
+    if (!holdingRef.current) return;
+    const elapsed = Date.now() - holdStart.current;
+    const p = Math.min(1, elapsed / SUPER_HOLD_MS);
+    setHoldProgress(p);
+    if (p < 1) {
+      holdRaf.current = requestAnimationFrame(tickHold);
+    }
+  };
+
+  const startHold = () => {
+    if (!canBuy || isMaxed) return;
+    holdingRef.current = true;
+    holdStart.current = Date.now();
+    setHoldProgress(0);
+    holdRaf.current = requestAnimationFrame(tickHold);
+    // Fire purchase after hold duration.
+    holdTimer.current = window.setTimeout(() => {
+      holdingRef.current = false;
+      setHoldProgress(0);
+      setBursting(true);
+      onBuyRef.current();
+      // Expand 1.25x → shrink to 0 → reappear (single 500ms animation).
+      window.setTimeout(() => setBursting(false), 500);
+    }, SUPER_HOLD_MS);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (holdRaf.current) cancelAnimationFrame(holdRaf.current);
+      if (holdTimer.current !== null) window.clearTimeout(holdTimer.current);
+    };
+  }, []);
+
+  // Long-press (300ms) reveals cost popover in landscape — for HIRE only.
   const [costPopover, setCostPopover] = useState(false);
   const longPressTimer = useRef<number | null>(null);
   const popoverTimer = useRef<number | null>(null);
@@ -591,19 +684,16 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
   };
 
   useEffect(() => {
-    return () => {
-      clearPopoverTimers();
-    };
+    return () => clearPopoverTimers();
   }, []);
 
   const handleTouchStart = () => {
+    if (isSuperPhase) return;
     clearPopoverTimers();
     longPressTimer.current = window.setTimeout(() => {
       longPressTimer.current = null;
       setCostPopover(true);
-      if (popoverTimer.current !== null) {
-        window.clearTimeout(popoverTimer.current);
-      }
+      if (popoverTimer.current !== null) window.clearTimeout(popoverTimer.current);
       popoverTimer.current = window.setTimeout(() => {
         setCostPopover(false);
         popoverTimer.current = null;
@@ -616,8 +706,23 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
     setCostPopover(false);
   };
 
+  // SUPER hold: start on pointerdown, cancel on pointerup/leave/cancel.
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (!isSuperPhase || isMaxed) return;
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    startHold();
+  };
+
+  const handlePointerUp = () => {
+    if (holdingRef.current) cancelHold();
+  };
+
   const handleClick = () => {
     if (isMaxed) return;
+    // SUPER uses hold-to-buy — click is a no-op for SUPER.
+    if (isSuperPhase) return;
+    // Standard HIRE flow.
     if (!canBuy) {
       setShaking(true);
       window.setTimeout(() => setShaking(false), 200);
@@ -628,43 +733,114 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
     onBuy();
   };
 
-  const stateClass = isMaxed
-    ? ' purchase-pill-maxed'
-    : canBuy
-      ? ' purchase-pill-affordable'
-      : ' purchase-pill-unaffordable';
+  // Keyboard: hold Space/Enter for 3s.
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isSuperPhase || isMaxed || !canBuy) return;
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (!holdingRef.current) startHold();
+    }
+  };
+  const handleKeyUp = (e: React.KeyboardEvent) => {
+    if ((e.key === ' ' || e.key === 'Enter') && holdingRef.current) {
+      cancelHold();
+    }
+  };
 
-  return (
-    <button
-      className={`purchase-pill purchase-pill-auto${stateClass}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}${sweepHit ? ' sweep-hit' : ''}`}
-      style={!isMaxed && canBuy ? {
-        '--pill-color': verbColor,
-        '--pill-color-rgb': rgb,
-      } as React.CSSProperties : undefined}
-      onClick={handleClick}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={dismissPopover}
-      onTouchMove={dismissPopover}
-      onTouchCancel={dismissPopover}
-      disabled={isMaxed}
-      aria-label={
-        isMaxed
+  // Determine pill mode.
+  const superMaxed = isSuperPhase && isMaxed;
+  const superActive = isSuperPhase && !isMaxed;
+  const holding = holdProgress > 0;
+
+  const stateClass = superMaxed
+    ? ' purchase-pill-maxed purchase-pill-super-maxed'
+    : superActive
+      ? canBuy
+        ? ` purchase-pill-affordable purchase-pill-super${holding ? ' purchase-pill-super-holding' : ''}`
+        : ' purchase-pill-unaffordable purchase-pill-super'
+      : isMaxed
+        ? ' purchase-pill-maxed'
+        : canBuy
+          ? ' purchase-pill-affordable'
+          : ' purchase-pill-unaffordable';
+
+  const labelText = superMaxed
+    ? 'MAX'
+    : superActive
+      ? 'SUPER'
+      : `HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`;
+  const labelAbbr = superActive ? 'S' : 'A';
+
+  const ariaLabel = superMaxed
+    ? `${generatorName} gear maxed, ${gearName ?? ''} level 3 of 3.`
+    : superActive && canBuy
+      ? `Super upgrade ${generatorName}, ${gearName ?? ''}, affordable, costs ${costText} engagement${gearMultiplier ? `, multiplier times ${gearMultiplier}` : ''}. Hold for 3 seconds to purchase.`
+      : superActive
+        ? `Super upgrade ${generatorName}, ${gearName ?? ''}, not affordable, costs ${costText} engagement.`
+        : isMaxed
           ? `${generatorName} autoclickers maxed at ${autoclickerCount}`
           : canBuy
             ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costText} engagement`
-            : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`
-      }
-      title={isMaxed ? `${generatorName} — max autoclickers (${autoclickerCount})` : `Buy autoclicker for ${costText} engagement`}
+            : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`;
+
+  const title = superMaxed
+    ? `${generatorName} — ${gearName ?? 'gear'} maxed`
+    : superActive
+      ? `${gearName ?? 'Super upgrade'} — hold to buy (${costText} eng)`
+      : isMaxed
+        ? `${generatorName} — max autoclickers (${autoclickerCount})`
+        : `Buy autoclicker for ${costText} engagement`;
+
+  // Inline style for hold progress — drives the fire fill and glow intensity.
+  const holdStyle: React.CSSProperties | undefined =
+    (!superMaxed && (superActive ? canBuy : (!isMaxed && canBuy)))
+      ? {
+          '--pill-color': verbColor,
+          '--pill-color-rgb': rgb,
+          ...(holding ? { '--hold-progress': holdProgress } as Record<string, unknown> : {}),
+        } as React.CSSProperties
+      : undefined;
+
+  return (
+    <button
+      className={`purchase-pill purchase-pill-auto${stateClass}${glowing ? ' purchase-pill-flash' : ''}${shaking ? ' purchase-pill-shake' : ''}${bursting ? ' super-burst' : ''}${sweepHit ? ' sweep-hit' : ''}`}
+      style={holdStyle}
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={dismissPopover}
+      onTouchCancel={dismissPopover}
+      disabled={superMaxed || (!isSuperPhase && isMaxed)}
+      aria-label={ariaLabel}
+      title={title}
     >
+      {/* Hold progress fill — fire bar rising from bottom */}
+      {holding && (
+        <span
+          className="super-hold-fire"
+          style={{ '--hold-progress': holdProgress } as React.CSSProperties}
+          aria-hidden="true"
+        />
+      )}
       <span className="pill-label">
-        {isMaxed && <span className="pill-crown" aria-hidden>♛</span>}
-        {/* Two-span pattern: full label shown by default, abbr shown in sub-750px landscape. */}
-        <span className="pill-label-full">{`HIRE${autoclickerCount > 0 ? ` +${autoclickerCount}` : ''}`}</span>
-        <span className="pill-label-abbr">A</span>
+        {superMaxed && <span className="pill-crown" aria-hidden>♛</span>}
+        {!isSuperPhase && isMaxed && <span className="pill-crown" aria-hidden>♛</span>}
+        <span className="pill-label-full">{labelText}</span>
+        <span className="pill-label-abbr">{labelAbbr}</span>
       </span>
-      <span className="pill-cost">{isMaxed ? 'MAX' : costLabel}</span>
-      {/* Long-press cost popover — visible in landscape where pill-cost is hidden. */}
-      {costPopover && (
+      <span className="pill-cost">{superMaxed ? 'MAX' : isMaxed ? 'MAX' : costLabel}</span>
+      {/* Cost popover — SUPER shows gear name + cost + multiplier. */}
+      {(holding || costPopover) && isSuperPhase && !isMaxed && (
+        <span className="pill-cost-popover pill-cost-popover-super" aria-hidden="true">
+          <span className="popover-gear-name">{gearName}</span>
+          <span className="popover-gear-detail">{costText} eng {gearMultiplier ? `\u2192 \u00D7${gearMultiplier}` : ''}</span>
+        </span>
+      )}
+      {costPopover && !isSuperPhase && (
         <span className="pill-cost-popover" aria-hidden="true">
           {isMaxed ? 'MAX' : costLabel}
         </span>

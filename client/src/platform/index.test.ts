@@ -78,14 +78,14 @@ describe('checkPlatformUnlocks', () => {
 
   it('unlocks skroll when total followers meets its threshold', () => {
     const platforms = makePlatforms(true, false, false);
-    const threshold = STATIC_DATA.unlockThresholds.platforms.skroll; // 500
+    const threshold = STATIC_DATA.unlockThresholds.platforms.skroll; // 15_000
     const result = checkPlatformUnlocks(platforms, threshold, STATIC_DATA);
     expect(result.skroll.unlocked).toBe(true);
   });
 
   it('unlocks multiple platforms simultaneously when followers are high enough', () => {
     const platforms = makePlatforms(true, false, false);
-    const result = checkPlatformUnlocks(platforms, 10_000, STATIC_DATA);
+    const result = checkPlatformUnlocks(platforms, 20_000, STATIC_DATA);
     expect(result.picshift.unlocked).toBe(true);
     expect(result.skroll.unlocked).toBe(true);
   });

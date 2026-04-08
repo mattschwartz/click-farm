@@ -16,8 +16,8 @@ import type {
   CloutUpgradeDef,
   UpgradeId,
   ViralBurstConfig,
-  KitItemDef,
-  KitItemId,
+  VerbGearDef,
+  VerbGearId,
   AudienceMoodStaticData,
 } from '../types.ts';
 
@@ -145,7 +145,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     unlock_threshold: 25_000,
     base_buy_cost: 1_300_000,
     buy_cost_multiplier: 1.15,
-    count_exponent: 1,
+    count_exponent: 1.3,
     upgrade_costs: [1_000_000, 3_000_000, 10_000_000, 30_000_000, 100_000_000, 300_000_000, 1_000_000_000, 3_000_000_000, 10_000_000_000],
     max_level: 10,
     base_autoclicker_cost: 6_500_000,
@@ -314,7 +314,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       deepfakes: 1.0,
       algorithmic_prophecy: 1.0,
     },
-    unlock_threshold: 2_000,
+    unlock_threshold: 15_000,
   },
   // BALANCE: placeholder — all podpod values below. Game-designer owns final
   // content_affinity and unlock_threshold (task #131 open question #1).
@@ -409,57 +409,49 @@ const VIRAL_BURST_CONFIG: ViralBurstConfig = {
 };
 
 // ---------------------------------------------------------------------------
-// Creator Kit items — per-run upgrades purchased with Engagement
-// (architecture/creator-kit.md).
+// Verb Gear — per-verb equipment upgrades (architecture/verb-gear.md)
 //
-// Every numeric value below is PLACEHOLDER. Final balance is owned by
-// game-designer (open questions #3, #4, #5 in creator-kit.md). Placeholders
-// follow the guidance in task #74:
-//   - 3 levels per item
-//   - cost[] in Engagement, roughly calibrated against generator costs
-//   - value arrays produce a visible-but-not-absurd effect at each level
-//   - Phone has no value array (sequential semantics — level count IS the value)
-// BALANCE: placeholder — all five item definitions below.
+// One gear item per manual verb. Each level provides ~10x multiplier.
+// Costs are in Engagement. Balance values from proposal §3 — all values are
+// tuning targets owned by game-designer.
+// BALANCE: starting cells — all five item definitions below.
 // ---------------------------------------------------------------------------
 
-const CREATOR_KIT_ITEM_DEFS: Record<KitItemId, KitItemDef> = {
-  // Camera — Engagement Boost analog (per-run, multiplicative)
-  camera: {
-    id: 'camera',
-    max_level: 3, // BALANCE: placeholder
-    cost: [500, 2_500, 12_000], // BALANCE: placeholder
-    effect: {
-      type: 'engagement_multiplier',
-      values: [1.5, 2.5, 4.0], // BALANCE: placeholder — cumulative
-    },
+const VERB_GEAR_DEFS: Record<VerbGearId, VerbGearDef> = {
+  chirps: {
+    id: 'chirps',
+    name: 'Mechanical Keyboard',
+    max_level: 3,
+    cost: [2e9, 2e12, 2e15],         // 2B, 2T, 2Qa
+    multipliers: [1_234, 1_522_756, 1_879_080_904],     // cumulative per-level
   },
-  // Phone — Sequential platform head-start. Target is computed dynamically
-  // from player state + platform declaration order, so no value array.
-  phone: {
-    id: 'phone',
-    max_level: 3, // BALANCE: placeholder
-    cost: [1_200, 5_500, 22_000], // BALANCE: placeholder
-    effect: { type: 'platform_headstart_sequential' },
+  selfies: {
+    id: 'selfies',
+    name: 'Phone',
+    max_level: 3,
+    cost: [20e9, 20e12, 20e15],       // 20B, 20T, 20Qa
+    multipliers: [1_234, 1_522_756, 1_879_080_904],
   },
-  // Wardrobe — Follower conversion multiplier (new axis, no Clout analog)
-  wardrobe: {
-    id: 'wardrobe',
-    max_level: 3, // BALANCE: placeholder
-    cost: [600, 3_000, 14_000], // BALANCE: placeholder
-    effect: {
-      type: 'follower_conversion_multiplier',
-      values: [1.25, 1.75, 2.5], // BALANCE: placeholder — cumulative
-    },
+  livestreams: {
+    id: 'livestreams',
+    name: 'Camera',
+    max_level: 3,
+    cost: [200e9, 200e12, 200e15],    // 200B, 200T, 200Qa
+    multipliers: [1_234, 1_522_756, 1_879_080_904],
   },
-  // Mogging — Viral burst amplifier (multiplies rolled boost_factor)
-  mogging: {
-    id: 'mogging',
-    max_level: 3, // BALANCE: placeholder
-    cost: [1_000, 5_000, 20_000], // BALANCE: placeholder
-    effect: {
-      type: 'viral_burst_amplifier',
-      values: [1.2, 1.5, 2.0], // BALANCE: placeholder — cumulative
-    },
+  podcasts: {
+    id: 'podcasts',
+    name: 'Microphone',
+    max_level: 3,
+    cost: [2e12, 2e15, 2e18],        // 2T, 2Qa, 2Qi
+    multipliers: [1_234, 1_522_756, 1_879_080_904],
+  },
+  viral_stunts: {
+    id: 'viral_stunts',
+    name: 'Shameless',
+    max_level: 3,
+    cost: [20e12, 20e15, 20e18],     // 20T, 20Qa, 20Qi
+    multipliers: [1_234, 1_522_756, 1_879_080_904],
   },
 };
 
@@ -493,7 +485,7 @@ export const STATIC_DATA: StaticData = {
   generators: GENERATOR_DEFS,
   platforms: PLATFORM_DEFS,
   cloutUpgrades: CLOUT_UPGRADE_DEFS,
-  creatorKitItems: CREATOR_KIT_ITEM_DEFS,
+  verbGear: VERB_GEAR_DEFS,
   unlockThresholds: {
     // Post-prestige generators (ai_slop, deepfakes, algorithmic_prophecy) are
     // intentionally absent — they are unlocked only via Clout `generator_unlock`

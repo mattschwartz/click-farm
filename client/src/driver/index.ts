@@ -14,12 +14,11 @@
 import type {
   GameState,
   GeneratorId,
-  KitItemId,
   StaticData,
   UpgradeId,
+  VerbGearId,
   ViralBurstPayload,
 } from '../types.ts';
-import { purchaseKitItem } from '../creator-kit/index.ts';
 import { tick, postClick, computeSnapshot } from '../game-loop/index.ts';
 import {
   buyGenerator,
@@ -31,6 +30,7 @@ import {
   autoclickerCap,
 } from '../generator/index.ts';
 import { createInitialGameState, canAffordEngagement } from '../model/index.ts';
+import { purchaseVerbGear } from '../verb-gear/index.ts';
 import { clearSave, load, save } from '../save/index.ts';
 import { calculateOffline, type OfflineResult } from '../offline/index.ts';
 import {
@@ -60,7 +60,7 @@ export type StateListener = (state: GameState) => void;
 export type ViralBurstListener = (payload: ViralBurstPayload) => void;
 
 /** Which driver action was attempted when the error fired. */
-export type ActionName = 'click' | 'buy' | 'upgrade' | 'unlock' | 'buyAutoclicker' | 'buyCloutUpgrade' | 'buyKitItem';
+export type ActionName = 'click' | 'buy' | 'upgrade' | 'unlock' | 'buyAutoclicker' | 'buyCloutUpgrade' | 'buyVerbGear';
 
 /**
  * Fired when a player-triggered action throws out of the model layer. The
@@ -187,8 +187,8 @@ export interface GameDriver {
   canRebrand(): boolean;
   /** Spend Clout to level up a meta-upgrade. Throws when unaffordable. */
   buyCloutUpgrade(upgradeId: UpgradeId): void;
-  /** Spend Engagement on a Creator Kit item. Errors caught via onActionError. */
-  buyKitItem(itemId: KitItemId): void;
+  /** Spend Engagement on a verb gear item. Errors caught via onActionError. */
+  buyVerbGear(gearId: VerbGearId): void;
   /**
    * Build the affordable purchase list and begin the 80ms sweep loop.
    * No-op if a sweep is already active.
@@ -447,9 +447,8 @@ export function createDriver(options: DriverOptions): GameDriver {
         if (canAffordEngagement(s.player, buyCost)) {
           items.push({ type: 'buy', generatorId: id, cost: buyCost });
         }
-        // HIRE track (capped at 12 × (1 + rebrand_count))
-        const cap = autoclickerCap(s.player.rebrand_count);
-        if (gen.autoclicker_count < cap) {
+        // HIRE track (flat cap of 12)
+        if (gen.autoclicker_count < autoclickerCap()) {
           const hireCost = autoclickerBuyCost(id, gen.autoclicker_count, staticData);
           if (hireCost > 0 && canAffordEngagement(s.player, hireCost)) {
             items.push({ type: 'autoclicker', generatorId: id, cost: hireCost });
@@ -643,9 +642,9 @@ export function createDriver(options: DriverOptions): GameDriver {
       });
     },
 
-    buyKitItem(itemId) {
-      runAction('buyKitItem', { itemId }, () => {
-        applyState(purchaseKitItem(state, itemId, staticData));
+    buyVerbGear(gearId) {
+      runAction('buyVerbGear', { gearId }, () => {
+        applyState(purchaseVerbGear(state, gearId, staticData));
       });
     },
 

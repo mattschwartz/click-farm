@@ -50,12 +50,14 @@ export function useSettings(): UseSettingsResult {
   }, [settings.reduceMotion]);
 
   // Persist on every change and sync audio state.
+  // Order matters: set volumes BEFORE sound-enabled so syncMusic() inside
+  // setSoundEnabled sees the correct musicVol value.
   useEffect(() => {
     saveSettings(settings);
-    setSoundEnabled(settings.sound);
     setSfxMusicVolume(settings.musicVolume);
     setSfxSfxVolume(settings.sfxVolume);
     setSfxMusicInBackground(settings.musicInBackground);
+    setSoundEnabled(settings.sound);
   }, [settings]);
 
   const setReduceTimePressure = useCallback(

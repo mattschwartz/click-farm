@@ -151,6 +151,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
     pauseLoop,
     resumeLoop,
     buyCloutUpgrade,
+    buyVerbGear,
     saveError,
     clearSaveError,
     resetGame,
@@ -413,6 +414,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               onBuy={buy}
               onUpgrade={upgrade}
               onBuyAutoclicker={buyAutoclicker}
+              onBuyVerbGear={buyVerbGear}
               viralGeneratorId={viralActive?.source_generator_id ?? null}
               sweepActive={sweepActive}
               sweepCanAfford={sweepCanAfford}
@@ -421,7 +423,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
               onStartSweep={startSweep}
               onCancelSweep={cancelSweep}
             />
-            {/* CreatorKitPanel hidden — to be redesigned */}
           </div>
           <PlatformPanel
             state={state}
