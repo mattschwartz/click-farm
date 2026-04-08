@@ -317,7 +317,7 @@ export function createDriver(options: DriverOptions): GameDriver {
   const sweepPurchaseListeners = new Set<(e: SweepPurchaseEvent) => void>();
 
   // Internal sweep state — ephemeral, not persisted.
-  const sweep = { active: false, timeoutHandle: null as number | null };
+  const sweep = { active: false, timeoutHandle: null as number | null, startTime: 0 };
 
   function emitSaveError(e: SaveError): void {
     for (const listener of saveErrorListeners) listener(e);
@@ -484,6 +484,13 @@ export function createDriver(options: DriverOptions): GameDriver {
     fireSweepEndListeners();
   }
 
+  /** Sweep interval ramps from 88ms → 30ms over 3s, then holds at 30ms. */
+  function sweepInterval(): number {
+    const elapsed = now() - sweep.startTime;
+    const t = Math.min(1, elapsed / 3000);
+    return Math.round(88 - 18 * t);
+  }
+
   function fireSweepPurchase(item: SweepItem): void {
     const before = state;
     try {
@@ -513,7 +520,7 @@ export function createDriver(options: DriverOptions): GameDriver {
       const nextItems = buildAffordableList(state);
       if (nextItems.length === 0) { endSweep(); return; }
       fireSweepPurchase(nextItems[0]);
-    }, 80);
+    }, sweepInterval());
   }
 
   return {
@@ -657,6 +664,7 @@ export function createDriver(options: DriverOptions): GameDriver {
         return;
       }
       sweep.active = true;
+      sweep.startTime = now();
       fireSweepPurchase(items[0]);
     },
 
