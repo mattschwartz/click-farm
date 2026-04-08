@@ -203,7 +203,7 @@ export const PLATFORM_DISPLAY: Record<PlatformId, PlatformDisplay> = {
     accent: '#8b6fb8',
     tagline: 'Long-form audio, loyal audiences.',
     image: podpodImg,
-    audienceLabel: 'listeners',
+    audienceLabel: 'followers',
   },
 };
 
