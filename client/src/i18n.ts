@@ -113,7 +113,7 @@ i18n
         narrative: narrativeEn,
       },
     },
-    lng: getSavedLanguage(),
+    lng: 'en',
     fallbackLng: 'en',
     ns: ['game', 'ui', 'narrative'],
     defaultNS: 'ui',
@@ -124,6 +124,14 @@ i18n
       useSuspense: false,
     },
   });
+
+// If the user previously chose a non-English language, lazy-load its bundle
+// and switch. This runs asynchronously — the first render shows English
+// (fallback) then re-renders once the bundle arrives.
+const savedLang = getSavedLanguage();
+if (savedLang !== 'en') {
+  changeLanguage(savedLang);
+}
 
 /**
  * Translate a dynamic key — for keys stored as plain strings in display.ts
