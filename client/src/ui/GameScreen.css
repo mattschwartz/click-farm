@@ -4219,40 +4219,16 @@ html[data-reduce-motion="true"] .purchase-pill-maxed::before { animation: none; 
 }
 
 /* ---------------------------------------------------------------------------
- * SUPER tier escalation — increasingly urgent per gear level.
- * Tier 1 (SUPER): warm orange (default above).
- * Tier 2 (SUPER II): hot magenta-pink, stronger glow.
- * Tier 3 (SUPER III): crimson-gold, intense glow + animated pulse.
+ * SUPER tier escalation — all tiers share the same flame wreath styling
+ * defined on .purchase-pill-super.purchase-pill-affordable above.
  * --------------------------------------------------------------------------- */
 
-/* Tier 2 — SUPER II */
-.super-tier-2.purchase-pill-affordable {
-  border-color: rgba(230, 60, 160, 0.60);
-  background: rgba(230, 60, 160, 0.20);
-  box-shadow: 0 0 12px rgba(230, 60, 160, 0.40);
-}
-
-/* Tier 3 — SUPER III */
-.super-tier-3.purchase-pill-affordable {
-  border-color: rgba(220, 40, 40, 0.70);
-  background: linear-gradient(135deg, rgba(220, 40, 40, 0.25), rgba(255, 180, 30, 0.25));
-  box-shadow: 0 0 16px rgba(255, 80, 30, 0.50), 0 0 32px rgba(255, 180, 30, 0.20);
-  animation: super-tier-3-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes super-tier-3-pulse {
-  0%, 100% { box-shadow: 0 0 16px rgba(255, 80, 30, 0.50), 0 0 32px rgba(255, 180, 30, 0.20); }
-  50%      { box-shadow: 0 0 22px rgba(255, 80, 30, 0.65), 0 0 40px rgba(255, 180, 30, 0.35); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .super-tier-3.purchase-pill-affordable { animation: none; }
   .purchase-pill-super.purchase-pill-affordable::before {
     animation: none;
     background: rgba(255, 140, 40, 0.5);
   }
 }
-html[data-reduce-motion="true"] .super-tier-3.purchase-pill-affordable { animation: none; }
 html[data-reduce-motion="true"] .purchase-pill-super.purchase-pill-affordable::before {
   animation: none;
   background: rgba(255, 140, 40, 0.5);
