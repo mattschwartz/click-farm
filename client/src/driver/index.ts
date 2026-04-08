@@ -488,7 +488,7 @@ export function createDriver(options: DriverOptions): GameDriver {
   function sweepInterval(): number {
     const elapsed = now() - sweep.startTime;
     const t = Math.min(1, elapsed / 3000);
-    return Math.round(88 - 18 * t);
+    return Math.round(88 - 58 * t);
   }
 
   function fireSweepPurchase(item: SweepItem): void {

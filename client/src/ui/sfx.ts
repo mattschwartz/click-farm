@@ -500,7 +500,6 @@ export function playSweepEnd(): void {
   play(sweepEndSfx, sfxVol * 0.6, [0.98, 1.02]);
 }
 
-/** Play the building whoosh -> pop sound (750ms). */
 /** Play the wow sound on SUPER gear purchase. */
 export function playWow(): void {
   if (masterMuted) return;
