@@ -329,8 +329,8 @@ function GeneratorRow({
     : 0;
 
   // Speed affordance state computed UNCONDITIONALLY so the hooks below can
-  // depend on it without skipping on unowned/locked renders. classifySpeedBtnState
-  // returns 'dormant' when count===0, which is correct for pre-owned rows.
+  // depend on it without skipping on unowned/locked renders, including rows
+  // that are currently unowned or locked.
   const upgradeCostUnconditional = g.level >= def.max_level ? new Decimal(Infinity) : generatorUpgradeCost(id, g.level, staticData);
   const speedStateUnconditional = classifySpeedBtnState(
     g.count,

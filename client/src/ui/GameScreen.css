@@ -4399,15 +4399,17 @@ html[data-reduce-motion="true"] .purchase-pill-super.purchase-pill-affordable::b
 
 /* Rebrand commit button — reduced motion: kill flame spin + glow pulse + shake */
 @media (prefers-reduced-motion: reduce) {
-  .commit-btn::before  { animation: none; background: rgba(255, 140, 40, 0.5); }
-  .commit-btn::after   { animation: none; }
-  .commit-btn:hover    { animation: none; }
-  .commit-btn-holding  { animation: none; }
+  .commit-btn::before    { animation: none; background: rgba(255, 140, 40, 0.5); }
+  .commit-btn::after     { animation: none; }
+  .commit-btn:not(:hover){ animation: none; }
+  .commit-btn:hover      { animation: none; }
+  .commit-btn-holding    { animation: none; }
 }
-html[data-reduce-motion="true"] .commit-btn::before  { animation: none; background: rgba(255, 140, 40, 0.5); }
-html[data-reduce-motion="true"] .commit-btn::after   { animation: none; }
-html[data-reduce-motion="true"] .commit-btn:hover    { animation: none; }
-html[data-reduce-motion="true"] .commit-btn-holding  { animation: none; }
+html[data-reduce-motion="true"] .commit-btn::before    { animation: none; background: rgba(255, 140, 40, 0.5); }
+html[data-reduce-motion="true"] .commit-btn::after     { animation: none; }
+html[data-reduce-motion="true"] .commit-btn:not(:hover){ animation: none; }
+html[data-reduce-motion="true"] .commit-btn:hover      { animation: none; }
+html[data-reduce-motion="true"] .commit-btn-holding    { animation: none; }
 
 /* Unaffordable SUPER — keeps SUPER label */
 .purchase-pill-super.purchase-pill-unaffordable .pill-label {
