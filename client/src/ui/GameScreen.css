@@ -515,6 +515,20 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   transition: transform 40ms ease-in, box-shadow 40ms ease-in;
 }
 
+/* Cooldown rejection — quick horizontal "no" wiggle */
+.live-verb-btn.live-verb-nope {
+  animation: verb-nope 300ms ease-in-out;
+}
+
+@keyframes verb-nope {
+  0%   { translate: 0; }
+  20%  { translate: -4px; }
+  40%  { translate: 4px; }
+  60%  { translate: -3px; }
+  80%  { translate: 2px; }
+  100% { translate: 0; }
+}
+
 /* Cooldown: cursor default, no press. Grayscale is handled per-element below. */
 .live-verb-cooldown {
   cursor: default;

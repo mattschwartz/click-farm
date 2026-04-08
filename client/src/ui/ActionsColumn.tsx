@@ -136,6 +136,15 @@ const FLOAT_TTL_MS = 2700; // slightly longer than the 2600ms CSS animation
 // trigger a visual depress on keypress.
 const verbBtnRefs = new Map<GeneratorId, HTMLButtonElement>();
 
+/** Briefly wiggle a verb button to signal "on cooldown". */
+function wiggleVerb(el: HTMLButtonElement | null | undefined) {
+  if (!el) return;
+  el.classList.remove('live-verb-nope'); // reset if already animating
+  void el.offsetWidth; // force reflow to restart animation
+  el.classList.add('live-verb-nope');
+  el.addEventListener('animationend', () => el.classList.remove('live-verb-nope'), { once: true });
+}
+
 interface LiveVerbButtonProps {
   verbId: GeneratorId;
   state: GameState;
@@ -499,7 +508,10 @@ export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats =
         const lastState = state.player.last_manual_click_at[verb] ?? 0;
         const lastLocal = kbLastTap.current[verb] ?? 0;
         const lastTap = Math.max(lastState, lastLocal);
-        if (now - lastTap < cdMs) return;
+        if (now - lastTap < cdMs) {
+          wiggleVerb(verbBtnRefs.get(verb));
+          return;
+        }
         kbLastTap.current[verb] = now;
         playClick();
         onClickVerb(verb);
