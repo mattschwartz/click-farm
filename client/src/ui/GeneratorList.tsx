@@ -833,6 +833,25 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
     );
   }
 
+  // --- SUPER maxed: use identical platinum classes as SPEED maxed ---
+  if (superMaxed) {
+    return (
+      <button
+        className={`row-btn row-btn-upgrade row-btn-lvl-maxed${sweepHit ? ' sweep-hit' : ''}`}
+        disabled
+        aria-label={ariaLabel}
+        title={title}
+      >
+        <span className="label">
+          <span className="lvl-crown" aria-hidden>♛</span>
+          <span className="pill-label-full">SUPER III</span>
+          <span className="pill-label-abbr">SIII</span>
+        </span>
+        <span className="row-btn-cost">MAX</span>
+      </button>
+    );
+  }
+
   // --- SUPER phase: purchase-pill markup with flame wreath ---
   return (
     <button
