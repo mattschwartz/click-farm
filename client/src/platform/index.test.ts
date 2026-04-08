@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
+import '../test/decimal-matchers.ts';
 import {
   getPlatformAffinity,
   checkPlatformUnlocks,
@@ -124,48 +126,48 @@ describe('computeFollowerDistribution', () => {
       platforms,
       STATIC_DATA
     );
-    expect(totalRate).toBe(0);
-    expect(perPlatformRate.chirper).toBe(0);
+    expect(totalRate).toEqualDecimal(0);
+    expect(perPlatformRate.chirper).toEqualDecimal(0);
   });
 
   it('returns zero rates when no platforms are unlocked', () => {
     const platforms = makePlatforms(false, false, false);
-    const rates = { selfies: 1.0 };
+    const rates = { selfies: new Decimal(1.0) };
     const { totalRate } = computeFollowerDistribution(rates, platforms, STATIC_DATA);
-    expect(totalRate).toBe(0);
+    expect(totalRate).toEqualDecimal(0);
   });
 
   it('sends all followers to the only unlocked platform', () => {
     const platforms = makePlatforms(true, false, false);
-    const rates = { selfies: 10.0 };
+    const rates = { selfies: new Decimal(10.0) };
     const { perPlatformRate, totalRate } = computeFollowerDistribution(
       rates,
       platforms,
       STATIC_DATA
     );
     // chirper is the only unlocked platform → gets 100 %
-    expect(perPlatformRate.picshift).toBe(0);
-    expect(perPlatformRate.skroll).toBe(0);
-    expect(perPlatformRate.chirper).toBeCloseTo(totalRate, 10);
-    expect(totalRate).toBeGreaterThan(0);
+    expect(perPlatformRate.picshift).toEqualDecimal(0);
+    expect(perPlatformRate.skroll).toEqualDecimal(0);
+    expect(perPlatformRate.chirper.toNumber()).toBeCloseTo(totalRate.toNumber(), 10);
+    expect(totalRate.gt(0)).toBe(true);
   });
 
   it('distributes followers proportionally across two platforms', () => {
     const platforms = makePlatforms(true, true, false);
     // selfies: picshift has higher affinity (2.0) than chirper (0.8)
-    const rates = { selfies: 10.0 };
+    const rates = { selfies: new Decimal(10.0) };
     const { perPlatformRate } = computeFollowerDistribution(
       rates,
       platforms,
       STATIC_DATA
     );
-    expect(perPlatformRate.picshift).toBeGreaterThan(perPlatformRate.chirper);
-    expect(perPlatformRate.skroll).toBe(0);
+    expect(perPlatformRate.picshift.gt(perPlatformRate.chirper)).toBe(true);
+    expect(perPlatformRate.skroll).toEqualDecimal(0);
   });
 
   it('total rate equals base follower rate (sum across platforms is conserved)', () => {
     const platforms = makePlatforms(true, true, true);
-    const rates = { selfies: 5.0, memes: 3.0, tutorials: 2.0 };
+    const rates = { selfies: new Decimal(5.0), memes: new Decimal(3.0), tutorials: new Decimal(2.0) };
 
     const { perPlatformRate, totalRate } = computeFollowerDistribution(
       rates,
@@ -173,14 +175,16 @@ describe('computeFollowerDistribution', () => {
       STATIC_DATA
     );
 
-    const sumOfPlatforms =
-      perPlatformRate.chirper + perPlatformRate.picshift + perPlatformRate.skroll + perPlatformRate.podpod;
-    expect(sumOfPlatforms).toBeCloseTo(totalRate, 10);
+    const sumOfPlatforms = perPlatformRate.chirper
+      .plus(perPlatformRate.picshift)
+      .plus(perPlatformRate.skroll)
+      .plus(perPlatformRate.podpod);
+    expect(sumOfPlatforms.toNumber()).toBeCloseTo(totalRate.toNumber(), 10);
   });
 
   it('base rate equals Σ(engagement_rate × conversion_rate)', () => {
     const platforms = makePlatforms(true, false, false);
-    const selfiesRate = 4.0;
+    const selfiesRate = new Decimal(4.0);
     const selfiesConv = STATIC_DATA.generators.selfies.follower_conversion_rate;
 
     const { totalRate } = computeFollowerDistribution(
@@ -190,30 +194,30 @@ describe('computeFollowerDistribution', () => {
     );
 
     // With one platform, totalRate == base rate
-    expect(totalRate).toBeCloseTo(selfiesRate * selfiesConv, 10);
+    expect(totalRate.toNumber()).toBeCloseTo(selfiesRate.toNumber() * selfiesConv, 10);
   });
 
   it('tutorials produce more followers on skroll than chirper', () => {
     const platforms = makePlatforms(true, false, true);
-    const rates = { tutorials: 10.0 };
+    const rates = { tutorials: new Decimal(10.0) };
     const { perPlatformRate } = computeFollowerDistribution(
       rates,
       platforms,
       STATIC_DATA
     );
     // skroll has 2.0 affinity for tutorials; chirper has 0.7
-    expect(perPlatformRate.skroll).toBeGreaterThan(perPlatformRate.chirper);
+    expect(perPlatformRate.skroll.gt(perPlatformRate.chirper)).toBe(true);
   });
 
   it('locked platforms receive zero followers even with high affinity', () => {
     // picshift has 2.0 selfies affinity but is locked
     const platforms = makePlatforms(true, false, false);
-    const rates = { selfies: 100.0 };
+    const rates = { selfies: new Decimal(100.0) };
     const { perPlatformRate } = computeFollowerDistribution(
       rates,
       platforms,
       STATIC_DATA
     );
-    expect(perPlatformRate.picshift).toBe(0);
+    expect(perPlatformRate.picshift).toEqualDecimal(0);
   });
 });

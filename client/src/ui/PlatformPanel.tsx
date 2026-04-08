@@ -1,6 +1,7 @@
 // Platform panel — 3 cards with per-platform follower counts, top affinity
 // generators, and per-platform follower rate arrows (UX §7).
 
+import type Decimal from 'decimal.js';
 import type {
   GameState,
   GeneratorId,
@@ -49,7 +50,7 @@ export function PlatformPanel({ state, staticData, viralPlatformId }: Props) {
             key={id}
             id={id}
             unlocked={p.unlocked}
-            followers={p.followers}
+            followers={p.followers.toNumber()}
             unlockThreshold={threshold}
             staticData={staticData}
             heaviestGenerator={heaviestByPlatform[id]}
@@ -143,7 +144,7 @@ function PlatformCard({
 // ---------------------------------------------------------------------------
 
 function computeHeaviestContributor(
-  engagementRates: Partial<Record<GeneratorId, number>>,
+  engagementRates: Partial<Record<GeneratorId, Decimal>>,
   platforms: GameState['platforms'],
   staticData: StaticData,
 ): Record<PlatformId, GeneratorId | null> {
@@ -153,7 +154,7 @@ function computeHeaviestContributor(
     skroll: null,
     podpod: null,
   };
-  const entries = Object.entries(engagementRates) as [GeneratorId, number][];
+  const entries = Object.entries(engagementRates) as [GeneratorId, Decimal][];
   for (const pid of Object.keys(platforms) as PlatformId[]) {
     if (!platforms[pid].unlocked) continue;
     const def = staticData.platforms[pid];
@@ -162,7 +163,7 @@ function computeHeaviestContributor(
     for (const [gid, engagementRate] of entries) {
       const conv = staticData.generators[gid].follower_conversion_rate;
       const affinity = def.content_affinity[gid] ?? 0;
-      const score = engagementRate * conv * affinity;
+      const score = engagementRate.toNumber() * conv * affinity;
       if (score > bestScore) {
         bestScore = score;
         bestGen = gid;

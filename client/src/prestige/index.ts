@@ -20,6 +20,7 @@
 //   platform_headstart → the named platform starts unlocked
 //   generator_unlock   → the named generator starts owned at level 1
 
+import Decimal from 'decimal.js';
 import type {
   GameState,
   GeneratorId,
@@ -41,14 +42,15 @@ import { spendClout } from '../model/index.ts';
 /**
  * Clout awarded for a rebrand given current total_followers.
  *
- *   clout = floor(sqrt(total_followers) / 10)
+ *   clout = floor(log10(total_followers) × k)
  *
- * Resolved 2026-04-04 (core-systems.md §Open Questions #1). First clean
- * milestone: 10,000 followers → 10 Clout.
+ * Log10-based formula per Decimal.js migration proposal §9.
+ * Provisional k=3. Returns 0 for followers ≤ 0.
  */
-export function cloutForRebrand(totalFollowers: number): number {
-  if (totalFollowers < 0 || !Number.isFinite(totalFollowers)) return 0;
-  return Math.floor(Math.sqrt(totalFollowers) / 10);
+export function cloutForRebrand(totalFollowers: Decimal): number {
+  if (totalFollowers.lte(0) || totalFollowers.isNaN()) return 0;
+  const k = 3;
+  return Math.floor(totalFollowers.log(10).times(k).toNumber());
 }
 
 // ---------------------------------------------------------------------------
@@ -135,7 +137,7 @@ export function applyRebrand(
       return [id, {
         id,
         unlocked,
-        followers: 0,
+        followers: new Decimal(0),
         retention: 1.0,
         content_fatigue: {},
         neglect: 0,
@@ -166,8 +168,8 @@ export function applyRebrand(
   // Player: preserve meta, reset run state, add earned clout, bump count.
   const player: Player = {
     ...state.player,
-    engagement: 0,
-    total_followers: 0,
+    engagement: new Decimal(0),
+    total_followers: new Decimal(0),
     has_started_run: false,
     // lifetime_followers preserved (compounds across runs)
     clout: state.player.clout + result.cloutEarned,

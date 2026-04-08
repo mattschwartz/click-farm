@@ -14,7 +14,20 @@
 //    within one tick. Enabled by default.
 
 import { useEffect, useRef, useState } from 'react';
+import type Decimal from 'decimal.js';
 import { TICK_INTERVAL_MS } from '../driver/index.ts';
+
+/** Accept either a native number or a decimal.js Decimal. */
+type NumericInput = Decimal | number;
+
+/** Convert a NumericInput to a native number. */
+function toNum(n: NumericInput): number {
+  // Precision loss to float64 is safe here: the interpolated value is only
+  // used for display rendering (RAF animation frame). The authoritative
+  // game state remains in Decimal. The worst case is a sub-pixel rendering
+  // discrepancy that is invisible at screen resolution.
+  return typeof n === 'number' ? n : n.toNumber();
+}
 
 // ---------------------------------------------------------------------------
 // Pure calculation — extracted for unit testability without React or RAF.
@@ -31,14 +44,14 @@ import { TICK_INTERVAL_MS } from '../driver/index.ts';
  * @param maxMs      - the tick interval used as the clamp ceiling
  */
 export function interpolateValue(
-  lastValue: number,
-  ratePerSec: number,
+  lastValue: NumericInput,
+  ratePerSec: NumericInput,
   elapsedMs: number,
   clamp = true,
   maxMs: number = TICK_INTERVAL_MS,
 ): number {
   const effectiveMs = clamp ? Math.min(elapsedMs, maxMs) : elapsedMs;
-  return lastValue + ratePerSec * (effectiveMs / 1000);
+  return toNum(lastValue) + toNum(ratePerSec) * (effectiveMs / 1000);
 }
 
 // ---------------------------------------------------------------------------
@@ -53,21 +66,24 @@ export function interpolateValue(
  * @param clamp      - whether to cap prediction at one tick interval
  */
 export function useInterpolatedValue(
-  value: number,
-  ratePerSec: number,
+  value: NumericInput,
+  ratePerSec: NumericInput,
   clamp = true,
 ): number {
+  const numValue = toNum(value);
+  const numRate = toNum(ratePerSec);
+
   // Refs hold the most recent anchor — always current without re-triggering effects.
-  const lastValue = useRef(value);
+  const lastValue = useRef(numValue);
   const lastTime = useRef(performance.now());
 
-  const [displayValue, setDisplayValue] = useState(value);
+  const [displayValue, setDisplayValue] = useState(numValue);
 
   // Update anchor when the ground-truth value changes (game tick boundary).
   useEffect(() => {
-    lastValue.current = value;
+    lastValue.current = numValue;
     lastTime.current = performance.now();
-  }, [value]);
+  }, [numValue]);
 
   // Re-anchor time when rate changes so the interpolator doesn't over-predict
   // from a stale anchor using the new (higher/lower) rate. Without this,
@@ -75,10 +91,10 @@ export function useInterpolatedValue(
   // tick, producing a visible twitch backward when the real value arrives.
   useEffect(() => {
     lastTime.current = performance.now();
-  }, [ratePerSec]);
+  }, [numRate]);
 
   // RAF loop — runs continuously while mounted, re-creates when rate changes.
-  // Capturing ratePerSec and clamp in the closure is correct: the effect
+  // Capturing numRate and clamp in the closure is correct: the effect
   // re-runs (cancels + restarts) when either changes, so the closure is always
   // up-to-date. lastValue / lastTime are refs — always current.
   useEffect(() => {
@@ -87,14 +103,14 @@ export function useInterpolatedValue(
     const frame = () => {
       const elapsedMs = performance.now() - lastTime.current;
       setDisplayValue(
-        interpolateValue(lastValue.current, ratePerSec, elapsedMs, clamp),
+        interpolateValue(lastValue.current, numRate, elapsedMs, clamp),
       );
       handle = requestAnimationFrame(frame);
     };
 
     handle = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(handle);
-  }, [ratePerSec, clamp]);
+  }, [numRate, clamp]);
 
   return displayValue;
 }

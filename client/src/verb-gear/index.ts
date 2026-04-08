@@ -11,6 +11,7 @@
 //   canPurchaseVerbGear(state, gearId, staticData) -> boolean
 //   purchaseVerbGear(state, gearId, staticData) -> GameState
 
+import Decimal from 'decimal.js';
 import type { GameState, GeneratorId, StaticData, VerbGearId } from '../types.ts';
 import { spendEngagement } from '../model/index.ts';
 import { autoclickerCap } from '../generator/index.ts';
@@ -51,7 +52,7 @@ export function verbGearCost(
   currentLevel: number,
   gearId: VerbGearId,
   staticData: StaticData,
-): number | null {
+): Decimal | null {
   const def = staticData.verbGear[gearId];
   if (def === undefined) {
     throw new Error(`verbGearCost: unknown gear item '${gearId}'`);
@@ -63,7 +64,7 @@ export function verbGearCost(
       `verbGearCost: cost table missing entry ${currentLevel} for '${gearId}'`,
     );
   }
-  return nextCost;
+  return new Decimal(nextCost);
 }
 
 // ---------------------------------------------------------------------------
@@ -86,7 +87,7 @@ export function canPurchaseVerbGear(
   const current = state.player.verb_gear[gearId] ?? 0;
   const cost = verbGearCost(current, gearId, staticData);
   if (cost === null) return false;
-  return state.player.engagement >= cost;
+  return state.player.engagement.gte(cost);
 }
 
 // ---------------------------------------------------------------------------
@@ -126,7 +127,7 @@ export function purchaseVerbGear(
   }
 
   // Step 3: Engagement check.
-  if (state.player.engagement < cost) {
+  if (state.player.engagement.lt(cost)) {
     throw new Error(
       `purchaseVerbGear: need ${cost} engagement for '${gearId}', have ${state.player.engagement}`,
     );

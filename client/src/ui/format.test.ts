@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
 import { fmtCompact, fmtCompactInt, fmtRate, fmtDuration } from './format.ts';
 
 // ---------------------------------------------------------------------------
@@ -84,12 +85,67 @@ describe('fmtCompact', () => {
     expect(fmtCompact(9.99e33)).toBe('9.99Dc');
   });
 
-  it('falls back to clean exponential notation beyond Dc range', () => {
-    // 1e34 → "10.00Dc" (still within readable Dc range)
-    expect(fmtCompact(1e34)).toBe('10.00Dc');
-    // 1e36+ → exponential (1000.00Dc would be ugly)
-    expect(fmtCompact(1e36)).toBe('1.00e+36');
+  // New tiers (Ud through Vg)
+  it('formats undecillions (Ud)', () => {
+    expect(fmtCompact(1e36)).toBe('1.00Ud');
+    expect(fmtCompact(5.5e36)).toBe('5.50Ud');
+  });
+
+  it('formats duodecillions (Dd)', () => {
+    expect(fmtCompact(1e39)).toBe('1.00Dd');
+  });
+
+  it('formats tredecillions (Td)', () => {
+    expect(fmtCompact(1e42)).toBe('1.00Td');
+  });
+
+  it('formats quattuordecillions (Qad) with 0 decimals', () => {
+    expect(fmtCompact(1e45)).toBe('1Qad');
+    expect(fmtCompact(3.7e45)).toBe('4Qad');
+  });
+
+  it('formats quindecillions (Qid) with 0 decimals', () => {
+    expect(fmtCompact(1e48)).toBe('1Qid');
+  });
+
+  it('formats sexdecillions (Sxd) with 0 decimals', () => {
+    expect(fmtCompact(1e51)).toBe('1Sxd');
+  });
+
+  it('formats septendecillions (Spd) with 0 decimals', () => {
+    expect(fmtCompact(1e54)).toBe('1Spd');
+  });
+
+  it('formats octodecillions (Ocd) with 0 decimals', () => {
+    expect(fmtCompact(1e57)).toBe('1Ocd');
+  });
+
+  it('formats novemdecillions (Nod) with 0 decimals', () => {
+    expect(fmtCompact(1e60)).toBe('1Nod');
+  });
+
+  it('formats vigintillions (Vg)', () => {
+    expect(fmtCompact(1e63)).toBe('1.00Vg');
+  });
+
+  it('falls back to clean exponential notation beyond Vg range', () => {
+    // 1e64 → "10.00Vg" (still within readable Vg range)
+    expect(fmtCompact(1e64)).toBe('10.00Vg');
+    // 1e66+ → exponential
+    expect(fmtCompact(1e66)).toBe('1.00e+66');
     expect(fmtCompact(1.4128611421938976e+151)).toBe('1.41e+151');
+  });
+
+  // Decimal inputs
+  it('accepts Decimal inputs', () => {
+    expect(fmtCompact(new Decimal(42.7))).toBe('42.7');
+    expect(fmtCompact(new Decimal(1e15))).toBe('1.00Qa');
+    expect(fmtCompact(new Decimal('1e36'))).toBe('1.00Ud');
+  });
+
+  it('uses Decimal.toExponential for overflow with Decimal inputs', () => {
+    const big = new Decimal('1.23456789e70');
+    expect(fmtCompact(big)).toBe('1.23e+70');
   });
 });
 
@@ -134,12 +190,29 @@ describe('fmtCompactInt', () => {
     expect(fmtCompactInt(1e33)).toBe('1.00Dc');
   });
 
-  it('falls back to clean exponential notation beyond Dc range', () => {
-    // 1e34 → "10.00Dc" (still within readable Dc range)
-    expect(fmtCompactInt(1e34)).toBe('10.00Dc');
-    // 1e36+ → exponential (1000.00Dc would be ugly)
-    expect(fmtCompactInt(1e36)).toBe('1.00e+36');
+  it('formats extended tiers (Ud through Vg)', () => {
+    expect(fmtCompactInt(1e36)).toBe('1.00Ud');
+    expect(fmtCompactInt(1e39)).toBe('1.00Dd');
+    expect(fmtCompactInt(1e42)).toBe('1.00Td');
+    expect(fmtCompactInt(1e45)).toBe('1Qad');
+    expect(fmtCompactInt(1e48)).toBe('1Qid');
+    expect(fmtCompactInt(1e51)).toBe('1Sxd');
+    expect(fmtCompactInt(1e54)).toBe('1Spd');
+    expect(fmtCompactInt(1e57)).toBe('1Ocd');
+    expect(fmtCompactInt(1e60)).toBe('1Nod');
+    expect(fmtCompactInt(1e63)).toBe('1.00Vg');
+  });
+
+  it('falls back to clean exponential notation beyond Vg range', () => {
+    expect(fmtCompactInt(1e64)).toBe('10.00Vg');
+    expect(fmtCompactInt(1e66)).toBe('1.00e+66');
     expect(fmtCompactInt(1.4128611421938976e+151)).toBe('1.41e+151');
+  });
+
+  // Decimal inputs
+  it('accepts Decimal inputs', () => {
+    expect(fmtCompactInt(new Decimal(1234))).toBe('1,234');
+    expect(fmtCompactInt(new Decimal(1e15))).toBe('1.00Qa');
   });
 });
 
@@ -162,6 +235,10 @@ describe('fmtRate', () => {
 
   it('formats a large rate with SI suffix (§4.2 — no raw digits)', () => {
     expect(fmtRate(127_097_600.7)).toBe('+127.10M/s');
+  });
+
+  it('accepts Decimal input', () => {
+    expect(fmtRate(new Decimal(18))).toBe('+18.0/s');
   });
 });
 

@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import Decimal from 'decimal.js';
+import '../test/decimal-matchers.ts';
 import {
   save,
   load,
@@ -14,6 +16,7 @@ import {
   migrateV7toV8,
   migrateV9toV10,
   migrateV14toV15,
+  migrateV15toV16,
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -60,7 +63,7 @@ describe('save and load', () => {
     const loaded = expectLoaded(load());
 
     expect(loaded.player.id).toBe(state.player.id);
-    expect(loaded.player.engagement).toBe(state.player.engagement);
+    expect(loaded.player.engagement).toEqualDecimal(state.player.engagement);
     expect(loaded.player.clout).toBe(state.player.clout);
   });
 
@@ -81,16 +84,16 @@ describe('save and load', () => {
       ...state,
       platforms: {
         ...state.platforms,
-        chirper: { ...state.platforms.chirper, followers: 1234 },
-        picshift: { ...state.platforms.picshift, followers: 567 },
+        chirper: { ...state.platforms.chirper, followers: new Decimal(1234) },
+        picshift: { ...state.platforms.picshift, followers: new Decimal(567) },
       },
     };
     save(stateWithFollowers);
     const loaded = expectLoaded(load());
 
-    expect(loaded.platforms.chirper.followers).toBe(1234);
-    expect(loaded.platforms.picshift.followers).toBe(567);
-    expect(loaded.platforms.skroll.followers).toBe(0);
+    expect(loaded.platforms.chirper.followers).toEqualDecimal(1234);
+    expect(loaded.platforms.picshift.followers).toEqualDecimal(567);
+    expect(loaded.platforms.skroll.followers).toEqualDecimal(0);
   });
 
   it('sets player.last_close_time on save', () => {
@@ -248,16 +251,16 @@ describe('importSaveJSON', () => {
 // ---------------------------------------------------------------------------
 
 describe('migrate', () => {
-  it('passes through current-version (v14) data unchanged', () => {
+  it('passes through current-version (v15) data to v16', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     const data: SaveData = {
-      version: 14,
+      version: 15,
       state,
       lastCloseTime: 0,
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(15);
+    expect(result.version).toBe(16);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -405,7 +408,7 @@ describe('migrateV3toV4', () => {
 
   it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(15);
+    expect(result.version).toBe(16);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
     // V14→V15 strips creator_kit and adds verb_gear
@@ -456,7 +459,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version via the chain', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(15);
+    expect(result.version).toBe(16);
     // V14→V15 strips creator_kit and adds verb_gear
     expect((result.state.player as any).creator_kit).toBeUndefined();
     expect(result.state.player.verb_gear).toEqual({});
@@ -485,7 +488,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(15);
+    expect(result.version).toBe(16);
     expect((result.state.player as any).creator_kit).toBeUndefined();
     expect(result.state.player.verb_gear).toEqual({});
   });
@@ -508,14 +511,14 @@ describe('migrateV5toV6', () => {
 
   it('clamps player.engagement = Infinity to MAX_SAFE_INTEGER', () => {
     const data = makeV5SaveData();
-    data.state.player.engagement = Infinity;
+    (data.state.player as any).engagement = Infinity;
     const result = migrateV5toV6(data);
     expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
 
   it('clamps player.engagement > MAX_SAFE_INTEGER to MAX_SAFE_INTEGER', () => {
     const data = makeV5SaveData();
-    data.state.player.engagement = Number.MAX_SAFE_INTEGER * 2;
+    (data.state.player as any).engagement = Number.MAX_SAFE_INTEGER * 2;
     const result = migrateV5toV6(data);
     expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
@@ -523,7 +526,7 @@ describe('migrateV5toV6', () => {
   it('coerces NaN engagement to MAX_SAFE_INTEGER', () => {
     // NaN is non-finite → treated as corrupt and pinned to the ceiling.
     const data = makeV5SaveData();
-    data.state.player.engagement = NaN;
+    (data.state.player as any).engagement = NaN;
     const result = migrateV5toV6(data);
     expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
   });
@@ -548,7 +551,7 @@ describe('migrateV5toV6', () => {
 
   it('passes through a valid v5 save unchanged', () => {
     const data = makeV5SaveData();
-    data.state.player.engagement = 12_345;
+    (data.state.player as any).engagement = 12_345;
     data.state.generators.selfies.level = 3;
     const result = migrateV5toV6(data);
     expect(result.state.player.engagement).toBe(12_345);
@@ -558,7 +561,7 @@ describe('migrateV5toV6', () => {
   it('preserves all other player + generator fields', () => {
     const data = makeV5SaveData();
     data.state.player.clout = 99;
-    data.state.player.engagement = Infinity;
+    (data.state.player as any).engagement = Infinity;
     data.state.generators.selfies.level = 20;
     data.state.generators.selfies.count = 42;
     const result = migrateV5toV6(data);
@@ -588,8 +591,9 @@ describe('migrateV5toV6', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(15);
-    expect(result.state.player.engagement).toBe(Number.MAX_SAFE_INTEGER);
+    expect(result.version).toBe(16);
+    // V15→V16 converts number to string; the engagement clamp from V5→V6 still applies
+    expect(result.state.player.engagement).toBe(String(Number.MAX_SAFE_INTEGER));
   });
 });
 
@@ -661,7 +665,7 @@ describe('migrateV6toV7', () => {
 
   it('preserves every other GameState field (player, generators, platforms, viralBurst)', () => {
     const data = makeV6SaveData();
-    data.state.player.engagement = 4242;
+    (data.state.player as any).engagement = 4242;
     data.state.player.clout = 7;
     const result = migrateV6toV7(data);
     expect(result.state.player.id).toBe(data.state.player.id);
@@ -904,9 +908,95 @@ describe('migrateV14toV15', () => {
 
   it('integrates with migrate() — a v14 save reaches current version', () => {
     const result = migrate(makeV14SaveData());
-    expect(result.version).toBe(15);
+    expect(result.version).toBe(16);
     expect((result.state.player as any).creator_kit).toBeUndefined();
     expect(result.state.player.verb_gear).toEqual({});
+  });
+});
+
+// ---------------------------------------------------------------------------
+// migrateV15toV16 — Decimal.js migration
+// ---------------------------------------------------------------------------
+
+describe('migrateV15toV16', () => {
+  function makeV15SaveData(): SaveData {
+    const state = createInitialGameState(STATIC_DATA, 0);
+    // Simulate a V15 save with number fields
+    return {
+      version: 15,
+      state: {
+        ...state,
+        player: {
+          ...state.player,
+          engagement: 1234.5 as any,
+          total_followers: 500 as any,
+          lifetime_followers: 1000 as any,
+          lifetime_engagement: 2000 as any,
+        },
+        platforms: {
+          ...state.platforms,
+          chirper: { ...state.platforms.chirper, followers: 300 as any },
+        },
+      },
+      lastCloseTime: 0,
+      lastCloseState: null,
+    };
+  }
+
+  it('bumps version from 15 to 16', () => {
+    const result = migrateV15toV16(makeV15SaveData());
+    expect(result.version).toBe(16);
+  });
+
+  it('converts number engagement fields to string', () => {
+    const result = migrateV15toV16(makeV15SaveData());
+    expect(result.state.player.engagement).toBe('1234.5');
+    expect(result.state.player.total_followers).toBe('500');
+    expect(result.state.player.lifetime_followers).toBe('1000');
+    expect(result.state.player.lifetime_engagement).toBe('2000');
+  });
+
+  it('converts platform followers to string', () => {
+    const result = migrateV15toV16(makeV15SaveData());
+    expect(result.state.platforms.chirper.followers).toBe('300');
+  });
+
+  it('handles NaN → "0"', () => {
+    const data = makeV15SaveData();
+    (data.state.player as any).engagement = NaN;
+    const result = migrateV15toV16(data);
+    expect(result.state.player.engagement).toBe('0');
+  });
+
+  it('handles Infinity → MAX_SAFE_INTEGER string', () => {
+    const data = makeV15SaveData();
+    (data.state.player as any).engagement = Infinity;
+    const result = migrateV15toV16(data);
+    expect(result.state.player.engagement).toBe(String(Number.MAX_SAFE_INTEGER));
+  });
+
+  it('handles negative → "0"', () => {
+    const data = makeV15SaveData();
+    (data.state.player as any).engagement = -100;
+    const result = migrateV15toV16(data);
+    expect(result.state.player.engagement).toBe('0');
+  });
+
+  it('passes through already-string values unchanged', () => {
+    const data = makeV15SaveData();
+    (data.state.player as any).engagement = '9999';
+    const result = migrateV15toV16(data);
+    expect(result.state.player.engagement).toBe('9999');
+  });
+
+  it('round-trips through save→load with Decimal fields intact', () => {
+    const state = createInitialGameState(STATIC_DATA, 0);
+    state.player.engagement = new Decimal(42.5);
+    state.platforms.chirper.followers = new Decimal(100);
+    save(state);
+    const loaded = expectLoaded(load());
+    expect(loaded.player.engagement).toEqualDecimal(42.5);
+    expect(loaded.platforms.chirper.followers).toEqualDecimal(100);
   });
 });
 

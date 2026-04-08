@@ -5,6 +5,7 @@
 // cover locked-state logic, tooltip math, and the modal data layout.
 
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
 import {
   cloutEarnedForReview,
   newCloutBalanceForReview,
@@ -35,11 +36,11 @@ function makeState(overrides: {
   // Apply overrides to player
   const player = {
     ...base.player,
-    total_followers: overrides.totalFollowers ?? 0,
+    total_followers: new Decimal(overrides.totalFollowers ?? 0),
     clout: overrides.clout ?? 0,
     rebrand_count: overrides.rebrandCount ?? 0,
-    engagement: overrides.engagement ?? 0,
-    lifetime_followers: overrides.lifetimeFollowers ?? 0,
+    engagement: new Decimal(overrides.engagement ?? 0),
+    lifetime_followers: new Decimal(overrides.lifetimeFollowers ?? 0),
     clout_upgrades: {
       ...base.player.clout_upgrades,
       ...(overrides.ownedUpgrades ?? {}),
@@ -104,15 +105,16 @@ describe('cloutEarnedForReview', () => {
     expect(cloutEarnedForReview(state)).toBe(0);
   });
 
-  it('returns floor(sqrt(10000)/10) = 10 for 10,000 followers', () => {
+  it('returns floor(log10(10000)*3) = 12 for 10,000 followers', () => {
     const state = makeState({ totalFollowers: 10_000 });
-    expect(cloutEarnedForReview(state)).toBe(10);
+    // log10(10_000) = 4 → 4 * 3 = 12
+    expect(cloutEarnedForReview(state)).toBe(12);
   });
 
-  it('returns floor(sqrt(47230)/10) = 21 for 47,230 followers (spec example)', () => {
+  it('returns floor(log10(47230)*3) = 14 for 47,230 followers', () => {
     const state = makeState({ totalFollowers: 47_230 });
-    // floor(sqrt(47230)/10) = floor(217.3.../10) = floor(21.73...) = 21
-    expect(cloutEarnedForReview(state)).toBe(21);
+    // log10(47230) ≈ 4.674 → 4.674 * 3 ≈ 14.023 → floor = 14
+    expect(cloutEarnedForReview(state)).toBe(14);
   });
 });
 
@@ -122,9 +124,9 @@ describe('cloutEarnedForReview', () => {
 
 describe('newCloutBalanceForReview', () => {
   it('adds cloutEarned to current clout balance', () => {
-    // 10,000 followers → +10 Clout; current clout = 42 → new balance = 52
+    // 10,000 followers → +12 Clout (log10(10000)*3=12); current clout = 42 → new balance = 54
     const state = makeState({ totalFollowers: 10_000, clout: 42 });
-    expect(newCloutBalanceForReview(state)).toBe(52);
+    expect(newCloutBalanceForReview(state)).toBe(54);
   });
 
   it('returns 0 when no followers and no existing clout', () => {

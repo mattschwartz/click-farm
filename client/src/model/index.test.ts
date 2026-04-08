@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
+import '../test/decimal-matchers.ts';
 import {
   createPlayer,
   createGeneratorState,
@@ -23,10 +25,11 @@ import { STATIC_DATA } from '../static-data/index.ts';
 describe('createPlayer', () => {
   it('creates a player with zeroed currencies', () => {
     const player = createPlayer(1000);
-    expect(player.engagement).toBe(0);
+    expect(player.engagement).toEqualDecimal(0);
     expect(player.clout).toBe(0);
-    expect(player.total_followers).toBe(0);
-    expect(player.lifetime_followers).toBe(0);
+    expect(player.total_followers).toEqualDecimal(0);
+    expect(player.lifetime_followers).toEqualDecimal(0);
+    expect(player.lifetime_engagement).toEqualDecimal(0);
   });
 
   it('sets run_start_time', () => {
@@ -76,7 +79,7 @@ describe('createPlatformState', () => {
   it('starts locked by default', () => {
     const platform = createPlatformState('picshift');
     expect(platform.unlocked).toBe(false);
-    expect(platform.followers).toBe(0);
+    expect(platform.followers).toEqualDecimal(0);
   });
 
   it('can be created unlocked', () => {
@@ -108,7 +111,7 @@ describe('createInitialGameState', () => {
   it('initializes all platform follower counts to 0', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     for (const platform of Object.values(state.platforms)) {
-      expect(platform.followers).toBe(0);
+      expect(platform.followers).toEqualDecimal(0);
     }
   });
 });
@@ -120,63 +123,61 @@ describe('createInitialGameState', () => {
 describe('earnEngagement', () => {
   it('adds engagement', () => {
     const player = createPlayer(0);
-    const updated = earnEngagement(player, 50);
-    expect(updated.engagement).toBe(50);
+    const updated = earnEngagement(player, new Decimal(50));
+    expect(updated.engagement).toEqualDecimal(50);
   });
 
   it('does not mutate the original player', () => {
     const player = createPlayer(0);
-    earnEngagement(player, 50);
-    expect(player.engagement).toBe(0);
+    earnEngagement(player, new Decimal(50));
+    expect(player.engagement).toEqualDecimal(0);
   });
 
   it('throws on negative amount', () => {
     const player = createPlayer(0);
-    expect(() => earnEngagement(player, -1)).toThrow();
+    expect(() => earnEngagement(player, new Decimal(-1))).toThrow();
   });
 
   it('allows earning 0', () => {
     const player = createPlayer(0);
-    const updated = earnEngagement(player, 0);
-    expect(updated.engagement).toBe(0);
+    const updated = earnEngagement(player, new Decimal(0));
+    expect(updated.engagement).toEqualDecimal(0);
   });
 
-  it('clamps earn that would exceed MAX_SAFE_INTEGER (task #89)', () => {
-    const player = createPlayer(Number.MAX_SAFE_INTEGER - 10);
-    const updated = earnEngagement(player, 1e18);
-    expect(updated.engagement).toBe(Number.MAX_SAFE_INTEGER);
+  it('allows earning beyond MAX_SAFE_INTEGER — no ceiling', () => {
+    const player = { ...createPlayer(0), engagement: new Decimal(Number.MAX_SAFE_INTEGER).minus(10) };
+    const updated = earnEngagement(player, new Decimal(1e18));
+    // No clamp — the value exceeds MAX_SAFE_INTEGER freely
+    expect(updated.engagement.gt(Number.MAX_SAFE_INTEGER)).toBe(true);
   });
 });
 
 // ---------------------------------------------------------------------------
-// clampEngagement (task #89 — save-breaking Infinity bug prevention)
+// clampEngagement (Decimal version — no upper ceiling)
 // ---------------------------------------------------------------------------
 
 describe('clampEngagement', () => {
   it('returns value unchanged when in the valid range', () => {
-    expect(clampEngagement(0)).toBe(0);
-    expect(clampEngagement(100)).toBe(100);
-    expect(clampEngagement(Number.MAX_SAFE_INTEGER)).toBe(
+    expect(clampEngagement(new Decimal(0))).toEqualDecimal(0);
+    expect(clampEngagement(new Decimal(100))).toEqualDecimal(100);
+    expect(clampEngagement(new Decimal(Number.MAX_SAFE_INTEGER))).toEqualDecimal(
       Number.MAX_SAFE_INTEGER,
     );
   });
 
   it('clamps negative values to 0', () => {
-    expect(clampEngagement(-1)).toBe(0);
-    expect(clampEngagement(-1e18)).toBe(0);
-    expect(clampEngagement(-Infinity)).toBe(0);
+    expect(clampEngagement(new Decimal(-1))).toEqualDecimal(0);
+    expect(clampEngagement(new Decimal(-1e18))).toEqualDecimal(0);
   });
 
-  it('clamps values above MAX_SAFE_INTEGER to MAX_SAFE_INTEGER', () => {
-    expect(clampEngagement(Number.MAX_SAFE_INTEGER + 1)).toBe(
-      Number.MAX_SAFE_INTEGER,
-    );
-    expect(clampEngagement(1e100)).toBe(Number.MAX_SAFE_INTEGER);
-    expect(clampEngagement(Infinity)).toBe(Number.MAX_SAFE_INTEGER);
+  it('does NOT clamp values above MAX_SAFE_INTEGER — no ceiling', () => {
+    const big = new Decimal(Number.MAX_SAFE_INTEGER).plus(1);
+    expect(clampEngagement(big)).toEqualDecimal(big);
+    expect(clampEngagement(new Decimal('1e100'))).toEqualDecimal('1e100');
   });
 
   it('coerces NaN to 0', () => {
-    expect(clampEngagement(NaN)).toBe(0);
+    expect(clampEngagement(new Decimal(NaN))).toEqualDecimal(0);
   });
 });
 
@@ -186,30 +187,30 @@ describe('clampEngagement', () => {
 
 describe('spendEngagement', () => {
   it('subtracts engagement', () => {
-    const player = earnEngagement(createPlayer(0), 100);
-    const updated = spendEngagement(player, 30);
-    expect(updated.engagement).toBe(70);
+    const player = earnEngagement(createPlayer(0), new Decimal(100));
+    const updated = spendEngagement(player, new Decimal(30));
+    expect(updated.engagement).toEqualDecimal(70);
   });
 
   it('throws when insufficient balance', () => {
-    const player = earnEngagement(createPlayer(0), 10);
-    expect(() => spendEngagement(player, 20)).toThrow();
+    const player = earnEngagement(createPlayer(0), new Decimal(10));
+    expect(() => spendEngagement(player, new Decimal(20))).toThrow();
   });
 
   it('throws on negative amount', () => {
-    const player = earnEngagement(createPlayer(0), 100);
-    expect(() => spendEngagement(player, -5)).toThrow();
+    const player = earnEngagement(createPlayer(0), new Decimal(100));
+    expect(() => spendEngagement(player, new Decimal(-5))).toThrow();
   });
 
   it('allows spending exact balance to zero', () => {
-    const player = earnEngagement(createPlayer(0), 50);
-    const updated = spendEngagement(player, 50);
-    expect(updated.engagement).toBe(0);
+    const player = earnEngagement(createPlayer(0), new Decimal(50));
+    const updated = spendEngagement(player, new Decimal(50));
+    expect(updated.engagement).toEqualDecimal(0);
   });
 
   it('does not go negative', () => {
     const player = createPlayer(0); // engagement = 0
-    expect(() => spendEngagement(player, 1)).toThrow();
+    expect(() => spendEngagement(player, new Decimal(1))).toThrow();
   });
 });
 
@@ -219,14 +220,14 @@ describe('spendEngagement', () => {
 
 describe('canAffordEngagement', () => {
   it('returns true when sufficient', () => {
-    const player = earnEngagement(createPlayer(0), 100);
-    expect(canAffordEngagement(player, 50)).toBe(true);
-    expect(canAffordEngagement(player, 100)).toBe(true);
+    const player = earnEngagement(createPlayer(0), new Decimal(100));
+    expect(canAffordEngagement(player, new Decimal(50))).toBe(true);
+    expect(canAffordEngagement(player, new Decimal(100))).toBe(true);
   });
 
   it('returns false when insufficient', () => {
     const player = createPlayer(0);
-    expect(canAffordEngagement(player, 1)).toBe(false);
+    expect(canAffordEngagement(player, new Decimal(1))).toBe(false);
   });
 });
 
@@ -299,45 +300,45 @@ describe('canAffordClout', () => {
 describe('earnFollowers', () => {
   it('increases platform followers independently', () => {
     let state = createInitialGameState(STATIC_DATA, 0);
-    const result = earnFollowers(state.platforms.chirper, state.player, 100);
+    const result = earnFollowers(state.platforms.chirper, state.player, new Decimal(100));
     state = {
       ...state,
       platforms: { ...state.platforms, chirper: result.platform },
       player: result.player,
     };
 
-    expect(state.platforms.chirper.followers).toBe(100);
-    expect(state.platforms.picshift.followers).toBe(0);
-    expect(state.platforms.skroll.followers).toBe(0);
+    expect(state.platforms.chirper.followers).toEqualDecimal(100);
+    expect(state.platforms.picshift.followers).toEqualDecimal(0);
+    expect(state.platforms.skroll.followers).toEqualDecimal(0);
   });
 
   it('updates lifetime_followers but not total_followers (derived)', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
-    const result = earnFollowers(state.platforms.chirper, state.player, 50);
+    const result = earnFollowers(state.platforms.chirper, state.player, new Decimal(50));
 
     // earnFollowers updates lifetime_followers
-    expect(result.player.lifetime_followers).toBe(50);
+    expect(result.player.lifetime_followers).toEqualDecimal(50);
     // total_followers is derived — earnFollowers does not write it
-    expect(result.player.total_followers).toBe(0);
+    expect(result.player.total_followers).toEqualDecimal(0);
     // To keep total_followers in sync, call syncTotalFollowers
     const synced = syncTotalFollowers(result.player, {
       ...state.platforms,
       chirper: result.platform,
     });
-    expect(synced.total_followers).toBe(50);
+    expect(synced.total_followers).toEqualDecimal(50);
   });
 
   it('throws when platform is locked', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     expect(() =>
-      earnFollowers(state.platforms.picshift, state.player, 10)
+      earnFollowers(state.platforms.picshift, state.player, new Decimal(10))
     ).toThrow();
   });
 
   it('throws on negative amount', () => {
     const state = createInitialGameState(STATIC_DATA, 0);
     expect(() =>
-      earnFollowers(state.platforms.chirper, state.player, -5)
+      earnFollowers(state.platforms.chirper, state.player, new Decimal(-5))
     ).toThrow();
   });
 
@@ -346,10 +347,10 @@ describe('earnFollowers', () => {
     const originalFollowers = state.platforms.chirper.followers;
     const originalTotal = state.player.total_followers;
 
-    earnFollowers(state.platforms.chirper, state.player, 100);
+    earnFollowers(state.platforms.chirper, state.player, new Decimal(100));
 
-    expect(state.platforms.chirper.followers).toBe(originalFollowers);
-    expect(state.player.total_followers).toBe(originalTotal);
+    expect(state.platforms.chirper.followers).toEqualDecimal(originalFollowers);
+    expect(state.player.total_followers).toEqualDecimal(originalTotal);
   });
 });
 
@@ -364,14 +365,14 @@ describe('syncTotalFollowers', () => {
     // Unlock and add followers manually for the test
     const platforms = {
       ...state.platforms,
-      chirper: { ...state.platforms.chirper, followers: 100 },
-      picshift: { ...state.platforms.picshift, followers: 200 },
-      skroll: { ...state.platforms.skroll, followers: 50 },
+      chirper: { ...state.platforms.chirper, followers: new Decimal(100) },
+      picshift: { ...state.platforms.picshift, followers: new Decimal(200) },
+      skroll: { ...state.platforms.skroll, followers: new Decimal(50) },
     };
 
     const player = syncTotalFollowers(state.player, platforms);
     state = { ...state, platforms, player };
 
-    expect(state.player.total_followers).toBe(350);
+    expect(state.player.total_followers).toEqualDecimal(350);
   });
 });

@@ -3,6 +3,7 @@
 // upgrade actions. All functions are pure — no mutation.
 // See core-systems.md §Generator, §Game Loop Tick, and §Interface Contracts.
 
+import Decimal from 'decimal.js';
 import type {
   GameState,
   GeneratorId,
@@ -29,15 +30,15 @@ export function generatorBuyCost(
   generatorId: GeneratorId,
   currentCount: number,
   staticData: StaticData,
-): number {
+): Decimal {
   if (currentCount < 0) {
     throw new Error(
       `generatorBuyCost: currentCount must be ≥ 0, got ${currentCount}`,
     );
   }
   const def = staticData.generators[generatorId];
-  return (
-    def.base_buy_cost * Math.pow(def.buy_cost_multiplier, currentCount)
+  return new Decimal(def.base_buy_cost).times(
+    new Decimal(def.buy_cost_multiplier).pow(currentCount),
   );
 }
 
@@ -52,7 +53,7 @@ export function generatorUpgradeCost(
   generatorId: GeneratorId,
   currentLevel: number,
   staticData: StaticData,
-): number {
+): Decimal {
   if (currentLevel < 1 || !Number.isFinite(currentLevel)) {
     throw new Error(
       `generatorUpgradeCost: currentLevel must be ≥ 1 and finite, got ${currentLevel}`,
@@ -65,7 +66,7 @@ export function generatorUpgradeCost(
       `generatorUpgradeCost: no cost defined for level ${currentLevel}→${currentLevel + 1} on '${generatorId}'`,
     );
   }
-  return def.upgrade_costs[index];
+  return new Decimal(def.upgrade_costs[index]);
 }
 
 /**
@@ -80,15 +81,15 @@ export function autoclickerBuyCost(
   generatorId: GeneratorId,
   currentAutoclickerCount: number,
   staticData: StaticData,
-): number {
+): Decimal {
   if (currentAutoclickerCount < 0) {
     throw new Error(
       `autoclickerBuyCost: currentAutoclickerCount must be ≥ 0, got ${currentAutoclickerCount}`,
     );
   }
   const def = staticData.generators[generatorId];
-  return (
-    def.base_autoclicker_cost * Math.pow(def.autoclicker_cost_multiplier, currentAutoclickerCount)
+  return new Decimal(def.base_autoclicker_cost).times(
+    new Decimal(def.autoclicker_cost_multiplier).pow(currentAutoclickerCount),
   );
 }
 
@@ -138,82 +139,6 @@ export function checkGeneratorUnlocks(
   return changed ? next : generators;
 }
 
-/**
- * Whether a manual-clickable generator is eligible for the Unlock purchase.
- * Pure derived view — no state mutation.
- */
-export function canUnlockGenerator(
-  verbId: GeneratorId,
-  state: GameState,
-  staticData: StaticData,
-): boolean {
-  const def = staticData.generators[verbId];
-  if (!def.manual_clickable) return false;
-  if (state.generators[verbId].owned) return false;
-  const threshold = staticData.unlockThresholds.generators[verbId];
-  return threshold !== undefined && state.player.total_followers >= threshold;
-}
-
-/**
- * Unlock a manual-clickable generator. Pays the Unlock cost (base_buy_cost per
- * D1 resolution) and flips owned=true.
- *
- * Throws if:
- * - The generator is not manual_clickable (passive-only gens use buyGenerator).
- * - The generator is already owned (already unlocked).
- * - The follower threshold is not yet met.
- * - The player cannot afford the Unlock cost.
- *
- * Pure — returns a new GameState; does not mutate the input.
- */
-export function unlockGenerator(
-  state: GameState,
-  verbId: GeneratorId,
-  staticData: StaticData,
-): GameState {
-  const def = staticData.generators[verbId];
-
-  if (!def.manual_clickable) {
-    throw new Error(
-      `unlockGenerator: generator '${verbId}' is not manual-clickable — use buyGenerator for passive generators`,
-    );
-  }
-
-  const gen = state.generators[verbId];
-
-  if (gen.owned) {
-    throw new Error(
-      `unlockGenerator: generator '${verbId}' is already unlocked`,
-    );
-  }
-
-  const threshold = staticData.unlockThresholds.generators[verbId];
-  if (threshold === undefined || state.player.total_followers < threshold) {
-    throw new Error(
-      `unlockGenerator: generator '${verbId}' threshold not met — ` +
-        `need ${threshold ?? '(no threshold)'} followers, have ${state.player.total_followers}`,
-    );
-  }
-
-  // Unlock cost reuses base_buy_cost per D1 resolution (A2 assumption).
-  const cost = def.base_buy_cost;
-
-  if (!canAffordEngagement(state.player, cost)) {
-    throw new Error(
-      `unlockGenerator: cannot afford to unlock '${verbId}' — ` +
-        `cost ${cost}, have ${state.player.engagement}`,
-    );
-  }
-
-  return {
-    ...state,
-    player: spendEngagement(state.player, cost),
-    generators: {
-      ...state.generators,
-      [verbId]: { ...gen, owned: true },
-    },
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Purchase actions
@@ -236,11 +161,8 @@ export function buyGenerator(
   const gen = state.generators[generatorId];
 
   if (!gen.owned) {
-    const def = staticData.generators[generatorId];
     throw new Error(
-      def.manual_clickable
-        ? `buyGenerator: generator '${generatorId}' must be unlocked first — use unlockGenerator`
-        : `buyGenerator: generator '${generatorId}' is not yet unlocked — check follower thresholds`,
+      `buyGenerator: generator '${generatorId}' is not yet unlocked — check follower thresholds`,
     );
   }
 

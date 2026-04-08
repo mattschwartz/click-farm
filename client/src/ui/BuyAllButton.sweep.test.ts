@@ -106,13 +106,13 @@ describe('BUY ALL button — sweep driver contract', () => {
     const { driver, timeouts } = makeDriver(1_000_000);
     const before = driver.getState().player.engagement;
     driver.startSweep();
-    expect(driver.getState().player.engagement).toBeLessThan(before);
+    expect(driver.getState().player.engagement.lt(before)).toBe(true);
     timeouts.flush();
   });
 
   it('onSweepEnd fires after natural sweep completion', () => {
     const buyCost = generatorBuyCost('chirps', 0, STATIC_DATA);
-    const { driver } = makeDriver(buyCost);
+    const { driver } = makeDriver(buyCost.toNumber());
     const ends: number[] = [];
     driver.onSweepEnd(() => ends.push(1));
     driver.startSweep();
@@ -131,7 +131,7 @@ describe('BUY ALL button — sweep driver contract', () => {
 
   it('onSweepEnd listener is removable (unsubscribe cleans up)', () => {
     const buyCost = generatorBuyCost('chirps', 0, STATIC_DATA);
-    const { driver } = makeDriver(buyCost);
+    const { driver } = makeDriver(buyCost.toNumber());
     const ends: number[] = [];
     const unsub = driver.onSweepEnd(() => ends.push(1));
     unsub();
@@ -141,7 +141,7 @@ describe('BUY ALL button — sweep driver contract', () => {
 
   it('canAfford becomes false after sweep exhausts funds', () => {
     const buyCost = generatorBuyCost('chirps', 0, STATIC_DATA);
-    const { driver } = makeDriver(buyCost);
+    const { driver } = makeDriver(buyCost.toNumber());
     driver.startSweep();
     // After sweep ends, nothing more is affordable
     expect(driver.getSweepState().canAfford).toBe(false);

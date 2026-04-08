@@ -2,6 +2,7 @@
 // authoritative semantics. Task #104 AC #11.
 
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
 import type {
   GameState,
   PlatformState,
@@ -142,7 +143,7 @@ describe('recomputeRetention', () => {
     return {
       id: 'chirper',
       unlocked: true,
-      followers: 0,
+      followers: new Decimal(0),
       retention: 1.0,
       content_fatigue: {},
       neglect: 0,

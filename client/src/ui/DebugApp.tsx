@@ -18,6 +18,7 @@ import {
   cloutForRebrand,
   cloutUpgradeCost,
 } from '../prestige/index.ts';
+import type Decimal from 'decimal.js';
 import type { GeneratorId, PlatformId, UpgradeId } from '../types.ts';
 import '../App.css';
 
@@ -43,13 +44,15 @@ const GENERATOR_ORDER: GeneratorId[] = [
 
 const PLATFORM_ORDER: PlatformId[] = ['chirper', 'picshift', 'skroll', 'podpod'];
 
-function fmt(n: number): string {
+function fmt(raw: Decimal | number): string {
+  const n = typeof raw === 'number' ? raw : raw.toNumber();
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(2)}K`;
   return n.toFixed(2);
 }
 
-function fmtInt(n: number): string {
+function fmtInt(raw: Decimal | number): string {
+  const n = typeof raw === 'number' ? raw : raw.toNumber();
   return Math.floor(n).toLocaleString();
 }
 
@@ -191,8 +194,8 @@ export function DebugApp() {
               }
               const buyCost = generatorBuyCost(id, g.count, STATIC_DATA);
               const upgradeCost = generatorUpgradeCost(id, g.level, STATIC_DATA);
-              const canBuy = state.player.engagement >= buyCost;
-              const canUpgrade = state.player.engagement >= upgradeCost;
+              const canBuy = state.player.engagement.gte(buyCost);
+              const canUpgrade = state.player.engagement.gte(upgradeCost);
               return (
                 <tr key={id}>
                   <td>{id}</td>
@@ -237,16 +240,16 @@ export function DebugApp() {
         </div>
         <button
           onClick={() => {
-            if (state.player.total_followers === 0) return;
+            if (state.player.total_followers.isZero()) return;
             if (!confirm(`Rebrand for ${rebrandPreview} Clout? Run will reset.`)) return;
             const r = rebrand();
             setLastRebrand(r.cloutEarned);
           }}
-          disabled={state.player.total_followers === 0}
+          disabled={state.player.total_followers.isZero()}
           style={{
             marginTop: 8,
             padding: '6px 12px',
-            cursor: state.player.total_followers > 0 ? 'pointer' : 'not-allowed',
+            cursor: state.player.total_followers.gt(0) ? 'pointer' : 'not-allowed',
           }}
         >
           Rebrand (+{rebrandPreview} Clout)

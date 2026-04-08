@@ -11,6 +11,7 @@
 // Architecture contract: single-player, client-authoritative. The driver IS
 // the authority during play. See core-systems.md §Component Boundaries.
 
+import type Decimal from 'decimal.js';
 import type {
   GameState,
   GeneratorId,
@@ -106,14 +107,14 @@ export type SweepItemType = 'buy' | 'upgrade' | 'autoclicker';
 export interface SweepPurchaseEvent {
   type: SweepItemType;
   generatorId: GeneratorId;
-  cost: number;
+  cost: Decimal;
 }
 
 // Internal sweep purchase candidate.
 interface SweepItem {
   type: SweepItemType;
   generatorId: GeneratorId;
-  cost: number;
+  cost: Decimal;
 }
 
 export interface DriverOptions {
@@ -378,7 +379,7 @@ export function createDriver(options: DriverOptions): GameDriver {
         source_generator_id: active.source_generator_id,
         source_platform_id: active.source_platform_id,
         duration_ms: active.duration_ms,
-        magnitude: active.magnitude,
+        magnitude: active.magnitude.toNumber(),
       };
       for (const listener of viralListeners) listener(payload);
     }
@@ -450,7 +451,7 @@ export function createDriver(options: DriverOptions): GameDriver {
         // HIRE track (flat cap of 12)
         if (gen.autoclicker_count < autoclickerCap()) {
           const hireCost = autoclickerBuyCost(id, gen.autoclicker_count, staticData);
-          if (hireCost > 0 && canAffordEngagement(s.player, hireCost)) {
+          if (hireCost.gt(0) && canAffordEngagement(s.player, hireCost)) {
             items.push({ type: 'autoclicker', generatorId: id, cost: hireCost });
           }
         }
@@ -470,7 +471,7 @@ export function createDriver(options: DriverOptions): GameDriver {
       const pa = priority[a.type];
       const pb = priority[b.type];
       if (pa !== pb) return pa - pb;
-      return b.cost - a.cost;
+      return b.cost.comparedTo(a.cost);
     });
   }
 

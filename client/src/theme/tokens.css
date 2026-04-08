@@ -49,6 +49,17 @@
   --tier-oc: #A01868;   /* 7.0:1 — fuchsia */
   --tier-no: #A81050;   /* 6.9:1 — hot pink */
   --tier-dc: #B00840;   /* 6.7:1 — crimson-pink */
+  /* Extended tiers (Ud through Vg) — placeholder colors. */
+  --tier-ud:  #B80030;  /* undecillion */
+  --tier-dd:  #C00028;  /* duodecillion */
+  --tier-td:  #C80020;  /* tredecillion */
+  --tier-qad: #D00018;  /* quattuordecillion */
+  --tier-qid: #D80010;  /* quindecillion */
+  --tier-sxd: #E00008;  /* sexdecillion */
+  --tier-spd: #E80000;  /* septendecillion */
+  --tier-ocd: #F00000;  /* octodecillion */
+  --tier-nod: #F80000;  /* novemdecillion */
+  --tier-vg:  #FF0000;  /* vigintillion */
 }
 
 /* ========================================================================

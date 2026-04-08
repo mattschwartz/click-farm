@@ -1,6 +1,7 @@
 // Tests for GeneratorList pure helpers (task #69, extended in #89).
 
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
 import {
   classifyLvlBtnState,
   shouldApplyManyReady,
@@ -14,38 +15,38 @@ import {
 
 describe('classifyLvlBtnState', () => {
   it('returns armed when engagement < upgradeCost', () => {
-    expect(classifyLvlBtnState(1, 1, 10, 49, 50)).toBe('armed');
-    expect(classifyLvlBtnState(5, 1, 10, 0, 100)).toBe('armed');
+    expect(classifyLvlBtnState(1, 1, 10, new Decimal(49), new Decimal(50))).toBe('armed');
+    expect(classifyLvlBtnState(5, 1, 10, new Decimal(0), new Decimal(100))).toBe('armed');
   });
 
   it('returns armed even at count=0 (SPEED not gated by POWER)', () => {
-    expect(classifyLvlBtnState(0, 1, 10, 0, 50)).toBe('armed');
+    expect(classifyLvlBtnState(0, 1, 10, new Decimal(0), new Decimal(50))).toBe('armed');
   });
 
   it('returns ready when engagement >= upgradeCost', () => {
-    expect(classifyLvlBtnState(1, 1, 10, 50, 50)).toBe('ready');
-    expect(classifyLvlBtnState(1, 1, 10, 1000, 50)).toBe('ready');
+    expect(classifyLvlBtnState(1, 1, 10, new Decimal(50), new Decimal(50))).toBe('ready');
+    expect(classifyLvlBtnState(1, 1, 10, new Decimal(1000), new Decimal(50))).toBe('ready');
   });
 
   it('returns ready at count=0 if affordable', () => {
-    expect(classifyLvlBtnState(0, 1, 10, 999_999, 10)).toBe('ready');
+    expect(classifyLvlBtnState(0, 1, 10, new Decimal(999_999), new Decimal(10))).toBe('ready');
   });
 
   it('ready is inclusive at the exact cost', () => {
-    expect(classifyLvlBtnState(1, 1, 10, 42, 42)).toBe('ready');
+    expect(classifyLvlBtnState(1, 1, 10, new Decimal(42), new Decimal(42))).toBe('ready');
   });
 
   it('returns maxed when level >= maxLevel (task #89)', () => {
-    expect(classifyLvlBtnState(1, 10, 10, 999_999, 50)).toBe('maxed');
-    expect(classifyLvlBtnState(1, 11, 10, 0, 0)).toBe('maxed');
+    expect(classifyLvlBtnState(1, 10, 10, new Decimal(999_999), new Decimal(50))).toBe('maxed');
+    expect(classifyLvlBtnState(1, 11, 10, new Decimal(0), new Decimal(0))).toBe('maxed');
   });
 
   it('returns maxed at count=0 if at level cap', () => {
-    expect(classifyLvlBtnState(0, 10, 10, 999_999, 50)).toBe('maxed');
+    expect(classifyLvlBtnState(0, 10, 10, new Decimal(999_999), new Decimal(50))).toBe('maxed');
   });
 
   it('max check precedes affordability — fully leveled stays maxed even if affordable', () => {
-    expect(classifyLvlBtnState(1, 10, 10, 0, 50)).toBe('maxed');
+    expect(classifyLvlBtnState(1, 10, 10, new Decimal(0), new Decimal(50))).toBe('maxed');
   });
 });
 

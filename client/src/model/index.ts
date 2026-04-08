@@ -2,6 +2,7 @@
 // Responsibility: entity factory functions and currency operations.
 // All operations return new state objects — no mutation.
 
+import Decimal from 'decimal.js';
 import type {
   Player,
   GeneratorState,
@@ -58,11 +59,11 @@ export function createPlayer(now: number = Date.now()): Player {
     id: typeof globalThis.crypto?.randomUUID === 'function'
       ? globalThis.crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    engagement: 0,
+    engagement: new Decimal(0),
     clout: 0,
-    total_followers: 0,
-    lifetime_followers: 0,
-    lifetime_engagement: 0,
+    total_followers: new Decimal(0),
+    lifetime_followers: new Decimal(0),
+    lifetime_engagement: new Decimal(0),
     has_started_run: false,
     rebrand_count: 0,
     clout_upgrades,
@@ -102,7 +103,7 @@ export function createPlatformState(
   return {
     id,
     unlocked,
-    followers: 0,
+    followers: new Decimal(0),
     // Audience Mood — healthy defaults. See architecture/audience-mood.md.
     retention: 1.0,
     content_fatigue: {},
@@ -156,43 +157,41 @@ export function createInitialGameState(
 // ---------------------------------------------------------------------------
 
 /**
- * Clamp an engagement value into the finite, representable range. Every
- * write to `player.engagement` MUST route through this helper — the clamp
- * is a permanent invariant that prevents a save-breaking Infinity bug
- * from ever re-emerging (see proposals/accepted/generator-level-growth-
- * curves.md). Non-finite inputs (NaN, ±Infinity) coerce to 0 / MAX_SAFE.
+ * Clamp an engagement value into the valid range. Every write to
+ * `player.engagement` MUST route through this helper. NaN and negative
+ * values coerce to 0. No upper ceiling — the number does not stop going up.
  */
-export function clampEngagement(value: number): number {
-  if (Number.isNaN(value)) return 0;
-  if (value < 0) return 0;
-  if (value > Number.MAX_SAFE_INTEGER) return Number.MAX_SAFE_INTEGER;
+export function clampEngagement(value: Decimal): Decimal {
+  if (value.isNaN()) return new Decimal(0);
+  if (!value.isFinite()) return new Decimal(0);
+  if (value.isNegative()) return new Decimal(0);
   return value;
 }
 
-export function earnEngagement(player: Player, amount: number): Player {
-  if (amount < 0) {
+export function earnEngagement(player: Player, amount: Decimal): Player {
+  if (amount.isNegative()) {
     throw new Error(`earnEngagement: amount must be ≥ 0, got ${amount}`);
   }
   return {
     ...player,
-    engagement: clampEngagement(player.engagement + amount),
+    engagement: clampEngagement(player.engagement.plus(amount)),
   };
 }
 
-export function spendEngagement(player: Player, amount: number): Player {
-  if (amount < 0) {
+export function spendEngagement(player: Player, amount: Decimal): Player {
+  if (amount.isNegative()) {
     throw new Error(`spendEngagement: amount must be ≥ 0, got ${amount}`);
   }
-  if (player.engagement < amount) {
+  if (player.engagement.lt(amount)) {
     throw new Error(
       `spendEngagement: insufficient engagement — have ${player.engagement}, need ${amount}`
     );
   }
-  return { ...player, engagement: player.engagement - amount };
+  return { ...player, engagement: player.engagement.minus(amount) };
 }
 
-export function canAffordEngagement(player: Player, amount: number): boolean {
-  return player.engagement >= amount;
+export function canAffordEngagement(player: Player, amount: Decimal): boolean {
+  return player.engagement.gte(amount);
 }
 
 // ---------------------------------------------------------------------------
@@ -236,9 +235,9 @@ export function canAffordClout(player: Player, amount: number): boolean {
 export function earnFollowers(
   platformState: PlatformState,
   player: Player,
-  amount: number
+  amount: Decimal
 ): { platform: PlatformState; player: Player } {
-  if (amount < 0) {
+  if (amount.isNegative()) {
     throw new Error(`earnFollowers: amount must be ≥ 0, got ${amount}`);
   }
   if (!platformState.unlocked) {
@@ -248,13 +247,13 @@ export function earnFollowers(
   }
   const newPlatform: PlatformState = {
     ...platformState,
-    followers: platformState.followers + amount,
+    followers: platformState.followers.plus(amount),
   };
   // Note: total_followers is derived and must be synced via syncTotalFollowers().
   // This function only updates lifetime_followers.
   const newPlayer: Player = {
     ...player,
-    lifetime_followers: player.lifetime_followers + amount,
+    lifetime_followers: player.lifetime_followers.plus(amount),
   };
   return { platform: newPlatform, player: newPlayer };
 }
@@ -266,8 +265,8 @@ export function syncTotalFollowers(
   platforms: Record<PlatformId, PlatformState>
 ): Player {
   const total = ALL_PLATFORM_IDS.reduce(
-    (sum, id) => sum + platforms[id].followers,
-    0
+    (sum: Decimal, id) => sum.plus(platforms[id].followers),
+    new Decimal(0)
   );
   return { ...player, total_followers: total };
 }

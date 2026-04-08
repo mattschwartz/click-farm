@@ -4,6 +4,7 @@
 // This is E7's end-to-end verification.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import './test/decimal-matchers.ts';
 import { createDriver } from './driver/index.ts';
 import { STATIC_DATA } from './static-data/index.ts';
 import { tick, computeSnapshot } from './game-loop/index.ts';
@@ -57,16 +58,16 @@ describe('integration — end-to-end play loop', () => {
     }
 
     // Chirper accumulated followers.
-    expect(state.platforms.chirper.followers).toBeGreaterThan(0);
+    expect(state.platforms.chirper.followers.gt(0)).toBe(true);
     const platformSum =
       state.platforms.chirper.followers
-      + state.platforms.picshift.followers
-      + state.platforms.skroll.followers
-      + state.platforms.podpod.followers;
-    expect(state.player.total_followers).toBeCloseTo(platformSum, 4);
+      .plus(state.platforms.picshift.followers)
+      .plus(state.platforms.skroll.followers)
+      .plus(state.platforms.podpod.followers);
+    expect(state.player.total_followers.toNumber()).toBeCloseTo(platformSum.toNumber(), 4);
 
     // If we crossed 100 followers, picshift should be unlocked.
-    if (state.player.total_followers >= 100) {
+    if (state.player.total_followers.gte(100)) {
       expect(state.platforms.picshift.unlocked).toBe(true);
     }
   });
@@ -92,18 +93,18 @@ describe('integration — end-to-end play loop', () => {
     const next = tick(state, 1_001_000, 1000, STATIC_DATA);
 
     // Selfies affinity: chirper=0.8, picshift=2.0 — picshift earns more.
-    expect(next.platforms.picshift.followers).toBeGreaterThan(
+    expect(next.platforms.picshift.followers.gt(
       next.platforms.chirper.followers,
-    );
-    expect(next.platforms.chirper.followers).toBeGreaterThan(0);
+    )).toBe(true);
+    expect(next.platforms.chirper.followers.gt(0)).toBe(true);
 
     // Totals match.
     const sum =
-      next.platforms.chirper.followers +
-      next.platforms.picshift.followers +
-      next.platforms.skroll.followers +
-      next.platforms.podpod.followers;
-    expect(next.player.total_followers).toBeCloseTo(sum, 6);
+      next.platforms.chirper.followers
+      .plus(next.platforms.picshift.followers)
+      .plus(next.platforms.skroll.followers)
+      .plus(next.platforms.podpod.followers);
+    expect(next.player.total_followers.toNumber()).toBeCloseTo(sum.toNumber(), 6);
   });
 
   it('currency conservation: engagement spent == engagement removed from balance', () => {
@@ -122,7 +123,7 @@ describe('integration — end-to-end play loop', () => {
     // chirps buy cost at count=0 is 1.5 × 1.215^0 = 1.5
     driver.buy('chirps');
     const after = driver.getState().player.engagement;
-    expect(before - after).toBeCloseTo(1.5);
+    expect(before.minus(after).toNumber()).toBeCloseTo(1.5);
   });
 
   it('follower totals stay consistent with platform sums across a long run', () => {
@@ -143,13 +144,13 @@ describe('integration — end-to-end play loop', () => {
 
     const s = driver.getState();
     const sum = s.platforms.chirper.followers
-      + s.platforms.picshift.followers
-      + s.platforms.skroll.followers
-      + s.platforms.podpod.followers;
-    expect(s.player.total_followers).toBeCloseTo(sum, 4);
-    expect(s.player.lifetime_followers).toBeGreaterThanOrEqual(
+      .plus(s.platforms.picshift.followers)
+      .plus(s.platforms.skroll.followers)
+      .plus(s.platforms.podpod.followers);
+    expect(s.player.total_followers.toNumber()).toBeCloseTo(sum.toNumber(), 4);
+    expect(s.player.lifetime_followers.gte(
       s.player.total_followers,
-    );
+    )).toBe(true);
   });
 
   it('snapshot reflects per-platform rates', () => {
@@ -162,13 +163,13 @@ describe('integration — end-to-end play loop', () => {
       },
     };
     const snap = computeSnapshot(state, STATIC_DATA);
-    expect(snap.total_engagement_rate).toBeGreaterThan(0);
+    expect(snap.total_engagement_rate.gt(0)).toBe(true);
     // chirper is unlocked, others not — only chirper gets the rate.
-    expect(snap.platform_rates.chirper).toBeGreaterThan(0);
-    expect(snap.platform_rates.picshift).toBe(0);
-    expect(snap.platform_rates.skroll).toBe(0);
-    expect(snap.total_follower_rate).toBeCloseTo(
-      snap.platform_rates.chirper,
+    expect(snap.platform_rates.chirper.gt(0)).toBe(true);
+    expect(snap.platform_rates.picshift.isZero()).toBe(true);
+    expect(snap.platform_rates.skroll.isZero()).toBe(true);
+    expect(snap.total_follower_rate.toNumber()).toBeCloseTo(
+      snap.platform_rates.chirper.toNumber(),
       6,
     );
   });
@@ -208,8 +209,8 @@ describe('integration — save/reload round-trip', () => {
     });
     const b = driverB.getState();
     expect(b.player.id).toBe(savedPlayerId);
-    expect(b.player.engagement).toBe(savedEngagement);
-    expect(b.player.total_followers).toBe(savedFollowers);
+    expect(b.player.engagement.eq(savedEngagement)).toBe(true);
+    expect(b.player.total_followers.eq(savedFollowers)).toBe(true);
     expect(b.generators.selfies.count).toBe(savedCount);
     // Snapshot survives.
     expect(b.player.last_close_state).not.toBeNull();

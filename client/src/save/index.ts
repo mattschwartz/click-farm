@@ -2,6 +2,7 @@
 // Responsibility: serialize/deserialize game state to/from localStorage,
 // with versioned migrations. See core-systems.md — "Save Module".
 
+import Decimal from 'decimal.js';
 import type {
   GameState,
   GeneratorId,
@@ -9,6 +10,7 @@ import type {
   PlatformId,
   PlatformState,
   SaveData,
+  SnapshotState,
   UpgradeId,
   ViralBurstState,
 } from '../types.ts';
@@ -16,7 +18,7 @@ import { recomputeAllRetention } from '../audience-mood/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
 
 const STORAGE_KEY = 'click_farm_save';
-const CURRENT_VERSION = 15;
+const CURRENT_VERSION = 16;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -85,7 +87,7 @@ export function load(): LoadResult {
     const error = err instanceof Error ? err : new Error(String(err));
     return { kind: 'corrupt', error };
   }
-  const gameState = migrated.state;
+  const gameState = deserializeDecimals(migrated.state);
 
   // Always ensure viralBurst is present — a v2 save written before the field
   // existed will be missing it entirely and would crash doTick on load.
@@ -339,8 +341,8 @@ export function migrateV5toV6(data: SaveData): SaveData {
 
   // Clamp engagement — NaN / Infinity / >MAX_SAFE_INTEGER all pinned to MAX_SAFE_INTEGER.
   // Negative / missing values fall through unchanged (runtime code handles those).
-  const rawEngagement = oldState.player.engagement;
-  let clampedEngagement = rawEngagement;
+  const rawEngagement = oldState.player.engagement as unknown as number;
+  let clampedEngagement: number = rawEngagement;
   const needsEngagementClamp =
     !Number.isFinite(rawEngagement) || rawEngagement > Number.MAX_SAFE_INTEGER;
   if (needsEngagementClamp) {
@@ -372,7 +374,7 @@ export function migrateV5toV6(data: SaveData): SaveData {
       generators: newGenerators,
       player: {
         ...oldState.player,
-        engagement: clampedEngagement,
+        engagement: clampedEngagement as unknown as Decimal,
       },
     },
   };
@@ -550,7 +552,7 @@ export function migrateV9toV10(data: SaveData): SaveData {
   // 3) Remap snapshot platform_rates if present.
   let newCloseState = oldState.player.last_close_state;
   if (newCloseState) {
-    const oldRates = newCloseState.platform_rates;
+    const oldRates = newCloseState.platform_rates as unknown as Record<string, number>;
     newCloseState = {
       ...newCloseState,
       platform_rates: {
@@ -559,13 +561,13 @@ export function migrateV9toV10(data: SaveData): SaveData {
         skroll: oldRates.grindset ?? 0,
         podpod: 0,
       },
-    };
+    } as unknown as typeof newCloseState;
   }
 
   // Also remap the top-level lastCloseState on SaveData if present.
   let newLastCloseState = data.lastCloseState;
   if (newLastCloseState) {
-    const oldTopRates = (newLastCloseState as { platform_rates: Record<string, number> }).platform_rates;
+    const oldTopRates = (newLastCloseState as unknown as { platform_rates: Record<string, number> }).platform_rates;
     newLastCloseState = {
       ...newLastCloseState,
       platform_rates: {
@@ -573,8 +575,8 @@ export function migrateV9toV10(data: SaveData): SaveData {
         picshift: oldTopRates.instasham ?? 0,
         skroll: oldTopRates.grindset ?? 0,
         podpod: 0,
-      } as Record<PlatformId, number>,
-    };
+      },
+    } as unknown as typeof newLastCloseState;
   }
 
   return {
@@ -718,7 +720,7 @@ export function migrateV12toV13(data: SaveData): SaveData {
       ...state,
       player: {
         ...state.player,
-        lifetime_engagement: (state.player as unknown as Record<string, unknown>).lifetime_engagement as number ?? 0,
+        lifetime_engagement: ((state.player as unknown as Record<string, unknown>).lifetime_engagement ?? 0) as unknown as Decimal,
       },
     },
   };
@@ -771,6 +773,122 @@ export function migrateV14toV15(data: SaveData): SaveData {
       },
     },
   };
+}
+
+/**
+ * V15→V16: Decimal.js migration — convert number engagement/follower fields
+ * to string representation so deserializeDecimals can wrap them on load.
+ *
+ * Edge cases: NaN → "0", Infinity → MAX_SAFE string, negative → "0".
+ */
+export function migrateV15toV16(data: SaveData): SaveData {
+  const state = data.state as any;
+
+  function safeNumToStr(v: unknown): string {
+    if (typeof v === 'string') return v; // already migrated
+    if (typeof v !== 'number' || Number.isNaN(v)) return '0';
+    if (v === Number.POSITIVE_INFINITY) return String(Number.MAX_SAFE_INTEGER);
+    if (!Number.isFinite(v) || v < 0) return '0';
+    return String(v);
+  }
+
+  // Player fields
+  const player = {
+    ...state.player,
+    engagement: safeNumToStr(state.player.engagement),
+    total_followers: safeNumToStr(state.player.total_followers),
+    lifetime_followers: safeNumToStr(state.player.lifetime_followers),
+    lifetime_engagement: safeNumToStr(state.player.lifetime_engagement),
+  };
+
+  // Platform followers
+  const platforms: Record<string, any> = {};
+  for (const id of Object.keys(state.platforms)) {
+    platforms[id] = {
+      ...state.platforms[id],
+      followers: safeNumToStr(state.platforms[id].followers),
+    };
+  }
+
+  // Snapshot fields (last_close_state on player)
+  if (player.last_close_state) {
+    const snap = player.last_close_state;
+    const rates: Record<string, string> = {};
+    for (const id of Object.keys(snap.platform_rates ?? {})) {
+      rates[id] = safeNumToStr(snap.platform_rates[id]);
+    }
+    player.last_close_state = {
+      ...snap,
+      total_engagement_rate: safeNumToStr(snap.total_engagement_rate),
+      total_follower_rate: safeNumToStr(snap.total_follower_rate),
+      platform_rates: rates,
+    };
+  }
+
+  // Top-level lastCloseState on SaveData envelope
+  let lastCloseState = data.lastCloseState;
+  if (lastCloseState) {
+    const snap = lastCloseState as any;
+    const rates: Record<string, string> = {};
+    for (const id of Object.keys(snap.platform_rates ?? {})) {
+      rates[id] = safeNumToStr(snap.platform_rates[id]);
+    }
+    lastCloseState = {
+      ...snap,
+      total_engagement_rate: safeNumToStr(snap.total_engagement_rate),
+      total_follower_rate: safeNumToStr(snap.total_follower_rate),
+      platform_rates: rates,
+    } as any;
+  }
+
+  return {
+    ...data,
+    version: 16,
+    lastCloseState,
+    state: { ...state, player, platforms },
+  };
+}
+
+/**
+ * Convert serialized string fields back to Decimal instances after migration.
+ * Called on every load — fields are strings after V16 migration or from
+ * Decimal.toJSON() in save(). Also handles number inputs for robustness
+ * (e.g. hand-edited saves).
+ */
+function deserializeDecimals(state: GameState): GameState {
+  const d = (v: unknown) => new Decimal(typeof v === 'number' || typeof v === 'string' ? v : 0);
+
+  const player = {
+    ...state.player,
+    engagement: d(state.player.engagement),
+    total_followers: d(state.player.total_followers),
+    lifetime_followers: d(state.player.lifetime_followers),
+    lifetime_engagement: d(state.player.lifetime_engagement),
+  };
+
+  const platforms: Record<PlatformId, PlatformState> = {} as any;
+  for (const id of Object.keys(state.platforms) as PlatformId[]) {
+    platforms[id] = {
+      ...state.platforms[id],
+      followers: d(state.platforms[id].followers),
+    };
+  }
+
+  // Deserialize snapshot if present
+  if (player.last_close_state) {
+    const snap = player.last_close_state as any;
+    const rates: Record<PlatformId, Decimal> = {} as any;
+    for (const id of Object.keys(snap.platform_rates ?? {}) as PlatformId[]) {
+      rates[id] = d(snap.platform_rates[id]);
+    }
+    player.last_close_state = {
+      total_engagement_rate: d(snap.total_engagement_rate),
+      total_follower_rate: d(snap.total_follower_rate),
+      platform_rates: rates,
+    } as SnapshotState;
+  }
+
+  return { ...state, player, platforms } as GameState;
 }
 
 export function migrate(data: SaveData): SaveData {
@@ -832,6 +950,9 @@ export function migrate(data: SaveData): SaveData {
     current = migrateV14toV15(current);
   }
 
+  if (current.version === 15) {
+    current = migrateV15toV16(current);
+  }
 
   if (current.version !== CURRENT_VERSION) {
     throw new Error(

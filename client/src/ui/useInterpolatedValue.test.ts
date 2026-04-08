@@ -4,6 +4,7 @@
 // logic that the hook delegates to.
 
 import { describe, it, expect } from 'vitest';
+import Decimal from 'decimal.js';
 import { interpolateValue } from './useInterpolatedValue.ts';
 
 const TICK_MS = 100; // mirrors TICK_INTERVAL_MS
@@ -52,5 +53,20 @@ describe('interpolateValue', () => {
   it('clamp with custom maxMs', () => {
     // maxMs = 50: elapsed 200ms clamped to 50ms, so 10/sec × 50ms = +0.5
     expect(interpolateValue(100, 10, 200, true, 50)).toBeCloseTo(100.5);
+  });
+
+  // Decimal inputs
+  it('accepts Decimal lastValue and returns number', () => {
+    const result = interpolateValue(new Decimal(500), 10, 0);
+    expect(typeof result).toBe('number');
+    expect(result).toBe(500);
+  });
+
+  it('accepts Decimal ratePerSec', () => {
+    expect(interpolateValue(100, new Decimal(10), 50)).toBeCloseTo(100.5);
+  });
+
+  it('accepts both Decimal lastValue and ratePerSec', () => {
+    expect(interpolateValue(new Decimal(1000), new Decimal(6.8), 100)).toBeCloseTo(1000.68);
   });
 });

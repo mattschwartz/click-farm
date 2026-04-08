@@ -10,6 +10,7 @@
 // automate-level badge, and pulse indicator.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type Decimal from 'decimal.js';
 import type { GameState, GeneratorId, StaticData } from '../types.ts';
 import {
   verbCooldownMs,
@@ -113,7 +114,7 @@ export function floatStyle(perClick: number, currentEngagement: number): { fontS
 
 interface FloatItem {
   id: number;
-  value: number;
+  value: Decimal | number;
   x: number; // % from left
   y: number; // % from top
   /** True for autoclicker-emitted floats (smaller, dimmer per §4.6). */
@@ -143,6 +144,15 @@ interface LiveVerbButtonProps {
 /** Density cap for individual autoclicker floats (§4.6). Above this, batch. */
 const AUTO_FLOAT_DENSITY_CAP = 8;
 
+/** Maximum visible floats per verb button. Oldest evicted when cap is hit. */
+const MAX_VISIBLE_FLOATS = 4;
+
+/** Push a float. When capped, evicts the oldest to stay at MAX_VISIBLE_FLOATS. */
+function pushFloat(prev: FloatItem[], item: FloatItem, capped: boolean): FloatItem[] {
+  const next = [...prev, item];
+  return capped && next.length > MAX_VISIBLE_FLOATS ? next.slice(next.length - MAX_VISIBLE_FLOATS) : next;
+}
+
 function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showFloats = true, isPaused = false }: LiveVerbButtonProps) {
   const genState = state.generators[verbId];
   const display = GENERATOR_DISPLAY[verbId];
@@ -150,6 +160,11 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
   const perTap = verbYieldPerTap(state.generators[verbId], state, staticData);
   const perAuto = verbYieldPerAutoTap(state.generators[verbId], state, staticData);
   const ratePerSec = computeGeneratorEffectiveRate(state.generators[verbId], state, staticData);
+  // Stable number references for useEffect/useCallback dependency arrays —
+  // Decimal objects are reference-compared, so a new object every render
+  // would tear down intervals and callbacks on every tick.
+  const perAutoNum = perAuto.toNumber();
+  const perTapNum = perTap.toNumber();
   const def = staticData.generators[verbId];
   const cdMs = verbCooldownMs(state.generators[verbId].level, def.base_event_rate);
   const lastTap = state.player.last_manual_click_at[verbId] ?? 0;
@@ -211,7 +226,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
         const radius = Math.random() * 25;
         const x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
         const y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
-        setFloats((prev) => [...prev, { id, value: perAutoTap, x, y, isAutoclick: true, batchCount: autoCount }]);
+        setFloats((prev) => pushFloat(prev, { id, value: perAutoTap, x, y, isAutoclick: true, batchCount: autoCount }, !showFloats));
         window.setTimeout(() => {
           setFloats((prev) => prev.filter((f) => f.id !== id));
         }, FLOAT_TTL_MS);
@@ -226,7 +241,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
             const radius = Math.random() * 25;
             const x = 50 + (Math.cos(angle) * radius / (rect?.width ?? 320)) * 100;
             const y = 50 + (Math.sin(angle) * radius / (rect?.height ?? 80)) * 100;
-            setFloats((prev) => [...prev, { id, value: perAutoTap, x, y, isAutoclick: true }]);
+            setFloats((prev) => pushFloat(prev, { id, value: perAutoTap, x, y, isAutoclick: true }, !showFloats));
             window.setTimeout(() => {
               setFloats((prev) => prev.filter((f) => f.id !== id));
             }, FLOAT_TTL_MS);
@@ -244,7 +259,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
     prevAutoCount.current = autoCount;
     const interval = window.setInterval(emitBurst, burstIntervalMs);
     return () => window.clearInterval(interval);
-  }, [autoCount, burstIntervalMs, perAuto, prefersReducedMotion, showFloats, isPaused]);
+  }, [autoCount, burstIntervalMs, perAutoNum, prefersReducedMotion, showFloats, isPaused]);
 
   const handleTap = useCallback((e: React.PointerEvent | React.MouseEvent) => {
     // Only show float feedback if the cooldown gate will accept the tap.
@@ -270,11 +285,11 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
     }
 
     const hires = genState.autoclicker_count;
-    setFloats((prev) => [...prev, { id, value: perTap, x, y, hireCount: hires > 1 ? hires : undefined }]);
+    setFloats((prev) => pushFloat(prev, { id, value: perTap, x, y, hireCount: hires > 1 ? hires : undefined }, !showFloats));
     window.setTimeout(() => {
       setFloats((prev) => prev.filter((f) => f.id !== id));
     }, FLOAT_TTL_MS);
-  }, [onClick, verbId, perTap, cdMs, state.player.last_manual_click_at, genState.autoclicker_count]);
+  }, [onClick, verbId, perTapNum, cdMs, state.player.last_manual_click_at, genState.autoclicker_count]);
 
   const fillHeight = atFloor ? 100 : progress * 100;
 
@@ -324,7 +339,7 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
             </span>
             {/* Rate indicator — shown when floats are off and autoclickers are active,
                 so the player still gets feedback that HIRE did something. */}
-            {!showFloats && ratePerSec > 0 && (
+            {!showFloats && ratePerSec.gt(0) && (
               <span className="verb-rate-indicator">+{fmtCompact(ratePerSec)}/s</span>
             )}
           </span>
@@ -347,7 +362,8 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
           Rendered outside the button to avoid overflow:hidden clipping.
           Autoclicker floats render at 80% size, 0.7 opacity (§4.6). */}
       {floats.map((f) => {
-        const fs = floatStyle(f.value, state.player.engagement);
+        const fv = typeof f.value === 'number' ? f.value : f.value.toNumber();
+        const fs = floatStyle(fv, state.player.engagement.toNumber());
         const autoScale = f.isAutoclick && !f.batchCount ? 0.8 : 1;
         const autoOpacity = f.isAutoclick ? (f.batchCount ? 0.85 : 0.7) : 1;
         return (
@@ -377,21 +393,12 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
 interface GhostSlotProps {
   verbId: GeneratorId;
   threshold: number;
-  canAfford: boolean;
-  cost: number;
   isAwakened: boolean;
-  onUnlock: (verbId: GeneratorId) => void;
 }
 
-function GhostSlot({ verbId, threshold, canAfford, cost, isAwakened, onUnlock }: GhostSlotProps) {
+function GhostSlot({ verbId, threshold, isAwakened }: GhostSlotProps) {
   const display = GENERATOR_DISPLAY[verbId];
   const color = VERB_COLOR[verbId] ?? display.color;
-
-  const handleClick = useCallback(() => {
-    if (isAwakened && canAfford) {
-      onUnlock(verbId);
-    }
-  }, [isAwakened, canAfford, verbId, onUnlock]);
 
   if (!isAwakened) {
     // Promise state — silhouette, 0.35 opacity, not tappable.
@@ -412,12 +419,11 @@ function GhostSlot({ verbId, threshold, canAfford, cost, isAwakened, onUnlock }:
     );
   }
 
-  // Awakened state — full opacity, 80px, tappable.
+  // Awakened state — full opacity, display-only (auto-unlock handles ownership).
   return (
-    <button
-      className={`ghost-slot ghost-awakened${!canAfford ? ' ghost-disabled' : ''}`}
-      onClick={handleClick}
-      aria-label={`Unlock ${display.name} for ${cost} engagement`}
+    <div
+      className="ghost-slot ghost-awakened"
+      aria-label={`${display.name} unlocking at ${threshold} followers`}
       style={{ '--verb-color': color } as React.CSSProperties}
     >
       {VERB_IMAGE[verbId]
@@ -426,11 +432,8 @@ function GhostSlot({ verbId, threshold, canAfford, cost, isAwakened, onUnlock }:
       }
       <span className="ghost-info">
         <span className="ghost-name">{display.name.toUpperCase()}</span>
-        <span className={`ghost-cost${!canAfford ? ' ghost-cost-disabled' : ''}`}>
-          Tap to unlock — {fmtCompact(cost)} engagement
-        </span>
       </span>
-    </button>
+    </div>
   );
 }
 
@@ -470,7 +473,7 @@ export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats =
   const ghostThreshold = ghostVerb
     ? staticData.unlockThresholds.generators[ghostVerb] ?? Infinity
     : Infinity;
-  const ghostAwakened = ghostVerb !== null && state.player.total_followers >= ghostThreshold;
+  const ghostAwakened = ghostVerb !== null && state.player.total_followers.gte(ghostThreshold);
   return (
     <section className="actions-column">
       <div className="actions-scroll-region">
@@ -492,10 +495,7 @@ export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats =
           <GhostSlot
             verbId={ghostVerb}
             threshold={ghostThreshold}
-            canAfford={false}
-            cost={0}
             isAwakened={ghostAwakened}
-            onUnlock={() => {}}
           />
         )}
       </div>
