@@ -2871,7 +2871,7 @@
       "id": 88,
       "role": "game-designer",
       "state": "design",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-05",
       "title": "Balance pass: base_upgrade_cost seed values after cost/reward parity fix",
       "requester": "game-designer",
@@ -2898,7 +2898,8 @@
         "Validate that the ten named phases from level-multiplier-curve.md still map onto the felt pacing"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 89,
@@ -5713,7 +5714,7 @@
       "id": 144,
       "role": "architect",
       "state": "build",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-06",
       "title": "Update core-systems.md after algorithm weather system removal",
       "requester": "architect",
@@ -5747,7 +5748,8 @@
         "Open question #1 updated if it references algorithm"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-08"
     },
     {
       "id": 145,
