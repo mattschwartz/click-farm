@@ -458,6 +458,12 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   margin-left: -10px;
 }
 
+@media (max-width: 1024px) {
+  .actions-column {
+    margin-top: 0;
+  }
+}
+
 .actions-scroll-region {
   display: flex;
   flex-direction: column;
