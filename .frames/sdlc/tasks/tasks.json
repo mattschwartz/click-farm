@@ -1,5 +1,5 @@
 {
-  "next_id": 197,
+  "next_id": 199,
   "tasks": [
     {
       "id": 1,
@@ -8057,6 +8057,69 @@
       "open_questions": [],
       "blocked_on": [],
       "date_completed": "2026-04-07"
+    },
+    {
+      "id": 197,
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Balance pass: 1.75x count_exponent and 1.3 buy_cost_multiplier across all generators",
+      "requester": "game-designer",
+      "complexity": "haiku",
+      "overview": "All generators need their POWER (count) upgrades to scale 1.75x better (count_exponent *= 1.75) and cost more aggressively (buy_cost_multiplier raised to 1.3 across the board). This applies to all 11 generators. Chirps already had custom values (exponent 1.5, cost mult 1.215) — these also get the treatment (exponent → 2.625, cost mult → 1.3). Livestreams was already bumped to 1.3 exponent — becomes 2.275.",
+      "related_items": [
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "All generator defs live here — count_exponent and buy_cost_multiplier fields on each GeneratorDef"
+        }
+      ],
+      "acceptance_criteria": [
+        "Every generator's count_exponent is multiplied by 1.75",
+        "Every generator's buy_cost_multiplier is set to 1.3",
+        "All tests pass after the change"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 198,
+      "role": "game-designer",
+      "state": "design",
+      "status": "open",
+      "date_assigned": "2026-04-08",
+      "title": "Tune clout formula constant k for log10-based prestige curve",
+      "requester": "game-designer",
+      "complexity": "sonnet",
+      "overview": "The Decimal.js engagement migration (accepted proposal 20260408) replaced the clout formula from floor(sqrt(total_followers) / 10) to floor(log10(total_followers) * k) with a provisional k=3. The constant k needs a proper tuning pass to ensure the prestige economy feels right across the full progression curve. Design intent: 1,000 clout is a deeply invested player, 100,000 clout buys the entire shop. The tuning pass should model clout accumulation across 15-20+ rebrands with compounding follower growth, verify the shop economy works at each stage, and produce a final value for k (or a piecewise formula if a single constant doesn't work).",
+      "related_items": [
+        {
+          "ref": "proposals/accepted/20260408-decimal-js-engagement-migration.md",
+          "purpose": "Source of the log10 formula and provisional k=3"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "Current clout formula implementation"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Clout upgrade costs — the shop economy k must balance against"
+        }
+      ],
+      "acceptance_criteria": [
+        "Model clout accumulation across 15-20 rebrands with realistic follower growth per run",
+        "Verify 1,000 cumulative clout requires significant investment (not reachable in first few rebrands)",
+        "Verify the clout shop economy works — early upgrades affordable after 2-3 rebrands, full shop buyout requires deep commitment",
+        "Produce a final value for k (or a piecewise/curve formula if needed) with rationale",
+        "Document the tuning decision as an update to the Decimal.js migration proposal or a standalone mini-proposal"
+      ],
+      "open_questions": [
+        {
+          "question": "Should k be a single constant or should the formula use a piecewise curve (e.g., higher k at low follower counts to make early rebrands feel rewarding, flattening at high counts)?",
+          "owner": "game-designer"
+        }
+      ],
+      "blocked_on": []
     }
   ]
 }
