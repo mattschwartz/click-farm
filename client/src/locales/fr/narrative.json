@@ -1,0 +1,68 @@
+{
+  "ceremony": {
+    "phase1": {
+      "headline": "Tu es sur le point de faire un rebrand.",
+      "currentFollowers": "Abonn\u00e9s actuels",
+      "cloutEarned": "Clout gagn\u00e9",
+      "newCloutBalance": "Nouveau solde Clout",
+      "whatResets": "Ce qui est r\u00e9initialis\u00e9",
+      "whatPersists": "Ce qui est conserv\u00e9",
+      "cancel": "Annuler",
+      "continue": "Continuer",
+      "cancelAria": "Annuler le rebrand",
+      "dialogAria": "Rebrand \u2014 Revue du seuil"
+    },
+    "phase2": {
+      "dialogAria": "Rebrand \u2014 \u00c9loge fun\u00e8bre",
+      "continue": "Continuer",
+      "skip": "Passer",
+      "skipAria": {
+        "continue": "Continuer",
+        "skip": "Passer l\u2019\u00e9loge"
+      }
+    },
+    "phase3": {
+      "headline": "Deviens quelqu\u2019un d\u2019autre.",
+      "rebrand": "Rebrand",
+      "dialogAria": "Rebrand \u2014 Confirmation"
+    },
+    "phase4": {
+      "dialogAria": "Rebranding en cours",
+      "srAnnounce": "Rebranding en cours. D\u00e9but du run {{runNumber}}.",
+      "engagement": "engagement",
+      "followers": "abonn\u00e9s"
+    },
+    "resetItems": {
+      "engagement": "Engagement",
+      "generatorsOwned": "G\u00e9n\u00e9rateurs obtenus",
+      "generatorsOwnedValue": "{{count}} types",
+      "platformsUnlocked": "Plateformes d\u00e9bloqu\u00e9es",
+      "platformsUnlockedValue": "{{count}} plateformes",
+      "followerCounts": "Compteurs d\u2019abonn\u00e9s",
+      "followerCountsValue": "tous"
+    },
+    "persistItems": {
+      "clout": "Clout",
+      "cloutUpgrades": "Am\u00e9liorations Clout",
+      "cloutUpgradesValue": "{{count}} obtenues",
+      "lifetimeFollowers": "Abonn\u00e9s au total",
+      "lifetimeEngagement": "Engagement au total",
+      "rebrandCount": "Nombre de rebrands",
+      "rebrandCountValue": "\u2192 {{count}}"
+    }
+  },
+  "eulogy": {
+    "hadFollowers": "Tu avais {{followers}} abonn\u00e9s sur {{platforms}}.",
+    "willNotRemember": "Ils ne se souviendront pas de toi.",
+    "madEngagement": "Tu as g\u00e9n\u00e9r\u00e9 {{engagement}} d\u2019engagement. Un h\u00e9ritage.",
+    "noPlatforms": "aucune plateforme",
+    "and": "et"
+  },
+  "offline": {
+    "welcomeBack": "De retour.",
+    "awayFor": "Tu \u00e9tais parti {{duration}}.",
+    "engagementEarned": "Engagement gagn\u00e9",
+    "platformFollowers": "Abonn\u00e9s {{name}}",
+    "dismiss": "Sympa."
+  }
+}

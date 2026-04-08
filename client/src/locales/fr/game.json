@@ -1,0 +1,101 @@
+{
+  "generators": {
+    "chirps": {
+      "name": "Chirps",
+      "tagline": "Posts rapides \u2014 ta voix en 280 caract\u00e8res."
+    },
+    "selfies": {
+      "name": "Selfies",
+      "tagline": "Peu d\u2019effort, peu de rendement \u2014 tout le monde commence ici."
+    },
+    "memes": {
+      "name": "Memes",
+      "tagline": "Haute variance, sensible aux tendances."
+    },
+    "hot_takes": {
+      "name": "Prises Br\u00fblantes",
+      "tagline": "Beaucoup d\u2019engagement, risque de bad buzz."
+    },
+    "tutorials": {
+      "name": "Tutoriels",
+      "tagline": "Stable, fiable, ennuyeux."
+    },
+    "livestreams": {
+      "name": "Lives",
+      "tagline": "Haut rendement, demande une attention constante."
+    },
+    "podcasts": {
+      "name": "Podcasts",
+      "tagline": "Croissance lente, rendement compos\u00e9."
+    },
+    "viral_stunts": {
+      "name": "Coups Viraux",
+      "tagline": "Pics massifs, p\u00e9riode de refroidissement."
+    },
+    "ai_slop": {
+      "name": "Bouillie IA",
+      "tagline": "Contenu infini, z\u00e9ro \u00e2me."
+    },
+    "deepfakes": {
+      "name": "Deepfakes",
+      "tagline": "Fausses c\u00e9l\u00e9brit\u00e9s, vrai engagement."
+    },
+    "algorithmic_prophecy": {
+      "name": "Proph\u00e9tie Algorithmique",
+      "tagline": "Dis aux gens ce qu\u2019ils pensaient d\u00e9j\u00e0."
+    }
+  },
+  "generatorCategories": {
+    "starter": "D\u00c9BUT",
+    "mid": "MILIEU",
+    "late": "TARDIF"
+  },
+  "platforms": {
+    "chirper": {
+      "name": "Chirper",
+      "tagline": "Avis tranch\u00e9s et r\u00e9pliques."
+    },
+    "picshift": {
+      "name": "Picshift",
+      "tagline": "Photos et esth\u00e9tique soign\u00e9e."
+    },
+    "skroll": {
+      "name": "Skroll",
+      "tagline": "Vid\u00e9os courtes \u00e0 l\u2019infini."
+    },
+    "podpod": {
+      "name": "PodPod",
+      "tagline": "Audio long format, audience fid\u00e8le."
+    }
+  },
+  "upgrades": {
+    "engagement_boost": {
+      "name": "Boost d\u2019Engagement",
+      "description": "Multiplie toute la production d\u2019engagement."
+    },
+    "platform_headstart_picshift": {
+      "name": "Avance Picshift",
+      "description": "Commence chaque run avec Picshift d\u00e9j\u00e0 d\u00e9bloqu\u00e9."
+    },
+    "platform_headstart_skroll": {
+      "name": "Avance Skroll",
+      "description": "Commence chaque run avec Skroll d\u00e9j\u00e0 d\u00e9bloqu\u00e9."
+    },
+    "platform_headstart_podpod": {
+      "name": "Avance PodPod",
+      "description": "Commence chaque run avec PodPod d\u00e9j\u00e0 d\u00e9bloqu\u00e9."
+    },
+    "ai_slop_unlock": {
+      "name": "Bouillie IA",
+      "description": "D\u00e9bloque Bouillie IA comme g\u00e9n\u00e9rateur post-prestige."
+    },
+    "deepfakes_unlock": {
+      "name": "Deepfakes",
+      "description": "D\u00e9bloque Deepfakes comme g\u00e9n\u00e9rateur post-prestige."
+    },
+    "algorithmic_prophecy_unlock": {
+      "name": "Proph\u00e9tie Algorithmique",
+      "description": "D\u00e9bloque Proph\u00e9tie Algorithmique comme g\u00e9n\u00e9rateur post-prestige."
+    }
+  }
+}

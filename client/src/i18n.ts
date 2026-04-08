@@ -29,6 +29,7 @@ export const SUPPORTED_LANGUAGES: Record<string, string> = {
   ru: '\u0420\u0443\u0441\u0441\u043a\u0438\u0439',
   de: 'Deutsch',
   nl: 'Nederlands',
+  fr: 'Fran\u00e7ais',
 };
 
 /**
@@ -80,6 +81,14 @@ const localeLoaders: Record<string, () => Promise<{
       import('./locales/nl/game.json'),
       import('./locales/nl/ui.json'),
       import('./locales/nl/narrative.json'),
+    ]);
+    return { game: game.default ?? game, ui: ui.default ?? ui, narrative: narrative.default ?? narrative };
+  },
+  fr: async () => {
+    const [game, ui, narrative] = await Promise.all([
+      import('./locales/fr/game.json'),
+      import('./locales/fr/ui.json'),
+      import('./locales/fr/narrative.json'),
     ]);
     return { game: game.default ?? game, ui: ui.default ?? ui, narrative: narrative.default ?? narrative };
   },
