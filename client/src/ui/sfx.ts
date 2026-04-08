@@ -23,7 +23,7 @@ import clickSfx from '../assets/click.wav';
 import purchaseSfx from '../assets/purchase.mp3';
 import sweepStartSfx from '../assets/sweep-start.wav';
 import sweepEndSfx from '../assets/sweep-end.wav';
-import wooshPopSfx from '../assets/woosh-pop.wav';
+import wowSfx from '../assets/wow.mp3';
 import ost01 from '../assets/djart-ost/djartmusic-8-bit-console-from-my-childhood-301286.mp3';
 import ost02 from '../assets/djart-ost/djartmusic-best-game-console-301284.mp3';
 import ost03 from '../assets/djart-ost/djartmusic-fun-with-my-8-bit-game-301278.mp3';
@@ -53,7 +53,7 @@ prefetch(clickSfx);
 prefetch(purchaseSfx);
 prefetch(sweepStartSfx);
 prefetch(sweepEndSfx);
-prefetch(wooshPopSfx);
+prefetch(wowSfx);
 
 // ---------------------------------------------------------------------------
 // Lazy AudioContext + eager decode
@@ -480,7 +480,8 @@ export function playSweepEnd(): void {
 }
 
 /** Play the building whoosh -> pop sound (750ms). */
-export function playWooshPop(): void {
+/** Play the wow sound on SUPER gear purchase. */
+export function playWow(): void {
   if (masterMuted) return;
-  play(wooshPopSfx, sfxVol * 0.7, [0.96, 1.04]);
+  play(wowSfx, sfxVol * 0.9, [0.95, 1.05]);
 }

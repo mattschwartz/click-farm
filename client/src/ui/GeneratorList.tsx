@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { GameState, GeneratorId, StaticData, VerbGearId } from '../types.ts';
 import { canPurchaseVerbGear, verbGearCost } from '../verb-gear/index.ts';
 import type { SweepItemType, SweepPurchaseEvent } from '../driver/index.ts';
+import { playWow } from './sfx.ts';
 import {
   autoclickerBuyCost,
   autoclickerCap,
@@ -654,6 +655,7 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
       holdingRef.current = false;
       setHoldProgress(0);
       setBursting(true);
+      playWow();
       onBuyRef.current();
       // Expand 1.25x → shrink to 0 → reappear (single 500ms animation).
       window.setTimeout(() => setBursting(false), 500);
