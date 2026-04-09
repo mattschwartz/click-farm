@@ -24,6 +24,7 @@
 .game-body {
   display: grid;
   grid-template-columns: 320px 1fr 280px;
+  grid-row: 3;
   gap: 16px;
   padding: 16px;
   min-height: 0;
@@ -1016,7 +1017,7 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   transform: translateY(2px);
   /* Solid gold background, contrast text */
   background: var(--accent-gold, #A0730E);
-  color: var(--surface-primary, #fff);
+  color: var(--text-inverse, #fff);
   border-color: rgba(255, 200, 50, 0.6);
   /* 4-layer shadow: depth slab (compressed) + ambient + inner glow + outer glow (§3) */
   box-shadow:
@@ -4540,8 +4541,8 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
 
   /* Redefine game-screen rows:
    *   Row 1 — top bar (40px)
-   *   Row 2 — content area (flex, absorbs remaining height)
-   *   Row 3 — prestige row (36px, wired in task #176)
+   *   Row 2 — save-error banner (auto, collapses when absent)
+   *   Row 3 — content area (1fr, absorbs remaining height)
    *
    * Safe area padding compensates for notched-device insets:
    *   - Dynamic Island creates a ~59px side inset in landscape (not a top inset).

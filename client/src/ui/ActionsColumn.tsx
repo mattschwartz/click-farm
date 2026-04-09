@@ -518,6 +518,9 @@ export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats =
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.repeat) return;
+      if (isPaused) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target as HTMLElement)?.isContentEditable) return;
       const idx = parseInt(e.key, 10) - 1;
       if (idx < 0 || idx > 4) return;
       const verb = LADDER_VERBS[idx];
@@ -546,7 +549,7 @@ export function ActionsColumn({ state, staticData, onClickVerb, showVerbFloats =
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [state.generators, state.player.last_manual_click_at, staticData.generators, onClickVerb]);
+  }, [state.generators, state.player.last_manual_click_at, staticData.generators, onClickVerb, isPaused]);
 
   // Spotlight disabled — cooldown-sorted ordering makes position-based
   // spotlight meaningless. All verbs render in the scroll region.

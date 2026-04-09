@@ -173,7 +173,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     autoclicker_cost_multiplier: 1.5,
   },
   // Ladder verb. Retuned for wider cooldown gap vs podcasts.
-  // yield=16,000,000, rate=0.01 → passive 160,000 (preserved).
+  // yield=18,000,000, rate=0.01 → passive 180,000/sec.
   // L1 cooldown 100,000ms, L10 cooldown 10,000ms. ~3× slower than podcasts.
   // TODO(game-designer): buy/upgrade/autoclicker costs are provisional —
   // retune during balance pass (task #88) to match new output.
@@ -199,7 +199,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // unlock_threshold here is set to Infinity for documentary clarity — the
   // checkGeneratorUnlocks pathway reads from unlockThresholds, not this field.
   //
-  // Stats relative to mogging (160,000 eng/s base): 8× / 15× / 40×.
+  // Stats relative to mogging (180,000 eng/s base): 8× / 15× / 40×.
   // Retuned to match mogging output bump. Passive-only (no manual tap).
   // TODO(game-designer): buy/upgrade costs are provisional — tune during
   // post-prestige balance pass (task #88).
@@ -207,7 +207,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   ai_slop: {
     id: 'ai_slop',
     base_event_yield: 1,
-    base_event_rate: 1_280_000.0,    // 8× mogging (8 × 160,000)
+    base_event_rate: 1_280_000.0,    // ~7.1× mogging (mogging base: 180,000/sec)
     manual_clickable: false,
     follower_conversion_rate: 0.6,
 
@@ -223,7 +223,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   deepfakes: {
     id: 'deepfakes',
     base_event_yield: 1,
-    base_event_rate: 2_400_000.0,    // 15× mogging (15 × 160,000)
+    base_event_rate: 2_400_000.0,    // ~13.3× mogging (mogging base: 180,000/sec)
     manual_clickable: false,
     follower_conversion_rate: 0.3,
 
@@ -239,7 +239,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   algorithmic_prophecy: {
     id: 'algorithmic_prophecy',
     base_event_yield: 1,
-    base_event_rate: 6_400_000.0,    // 40× mogging (40 × 160,000)
+    base_event_rate: 6_400_000.0,    // ~35.6× mogging (mogging base: 180,000/sec)
     manual_clickable: false,
     follower_conversion_rate: 0.5,
 
