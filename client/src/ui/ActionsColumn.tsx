@@ -363,8 +363,8 @@ function LiveVerbButton({ verbId, state, staticData, isSpotlight, onClick, showF
           : t('generators.verbAria', { name: t(display.name), yield: fmtCompact(perTap), cooldown: Math.round(cdMs) })}
       >
 
-        {/* Plastic sheen — horizontal light band across the top */}
-        <div className="verb-sheen" aria-hidden="true" />
+        {/* Plastic sheen — horizontal light band across the top (hidden on cooldown) */}
+        {(isReady || atFloor) && <div className="verb-sheen" aria-hidden="true" />}
 
         {/* Background image — direct child so it positions relative to the button */}
         {VERB_IMAGE[verbId] && (
