@@ -27,7 +27,7 @@ const ALL_GENERATOR_IDS: GeneratorId[] = [
   'tutorials',
   'livestreams',
   'podcasts',
-  'viral_stunts',
+  'mogging',
   // Post-prestige — present in state but owned=false until a Clout
   // `generator_unlock` upgrade is purchased.
   'ai_slop',

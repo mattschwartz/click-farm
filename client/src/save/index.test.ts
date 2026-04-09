@@ -17,6 +17,7 @@ import {
   migrateV9toV10,
   migrateV14toV15,
   migrateV15toV16,
+  migrateV16toV17,
 } from './index.ts';
 import { createInitialGameState } from '../model/index.ts';
 import { STATIC_DATA } from '../static-data/index.ts';
@@ -260,7 +261,7 @@ describe('migrate', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(16);
+    expect(result.version).toBe(17);
     expect(result.state.player.id).toBe(state.player.id);
   });
 
@@ -408,7 +409,7 @@ describe('migrateV3toV4', () => {
 
   it('integrates with migrate() — a v3 save reaches current version via the chain', () => {
     const result = migrate(makeV3SaveData());
-    expect(result.version).toBe(16);
+    expect(result.version).toBe(17);
     expect(result.state.player.clout_upgrades.engagement_boost).toBe(2);
     expect(result.state.generators.ai_slop).toBeDefined();
     // V14→V15 strips creator_kit and adds verb_gear
@@ -459,7 +460,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version via the chain', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(16);
+    expect(result.version).toBe(17);
     // V14→V15 strips creator_kit and adds verb_gear
     expect((result.state.player as any).creator_kit).toBeUndefined();
     expect(result.state.player.verb_gear).toEqual({});
@@ -488,7 +489,7 @@ describe('migrateV4toV5', () => {
 
   it('integrates with migrate() — a v4 save reaches current version', () => {
     const result = migrate(makeV4SaveData());
-    expect(result.version).toBe(16);
+    expect(result.version).toBe(17);
     expect((result.state.player as any).creator_kit).toBeUndefined();
     expect(result.state.player.verb_gear).toEqual({});
   });
@@ -591,7 +592,7 @@ describe('migrateV5toV6', () => {
       lastCloseState: null,
     };
     const result = migrate(data);
-    expect(result.version).toBe(16);
+    expect(result.version).toBe(17);
     // V15→V16 converts number to string; the engagement clamp from V5→V6 still applies
     expect(result.state.player.engagement).toBe(String(Number.MAX_SAFE_INTEGER));
   });
@@ -908,7 +909,7 @@ describe('migrateV14toV15', () => {
 
   it('integrates with migrate() — a v14 save reaches current version', () => {
     const result = migrate(makeV14SaveData());
-    expect(result.version).toBe(16);
+    expect(result.version).toBe(17);
     expect((result.state.player as any).creator_kit).toBeUndefined();
     expect(result.state.player.verb_gear).toEqual({});
   });
@@ -997,6 +998,46 @@ describe('migrateV15toV16', () => {
     const loaded = expectLoaded(load());
     expect(loaded.player.engagement).toEqualDecimal(42.5);
     expect(loaded.platforms.chirper.followers).toEqualDecimal(100);
+  });
+});
+
+// migrateV16toV17 — rename viral_stunts → mogging
+
+describe('migrateV16toV17', () => {
+  function makeV16SaveData(): SaveData {
+    const state = createInitialGameState(STATIC_DATA, 0) as any;
+    // Simulate a V16 save with viral_stunts instead of mogging
+    state.generators.viral_stunts = { ...state.generators.mogging, id: 'viral_stunts' };
+    delete state.generators.mogging;
+    state.player.verb_gear.viral_stunts = state.player.verb_gear.mogging ?? null;
+    delete state.player.verb_gear.mogging;
+    state.player.last_manual_click_at.viral_stunts = 12345;
+    delete state.player.last_manual_click_at.mogging;
+    return { version: 16, state, lastCloseTime: 0, lastCloseState: null };
+  }
+
+  it('renames viral_stunts → mogging in generators', () => {
+    const result = migrateV16toV17(makeV16SaveData());
+    expect((result.state as any).generators.mogging).toBeDefined();
+    expect((result.state as any).generators.mogging.id).toBe('mogging');
+    expect((result.state as any).generators.viral_stunts).toBeUndefined();
+  });
+
+  it('renames viral_stunts → mogging in verb_gear', () => {
+    const result = migrateV16toV17(makeV16SaveData());
+    expect((result.state as any).player.verb_gear.mogging).toBeDefined();
+    expect((result.state as any).player.verb_gear.viral_stunts).toBeUndefined();
+  });
+
+  it('renames viral_stunts → mogging in last_manual_click_at', () => {
+    const result = migrateV16toV17(makeV16SaveData());
+    expect((result.state as any).player.last_manual_click_at.mogging).toBe(12345);
+    expect((result.state as any).player.last_manual_click_at.viral_stunts).toBeUndefined();
+  });
+
+  it('bumps version to 17', () => {
+    const result = migrateV16toV17(makeV16SaveData());
+    expect(result.version).toBe(17);
   });
 });
 

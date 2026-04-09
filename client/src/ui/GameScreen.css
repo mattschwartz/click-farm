@@ -15,7 +15,7 @@
   color: var(--text-primary);
   font-family: var(--font-ui, 'Space Grotesk'), 'Space Grotesk Fallback', system-ui, sans-serif;
   display: grid;
-  grid-template-rows: 80px 1fr;
+  grid-template-rows: 80px auto 1fr;
   max-width: 1280px;
   margin: 0 auto;
   overflow: hidden;
@@ -24,6 +24,7 @@
 .game-body {
   display: grid;
   grid-template-columns: 320px 1fr 280px;
+  grid-row: 3;
   gap: 16px;
   padding: 16px;
   min-height: 0;
@@ -456,6 +457,12 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
   min-height: 0;
   margin-top: -10px;
   margin-left: -10px;
+}
+
+@media (max-width: 1024px) {
+  .actions-column {
+    margin-top: 0;
+  }
 }
 
 .actions-scroll-region {
@@ -1008,8 +1015,9 @@ html[data-reduce-motion="true"] .run-badge { animation: none; }
 .buy-all-btn-sweeping {
   /* Depress 2px */
   transform: translateY(2px);
-  /* Solid gold background, text color unchanged */
+  /* Solid gold background, contrast text */
   background: var(--accent-gold, #A0730E);
+  color: var(--text-inverse, #fff);
   border-color: rgba(255, 200, 50, 0.6);
   /* 4-layer shadow: depth slab (compressed) + ambient + inner glow + outer glow (§3) */
   box-shadow:
@@ -3878,12 +3886,15 @@ html[data-reduce-motion="true"] .gold-breathe {
 .save-error-banner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  align-self: start;
+  justify-content: center;
   gap: 12px;
-  padding: 8px 14px;
+  padding: 6px 18px;
+  margin: 8px auto;
+  max-width: 480px;
   background: rgba(var(--modal-danger-rgb),0.06);
-  border-top: 1px solid rgba(var(--modal-danger-rgb),0.22);
-  border-bottom: 1px solid rgba(var(--modal-danger-rgb),0.22);
+  border: 1px solid rgba(var(--modal-danger-rgb),0.22);
+  border-radius: 8px;
   color: var(--accent-red);
   font-size: 12px;
 }
@@ -4530,8 +4541,8 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
 
   /* Redefine game-screen rows:
    *   Row 1 — top bar (40px)
-   *   Row 2 — content area (flex, absorbs remaining height)
-   *   Row 3 — prestige row (36px, wired in task #176)
+   *   Row 2 — save-error banner (auto, collapses when absent)
+   *   Row 3 — content area (1fr, absorbs remaining height)
    *
    * Safe area padding compensates for notched-device insets:
    *   - Dynamic Island creates a ~59px side inset in landscape (not a top inset).
@@ -4540,7 +4551,7 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
    *
    * height: 100dvh is preserved from the base .game-screen rule. */
   .game-screen {
-    grid-template-rows: 40px 1fr;
+    grid-template-rows: 40px auto 1fr;
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     padding-bottom: env(safe-area-inset-bottom);
@@ -4559,9 +4570,8 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
     gap: 0;
     padding: 0;
     min-height: 0;
-    /* Explicit row placement — prevents save-error-banner (conditional child
-     * between top-bar and game-body) from displacing this to row 3. */
-    grid-row: 2;
+    /* Explicit row placement — banner sits in row 2 (auto), body in row 3. */
+    grid-row: 3;
   }
 
   /* Verb column — left column, spans both content rows (actions fill height). */
@@ -5175,6 +5185,69 @@ html[data-reduce-motion="true"] .purchase-pill:active { transition: none; }
   }
 
 } /* end @media landscape phone */
+
+/* ---------------------------------------------------------------------------
+ * Portrait touch devices (phones + tablets) — move prestige buttons under
+ * the settings gear in the top-right, matching the landscape phone treatment.
+ * max-width: 1024px excludes desktop; pointer: coarse excludes laptop browsers.
+ * --------------------------------------------------------------------------- */
+@media (max-width: 1024px) and (pointer: coarse) {
+  .floating-toolbar {
+    bottom: auto;
+    left: auto;
+    top: 0;
+    right: 0;
+    height: 40px;
+    align-items: center;
+    gap: 0;
+    flex-wrap: nowrap;
+  }
+
+  .floating-toolbar .alpha-row,
+  .floating-toolbar .github-link,
+  .floating-toolbar .music-player {
+    display: none;
+  }
+
+  .settings-gear-btn {
+    font-size: 20px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .prestige-cluster {
+    position: fixed;
+    top: 40px;
+    right: 0;
+    bottom: auto;
+    left: auto;
+    flex-direction: column;
+    z-index: 20;
+    border-radius: 0 0 0 8px;
+    padding: 4px;
+    gap: 4px;
+    border: none;
+    border-left: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.10);
+    background: var(--surface-panel);
+  }
+
+  .prestige-btn {
+    height: auto;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+  }
+
+  .generator-column {
+    padding: 8px 8px 0;
+  }
+}
 
 /* Suppress engagement hover tooltip on touch devices — the inline rate
  * (shown in landscape) makes it redundant, and hover doesn't exist on touch. */

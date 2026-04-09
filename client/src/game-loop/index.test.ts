@@ -101,7 +101,7 @@ describe('levelMultiplier', () => {
 
 describe('engagement — no ceiling (Decimal)', () => {
   it('tick allows engagement beyond MAX_SAFE_INTEGER', () => {
-    const state = stateWithGenerator('viral_stunts', 1_000_000, 10);
+    const state = stateWithGenerator('mogging', 1_000_000, 10);
     const pinned: GameState = {
       ...state,
       player: { ...state.player, engagement: new Decimal(Number.MAX_SAFE_INTEGER).minus(1) },
@@ -512,7 +512,7 @@ describe('yield/rate split regression', () => {
     tutorials: 60.0,            // 2 × 30.0
     livestreams: 2_540.0,       // 100_000 × 0.0254
     podcasts: 18_480.0,         // 1_200_000 × 0.0154
-    viral_stunts: 180_000.0,    // 18_000_000 × 0.01
+    mogging: 180_000.0,    // 18_000_000 × 0.01
     ai_slop: 1_280_000.0,      // 1 × 1_280_000
     deepfakes: 2_400_000.0,     // 1 × 2_400_000
     algorithmic_prophecy: 6_400_000.0, // 1 × 6_400_000
@@ -785,7 +785,7 @@ describe('evaluateViralTrigger', () => {
 describe('Verb gear multiplier in tick pipeline', () => {
   function withGear(
     state: GameState,
-    gear: Partial<Record<'chirps' | 'selfies' | 'livestreams' | 'podcasts' | 'viral_stunts', number>>,
+    gear: Partial<Record<'chirps' | 'selfies' | 'livestreams' | 'podcasts' | 'mogging', number>>,
   ): GameState {
     return {
       ...state,

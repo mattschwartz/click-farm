@@ -22,7 +22,7 @@ import type {
 } from '../types.ts';
 
 // ---------------------------------------------------------------------------
-// Generators — 8 base content types (chirps through viral_stunts)
+// Generators — 8 base content types (chirps through mogging)
 // Unlock thresholds create a progressive arc. Balance values are provisional.
 //
 // base_event_yield × base_event_rate = passive engagement/sec at count=1,
@@ -173,12 +173,12 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
     autoclicker_cost_multiplier: 1.5,
   },
   // Ladder verb. Retuned for wider cooldown gap vs podcasts.
-  // yield=16,000,000, rate=0.01 → passive 160,000 (preserved).
+  // yield=18,000,000, rate=0.01 → passive 180,000/sec.
   // L1 cooldown 100,000ms, L10 cooldown 10,000ms. ~3× slower than podcasts.
   // TODO(game-designer): buy/upgrade/autoclicker costs are provisional —
   // retune during balance pass (task #88) to match new output.
-  viral_stunts: {
-    id: 'viral_stunts',
+  mogging: {
+    id: 'mogging',
     base_event_yield: 18_000_000,
     base_event_rate: 0.01,
     manual_clickable: true,
@@ -199,15 +199,15 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   // unlock_threshold here is set to Infinity for documentary clarity — the
   // checkGeneratorUnlocks pathway reads from unlockThresholds, not this field.
   //
-  // Stats relative to viral_stunts (8,000 eng/s base): 8× / 15× / 40×.
-  // Retuned to match viral_stunts output bump. Passive-only (no manual tap).
+  // Stats relative to mogging (180,000 eng/s base): 8× / 15× / 40×.
+  // Retuned to match mogging output bump. Passive-only (no manual tap).
   // TODO(game-designer): buy/upgrade costs are provisional — tune during
   // post-prestige balance pass (task #88).
   // -------------------------------------------------------------------------
   ai_slop: {
     id: 'ai_slop',
     base_event_yield: 1,
-    base_event_rate: 1_280_000.0,    // 8× viral_stunts (8 × 160,000)
+    base_event_rate: 1_280_000.0,    // ~7.1× mogging (mogging base: 180,000/sec)
     manual_clickable: false,
     follower_conversion_rate: 0.6,
 
@@ -223,7 +223,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   deepfakes: {
     id: 'deepfakes',
     base_event_yield: 1,
-    base_event_rate: 2_400_000.0,    // 15× viral_stunts (15 × 160,000)
+    base_event_rate: 2_400_000.0,    // ~13.3× mogging (mogging base: 180,000/sec)
     manual_clickable: false,
     follower_conversion_rate: 0.3,
 
@@ -239,7 +239,7 @@ const GENERATOR_DEFS: Record<GeneratorId, GeneratorDef> = {
   algorithmic_prophecy: {
     id: 'algorithmic_prophecy',
     base_event_yield: 1,
-    base_event_rate: 6_400_000.0,    // 40× viral_stunts (40 × 160,000)
+    base_event_rate: 6_400_000.0,    // ~35.6× mogging (mogging base: 180,000/sec)
     manual_clickable: false,
     follower_conversion_rate: 0.5,
 
@@ -273,7 +273,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       tutorials: 0.7,
       livestreams: 1.2,
       podcasts: 0.6,
-      viral_stunts: 1.5,
+      mogging: 1.5,
       // Post-prestige generators — neutral affinity across all platforms.
       // TODO(game-designer): tune during post-prestige balance pass.
       ai_slop: 1.0,
@@ -292,7 +292,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       tutorials: 0.8,
       livestreams: 1.5,
       podcasts: 0.7,
-      viral_stunts: 1.8,
+      mogging: 1.8,
       ai_slop: 1.0,
       deepfakes: 1.0,
       algorithmic_prophecy: 1.0,
@@ -309,7 +309,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       tutorials: 2.0,
       livestreams: 1.0,
       podcasts: 1.8,
-      viral_stunts: 0.6,
+      mogging: 0.6,
       ai_slop: 1.0,
       deepfakes: 1.0,
       algorithmic_prophecy: 1.0,
@@ -328,7 +328,7 @@ const PLATFORM_DEFS: Record<PlatformId, PlatformDef> = {
       tutorials: 1.5,
       livestreams: 0.9,
       podcasts: 2.0,           // home turf — podcast-native
-      viral_stunts: 0.5,
+      mogging: 0.5,
       ai_slop: 1.0,
       deepfakes: 1.0,
       algorithmic_prophecy: 1.0,
@@ -401,7 +401,7 @@ const VIRAL_BURST_CONFIG: ViralBurstConfig = {
   minCooldownTicks: 9_000,       // 15 min at 100ms/tick (active-play only)
   baseProbabilityEarly: 0.000037, // ~1 viral / 45-60 min before tutorials
   baseProbabilityMid:   0.000067, // ~1 viral / 20-30 min after tutorials
-  baseProbabilityLate:  0.000095, // ~1 viral / 15-20 min after viral_stunts
+  baseProbabilityLate:  0.000095, // ~1 viral / 15-20 min after mogging
   durationMsMin: 5_000,
   durationMsMax: 10_000,
   magnitudeBoostMin: 3.0,        // 3–5× normal engagement rate during viral
@@ -446,9 +446,9 @@ const VERB_GEAR_DEFS: Record<VerbGearId, VerbGearDef> = {
     cost: [2e12, 2e15, 2e18],        // 2T, 2Qa, 2Qi
     multipliers: [1_234, 1_522_756, 1_879_080_904],
   },
-  viral_stunts: {
-    id: 'viral_stunts',
-    name: 'Shameless',
+  mogging: {
+    id: 'mogging',
+    name: 'Sigma',
     max_level: 3,
     cost: [20e12, 20e15, 20e18],     // 20T, 20Qa, 20Qi
     multipliers: [1_234, 1_522_756, 1_879_080_904],
@@ -499,7 +499,7 @@ export const STATIC_DATA: StaticData = {
       tutorials: GENERATOR_DEFS.tutorials.unlock_threshold,
       livestreams: GENERATOR_DEFS.livestreams.unlock_threshold,
       podcasts: GENERATOR_DEFS.podcasts.unlock_threshold,
-      viral_stunts: GENERATOR_DEFS.viral_stunts.unlock_threshold,
+      mogging: GENERATOR_DEFS.mogging.unlock_threshold,
     },
     platforms: {
       chirper: PLATFORM_DEFS.chirper.unlock_threshold,

@@ -419,15 +419,15 @@ describe('driver — persistence', () => {
     // (floor(sqrt(X)/10) may be 0 here — that's fine for checking reset).
     void injected;
 
-    // Viral stunts must be owned to rebrand — inject via step with high followers.
+    // Mogging must be owned to rebrand — inject via step with high followers.
     // Use _injectState if available, otherwise force-unlock by ticking with
     // enough followers. Simplest: directly patch the state through the driver's
-    // internal applyState by calling step with a state that has viral_stunts owned.
+    // internal applyState by calling step with a state that has mogging owned.
     (driver as any)._applyState?.({
       ...driver.getState(),
       generators: {
         ...driver.getState().generators,
-        viral_stunts: { ...driver.getState().generators.viral_stunts, owned: true },
+        mogging: { ...driver.getState().generators.mogging, owned: true },
       },
     });
     // Fail deterministically if setup could not make the player rebrand-eligible.

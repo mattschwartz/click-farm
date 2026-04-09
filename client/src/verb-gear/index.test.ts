@@ -181,7 +181,7 @@ describe('verbGearCost', () => {
     expect(verbGearCost(0, 'selfies', STATIC_DATA)).toEqualDecimal(20e9);
     expect(verbGearCost(0, 'livestreams', STATIC_DATA)).toEqualDecimal(200e9);
     expect(verbGearCost(0, 'podcasts', STATIC_DATA)).toEqualDecimal(2e12);
-    expect(verbGearCost(0, 'viral_stunts', STATIC_DATA)).toEqualDecimal(20e12);
+    expect(verbGearCost(0, 'mogging', STATIC_DATA)).toEqualDecimal(20e12);
   });
 });
 

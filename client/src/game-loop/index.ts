@@ -195,7 +195,7 @@ export function evaluateViralTrigger(
   let p_viral: number;
   if (!generators.tutorials.owned) {
     p_viral = config.baseProbabilityEarly;
-  } else if (!generators.viral_stunts.owned) {
+  } else if (!generators.mogging.owned) {
     p_viral = config.baseProbabilityMid;
   } else {
     p_viral = config.baseProbabilityLate;
