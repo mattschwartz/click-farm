@@ -138,7 +138,8 @@
     "superAria": {
       "maxed": "Equipo de {{name}} al m\u00e1ximo, {{gearName}} nivel 3 de 3.",
       "affordable": "S\u00faper mejora {{name}}, {{gearName}}, asequible, cuesta {{cost}} engagement{{multiplierSuffix}}. Mant\u00e9n 3 segundos para comprar.",
-      "unaffordable": "S\u00faper mejora {{name}}, {{gearName}}, no asequible, cuesta {{cost}} engagement."
+      "unaffordable": "S\u00faper mejora {{name}}, {{gearName}}, no asequible, cuesta {{cost}} engagement.",
+      "multiplierSuffix": ", multiplicador por {{multiplier}}"
     },
     "superTitle": {
       "maxed": "{{name}} \u2014 {{gearName}} al m\u00e1ximo",

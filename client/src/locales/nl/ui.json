@@ -138,7 +138,8 @@
     "superAria": {
       "maxed": "{{name}} uitrusting op maximum, {{gearName}} niveau 3 van 3.",
       "affordable": "Super-upgrade {{name}}, {{gearName}}, betaalbaar, kost {{cost}} engagement{{multiplierSuffix}}. Houd 3 seconden ingedrukt om te kopen.",
-      "unaffordable": "Super-upgrade {{name}}, {{gearName}}, niet betaalbaar, kost {{cost}} engagement."
+      "unaffordable": "Super-upgrade {{name}}, {{gearName}}, niet betaalbaar, kost {{cost}} engagement.",
+      "multiplierSuffix": ", vermenigvuldiger maal {{multiplier}}"
     },
     "superTitle": {
       "maxed": "{{name}} \u2014 {{gearName}} op maximum",

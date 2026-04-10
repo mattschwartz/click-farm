@@ -780,25 +780,29 @@ function AutoPill({ costLabel, costText, canBuy, isMaxed, autoclickerCount, verb
       : autoclickerCount > 0 ? t('generators.hirePlus', { count: autoclickerCount }) : t('generators.hire');
   const labelAbbr = superActive ? superTierAbbr : 'A';
 
+  const multiplierSuffix = gearMultiplier
+    ? t('generators.superAria.multiplierSuffix', { multiplier: gearMultiplier })
+    : '';
+
   const ariaLabel = superMaxed
-    ? `${generatorName} gear maxed, ${gearName ?? ''} level 3 of 3.`
+    ? t('generators.superAria.maxed', { name: generatorName, gearName: gearName ?? '' })
     : superActive && canBuy
-      ? `Super upgrade ${generatorName}, ${gearName ?? ''}, affordable, costs ${costText} engagement${gearMultiplier ? `, multiplier times ${gearMultiplier}` : ''}. Hold for 3 seconds to purchase.`
+      ? t('generators.superAria.affordable', { name: generatorName, gearName: gearName ?? '', cost: costText, multiplierSuffix })
       : superActive
-        ? `Super upgrade ${generatorName}, ${gearName ?? ''}, not affordable, costs ${costText} engagement.`
+        ? t('generators.superAria.unaffordable', { name: generatorName, gearName: gearName ?? '', cost: costText })
         : isMaxed
-          ? `${generatorName} autoclickers maxed at ${autoclickerCount}`
+          ? t('generators.autoclickerAria.maxed', { name: generatorName, count: autoclickerCount })
           : canBuy
-            ? `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, affordable, costs ${costText} engagement`
-            : `Autoclicker ${generatorName}, ${autoclickerCount} autoclickers, not affordable, costs ${costText} engagement`;
+            ? t('generators.autoclickerAria.affordable', { name: generatorName, count: autoclickerCount, cost: costText })
+            : t('generators.autoclickerAria.unaffordable', { name: generatorName, count: autoclickerCount, cost: costText });
 
   const title = superMaxed
-    ? `${generatorName} — ${gearName ?? 'gear'} maxed`
+    ? t('generators.superTitle.maxed', { name: generatorName, gearName: gearName ?? '' })
     : superActive
-      ? `${gearName ?? 'Super upgrade'} — hold to buy (${costText} eng)`
+      ? t('generators.superTitle.buy', { gearName: gearName ?? '', cost: costText })
       : isMaxed
-        ? `${generatorName} — max autoclickers (${autoclickerCount})`
-        : `Buy autoclicker for ${costText} engagement`;
+        ? t('generators.autoclickerTitle.maxed', { name: generatorName, count: autoclickerCount })
+        : t('generators.autoclickerTitle.buy', { cost: costText });
 
   // Inline style for hold progress — drives the fire fill and glow intensity.
   const holdStyle: React.CSSProperties | undefined =
