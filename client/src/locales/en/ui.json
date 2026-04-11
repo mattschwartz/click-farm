@@ -138,7 +138,8 @@
     "superAria": {
       "maxed": "{{name}} gear maxed, {{gearName}} level 3 of 3.",
       "affordable": "Super upgrade {{name}}, {{gearName}}, affordable, costs {{cost}} engagement{{multiplierSuffix}}. Hold for 3 seconds to purchase.",
-      "unaffordable": "Super upgrade {{name}}, {{gearName}}, not affordable, costs {{cost}} engagement."
+      "unaffordable": "Super upgrade {{name}}, {{gearName}}, not affordable, costs {{cost}} engagement.",
+      "multiplierSuffix": ", multiplier times {{multiplier}}"
     },
     "superTitle": {
       "maxed": "{{name}} \u2014 {{gearName}} maxed",

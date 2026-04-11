@@ -138,7 +138,8 @@
     "superAria": {
       "maxed": "\u00c9quipement {{name}} au maximum, {{gearName}} niveau 3 sur 3.",
       "affordable": "Super am\u00e9lioration {{name}}, {{gearName}}, abordable, co\u00fbte {{cost}} engagement{{multiplierSuffix}}. Maintenir 3 secondes pour acheter.",
-      "unaffordable": "Super am\u00e9lioration {{name}}, {{gearName}}, pas abordable, co\u00fbte {{cost}} engagement."
+      "unaffordable": "Super am\u00e9lioration {{name}}, {{gearName}}, pas abordable, co\u00fbte {{cost}} engagement.",
+      "multiplierSuffix": ", multiplicateur fois {{multiplier}}"
     },
     "superTitle": {
       "maxed": "{{name}} \u2014 {{gearName}} au maximum",
