@@ -9,6 +9,7 @@
       "whatPersists": "Wat bewaard blijft",
       "cancel": "Annuleren",
       "continue": "Doorgaan",
+      "continueLockedLabel": "Ontgrendel eerst meer content",
       "cancelAria": "Rebrand annuleren",
       "dialogAria": "Rebrand \u2014 Drempeloverzicht"
     },
@@ -23,6 +24,7 @@
     },
     "phase3": {
       "headline": "Word iemand anders.",
+      "holdHint": "Houd ingedrukt om te rebranden",
       "rebrand": "Rebrand",
       "dialogAria": "Rebrand \u2014 Bevestiging"
     },
