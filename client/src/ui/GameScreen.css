@@ -2326,6 +2326,15 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 }
 
 /* Actions */
+.ceremony-locked-hint {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.5));
+  margin: 0;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
 .ceremony-actions {
   display: flex;
   justify-content: center;

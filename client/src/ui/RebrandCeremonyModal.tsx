@@ -153,6 +153,8 @@ interface DissolutionSnapshot {
 
 export interface RebrandCeremonyModalProps {
   state: GameState;
+  /** Whether the player meets the threshold to rebrand. */
+  eligible: boolean;
   /** Called when the player cancels from Phase 1, 2, or 3. */
   onCancel: () => void;
   /** Called at Phase 3 commit — performs the rebrand (driver.rebrand()). */
@@ -163,6 +165,7 @@ export interface RebrandCeremonyModalProps {
 
 export function RebrandCeremonyModal({
   state,
+  eligible,
   onCancel,
   onConfirm,
   onComplete,
@@ -219,6 +222,7 @@ export function RebrandCeremonyModal({
       {phase === 1 && (
         <Phase1Review
           state={state}
+          eligible={eligible}
           onCancel={onCancel}
           onContinue={goToPhase2}
         />
@@ -252,10 +256,12 @@ export function RebrandCeremonyModal({
 
 function Phase1Review({
   state,
+  eligible,
   onCancel,
   onContinue,
 }: {
   state: GameState;
+  eligible: boolean;
   onCancel: () => void;
   onContinue: () => void;
 }) {
@@ -344,6 +350,9 @@ function Phase1Review({
         </div>
       </div>
 
+      {!eligible && (
+        <p className="ceremony-locked-hint">{t('narrative:ceremony.phase1.notEligible')}</p>
+      )}
       <div className="ceremony-actions">
         <button
           ref={cancelBtnRef}
@@ -356,6 +365,7 @@ function Phase1Review({
           ref={continueBtnRef}
           className="ceremony-btn ceremony-btn-continue"
           onClick={onContinue}
+          disabled={!eligible}
         >
           {t('narrative:ceremony.phase1.continue')}
         </button>

@@ -347,7 +347,6 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
 
   // Rebrand button — opens Rebrand Ceremony (Phase 1) and pauses the game loop.
   const handleRebrandClick = () => {
-    if (!prestigeEligible) return;
     pauseLoop();
     setShowCeremonyModal(true);
   };
@@ -454,9 +453,8 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
           </button>
           <button
             ref={rebrandBtnRef}
-            className={`prestige-btn prestige-btn-rebrand${!prestigeEligible ? ' prestige-btn-locked' : ''}`}
+            className="prestige-btn prestige-btn-rebrand"
             onClick={handleRebrandClick}
-            disabled={!prestigeEligible}
             title={
               prestigeEligible
                 ? t('prestige.rebrandTo', { clout: fmtCompactInt(rebrandPreview) })
@@ -518,6 +516,7 @@ export function GameScreen({ onOfflineResult }: GameScreenProps = {}) {
       {showCeremonyModal && (
         <RebrandCeremonyModal
           state={state}
+          eligible={prestigeEligible}
           onCancel={handleCeremonyCancel}
           onConfirm={handleCeremonyConfirm}
           onComplete={handleCeremonyComplete}
