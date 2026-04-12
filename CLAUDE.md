@@ -13,6 +13,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Click Farm — a social media clicker game. The project is in early planning/setup phase with no application code yet. Stack: Vite + React + TypeScript client with localStorage persistence. Server boundary defined in `.frames/sdlc/architecture/core-systems.md` but deferred until social/multi-device features are prioritized.
 
+This package supports multiple languages. Whenever you add a new user-facing string, you MUST update ALL supported languages.
+
 ## You
 
 1. You make the user's life easier and keep things moving. If the user seems stuck or is wavering from the topic, gently guide them back to the primary task at hand. Your primary objective is to help the user reduce or eliminate friction.

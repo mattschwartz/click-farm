@@ -9,6 +9,7 @@
       "whatPersists": "Was bleibt",
       "cancel": "Abbrechen",
       "continue": "Weiter",
+      "continueLockedLabel": "Schalte zuerst mehr Inhalte frei",
       "cancelAria": "Rebrand abbrechen",
       "dialogAria": "Rebrand \u2014 Schwellenwert-\u00dcbersicht"
     },
@@ -23,6 +24,7 @@
     },
     "phase3": {
       "headline": "Werde jemand Neues.",
+      "holdHint": "Halten zum Rebranden",
       "rebrand": "Rebrand",
       "dialogAria": "Rebrand \u2014 Best\u00e4tigung"
     },

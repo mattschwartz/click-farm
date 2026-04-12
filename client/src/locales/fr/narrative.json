@@ -9,6 +9,7 @@
       "whatPersists": "Ce qui est conserv\u00e9",
       "cancel": "Annuler",
       "continue": "Continuer",
+      "continueLockedLabel": "D\u00e9bloque plus de contenu d\u2019abord",
       "cancelAria": "Annuler le rebrand",
       "dialogAria": "Rebrand \u2014 Revue du seuil"
     },
@@ -23,6 +24,7 @@
     },
     "phase3": {
       "headline": "Deviens quelqu\u2019un d\u2019autre.",
+      "holdHint": "Maintiens pour rebrand",
       "rebrand": "Rebrand",
       "dialogAria": "Rebrand \u2014 Confirmation"
     },

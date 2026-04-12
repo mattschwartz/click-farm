@@ -153,6 +153,8 @@ interface DissolutionSnapshot {
 
 export interface RebrandCeremonyModalProps {
   state: GameState;
+  /** Whether the player meets the threshold to rebrand. */
+  eligible: boolean;
   /** Called when the player cancels from Phase 1, 2, or 3. */
   onCancel: () => void;
   /** Called at Phase 3 commit — performs the rebrand (driver.rebrand()). */
@@ -163,6 +165,7 @@ export interface RebrandCeremonyModalProps {
 
 export function RebrandCeremonyModal({
   state,
+  eligible,
   onCancel,
   onConfirm,
   onComplete,
@@ -219,6 +222,7 @@ export function RebrandCeremonyModal({
       {phase === 1 && (
         <Phase1Review
           state={state}
+          eligible={eligible}
           onCancel={onCancel}
           onContinue={goToPhase2}
         />
@@ -252,10 +256,12 @@ export function RebrandCeremonyModal({
 
 function Phase1Review({
   state,
+  eligible,
   onCancel,
   onContinue,
 }: {
   state: GameState;
+  eligible: boolean;
   onCancel: () => void;
   onContinue: () => void;
 }) {
@@ -307,11 +313,11 @@ function Phase1Review({
           <span className="ceremony-stat-label">{t('narrative:ceremony.phase1.currentFollowers')}</span>
           <span className="ceremony-stat-value">{fmtCompactInt(state.player.total_followers)}</span>
         </div>
-        <div className="ceremony-stat-row">
+        <div className={`ceremony-stat-row${!eligible ? ' ceremony-stat-row-locked' : ''}`}>
           <span className="ceremony-stat-label">{t('narrative:ceremony.phase1.cloutEarned')}</span>
           <span className="ceremony-stat-value ceremony-stat-positive">+{cloutEarned}</span>
         </div>
-        <div className="ceremony-stat-row ceremony-stat-row-final">
+        <div className={`ceremony-stat-row ceremony-stat-row-final${!eligible ? ' ceremony-stat-row-locked' : ''}`}>
           <span className="ceremony-stat-label">{t('narrative:ceremony.phase1.newCloutBalance')}</span>
           <span className="ceremony-stat-value">{newBalance}</span>
         </div>
@@ -356,8 +362,9 @@ function Phase1Review({
           ref={continueBtnRef}
           className="ceremony-btn ceremony-btn-continue"
           onClick={onContinue}
+          disabled={!eligible}
         >
-          {t('narrative:ceremony.phase1.continue')}
+          {eligible ? t('narrative:ceremony.phase1.continue') : t('narrative:ceremony.phase1.continueLockedLabel')}
         </button>
       </div>
     </div>
@@ -513,24 +520,28 @@ function Phase3Commit({ onCommit }: { onCommit: () => void }) {
       aria-label={t('narrative:ceremony.phase3.dialogAria')}
     >
       <p className="commit-headline">{t('narrative:ceremony.phase3.headline')}</p>
-      <button
-        ref={btnRef}
-        className={`commit-btn${holding ? ' commit-btn-holding' : ''}${committed ? ' commit-btn-pressing' : ''}`}
-        style={btnStyle}
-        onPointerDown={startHold}
-        onPointerUp={cancelHold}
-        onPointerLeave={cancelHold}
-        onPointerCancel={cancelHold}
-        onKeyDown={handleKeyDown}
-        onKeyUp={handleKeyUp}
-      >
-        <span className="commit-btn-label">{t('narrative:ceremony.phase3.rebrand')}</span>
-        <div
-          className="commit-hold-fire"
-          style={{ height: `${progress * 100}%` }}
-          aria-hidden="true"
-        />
-      </button>
+      <div className="commit-btn-group">
+        <button
+          ref={btnRef}
+          className={`commit-btn${holding ? ' commit-btn-holding' : ''}${committed ? ' commit-btn-pressing' : ''}`}
+          style={btnStyle}
+          aria-describedby="commit-hold-hint"
+          onPointerDown={startHold}
+          onPointerUp={cancelHold}
+          onPointerLeave={cancelHold}
+          onPointerCancel={cancelHold}
+          onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
+        >
+          <span className="commit-btn-label">{t('narrative:ceremony.phase3.rebrand')}</span>
+          <div
+            className="commit-hold-fire"
+            style={{ height: `${progress * 100}%` }}
+            aria-hidden="true"
+          />
+        </button>
+        <p id="commit-hold-hint" className="commit-subtitle">{t('narrative:ceremony.phase3.holdHint')}</p>
+      </div>
     </div>
   );
 }

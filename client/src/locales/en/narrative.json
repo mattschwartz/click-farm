@@ -9,6 +9,7 @@
       "whatPersists": "What persists",
       "cancel": "Cancel",
       "continue": "Continue",
+      "continueLockedLabel": "Unlock more content first",
       "cancelAria": "Cancel rebrand",
       "dialogAria": "Rebrand \u2014 Threshold Review"
     },
@@ -23,6 +24,7 @@
     },
     "phase3": {
       "headline": "Become someone new.",
+      "holdHint": "Hold to rebrand",
       "rebrand": "Rebrand",
       "dialogAria": "Rebrand \u2014 Commit"
     },

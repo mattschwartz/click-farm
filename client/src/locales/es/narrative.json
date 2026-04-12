@@ -9,6 +9,7 @@
       "whatPersists": "Lo que se conserva",
       "cancel": "Cancelar",
       "continue": "Continuar",
+      "continueLockedLabel": "Desbloquea m\u00e1s contenido primero",
       "cancelAria": "Cancelar rebrand",
       "dialogAria": "Rebrand \u2014 Revisi\u00f3n de umbral"
     },
@@ -23,6 +24,7 @@
     },
     "phase3": {
       "headline": "Convi\u00e9rtete en alguien nuevo.",
+      "holdHint": "Mant\u00e9n para rebrand",
       "rebrand": "Rebrand",
       "dialogAria": "Rebrand \u2014 Confirmar"
     },
