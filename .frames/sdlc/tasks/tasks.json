@@ -1,5 +1,5 @@
 {
-  "next_id": 210,
+  "next_id": 214,
   "tasks": [
     {
       "id": 1,
@@ -6636,7 +6636,7 @@
       "id": 165,
       "role": "architect",
       "state": "plan",
-      "status": "open",
+      "status": "complete",
       "date_assigned": "2026-04-07",
       "title": "Decompose brand deal milestones proposal into implementation tasks",
       "requester": "game-designer",
@@ -6662,7 +6662,8 @@
         "Each task scoped to one role (engineer) and one state (build)"
       ],
       "open_questions": [],
-      "blocked_on": []
+      "blocked_on": [],
+      "date_completed": "2026-04-12"
     },
     {
       "id": 166,
@@ -8587,6 +8588,184 @@
         }
       ],
       "blocked_on": []
+    },
+    {
+      "id": 210,
+      "alias": "T1",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-12",
+      "title": "Brand deals: data model, static data, save migration, rebrand reset",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Ground-level data layer for the Brand Deal Milestones proposal. Adds the BrandDeal / BrandDealReward types to client/src/types.ts, adds `brand_deals: BrandDeal[]` to StaticData, populates STATIC_DATA with the two initial milestones, adds `cumulative_engagement: Decimal` to Player (defaults to 0, resets on rebrand), writes the V17→V18 save migration defaulting to 0, and wires createPlayer() and applyRebrand() to initialize/reset it. No runtime logic, no UI. This is purely the shape change the rest of the feature hangs off of.\n\nStatic data entries (per proposal §Milestone Table):\n  - { id: 'local_car_dealership', threshold: 1e9, name: 'Local Car Dealership', rewards: [{ type: 'yield_multiplier', multiplier: 2 }] }\n  - { id: 'energy_drink_sponsorship', threshold: 5e11, name: 'Energy Drink Sponsorship', rewards: [{ type: 'yield_multiplier', multiplier: 10 }, { type: 'unlock_feature', feature: 'buy_all' }] }\n\nArray MUST be sorted by threshold ascending so downstream consumers can trust the order.\n\nCumulative_engagement is scoped to Player (not GameState) per the engineer review resolution in the proposal — same lifecycle as verb_gear. Decimal type for consistency with engagement/lifetime_engagement. The field is per-run; applyRebrand() in prestige/index.ts must reset it to `new Decimal(0)` and the field MUST NOT appear in any preservation list.\n\nSave migration follows the V12→V13 lifetime_engagement pattern exactly — bump CURRENT_VERSION from 17 to 18 and add migrateV17toV18 that defaults `player.cumulative_engagement` to 0 when absent.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-brand-deal-milestones.md",
+          "purpose": "Source proposal — §Data model and §Milestone Table are the spec for this task"
+        },
+        {
+          "ref": "client/src/types.ts",
+          "purpose": "Where Player and StaticData type declarations live"
+        },
+        {
+          "ref": "client/src/static-data/index.ts",
+          "purpose": "Where STATIC_DATA is populated; add brand_deals collection here"
+        },
+        {
+          "ref": "client/src/model/index.ts",
+          "purpose": "createPlayer() — initialize cumulative_engagement to 0 here (see L43–73 pattern for verb_gear)"
+        },
+        {
+          "ref": "client/src/prestige/index.ts",
+          "purpose": "applyRebrand() — reset cumulative_engagement to 0 alongside verb_gear at L168–186"
+        },
+        {
+          "ref": "client/src/save/index.ts",
+          "purpose": "Add migrateV17toV18; CURRENT_VERSION at L21 (currently 17). Pattern at L714–727 (lifetime_engagement migration) is the template."
+        }
+      ],
+      "acceptance_criteria": [
+        "BrandDeal and BrandDealReward types added to types.ts with the exact shapes from the proposal §Data model",
+        "StaticData interface gains a `brand_deals: BrandDeal[]` field and STATIC_DATA includes both initial milestones, sorted by threshold ascending",
+        "Player gains `cumulative_engagement: Decimal` with JSDoc noting per-run lifecycle and reset-on-rebrand",
+        "createPlayer() initializes cumulative_engagement to new Decimal(0)",
+        "applyRebrand() resets cumulative_engagement to new Decimal(0) — do NOT add it to any preservation list",
+        "CURRENT_VERSION bumped to 18 and migrateV17toV18 added, defaulting cumulative_engagement to 0 when absent",
+        "Save serialize/deserialize round-trip covers the new field (extend the existing save index.test.ts lifetime_engagement coverage)",
+        "All existing tests pass; new tests verify: fresh player starts at 0, rebrand resets to 0, migration from V17 defaults to 0"
+      ],
+      "open_questions": [],
+      "blocked_on": []
+    },
+    {
+      "id": 211,
+      "alias": "T2",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-12",
+      "title": "Brand deals: multiplier engine, counter increments, stacking order §5 wiring",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Runtime logic for brand deals. Implements the pure helpers, wires them into the yield/rate paths at the declared stacking position, and increments `cumulative_engagement` in both the tick and postClick paths.\n\nHelpers (create a new module, e.g. `client/src/brand-deal/index.ts`):\n  - `brandDealMultiplier(cumulativeEngagement: Decimal, deals: BrandDeal[]): number` — iterates deals where cumulative ≥ threshold, multiplies yield_multiplier rewards together, starting at 1.0. Correct pseudocode is in the proposal's revised §Data model (NOT the earlier buggy version).\n  - `isBrandDealFeatureUnlocked(cumulativeEngagement: Decimal, deals: BrandDeal[], feature: string): boolean` — true if any unlocked deal has an unlock_feature reward with matching feature id.\n\nIntegration — stacking order §5 (event effects), applied AFTER verb_gear (§4):\n  1. `computeGeneratorEffectiveRate` (game-loop/index.ts L121-141) — multiply the effective rate by brandDealMultiplier(state.player.cumulative_engagement, staticData.brand_deals). Insert AFTER the gear multiplier step so the chain reads base → count → clout → gear → brand_deal.\n  2. `verbYieldPerTap` (game-loop/index.ts L520-529) — same multiplication, same chain position.\n  3. Update the stacking-order comment block in `audience-mood/index.ts` ~L11 to list brand_deal at §5.\n  4. Update the formula JSDoc comments at game-loop/index.ts L104, L490, L510, L530 to reflect the new factor.\n\nCounter increment — cumulative_engagement must advance in BOTH paths:\n  - `tick()` L300-305 — increment cumulative_engagement by engagementEarned, alongside the existing lifetime_engagement update.\n  - `postClick()` L566-578 — increment cumulative_engagement by `earned`, alongside lifetime_engagement.\n\nImportant subtlety: the multiplier is read from `state.player.cumulative_engagement` as-of-the-start-of-the-tick. This is the simpler and correct interpretation — a tick that crosses a threshold applies the old multiplier to that tick's earnings, and the new multiplier takes effect on the NEXT tick. Document this choice in a code comment.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-brand-deal-milestones.md",
+          "purpose": "Source proposal — §Runtime computation has the corrected pseudocode; §Where it enters the formula describes the stacking position"
+        },
+        {
+          "ref": ".frames/sdlc/architecture/verb-gear.md",
+          "purpose": "§Stacking Order — brand deals go at §5, after gear at §4. Carries the creator-kit.md chain convention."
+        },
+        {
+          "ref": "client/src/game-loop/index.ts",
+          "purpose": "Integration points: computeGeneratorEffectiveRate (L121), verbYieldPerTap (L490-529), tick engagement accumulation (L300-305), postClick (L542-579)"
+        },
+        {
+          "ref": "client/src/audience-mood/index.ts",
+          "purpose": "Stacking-order comment around L11 — needs brand_deal entry at §5"
+        }
+      ],
+      "acceptance_criteria": [
+        "`brandDealMultiplier` and `isBrandDealFeatureUnlocked` exist as pure functions with unit tests covering: zero deals → 1.0, threshold not reached → 1.0, one deal reached → single factor, two deals reached → product, feature unlock present/absent",
+        "Tests verify step-function behavior at threshold: cumulative at threshold-1 returns lower mult, at threshold returns higher mult",
+        "Tests verify multiplicative stacking: brand deal factor multiplies on top of count, clout, and verb_gear in both yield and rate paths",
+        "Tests verify cumulative_engagement increments in both tick (passive) and postClick (manual) paths by the same amount added to engagement/lifetime_engagement",
+        "Stacking-order comment in audience-mood/index.ts updated to list brand_deal at §5",
+        "JSDoc formula comments in game-loop/index.ts updated to include the brand_deal factor",
+        "All existing game-loop tests pass after the rewire",
+        "`npm run build` (client/) succeeds"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        210
+      ]
+    },
+    {
+      "id": 212,
+      "alias": "T3",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-12",
+      "title": "Brand deals: offline reconciliation of cumulative_engagement",
+      "requester": "architect",
+      "complexity": "haiku",
+      "overview": "Ensure `cumulative_engagement` advances during offline catch-up so that a player who earns enough offline to cross a brand deal threshold sees the deal applied on return. Per architect review §4 (non-blocking): compute offline at the as-of-close rate, then reconcile cumulative_engagement on open. Do NOT add a second segmentation layer — the offline calc is already approximate per core-systems.md §Assumptions #6.\n\nImplementation: in `offline/index.ts` `computeOfflineEarnings` (around L155 where lifetime_engagement is advanced), also advance `cumulative_engagement` by `engagementGained`. That is the full change — the multiplier at as-of-close is already baked into engagementGained by T2's rate wiring, and threshold crossings will be visible to the player on the next live tick after return.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-brand-deal-milestones.md",
+          "purpose": "Source proposal — §Open questions bullet 5 flags offline catch-up as an open item; architect review §4 resolves it"
+        },
+        {
+          "ref": "client/src/offline/index.ts",
+          "purpose": "computeOfflineEarnings around L155 — where lifetime_engagement is advanced; cumulative_engagement advance goes in the same return block"
+        }
+      ],
+      "acceptance_criteria": [
+        "cumulative_engagement is incremented by engagementGained in computeOfflineEarnings",
+        "Test: a player who closes below milestone 1 threshold and re-opens after earning enough offline to cross it has cumulative_engagement ≥ the milestone threshold on return",
+        "Test: offline earnings at as-of-close rate (no re-segmentation) — existing offline test expectations unchanged",
+        "All existing offline tests pass"
+      ],
+      "open_questions": [],
+      "blocked_on": [
+        211
+      ]
+    },
+    {
+      "id": 213,
+      "alias": "T4",
+      "role": "engineer",
+      "state": "build",
+      "status": "open",
+      "date_assigned": "2026-04-12",
+      "title": "Brand deals: unlock toast, persistent multiplier pill, Buy All feature gate, i18n",
+      "requester": "architect",
+      "complexity": "sonnet",
+      "overview": "Player-facing surfacing of brand deals. Three UI deliverables plus i18n:\n\n1. **Unlock toast.** When a previously-locked deal becomes unlocked in a tick or postClick result, fire a transient toast: 'Brand Deal: {name} — ×{multiplier} engagement'. Warm-gold tint via `rgba(var(--glow-halo-rgb), …)` (same family as the HIRE flame), 3-second hold, fade out. No modal, no queue (if two unlock in the same tick — rare — stack them vertically or show the highest one; engineer's call, document in code). Detection: compare `isBrandDealFeatureUnlocked`/deal count before and after the state transition in useGame, OR compute newly-unlocked deals by diffing cumulative_engagement crossings across the state update. There is no existing toast system — build a minimal one scoped to this feature; do not over-generalize.\n\n2. **Persistent multiplier pill.** A compact `⚡×N Brand Deal` pill rendered in the generator column header (same strip as BuyAllButton in GeneratorList.tsx L171). Hidden when the multiplier is 1. Per ux-designer review #2: this shares real estate with Buy All — position the pill inline with or above the Buy All bar, engineer to choose the least crowded arrangement. If layout is genuinely ambiguous after attempting it, file a follow-up ux-designer question rather than guessing.\n\n3. **Buy All feature gate.** BuyAllButton must be disabled (or hidden — engineer's call, but disabled-with-tooltip is the safer default) until `isBrandDealFeatureUnlocked(cumulative_engagement, brand_deals, 'buy_all')` returns true. Match the existing disabled visual state (transparent bg, --text-receded label, --border-subtle border, no pointer). The keyboard shortcut `B` must also respect the gate.\n\n4. **i18n.** Add the new user-facing strings to all six supported locales (en, es, fr, de, nl, ru):\n  - Toast template: 'Brand Deal: {name} — ×{multiplier} engagement'\n  - Pill label: 'Brand Deal' (the ×N is numeric, no translation)\n  - Buy All locked tooltip: 'Unlocked at 500B engagement earned'\n  - Brand deal display names: 'Local Car Dealership', 'Energy Drink Sponsorship'\n  Follow the existing ui.json structure under a new `brandDeal` key namespace.",
+      "related_items": [
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-brand-deal-milestones.md",
+          "purpose": "Source proposal — §UI treatment and the ux-designer review (item 1 & 2) have the visual spec"
+        },
+        {
+          "ref": "client/src/ui/GeneratorList.tsx",
+          "purpose": "BuyAllButton lives here at L171, L1011+; feature gate and pill placement both happen in this file"
+        },
+        {
+          "ref": "client/src/ui/useGame.ts",
+          "purpose": "State transitions flow through here; toast detection hook attaches here (see L34 toast comment)"
+        },
+        {
+          "ref": "client/src/locales/en/ui.json",
+          "purpose": "i18n source of truth; mirror additions into es/fr/de/nl/ru"
+        },
+        {
+          "ref": ".frames/sdlc/proposals/accepted/20260406-auto-buy-sweep.md",
+          "purpose": "Auto-buy-sweep spec — §7 visual states define the disabled style to reuse for the gate"
+        }
+      ],
+      "acceptance_criteria": [
+        "Unlocking a brand deal (via tick or postClick crossing the threshold) shows a warm-gold toast naming the deal and its multiplier, held 3s then faded out",
+        "A persistent pill shows the current brand deal multiplier (e.g. `⚡×20 Brand Deal`) in the generator column header when multiplier > 1; hidden at multiplier 1",
+        "BuyAllButton is disabled with a locked-style visual and a tooltip/label explaining the unlock condition until isBrandDealFeatureUnlocked(..., 'buy_all') is true",
+        "The `B` keyboard shortcut is a no-op while Buy All is gated",
+        "All new user-facing strings added to en, es, fr, de, nl, ru under a consistent brandDeal namespace",
+        "All existing tests pass; new tests cover: pill hidden at 1x, pill shown with correct value at 2x, Buy All disabled pre-unlock and enabled post-unlock, B keyboard no-op while gated",
+        "`npm run build` (client/) succeeds"
+      ],
+      "open_questions": [
+        {
+          "question": "If the pill and Buy All button genuinely cannot cohabit the column header strip, should the pill move to the top bar instead? The ux-designer review ruled that out initially (top bar is crowded), but the engineer may discover the column header is worse. Resolution path: attempt column header first; if unworkable, file a ux-designer follow-up question with a screenshot.",
+          "owner": "ux-designer"
+        }
+      ],
+      "blocked_on": [
+        211
+      ]
     }
   ]
 }
