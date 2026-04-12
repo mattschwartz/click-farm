@@ -2253,6 +2253,12 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
   border-top: 1px solid var(--border-default);
 }
 
+.ceremony-stat-row-locked > .ceremony-stat-value {
+  filter: blur(4px);
+  user-select: none;
+  pointer-events: none;
+}
+
 .ceremony-stat-label {
   color: var(--text-secondary);
 }
@@ -2326,15 +2332,6 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 }
 
 /* Actions */
-.ceremony-locked-hint {
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--text-secondary, rgba(255, 255, 255, 0.5));
-  margin: 0;
-  text-align: center;
-  letter-spacing: 0.02em;
-}
-
 .ceremony-actions {
   display: flex;
   justify-content: center;
@@ -2370,6 +2367,23 @@ html[data-reduce-motion="true"] .rotate-to-landscape-overlay {
 .ceremony-btn-continue:hover {
   background: rgba(var(--glow-halo-rgb),0.20);
   border-color: rgba(var(--glow-halo-rgb),0.50);
+}
+
+.ceremony-btn-continue:disabled {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: rgba(0, 0, 0, 0.3);
+  cursor: not-allowed;
+}
+
+.ceremony-btn-continue:disabled::before {
+  content: '\29B8';
+  margin-right: 6px;
+}
+
+.ceremony-btn-continue:disabled:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 /* ==========================================================================

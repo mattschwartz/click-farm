@@ -9,7 +9,7 @@
       "whatPersists": "What persists",
       "cancel": "Cancel",
       "continue": "Continue",
-      "notEligible": "Unlock mogging to rebrand.",
+      "continueLockedLabel": "Unlock more content first",
       "cancelAria": "Cancel rebrand",
       "dialogAria": "Rebrand \u2014 Threshold Review"
     },

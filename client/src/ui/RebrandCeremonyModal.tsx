@@ -313,11 +313,11 @@ function Phase1Review({
           <span className="ceremony-stat-label">{t('narrative:ceremony.phase1.currentFollowers')}</span>
           <span className="ceremony-stat-value">{fmtCompactInt(state.player.total_followers)}</span>
         </div>
-        <div className="ceremony-stat-row">
+        <div className={`ceremony-stat-row${!eligible ? ' ceremony-stat-row-locked' : ''}`}>
           <span className="ceremony-stat-label">{t('narrative:ceremony.phase1.cloutEarned')}</span>
           <span className="ceremony-stat-value ceremony-stat-positive">+{cloutEarned}</span>
         </div>
-        <div className="ceremony-stat-row ceremony-stat-row-final">
+        <div className={`ceremony-stat-row ceremony-stat-row-final${!eligible ? ' ceremony-stat-row-locked' : ''}`}>
           <span className="ceremony-stat-label">{t('narrative:ceremony.phase1.newCloutBalance')}</span>
           <span className="ceremony-stat-value">{newBalance}</span>
         </div>
@@ -350,9 +350,6 @@ function Phase1Review({
         </div>
       </div>
 
-      {!eligible && (
-        <p className="ceremony-locked-hint">{t('narrative:ceremony.phase1.notEligible')}</p>
-      )}
       <div className="ceremony-actions">
         <button
           ref={cancelBtnRef}
@@ -367,7 +364,7 @@ function Phase1Review({
           onClick={onContinue}
           disabled={!eligible}
         >
-          {t('narrative:ceremony.phase1.continue')}
+          {eligible ? t('narrative:ceremony.phase1.continue') : t('narrative:ceremony.phase1.continueLockedLabel')}
         </button>
       </div>
     </div>
