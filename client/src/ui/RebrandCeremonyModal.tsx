@@ -520,25 +520,28 @@ function Phase3Commit({ onCommit }: { onCommit: () => void }) {
       aria-label={t('narrative:ceremony.phase3.dialogAria')}
     >
       <p className="commit-headline">{t('narrative:ceremony.phase3.headline')}</p>
-      <button
-        ref={btnRef}
-        className={`commit-btn${holding ? ' commit-btn-holding' : ''}${committed ? ' commit-btn-pressing' : ''}`}
-        style={btnStyle}
-        onPointerDown={startHold}
-        onPointerUp={cancelHold}
-        onPointerLeave={cancelHold}
-        onPointerCancel={cancelHold}
-        onKeyDown={handleKeyDown}
-        onKeyUp={handleKeyUp}
-      >
-        <span className="commit-btn-label">{t('narrative:ceremony.phase3.rebrand')}</span>
-        <div
-          className="commit-hold-fire"
-          style={{ height: `${progress * 100}%` }}
-          aria-hidden="true"
-        />
-      </button>
-      <p className="commit-subtitle">{t('narrative:ceremony.phase3.holdHint')}</p>
+      <div className="commit-btn-group">
+        <button
+          ref={btnRef}
+          className={`commit-btn${holding ? ' commit-btn-holding' : ''}${committed ? ' commit-btn-pressing' : ''}`}
+          style={btnStyle}
+          aria-describedby="commit-hold-hint"
+          onPointerDown={startHold}
+          onPointerUp={cancelHold}
+          onPointerLeave={cancelHold}
+          onPointerCancel={cancelHold}
+          onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
+        >
+          <span className="commit-btn-label">{t('narrative:ceremony.phase3.rebrand')}</span>
+          <div
+            className="commit-hold-fire"
+            style={{ height: `${progress * 100}%` }}
+            aria-hidden="true"
+          />
+        </button>
+        <p id="commit-hold-hint" className="commit-subtitle">{t('narrative:ceremony.phase3.holdHint')}</p>
+      </div>
     </div>
   );
 }
