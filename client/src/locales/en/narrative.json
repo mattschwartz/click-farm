@@ -23,6 +23,7 @@
     },
     "phase3": {
       "headline": "Become someone new.",
+      "holdHint": "Hold to rebrand",
       "rebrand": "Rebrand",
       "dialogAria": "Rebrand \u2014 Commit"
     },

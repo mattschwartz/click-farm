@@ -531,6 +531,7 @@ function Phase3Commit({ onCommit }: { onCommit: () => void }) {
           aria-hidden="true"
         />
       </button>
+      <p className="commit-subtitle">{t('narrative:ceremony.phase3.holdHint')}</p>
     </div>
   );
 }
