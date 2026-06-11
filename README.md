@@ -22,7 +22,7 @@ The journey between those two points is the joke — and the game.
   <img src="client/src/assets/selfie.png" alt="Selfies" width="100" />
   <img src="client/src/assets/livestream.png" alt="Livestreams" width="100" />
   <img src="client/src/assets/podcast.png" alt="Podcasts" width="100" />
-  <img src="client/src/assets/viral-stunts.png" alt="Viral Stunts" width="100" />
+  <img src="client/src/assets/mogging.png" alt="Mogging" width="100" />
 </p>
 
 ## How it works

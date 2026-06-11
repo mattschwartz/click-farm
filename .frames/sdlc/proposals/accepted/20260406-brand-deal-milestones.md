@@ -3,7 +3,7 @@ name: Brand Deal Milestones (Creator Kit Integration)
 description: Milestone-based brand deals that auto-unlock within the Creator Kit, granting base yield multipliers and feature unlocks at cumulative engagement thresholds.
 created: 2026-04-06
 author: game-designer
-status: accepted
+status: implementation
 reviewers: []
 ---
 
