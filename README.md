@@ -45,10 +45,6 @@ Click Farm is an idle/clicker game that plays like an arcade cabinet and reads l
 
 No ads. No microtransactions. No daily login rewards. No dark patterns. Just clicks.
 
-<p align="center">
-  <img src="client/src/assets/golden-thumb.png" alt="Golden Thumb" width="80" />
-</p>
-
 ## Tech
 
 Vite + React + TypeScript. Runs entirely in your browser. Game state persists to localStorage — no server, no account, no sign-up.
@@ -68,4 +64,4 @@ npm test
 
 ## License
 
-All rights reserved.
+The **code** is free to use however you like (see [LICENSE](LICENSE)). The **art, music and sound effects** are **not** covered by that grant.
